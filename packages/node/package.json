@@ -1,0 +1,36 @@
+{
+    "name": "@backtrace/node",
+    "version": "0.0.1",
+    "description": "Backtrace-JavaScript Node.JS integration",
+    "main": "lib/index.js",
+    "types": "lib/index.d.ts",
+    "scripts": {
+        "test": "NODE_ENV=test jest"
+    },
+    "engines": {
+        "node": ">=11.15.54"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/backtrace-labs/backtrace-javascript.git"
+    },
+    "keywords": [
+        "Error",
+        "Reporting",
+        "Diagnostic",
+        "Tool",
+        "Bug",
+        "Bugs",
+        "StackTrace"
+    ],
+    "author": "Backtrace <team@backtrace.io>",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/backtrace-labs/backtrace-javascript/issues"
+    },
+    "homepage": "https://github.com/backtrace-labs/backtrace-javascript#readme",
+    "devDependencies": {
+        "@types/node": "^11.15.54",
+        "typescript": "^5.0.4"
+    }
+}

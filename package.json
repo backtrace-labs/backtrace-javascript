@@ -1,0 +1,42 @@
+{
+    "name": "@backtrace/javascript",
+    "version": "0.0.1",
+    "description": "Backtrace.io error reporting tool for JavaScript",
+    "author": "Backtrace <team@backtrace.io>",
+    "license": "MIT",
+    "scripts": {
+        "build": "tsc -b ./tsconfig.packages.json",
+        "clean": "tsc -b --clean && rimraf \"packages/*/lib\" \"lib\"",
+        "format": "prettier --write '**/*.ts'",
+        "lint": "eslint . --ext .ts",
+        "watch": "tsc -b ./tsconfig.packages.json -w",
+        "test": "NODE_ENV=test jest"
+    },
+    "workspaces": [
+        "packages/*"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/backtrace-labs/backtrace-javascript.git"
+    },
+    "keywords": [
+        "Error",
+        "Reporting",
+        "Diagnostic",
+        "Tool",
+        "Bug",
+        "Bugs",
+        "StackTrace"
+    ],
+    "bugs": {
+        "url": "https://github.com/backtrace-labs/backtrace-javascript/issues"
+    },
+    "homepage": "https://github.com/backtrace-labs/backtrace-javascript#readme",
+    "devDependencies": {
+        "eslint": "^8.41.0",
+        "eslint-config-prettier": "^8.8.0",
+        "prettier": "^2.8.8",
+        "rimraf": "^5.0.1",
+        "typescript": "^5.0.4"
+    }
+}
