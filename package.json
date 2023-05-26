@@ -8,6 +8,7 @@
         "build": "tsc -b ./tsconfig.packages.json",
         "clean": "tsc -b --clean && rimraf \"packages/*/lib\" \"lib\"",
         "format": "prettier --write '**/*.ts'",
+        "format:check": "prettier --check '**/*.ts'",
         "lint": "eslint . --ext .ts",
         "rebuild": "npm run clean && npm run build",
         "watch": "tsc -b ./tsconfig.packages.json -w",
