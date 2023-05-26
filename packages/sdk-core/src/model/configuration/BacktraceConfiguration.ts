@@ -4,7 +4,7 @@ import { BacktraceDatabaseConfiguration } from './BacktraceDatabaseConfiguration
 // Submission information
 export type BacktraceBasicSubmissionInformation = {
     /**
-     * The server address (submission URL) is required to submit exceptions from your Unity project to your Backtrace instance.
+     * The server address (submission URL) is required to submit exceptions from your project to your Backtrace instance.
      *
      * The Server Address must be in the following format: https://submit.backtrace.io/{subdomain}/{submission-token}/json.
      */
@@ -36,7 +36,7 @@ export type BasicBacktraceClientSettings = BacktraceBasicSubmissionInformation &
      * Attributes are additional metadata that can be attached to error and crash reports. You can use attributes to filter,
      * aggregate, analyze, and debug errors in the Backtrace console.
      */
-    userAttributes?: Record<string, any>;
+    userAttributes?: Record<string, unknown>;
     /**
      * Attachments are additional files/data that can be send with error to Backtrace.
      */

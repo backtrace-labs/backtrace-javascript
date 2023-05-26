@@ -2,7 +2,7 @@
     "files": [],
     "references": [
         {
-            "path": "packages/core"
+            "path": "packages/sdk-core"
         },
         {
             "path": "packages/browser"
