@@ -1,0 +1,32 @@
+{
+    "name": "@backtrace/core",
+    "version": "0.0.1",
+    "description": "Backtrace-JavaScript core library",
+    "main": "lib/index.js",
+    "types": "lib/index.d.ts",
+    "scripts": {
+        "test": "NODE_ENV=test jest"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/backtrace-labs/backtrace-javascript.git"
+    },
+    "keywords": [
+        "Error",
+        "Reporting",
+        "Diagnostic",
+        "Tool",
+        "Bug",
+        "Bugs",
+        "StackTrace"
+    ],
+    "author": "Backtrace <team@backtrace.io>",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/backtrace-labs/backtrace-javascript/issues"
+    },
+    "homepage": "https://github.com/backtrace-labs/backtrace-javascript#readme",
+    "devDependencies": {
+        "typescript": "^5.0.4"
+    }
+}
