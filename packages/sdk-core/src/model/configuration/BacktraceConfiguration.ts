@@ -4,7 +4,7 @@ import { BacktraceDatabaseConfiguration } from './BacktraceDatabaseConfiguration
 // Submission information
 export type BacktraceBasicSubmissionInformation = {
     /**
-     * The server address (submission URL) is required to submit exceptions from your Unity project to your Backtrace instance.
+     * The server address (submission URL) is required to submit exceptions from your project to your Backtrace instance.
      *
      * The Server Address must be in the following format: https://submit.backtrace.io/{subdomain}/{submission-token}/json.
      */

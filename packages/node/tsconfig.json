@@ -7,7 +7,7 @@
     "exclude": ["node_modules", "tests", "lib"],
     "references": [
         {
-            "path": "../core"
+            "path": "../sdk-core/tsconfig.json"
         }
     ]
 }
