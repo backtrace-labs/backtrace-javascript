@@ -21,12 +21,12 @@ export interface BacktraceConfiguration {
      * For users who need to use a direct URL to the Backtrace instance, the server address must be in the following format:
      * https://universe-name.sp.backtrace.io:6098/
      *
-     * The legacy submission URL requires an optional token to be available.
+     * The direct submission URL requires an optional token to be available.
      */
     url: string;
 
     /**
-     * Submission token - the token is required only if the user uses direct submission URL to Backtrace (Legacy URL).
+     * Submission token - the token is required only if the user uses direct submission URL to Backtrace.
      */
     token?: string;
     timeout?: number;
