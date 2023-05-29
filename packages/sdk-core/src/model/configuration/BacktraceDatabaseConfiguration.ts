@@ -5,7 +5,7 @@ export enum DeduplicationStrategy {
     Message = 1 << 2,
     All = ~(~0 << 4),
 }
-export type EnabledBacktraceConfiguration = {
+export interface EnabledBacktraceConfiguration {
     /**
      * Determine if the Database is enabled
      */
@@ -59,13 +59,13 @@ export type EnabledBacktraceConfiguration = {
      * The default value is 3
      */
     maximumRetries?: number;
-};
+}
 
-export type DisabledBacktraceConfiguration = {
+export interface DisabledBacktraceConfiguration extends Omit<Partial<EnabledBacktraceConfiguration>, 'enabled'> {
     /**
      * Determine if the Database is enabled
      */
     enabled?: false;
-} & Partial<EnabledBacktraceConfiguration>;
+}
 
 export type BacktraceDatabaseConfiguration = EnabledBacktraceConfiguration | DisabledBacktraceConfiguration;

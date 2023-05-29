@@ -2,7 +2,7 @@ import { BacktraceAttachment } from '../report/BacktraceAttachment';
 import { BacktraceDatabaseConfiguration } from './BacktraceDatabaseConfiguration';
 
 // Submission information
-export type BacktraceBasicSubmissionInformation = {
+export interface BacktraceBasicSubmissionInformation {
     /**
      * The server address (submission URL) is required to submit exceptions from your project to your Backtrace instance.
      *
@@ -11,11 +11,14 @@ export type BacktraceBasicSubmissionInformation = {
     url: string;
     timeout?: number;
     ignoreSslCertificate?: boolean;
-};
-export type BacktraceLegacySubmitInformation = BacktraceBasicSubmissionInformation & { token: string };
+}
+// Legacy submission information
+export interface BacktraceLegacySubmitInformation extends BacktraceBasicSubmissionInformation {
+    token: string;
+}
 export type BacktraceSubmissionInformation = BacktraceBasicSubmissionInformation | BacktraceLegacySubmitInformation;
 
-export type BacktraceMetricsSupport = {
+export interface BacktraceMetricsSupport {
     metricsSubmissionUrl?: string;
     enable: boolean;
     ignoreSslCertificate?: boolean;
@@ -24,9 +27,9 @@ export type BacktraceMetricsSupport = {
      * By default, session events are sent on application startup/finish, and every 30 minutes while the game is running.
      */
     autoSendInterval?: number;
-};
+}
 
-export type BasicBacktraceClientSettings = BacktraceBasicSubmissionInformation & {
+export interface BasicBacktraceClientSettings extends BacktraceBasicSubmissionInformation {
     /**
      * Limits the number of reports the client will send per minute. If set to '0', there is no limit.
      * If set to a value greater than '0' and the value is reached, the client will not send any reports until the next minute.
@@ -46,6 +49,6 @@ export type BasicBacktraceClientSettings = BacktraceBasicSubmissionInformation &
      * Metrics such as crash free users and crash free sessions
      */
     metrics?: BacktraceMetricsSupport;
-};
+}
 
 export type BacktraceConfiguration = BasicBacktraceClientSettings & BacktraceDatabaseConfiguration;
