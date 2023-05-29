@@ -1,8 +1,23 @@
 export enum DeduplicationStrategy {
+    /**
+     * Duplicated reports are not aggregated
+     */
     None = 0,
+    /**
+     * Aggregates based on the current stack trace
+     */
     Callstack = 1 << 0,
+    /**
+     * Aggregates by stack trace and exception type
+     */
     Classifier = 1 << 1,
+    /**
+     * Aggregates by stack trace and exception message
+     */
     Message = 1 << 2,
+    /**
+     * Aggregates by faulting callstack, exception type, and exception message
+     */
     All = ~(~0 << 4),
 }
 export interface EnabledBacktraceDatabaseConfiguration {
@@ -16,17 +31,13 @@ export interface EnabledBacktraceDatabaseConfiguration {
     path: string;
     /**
      * Determine if the directory should be auto created by the SDK.
-     * By default = true.
+     * By default true.
      */
     createDatabaseDirectory?: boolean;
 
     /**
-     * Aggregates duplicated reports. The available options are:
-     * None: Duplicated reports are not aggregated.
-     * Callstack: Aggregates based on the current stack trace.
-     * Classifier: Aggregates by stack trace and exception type.
-     * Message: Aggregates by stack trace and exception message.
-     * All: Aggregates by faulting callstack, exception type, and exception message.
+     * Duplicated reports aggregration settings. If defined, the same reports can be combined
+     * together.
      */
     deduplicationStrategy?: DeduplicationStrategy;
 
