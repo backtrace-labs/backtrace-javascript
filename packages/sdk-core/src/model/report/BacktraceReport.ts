@@ -1,7 +1,7 @@
 import { BacktraceAttachment } from './BacktraceAttachment';
 
 export interface BacktraceReport {
-    attributes(): Record<string, unknown>;
-    attachments(): BacktraceAttachment[];
+    get attributes(): Record<string, unknown>;
+    get attachments(): BacktraceAttachment[];
     toData(): Record<string, unknown>;
 }
