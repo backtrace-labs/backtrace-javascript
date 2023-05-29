@@ -1,4 +1,4 @@
-export type BacktraceInMemoryAttachment = {
+export interface BacktraceInMemoryAttachment {
     /**
      * Attachment name
      */
@@ -6,8 +6,8 @@ export type BacktraceInMemoryAttachment = {
     /**
      * Attachment data
      */
-    data: string;
-};
+    data: Uint8Array;
+}
 
 export type BacktraceFileAttachment = string;
 export type BacktraceAttachment = BacktraceInMemoryAttachment | BacktraceFileAttachment;

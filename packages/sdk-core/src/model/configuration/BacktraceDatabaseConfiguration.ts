@@ -1,11 +1,26 @@
 export enum DeduplicationStrategy {
+    /**
+     * Duplicated reports are not aggregated
+     */
     None = 0,
+    /**
+     * Aggregates based on the current stack trace
+     */
     Callstack = 1 << 0,
+    /**
+     * Aggregates by stack trace and exception type
+     */
     Classifier = 1 << 1,
+    /**
+     * Aggregates by stack trace and exception message
+     */
     Message = 1 << 2,
+    /**
+     * Aggregates by faulting callstack, exception type, and exception message
+     */
     All = ~(~0 << 4),
 }
-export type EnabledBacktraceConfiguration = {
+export interface EnabledBacktraceDatabaseConfiguration {
     /**
      * Determine if the Database is enabled
      */
@@ -16,17 +31,13 @@ export type EnabledBacktraceConfiguration = {
     path: string;
     /**
      * Determine if the directory should be auto created by the SDK.
-     * By default = true.
+     * By default true.
      */
     createDatabaseDirectory?: boolean;
 
     /**
-     * Aggregates duplicated reports. The available options are:
-     * None: Duplicated reports are not aggregated.
-     * Callstack: Aggregates based on the current stack trace.
-     * Classifier: Aggregates by stack trace and exception type.
-     * Message: Aggregates by stack trace and exception message.
-     * All: Aggregates by faulting callstack, exception type, and exception message.
+     * Duplicated reports aggregration settings. If defined, the same reports can be combined
+     * together.
      */
     deduplicationStrategy?: DeduplicationStrategy;
 
@@ -50,8 +61,8 @@ export type EnabledBacktraceConfiguration = {
      */
     maximumDatabaseSizeInMb?: number;
     /**
-     * The amount of time (in seconds) to wait between retries if the database is unable to send a report.
-     * The default value is 60
+     * The amount of time (in ms) to wait between retries if the database is unable to send a report.
+     * The default value is 60 000
      */
     retryInterval?: number;
     /**
@@ -59,13 +70,16 @@ export type EnabledBacktraceConfiguration = {
      * The default value is 3
      */
     maximumRetries?: number;
-};
+}
 
-export type DisabledBacktraceConfiguration = {
+export interface DisabledBacktraceDatabaseConfiguration
+    extends Omit<Partial<EnabledBacktraceDatabaseConfiguration>, 'enabled'> {
     /**
      * Determine if the Database is enabled
      */
     enabled?: false;
-} & Partial<EnabledBacktraceConfiguration>;
+}
 
-export type BacktraceDatabaseConfiguration = EnabledBacktraceConfiguration | DisabledBacktraceConfiguration;
+export type BacktraceDatabaseConfiguration =
+    | EnabledBacktraceDatabaseConfiguration
+    | DisabledBacktraceDatabaseConfiguration;
