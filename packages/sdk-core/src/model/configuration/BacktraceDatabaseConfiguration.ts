@@ -61,8 +61,8 @@ export interface EnabledBacktraceDatabaseConfiguration {
      */
     maximumDatabaseSizeInMb?: number;
     /**
-     * The amount of time (in seconds) to wait between retries if the database is unable to send a report.
-     * The default value is 60
+     * The amount of time (in ms) to wait between retries if the database is unable to send a report.
+     * The default value is 60 000
      */
     retryInterval?: number;
     /**
