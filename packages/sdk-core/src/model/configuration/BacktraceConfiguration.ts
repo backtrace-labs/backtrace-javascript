@@ -36,7 +36,7 @@ export interface BacktraceConfiguration {
      * Limits the number of reports the client will send per minute. If set to '0', there is no limit.
      * If set to a value greater than '0' and the value is reached, the client will not send any reports until the next minute.
      */
-    rateLimit: number;
+    rateLimit?: number;
     /**
      * Attributes are additional metadata that can be attached to error and crash reports. You can use attributes to filter,
      * aggregate, analyze, and debug errors in the Backtrace console.
