@@ -51,4 +51,6 @@ export interface BasicBacktraceClientSettings extends BacktraceBasicSubmissionIn
     metrics?: BacktraceMetricsSupport;
 }
 
-export type BacktraceConfiguration = BasicBacktraceClientSettings & BacktraceDatabaseConfiguration;
+export interface BacktraceConfiguration extends BasicBacktraceClientSettings {
+    database?: BacktraceDatabaseConfiguration;
+}
