@@ -1,23 +1,6 @@
 import { BacktraceAttachment } from '../report/BacktraceAttachment';
 import { BacktraceDatabaseConfiguration } from './BacktraceDatabaseConfiguration';
 
-// Submission information
-export interface BacktraceBasicSubmissionInformation {
-    /**
-     * The server address (submission URL) is required to submit exceptions from your project to your Backtrace instance.
-     *
-     * The Server Address must be in the following format: https://submit.backtrace.io/{subdomain}/{submission-token}/json.
-     */
-    url: string;
-    timeout?: number;
-    ignoreSslCertificate?: boolean;
-}
-// Legacy submission information
-export interface BacktraceLegacySubmitInformation extends BacktraceBasicSubmissionInformation {
-    token: string;
-}
-export type BacktraceSubmissionInformation = BacktraceBasicSubmissionInformation | BacktraceLegacySubmitInformation;
-
 export interface BacktraceMetricsSupport {
     metricsSubmissionUrl?: string;
     enable: boolean;
@@ -29,7 +12,26 @@ export interface BacktraceMetricsSupport {
     autoSendInterval?: number;
 }
 
-export interface BacktraceConfiguration extends BacktraceBasicSubmissionInformation {
+export interface BacktraceConfiguration {
+    /**
+     * The server address (submission URL) is required to submit exceptions from your project to your Backtrace instance.
+     *
+     * The Server Address must be in the following format: https://submit.backtrace.io/{subdomain}/{submission-token}/json
+     *
+     * For users who need to use a direct URL to the Backtrace instance, the server address must be in the following format:
+     * https://universe-name.sp.backtrace.io:6098/
+     *
+     * The legacy submission URL requires an optional token to be available.
+     */
+    url: string;
+
+    /**
+     * Submission token - the token is required only if the user uses direct submission URL to Backtrace (Legacy URL).
+     */
+    token: string;
+    timeout?: number;
+    ignoreSslCertificate?: boolean;
+
     /**
      * Limits the number of reports the client will send per minute. If set to '0', there is no limit.
      * If set to a value greater than '0' and the value is reached, the client will not send any reports until the next minute.
