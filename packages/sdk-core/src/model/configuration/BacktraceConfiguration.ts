@@ -28,7 +28,7 @@ export interface BacktraceConfiguration {
     /**
      * Submission token - the token is required only if the user uses direct submission URL to Backtrace (Legacy URL).
      */
-    token: string;
+    token?: string;
     timeout?: number;
     ignoreSslCertificate?: boolean;
 
