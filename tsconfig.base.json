@@ -9,7 +9,7 @@
         "esModuleInterop": true,
         "strictNullChecks": true,
         "noUnusedLocals": true,
-        "removeComments": true,
+        "removeComments": false,
         "forceConsistentCasingInFileNames": true,
         "skipLibCheck": true,
         "declaration": true,
