@@ -35,7 +35,7 @@ export class BacktraceCoreClient {
         attributes: Record<string, unknown> = {},
         attachments: BacktraceAttachment[] = [],
     ): Promise<void> {
-        let report = this.isReport(data) ? data : new BacktraceReport(data, attributes, attachments);
+        const report = this.isReport(data) ? data : new BacktraceReport(data, attributes, attachments);
         console.log(report.message);
     }
 
