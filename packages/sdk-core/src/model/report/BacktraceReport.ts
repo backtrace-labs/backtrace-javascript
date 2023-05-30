@@ -1,4 +1,5 @@
 import { BacktraceAttachment } from './BacktraceAttachment';
+import { BacktraceErrorType } from './BacktraceErrorType';
 
 export class BacktraceReport {
     /**
@@ -29,7 +30,7 @@ export class BacktraceReport {
         public readonly attributes: Record<string, unknown> = {},
         public readonly attachments: BacktraceAttachment[] = [],
     ) {
-        let errorType: string = 'Exception';
+        let errorType: BacktraceErrorType = 'Exception';
         if (data instanceof Error) {
             this.annotations['error'] = data;
             this.classifiers = [data.name];
