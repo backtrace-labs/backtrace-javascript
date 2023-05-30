@@ -35,12 +35,17 @@ export class BacktraceCoreClient {
         attributes: Record<string, unknown> = {},
         attachments: BacktraceAttachment[] = [],
     ): Promise<void> {
-        const report = this.isReport(data) ? data : new BacktraceReport(data, attributes, attachments);
-        if (typeof data === 'string') {
-            report.libraryGeneratedFrames++;
-        }
+        const report = this.isReport(data)
+            ? data
+            : new BacktraceReport(data, attributes, attachments, {
+                  skipFrames: this.skipFrameOnMessage(data),
+              });
 
         console.log(report.message);
+    }
+
+    private skipFrameOnMessage(data: Error | string): number {
+        return typeof data === 'string' ? 1 : 0;
     }
 
     private isReport(data: BacktraceReport | Error | string): data is BacktraceReport {
