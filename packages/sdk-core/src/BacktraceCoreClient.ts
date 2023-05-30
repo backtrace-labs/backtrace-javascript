@@ -36,6 +36,10 @@ export class BacktraceCoreClient {
         attachments: BacktraceAttachment[] = [],
     ): Promise<void> {
         const report = this.isReport(data) ? data : new BacktraceReport(data, attributes, attachments);
+        if (typeof data === 'string') {
+            report.libraryGeneratedFrames++;
+        }
+
         console.log(report.message);
     }
 
