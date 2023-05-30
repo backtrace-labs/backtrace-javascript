@@ -44,6 +44,6 @@ export class BacktraceCoreClient {
     }
 
     private isReport(data: BacktraceReport | Error | string): data is BacktraceReport {
-        return !(data instanceof Error || typeof data === 'string');
+        return data instanceof BacktraceReport;
     }
 }
