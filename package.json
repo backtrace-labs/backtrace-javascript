@@ -12,7 +12,7 @@
         "lint": "eslint . --ext .ts",
         "rebuild": "npm run clean && npm run build",
         "watch": "tsc -b ./tsconfig.packages.json -w",
-        "test": "NODE_ENV=test jest"
+        "test": "npm run test --ws --if-present"
     },
     "workspaces": [
         "packages/*"
