@@ -107,10 +107,10 @@ export class StackTraceConverter {
     private generateLegacyFirefoxFrame(functionName: string, sourceCodeParts: string[]): BacktraceStackFrame {
         const lineNumberStart = sourceCodeParts.length - 1;
         const lineNumber = parseInt(sourceCodeParts[lineNumberStart]);
-        const sourceCode = sourceCodeParts.slice(0, lineNumberStart).join(':');
+        const library = sourceCodeParts.slice(0, lineNumberStart).join(':');
         return {
+            library,
             funcName: functionName,
-            library: sourceCode,
             line: isNaN(lineNumber) ? undefined : lineNumber,
         };
     }
@@ -119,11 +119,11 @@ export class StackTraceConverter {
         const lineNumberStart = sourceCodeParts.length - 2;
         const lineNumber = parseInt(sourceCodeParts[lineNumberStart]);
         const columnName = parseInt(sourceCodeParts[lineNumberStart + 1]);
-        const sourceCode = sourceCodeParts.slice(0, lineNumberStart).join(':');
+        const library = sourceCodeParts.slice(0, lineNumberStart).join(':');
 
         return {
+            library,
             funcName: functionName,
-            library: sourceCode,
             column: columnName,
             line: lineNumber,
         };
