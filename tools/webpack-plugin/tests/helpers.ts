@@ -51,6 +51,10 @@ export function expectSuccess(stats?: webpack.Stats) {
 export async function expectSourceSnippet(content: string) {
     expect(content).toContain('console.log("Injected');
 }
+
+export async function expectSourceComment(content: string) {
+    expect(content).toMatch(/^\/\/# x-backtrace-debugId=[a-fA-F0-9-]+$/m);
+}
 }
 
 export async function getFiles(dir: string, test?: RegExp) {
