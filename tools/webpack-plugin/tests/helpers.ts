@@ -55,6 +55,9 @@ export async function expectSourceSnippet(content: string) {
 export async function expectSourceComment(content: string) {
     expect(content).toMatch(/^\/\/# x-backtrace-debugId=[a-fA-F0-9-]+$/m);
 }
+
+export async function expectSourceMapSnippet(content: string) {
+    expect(content).toMatch(/"x-backtrace-debugId":\s*"[a-fA-F0-9-]+"/);
 }
 
 export async function getFiles(dir: string, test?: RegExp) {

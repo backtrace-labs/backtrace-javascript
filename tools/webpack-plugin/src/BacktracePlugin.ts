@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { Compilation, Compiler, WebpackPluginInstance } from 'webpack';
-import { ConcatSource } from 'webpack-sources';
+import { ConcatSource, SourceMapSource } from 'webpack-sources';
 
 export class BacktracePlugin implements WebpackPluginInstance {
     public apply(compiler: Compiler) {
@@ -30,6 +30,34 @@ export class BacktracePlugin implements WebpackPluginInstance {
                             ) as never,
                         );
                     }
+                },
+            );
+
+            compilation.hooks.processAssets.tap(
+                {
+                    name: BacktracePlugin.name,
+                    stage: Compilation.PROCESS_ASSETS_STAGE_DEV_TOOLING,
+                },
+                (assets) => {
+                    for (const key in assets) {
+                        const asset = compilation.getAsset(key);
+                        if (!asset) {
+                            continue;
+                        }
+
+                        const debugId = assetDebugIds.get(key);
+                        if (!debugId) {
+                            continue;
+                        }
+
+                        if (asset.source instanceof SourceMapSource) {
+                            const { source, map } = asset.source.sourceAndMap();
+                            (map as unknown as Record<string, string>)['x-backtrace-debugId'] = debugId;
+                            const newSourceMap = new SourceMapSource(source as never, 'x', map as never);
+                            compilation.updateAsset(key, newSourceMap as never);
+                        }
+                    }
+                    return;
                 },
             );
 

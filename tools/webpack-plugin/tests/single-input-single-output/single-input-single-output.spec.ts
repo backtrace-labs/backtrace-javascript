@@ -1,6 +1,15 @@
 import fs from 'fs';
 import path from 'path';
-import { asyncWebpack, expectSourceSnippet, expectSuccess, getBaseConfig, getFiles, removeDir } from '../helpers';
+import {
+    asyncWebpack,
+    expectSourceComment,
+    expectSourceMapSnippet,
+    expectSourceSnippet,
+    expectSuccess,
+    getBaseConfig,
+    getFiles,
+    removeDir,
+} from '../helpers';
 
 describe('Single-input-single-output', () => {
     const outputDir = path.join(__dirname, './output');
@@ -56,4 +65,29 @@ describe('Single-input-single-output', () => {
             await expectSourceComment(content);
         }
     });
+
+    it('should inject debug ID into emitted sourcemap files', async () => {
+        const config = getBaseConfig(
+            {
+                entry: path.join(__dirname, './input/index.ts'),
+                devtool: 'source-map',
+                output: {
+                    path: outputDir,
+                    filename: '[name].js',
+                },
+            },
+            path.join(__dirname, './tsconfig.test.json'),
+        );
+
+        const result = await asyncWebpack(config);
+        expectSuccess(result);
+
+        const mapFiles = await getFiles(outputDir, /.js.map$/);
+        expect(mapFiles.length).toBeGreaterThan(0);
+
+        for (const file of mapFiles) {
+            const content = await fs.promises.readFile(file, 'utf8');
+            await expectSourceMapSnippet(content);
+        }
+    }, 30000);
 });
