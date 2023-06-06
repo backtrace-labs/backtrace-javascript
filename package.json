@@ -15,7 +15,8 @@
         "test": "npm run test --ws --if-present"
     },
     "workspaces": [
-        "packages/*"
+        "packages/*",
+        "tools/*"
     ],
     "repository": {
         "type": "git",
