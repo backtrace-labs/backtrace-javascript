@@ -56,7 +56,7 @@ export function asyncWebpack(config: webpack.Configuration): Promise<webpack.Sta
     });
 }
 
-export function expectSuccess(stats?: webpack.Stats) {
+export function expectSuccess(stats?: webpack.Stats): asserts stats is webpack.Stats {
     expect(stats).toBeDefined();
     if (stats?.hasErrors()) {
         throw new Error(stats.toString());
