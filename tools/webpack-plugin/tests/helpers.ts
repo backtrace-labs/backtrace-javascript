@@ -2,13 +2,20 @@ import fs from 'fs';
 import path from 'path';
 import webpack from 'webpack';
 import { BacktracePlugin } from '../src';
+import { BacktracePluginOptions } from '../src/BacktracePlugin';
+import { TestDebugIdGenerator } from './__mocks__/TestDebugIdGenerator';
+
+export interface BaseConfigOptions {
+    tsconfigPath?: string;
+    pluginOptions?: BacktracePluginOptions;
+}
 
 /**
  * Returns a config with base configuration.
  *
  * Input and output should be provided in the arguments.
  */
-export function getBaseConfig(config: webpack.Configuration, tsconfigPath?: string): webpack.Configuration {
+export function getBaseConfig(config: webpack.Configuration, options?: BaseConfigOptions): webpack.Configuration {
     return {
         resolve: {
             extensions: ['.ts', '.js'],
@@ -19,14 +26,22 @@ export function getBaseConfig(config: webpack.Configuration, tsconfigPath?: stri
                     test: /.ts$/,
                     loader: 'ts-loader',
                     options: {
-                        configFile: tsconfigPath,
+                        configFile: options?.tsconfigPath,
                     },
                 },
             ],
         },
-        plugins: [new BacktracePlugin()],
+        plugins: [new BacktracePlugin(options?.pluginOptions ?? { debugIdGenerator: new TestDebugIdGenerator() })],
         ...config,
     };
+}
+
+export function webpackModeTest(callback: (testCase: webpack.Configuration['mode']) => void) {
+    const cases: webpack.Configuration['mode'][] = [undefined, 'none', 'development', 'production'];
+
+    for (const testCase of cases) {
+        describe(`Webpack mode: ${testCase}`, () => callback(testCase));
+    }
 }
 
 export function asyncWebpack(config: webpack.Configuration): Promise<webpack.Stats | undefined> {
@@ -49,15 +64,15 @@ export function expectSuccess(stats?: webpack.Stats) {
 }
 
 export async function expectSourceSnippet(content: string) {
-    expect(content).toContain('console.log("Injected');
+    TestDebugIdGenerator.testForSourceSnippet(content);
 }
 
 export async function expectSourceComment(content: string) {
-    expect(content).toMatch(/^\/\/# x-backtrace-debugId=[a-fA-F0-9-]+$/m);
+    TestDebugIdGenerator.testForSourceComment(content);
 }
 
 export async function expectSourceMapSnippet(content: string) {
-    expect(content).toMatch(/"x-backtrace-debugId":\s*"[a-fA-F0-9-]+"/);
+    TestDebugIdGenerator.testForSourceMapKey(content);
 }
 
 export async function getFiles(dir: string, test?: RegExp) {
