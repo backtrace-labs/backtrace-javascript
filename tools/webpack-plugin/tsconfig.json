@@ -4,5 +4,10 @@
         "rootDir": "./src",
         "outDir": "./lib"
     },
-    "exclude": ["node_modules", "tests", "lib"]
+    "exclude": ["node_modules", "tests", "lib"],
+    "references": [
+        {
+            "path": "../sourcemap-tools/tsconfig.json"
+        }
+    ]
 }

@@ -1,10 +1,18 @@
+import { DebugIdGenerator } from '@backtrace/sourcemap-tools';
 import crypto from 'crypto';
 import { Compilation, Compiler, WebpackPluginInstance } from 'webpack';
 import { ConcatSource, SourceMapSource } from 'webpack-sources';
 
+export interface BacktracePluginOptions {
+    debugIdGenerator?: DebugIdGenerator;
+}
+
 export class BacktracePlugin implements WebpackPluginInstance {
+    constructor(public readonly options?: BacktracePluginOptions) {}
+
     public apply(compiler: Compiler) {
         const assetDebugIds = new Map<string, string>();
+        const debugIdGenerator = this.options?.debugIdGenerator ?? new DebugIdGenerator();
 
         compiler.hooks.thisCompilation.tap(BacktracePlugin.name, (compilation) => {
             compilation.hooks.processAssets.tap(
@@ -22,13 +30,8 @@ export class BacktracePlugin implements WebpackPluginInstance {
                         const debugId = crypto.randomUUID();
                         assetDebugIds.set(key, debugId);
 
-                        compilation.updateAsset(
-                            key,
-                            new ConcatSource(
-                                asset.source as never,
-                                `!function(){console.log("Injected ${debugId}")}()`,
-                            ) as never,
-                        );
+                        const sourceSnippet = debugIdGenerator.generateSourceSnippet(debugId);
+                        compilation.updateAsset(key, new ConcatSource(asset.source as never, sourceSnippet) as never);
                     }
                 },
             );
@@ -52,7 +55,7 @@ export class BacktracePlugin implements WebpackPluginInstance {
 
                         if (asset.source instanceof SourceMapSource) {
                             const { source, map } = asset.source.sourceAndMap();
-                            (map as unknown as Record<string, string>)['x-backtrace-debugId'] = debugId;
+                            debugIdGenerator.addSourceMapKey(map, debugId);
                             const newSourceMap = new SourceMapSource(source as never, 'x', map as never);
                             compilation.updateAsset(key, newSourceMap as never);
                         }
@@ -78,10 +81,8 @@ export class BacktracePlugin implements WebpackPluginInstance {
                             continue;
                         }
 
-                        compilation.updateAsset(
-                            key,
-                            new ConcatSource(asset.source as never, `\n//# x-backtrace-debugId=${debugId}`) as never,
-                        );
+                        const comment = debugIdGenerator.generateSourceComment(debugId);
+                        compilation.updateAsset(key, new ConcatSource(asset.source as never, `\n${comment}`) as never);
                     }
                 },
             );
