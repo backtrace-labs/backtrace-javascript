@@ -1,9 +1,12 @@
-import { DebugIdGenerator } from '@backtrace/sourcemap-tools';
+import { ContentAppender, DebugIdGenerator } from '@backtrace/sourcemap-tools';
 import type { Source } from 'webpack-sources';
 import { ConcatSource, RawSource, SourceMapSource } from 'webpack-sources';
 
 export class BacktraceWebpackSourceGenerator {
-    constructor(private readonly _debugIdGenerator: DebugIdGenerator) {}
+    constructor(
+        private readonly _debugIdGenerator: DebugIdGenerator,
+        private readonly _contentAppender: ContentAppender,
+    ) {}
 
     public addDebugIdToSource(source: Source, debugId: string): ConcatSource {
         const sourceSnippet = this._debugIdGenerator.generateSourceSnippet(debugId);
@@ -30,12 +33,7 @@ export class BacktraceWebpackSourceGenerator {
     public addDebugIdToRawSourceMap(source: Source, debugId: string): RawSource {
         let sourceMapSource = (source.source() as Buffer).toString('utf8');
         const debugSourceMapObj = this._debugIdGenerator.addSourceMapKey({}, debugId);
-        for (const [key, value] of Object.entries(debugSourceMapObj)) {
-            // Replace closing bracket with additional key-values
-            // Keep the matched whitespaces at the end
-            sourceMapSource = sourceMapSource.replace(/}(\s*)$/, `,"${key}":${JSON.stringify(value)}}$1`);
-        }
-
+        sourceMapSource = this._contentAppender.appendToJSON(sourceMapSource, debugSourceMapObj);
         return new RawSource(sourceMapSource);
     }
 }

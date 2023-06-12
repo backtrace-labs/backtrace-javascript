@@ -1,4 +1,4 @@
-import { DebugIdGenerator } from '@backtrace/sourcemap-tools';
+import { ContentAppender, DebugIdGenerator } from '@backtrace/sourcemap-tools';
 import { ConcatSource, RawSource, SourceMapSource } from 'webpack-sources';
 import { BacktraceWebpackSourceGenerator } from '../../src/BacktraceWebpackSourceGenerator';
 
@@ -21,10 +21,11 @@ describe('BacktraceWebpackSourceGenerator', () => {
 
             const source = new RawSource('abc');
             const debugIdGenerator = new DebugIdGenerator();
+            const contentAppender = new ContentAppender();
 
             jest.spyOn(debugIdGenerator, 'generateSourceSnippet').mockReturnValue(expected);
 
-            const sourceGenerator = new BacktraceWebpackSourceGenerator(debugIdGenerator);
+            const sourceGenerator = new BacktraceWebpackSourceGenerator(debugIdGenerator, contentAppender);
             const actualSource = sourceGenerator.addDebugIdToSource(source, 'x');
             const actual = actualSource.buffer().toString('utf-8');
 
@@ -37,10 +38,11 @@ describe('BacktraceWebpackSourceGenerator', () => {
 
             const source = new RawSource('abc');
             const debugIdGenerator = new DebugIdGenerator();
+            const contentAppender = new ContentAppender();
 
             const spy = jest.spyOn(debugIdGenerator, 'generateSourceSnippet').mockReturnValue(expected);
 
-            const sourceGenerator = new BacktraceWebpackSourceGenerator(debugIdGenerator);
+            const sourceGenerator = new BacktraceWebpackSourceGenerator(debugIdGenerator, contentAppender);
             sourceGenerator.addDebugIdToSource(source, expected);
 
             expect(spy).toBeCalledWith(expected);
@@ -49,8 +51,9 @@ describe('BacktraceWebpackSourceGenerator', () => {
         it('should return an instance of ConcatSource', () => {
             const source = new RawSource('abc');
             const debugIdGenerator = new DebugIdGenerator();
+            const contentAppender = new ContentAppender();
 
-            const sourceGenerator = new BacktraceWebpackSourceGenerator(debugIdGenerator);
+            const sourceGenerator = new BacktraceWebpackSourceGenerator(debugIdGenerator, contentAppender);
             const actual = sourceGenerator.addDebugIdToSource(source, 'def');
 
             expect(actual).toBeInstanceOf(ConcatSource);
@@ -60,8 +63,9 @@ describe('BacktraceWebpackSourceGenerator', () => {
             const expected = 'abc';
             const source = new RawSource(expected);
             const debugIdGenerator = new DebugIdGenerator();
+            const contentAppender = new ContentAppender();
 
-            const sourceGenerator = new BacktraceWebpackSourceGenerator(debugIdGenerator);
+            const sourceGenerator = new BacktraceWebpackSourceGenerator(debugIdGenerator, contentAppender);
             sourceGenerator.addDebugIdToSource(source, 'def');
 
             expect(source.buffer().toString('utf-8')).toEqual(expected);
@@ -74,10 +78,11 @@ describe('BacktraceWebpackSourceGenerator', () => {
 
             const source = new RawSource('abc');
             const debugIdGenerator = new DebugIdGenerator();
+            const contentAppender = new ContentAppender();
 
             jest.spyOn(debugIdGenerator, 'generateSourceComment').mockReturnValue(expected);
 
-            const sourceGenerator = new BacktraceWebpackSourceGenerator(debugIdGenerator);
+            const sourceGenerator = new BacktraceWebpackSourceGenerator(debugIdGenerator, contentAppender);
             const actualSource = sourceGenerator.addDebugIdCommentToSource(source, 'x');
             const actual = actualSource.buffer().toString('utf-8');
 
@@ -90,10 +95,11 @@ describe('BacktraceWebpackSourceGenerator', () => {
 
             const source = new RawSource('abc');
             const debugIdGenerator = new DebugIdGenerator();
+            const contentAppender = new ContentAppender();
 
             const spy = jest.spyOn(debugIdGenerator, 'generateSourceComment').mockReturnValue(expected);
 
-            const sourceGenerator = new BacktraceWebpackSourceGenerator(debugIdGenerator);
+            const sourceGenerator = new BacktraceWebpackSourceGenerator(debugIdGenerator, contentAppender);
             sourceGenerator.addDebugIdCommentToSource(source, expected);
 
             expect(spy).toBeCalledWith(expected);
@@ -102,8 +108,9 @@ describe('BacktraceWebpackSourceGenerator', () => {
         it('should return an instance of ConcatSource', () => {
             const source = new RawSource('abc');
             const debugIdGenerator = new DebugIdGenerator();
+            const contentAppender = new ContentAppender();
 
-            const sourceGenerator = new BacktraceWebpackSourceGenerator(debugIdGenerator);
+            const sourceGenerator = new BacktraceWebpackSourceGenerator(debugIdGenerator, contentAppender);
             const actual = sourceGenerator.addDebugIdCommentToSource(source, 'def');
 
             expect(actual).toBeInstanceOf(ConcatSource);
@@ -113,8 +120,9 @@ describe('BacktraceWebpackSourceGenerator', () => {
             const expected = 'abc';
             const source = new RawSource(expected);
             const debugIdGenerator = new DebugIdGenerator();
+            const contentAppender = new ContentAppender();
 
-            const sourceGenerator = new BacktraceWebpackSourceGenerator(debugIdGenerator);
+            const sourceGenerator = new BacktraceWebpackSourceGenerator(debugIdGenerator, contentAppender);
             sourceGenerator.addDebugIdCommentToSource(source, 'def');
 
             expect(source.buffer().toString('utf-8')).toEqual(expected);
@@ -126,16 +134,17 @@ describe('BacktraceWebpackSourceGenerator', () => {
             const sourceMap = createTestSourceMap();
             const expected = {
                 ...sourceMap,
-                newKey1: 123,
+                debugId: '123',
                 newKey2: 456,
             };
 
             const source = new SourceMapSource('abc', 'x', sourceMap);
             const debugIdGenerator = new DebugIdGenerator();
+            const contentAppender = new ContentAppender();
 
             jest.spyOn(debugIdGenerator, 'addSourceMapKey').mockReturnValue(expected);
 
-            const sourceGenerator = new BacktraceWebpackSourceGenerator(debugIdGenerator);
+            const sourceGenerator = new BacktraceWebpackSourceGenerator(debugIdGenerator, contentAppender);
             const actualSourceMapSource = sourceGenerator.addDebugIdToSourceMap(source, 'x');
 
             const { map: actualMap } = actualSourceMapSource.sourceAndMap();
@@ -147,10 +156,13 @@ describe('BacktraceWebpackSourceGenerator', () => {
 
             const source = new SourceMapSource('abc', 'x', expected);
             const debugIdGenerator = new DebugIdGenerator();
+            const contentAppender = new ContentAppender();
 
-            const spy = jest.spyOn(debugIdGenerator, 'addSourceMapKey').mockReturnValue(createTestSourceMap());
+            const spy = jest
+                .spyOn(debugIdGenerator, 'addSourceMapKey')
+                .mockReturnValue({ ...createTestSourceMap(), debugId: '123' });
 
-            const sourceGenerator = new BacktraceWebpackSourceGenerator(debugIdGenerator);
+            const sourceGenerator = new BacktraceWebpackSourceGenerator(debugIdGenerator, contentAppender);
             sourceGenerator.addDebugIdToSourceMap(source, 'def');
 
             expect(spy).toBeCalledWith(expected, expect.anything());
@@ -161,10 +173,13 @@ describe('BacktraceWebpackSourceGenerator', () => {
 
             const source = new SourceMapSource('abc', 'x', createTestSourceMap());
             const debugIdGenerator = new DebugIdGenerator();
+            const contentAppender = new ContentAppender();
 
-            const spy = jest.spyOn(debugIdGenerator, 'addSourceMapKey').mockReturnValue(createTestSourceMap());
+            const spy = jest
+                .spyOn(debugIdGenerator, 'addSourceMapKey')
+                .mockReturnValue({ ...createTestSourceMap(), debugId: '123' });
 
-            const sourceGenerator = new BacktraceWebpackSourceGenerator(debugIdGenerator);
+            const sourceGenerator = new BacktraceWebpackSourceGenerator(debugIdGenerator, contentAppender);
             sourceGenerator.addDebugIdToSourceMap(source, expected);
 
             expect(spy).toBeCalledWith(expect.anything(), expected);
@@ -173,8 +188,9 @@ describe('BacktraceWebpackSourceGenerator', () => {
         it('should return an instance of SourceMapSource', () => {
             const source = new SourceMapSource('abc', 'x', createTestSourceMap());
             const debugIdGenerator = new DebugIdGenerator();
+            const contentAppender = new ContentAppender();
 
-            const sourceGenerator = new BacktraceWebpackSourceGenerator(debugIdGenerator);
+            const sourceGenerator = new BacktraceWebpackSourceGenerator(debugIdGenerator, contentAppender);
             const actual = sourceGenerator.addDebugIdToSourceMap(source, 'def');
 
             expect(actual).toBeInstanceOf(SourceMapSource);
@@ -184,8 +200,9 @@ describe('BacktraceWebpackSourceGenerator', () => {
             const expected = 'abc';
             const source = new SourceMapSource(expected, 'x', createTestSourceMap());
             const debugIdGenerator = new DebugIdGenerator();
+            const contentAppender = new ContentAppender();
 
-            const sourceGenerator = new BacktraceWebpackSourceGenerator(debugIdGenerator);
+            const sourceGenerator = new BacktraceWebpackSourceGenerator(debugIdGenerator, contentAppender);
             sourceGenerator.addDebugIdCommentToSource(source, 'def');
 
             const { source: actualSourceMap } = source.sourceAndMap();
@@ -196,16 +213,17 @@ describe('BacktraceWebpackSourceGenerator', () => {
             const expected = createTestSourceMap();
             const modifiedSourceMap = {
                 ...expected,
-                newKey1: 123,
+                debugId: '123',
                 newKey2: 456,
             };
 
             const source = new SourceMapSource('abc', 'x', expected);
             const debugIdGenerator = new DebugIdGenerator();
+            const contentAppender = new ContentAppender();
 
             jest.spyOn(debugIdGenerator, 'addSourceMapKey').mockReturnValue(modifiedSourceMap);
 
-            const sourceGenerator = new BacktraceWebpackSourceGenerator(debugIdGenerator);
+            const sourceGenerator = new BacktraceWebpackSourceGenerator(debugIdGenerator, contentAppender);
             sourceGenerator.addDebugIdToSourceMap(source, 'x');
 
             const { map: actualMap } = source.sourceAndMap();
@@ -218,16 +236,17 @@ describe('BacktraceWebpackSourceGenerator', () => {
             const sourceMap = createTestSourceMap();
             const expected = {
                 ...sourceMap,
-                newKey1: 123,
+                debugId: '123',
                 newKey2: 456,
             };
 
             const source = new RawSource(JSON.stringify(sourceMap));
             const debugIdGenerator = new DebugIdGenerator();
+            const contentAppender = new ContentAppender();
 
             jest.spyOn(debugIdGenerator, 'addSourceMapKey').mockReturnValue(expected);
 
-            const sourceGenerator = new BacktraceWebpackSourceGenerator(debugIdGenerator);
+            const sourceGenerator = new BacktraceWebpackSourceGenerator(debugIdGenerator, contentAppender);
             const actualSource = sourceGenerator.addDebugIdToRawSourceMap(source, 'x');
 
             const actual = JSON.parse(actualSource.buffer().toString('utf-8'));
@@ -239,10 +258,13 @@ describe('BacktraceWebpackSourceGenerator', () => {
 
             const source = new RawSource(JSON.stringify(createTestSourceMap()));
             const debugIdGenerator = new DebugIdGenerator();
+            const contentAppender = new ContentAppender();
 
-            const spy = jest.spyOn(debugIdGenerator, 'addSourceMapKey').mockReturnValue(createTestSourceMap());
+            const spy = jest
+                .spyOn(debugIdGenerator, 'addSourceMapKey')
+                .mockReturnValue({ ...createTestSourceMap(), debugId: '123' });
 
-            const sourceGenerator = new BacktraceWebpackSourceGenerator(debugIdGenerator);
+            const sourceGenerator = new BacktraceWebpackSourceGenerator(debugIdGenerator, contentAppender);
             sourceGenerator.addDebugIdToRawSourceMap(source, expected);
 
             expect(spy).toBeCalledWith(expect.anything(), expected);
@@ -251,8 +273,9 @@ describe('BacktraceWebpackSourceGenerator', () => {
         it('should return an instance of RawSource', () => {
             const source = new RawSource(JSON.stringify(createTestSourceMap()));
             const debugIdGenerator = new DebugIdGenerator();
+            const contentAppender = new ContentAppender();
 
-            const sourceGenerator = new BacktraceWebpackSourceGenerator(debugIdGenerator);
+            const sourceGenerator = new BacktraceWebpackSourceGenerator(debugIdGenerator, contentAppender);
             const actual = sourceGenerator.addDebugIdToRawSourceMap(source, 'def');
 
             expect(actual).toBeInstanceOf(RawSource);
@@ -262,8 +285,9 @@ describe('BacktraceWebpackSourceGenerator', () => {
             const expected = JSON.stringify(createTestSourceMap());
             const source = new RawSource(expected);
             const debugIdGenerator = new DebugIdGenerator();
+            const contentAppender = new ContentAppender();
 
-            const sourceGenerator = new BacktraceWebpackSourceGenerator(debugIdGenerator);
+            const sourceGenerator = new BacktraceWebpackSourceGenerator(debugIdGenerator, contentAppender);
             sourceGenerator.addDebugIdCommentToSource(source, 'def');
 
             const { source: actualSourceMap } = source.sourceAndMap();
