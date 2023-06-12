@@ -1,12 +1,14 @@
 import { JavaScriptEngine } from '@backtrace/sdk-core/src/model/data/JavaScriptEngine';
 
 export function getEngine(): JavaScriptEngine {
-    if (navigator.vendor.toLowerCase().includes('apple')) {
-        return 'JavaScriptCore';
+    const normalizedUserAgent = navigator.userAgent.toLowerCase();
+
+    if (normalizedUserAgent.includes('firefox')) {
+        return 'SpiderMonkey';
     }
 
-    if (navigator.userAgent.toLowerCase().includes('firefox')) {
-        return 'SpiderMonkey';
+    if (normalizedUserAgent.includes('safari') && !normalizedUserAgent.includes('chrome')) {
+        return 'JavaScriptCore';
     }
 
     return 'v8';
