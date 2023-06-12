@@ -11,8 +11,10 @@ export class DebugIdGenerator {
         return `//# ${SOURCE_DEBUG_ID_COMMENT}=${uuid}`;
     }
 
-    public addSourceMapKey(sourceMap: object, uuid: string) {
-        (sourceMap as Record<string, string>)[SOURCEMAP_DEBUG_ID_KEY] = uuid;
-        return sourceMap;
+    public addSourceMapKey<T extends object>(sourceMap: T, uuid: string): T & { [SOURCEMAP_DEBUG_ID_KEY]: string } {
+        return {
+            ...sourceMap,
+            [SOURCEMAP_DEBUG_ID_KEY]: uuid,
+        };
     }
 }

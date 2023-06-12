@@ -147,31 +147,38 @@ describe('DebugIdGenerator', () => {
 
     describe('source map', () => {
         it('should add key to object', () => {
-            const obj = {};
-
             const debugIdGenerator = new DebugIdGenerator();
-            debugIdGenerator.addSourceMapKey(obj, crypto.randomUUID());
+            const actual = debugIdGenerator.addSourceMapKey({}, crypto.randomUUID());
 
-            expect(Object.keys(obj)).toContain(SOURCEMAP_DEBUG_ID_KEY);
+            expect(Object.keys(actual)).toContain(SOURCEMAP_DEBUG_ID_KEY);
         });
 
         it('should add provided debug ID to object', () => {
-            const obj = {};
             const expected = crypto.randomUUID();
 
             const debugIdGenerator = new DebugIdGenerator();
-            debugIdGenerator.addSourceMapKey(obj, crypto.randomUUID());
+            const actual = debugIdGenerator.addSourceMapKey({}, expected);
 
-            expect(obj[SOURCEMAP_DEBUG_ID_KEY as never]).toEqual(expected);
+            expect(actual[SOURCEMAP_DEBUG_ID_KEY as never]).toEqual(expected);
         });
 
-        it('should return the same object', () => {
+        it('should return a different object', () => {
             const expected = {};
 
             const debugIdGenerator = new DebugIdGenerator();
             const actual = debugIdGenerator.addSourceMapKey(expected, crypto.randomUUID());
 
-            expect(actual).toBe(expected);
+            expect(actual).not.toBe(expected);
+        });
+
+        it('should not modify the original object', () => {
+            const expected = {};
+            const actual = {};
+
+            const debugIdGenerator = new DebugIdGenerator();
+            debugIdGenerator.addSourceMapKey(actual, crypto.randomUUID());
+
+            expect(actual).toEqual(expected);
         });
     });
 });
