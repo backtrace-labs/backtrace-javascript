@@ -1,9 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import webpack from 'webpack';
-import { BacktracePlugin } from '../src';
-import { BacktracePluginOptions } from '../src/BacktracePlugin';
-import { TestDebugIdGenerator } from './__mocks__/TestDebugIdGenerator';
+import { BacktracePlugin } from '../../src';
+import { BacktracePluginOptions } from '../../src/BacktracePlugin';
+import { TestDebugIdGenerator } from '../__mocks__/TestDebugIdGenerator';
 
 export interface BaseConfigOptions {
     tsconfigPath?: string;
