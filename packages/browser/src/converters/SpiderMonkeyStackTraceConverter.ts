@@ -2,14 +2,16 @@ import { BacktraceReport, BacktraceStackTraceConverter } from '@backtrace/sdk-co
 import { BacktraceStackFrame } from '@backtrace/sdk-core/src/model/data/BacktraceStackTrace';
 import { JavaScriptEngine } from '@backtrace/sdk-core/src/model/data/JavaScriptEngine';
 
-export class SpiderMonkeyConverter implements BacktraceStackTraceConverter {
+export class SpiderMonkeyStackTraceConverter implements BacktraceStackTraceConverter {
     public readonly UNKNOWN_FRAME = 'unknown';
     public readonly ANONYMOUS_FUNCTION = 'anonymous';
     private readonly ANONYMOUS_FUNCTIONS = ['()', '(null)', ''];
+
     get engine(): JavaScriptEngine {
         return 'SpiderMonkey';
     }
-    convert(report: BacktraceReport): BacktraceStackFrame[] {
+
+    public convert(report: BacktraceReport): BacktraceStackFrame[] {
         const result: BacktraceStackFrame[] = [];
         if (!report.stackTrace) {
             return result;

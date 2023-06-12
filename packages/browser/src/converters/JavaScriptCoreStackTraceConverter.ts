@@ -2,13 +2,15 @@ import { BacktraceReport, BacktraceStackTraceConverter } from '@backtrace/sdk-co
 import { BacktraceStackFrame } from '@backtrace/sdk-core/src/model/data/BacktraceStackTrace';
 import { JavaScriptEngine } from '@backtrace/sdk-core/src/model/data/JavaScriptEngine';
 
-export class JavaScriptCoreConverter implements BacktraceStackTraceConverter {
+export class JavaScriptCoreStackTraceConverter implements BacktraceStackTraceConverter {
     public readonly UNKNOWN_FRAME = 'unknown';
     public readonly ANONYMOUS_FUNCTION = 'anonymous';
+
     get engine(): JavaScriptEngine {
         return 'JavaScriptCore';
     }
-    convert(report: BacktraceReport): BacktraceStackFrame[] {
+
+    public convert(report: BacktraceReport): BacktraceStackFrame[] {
         const result: BacktraceStackFrame[] = [];
         if (!report.stackTrace) {
             return result;
