@@ -1,14 +1,13 @@
 import { BacktraceReport } from '@backtrace/sdk-core';
-
-import { SpiderMonkeyConverter } from '../../../src/converters/SpiderMonkeyConverter';
-import { spiderMonkeyStackTraceTests } from './spiderMonkeyStackTraceTestCases';
+import { JavaScriptCoreStackTraceConverter } from '../../../src/converters/JavaScriptCoreStackTraceConverter';
+import { javaScriptCoreStackTraceTests } from './javaScriptCoreStackTraceTestCases';
 
 describe('Stack trace converter tests', () => {
-    describe('Spider monkey', () => {
-        const converter = new SpiderMonkeyConverter();
+    describe('JavaScriptCore', () => {
+        const converter = new JavaScriptCoreStackTraceConverter();
 
         describe('Stack trace generator', () => {
-            for (const stackTraceTest of spiderMonkeyStackTraceTests) {
+            for (const stackTraceTest of javaScriptCoreStackTraceTests) {
                 it(`Generator: ${stackTraceTest.name}`, () => {
                     const convertedStackFrames = converter.convert(stackTraceTest.test as BacktraceReport);
 
