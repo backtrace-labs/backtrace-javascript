@@ -1,7 +1,10 @@
 import { BacktraceAttachment } from './model/report/BacktraceAttachment';
 import { BacktraceReport } from './model/report/BacktraceReport';
+import { BacktraceStackTraceConverter } from './modules/converter/BacktraceStackTraceConverter';
+import { V8StackTraceConverter } from './modules/converter/V8StackTraceConverter';
 
 export class BacktraceCoreClient {
+    constructor(private readonly _stackTraceConverter: BacktraceStackTraceConverter = new V8StackTraceConverter()) {}
     /**
      * Asynchronously sends error data to Backtrace.
      * @param error Backtrace Report or error or message
@@ -41,7 +44,7 @@ export class BacktraceCoreClient {
                   skipFrames: this.skipFrameOnMessage(data),
               });
 
-        console.log(report.message);
+        console.log(this._stackTraceConverter.convert(report));
     }
 
     private skipFrameOnMessage(data: Error | string): number {

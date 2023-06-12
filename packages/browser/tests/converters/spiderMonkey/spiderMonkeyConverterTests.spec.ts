@@ -1,13 +1,14 @@
-import { BacktraceReport } from '../../src';
-import { V8StackTraceConverter } from '../../src/modules/converter/V8StackTraceConverter';
-import { v8StackTraceTests } from './v8stackTraceTestCases';
+import { BacktraceReport } from '@backtrace/sdk-core';
+
+import { SpiderMonkeyConverter } from '../../../src/converters/SpiderMonkeyConverter';
+import { spiderMonkeyStackTraceTests } from './spiderMonkeyStackTraceTestCases';
 
 describe('Stack trace converter tests', () => {
-    describe('v8', () => {
-        const converter = new V8StackTraceConverter();
+    describe('Spider monkey', () => {
+        const converter = new SpiderMonkeyConverter();
 
         describe('Stack trace generator', () => {
-            for (const stackTraceTest of v8StackTraceTests) {
+            for (const stackTraceTest of spiderMonkeyStackTraceTests) {
                 it(`Generator: ${stackTraceTest.name}`, () => {
                     const convertedStackFrames = converter.convert(stackTraceTest.test as BacktraceReport);
 
