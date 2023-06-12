@@ -1,1 +1,1 @@
-export type JavaScriptEngine = 'v8' | 'firefox' | 'safari';
+export type JavaScriptEngine = 'v8' | 'SpiderMonkey' | 'JavaScriptCore';
