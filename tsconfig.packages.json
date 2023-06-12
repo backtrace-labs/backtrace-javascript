@@ -6,6 +6,9 @@
         },
         {
             "path": "tools/sourcemap-tools"
+        },
+        {
+            "path": "tools/webpack-plugin"
         }
     ]
 }
