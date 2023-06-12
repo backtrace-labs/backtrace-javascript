@@ -12,7 +12,16 @@ import {
     webpackModeTest,
 } from './helpers';
 
-export function createE2ETest(configBuilder: (mode: webpack.Configuration['mode']) => webpack.Configuration) {
+interface E2ETestOptions {
+    testSourceFunction?: boolean;
+    testSourceComment?: boolean;
+    testSourceMap?: boolean;
+}
+
+export function createE2ETest(
+    configBuilder: (mode: webpack.Configuration['mode']) => webpack.Configuration,
+    opts?: E2ETestOptions,
+) {
     webpackModeTest((mode) => {
         let result: webpack.Stats;
 
@@ -27,43 +36,49 @@ export function createE2ETest(configBuilder: (mode: webpack.Configuration['mode'
             result = webpackResult;
         }, 30000);
 
-        it('should inject function into emitted source files', async () => {
-            const outputDir = result.compilation.outputOptions.path;
-            assert(outputDir);
+        if (opts?.testSourceFunction ?? true) {
+            it('should inject function into emitted source files', async () => {
+                const outputDir = result.compilation.outputOptions.path;
+                assert(outputDir);
 
-            const jsFiles = await getFiles(outputDir, /.js$/);
-            expect(jsFiles.length).toBeGreaterThan(0);
+                const jsFiles = await getFiles(outputDir, /.js$/);
+                expect(jsFiles.length).toBeGreaterThan(0);
 
-            for (const file of jsFiles) {
-                const content = await fs.promises.readFile(file, 'utf8');
-                await expectSourceSnippet(content);
-            }
-        });
+                for (const file of jsFiles) {
+                    const content = await fs.promises.readFile(file, 'utf8');
+                    await expectSourceSnippet(content);
+                }
+            });
+        }
 
-        it('should inject debug ID comment into emitted source files', async () => {
-            const outputDir = result.compilation.outputOptions.path;
-            assert(outputDir);
+        if (opts?.testSourceComment ?? true) {
+            it('should inject debug ID comment into emitted source files', async () => {
+                const outputDir = result.compilation.outputOptions.path;
+                assert(outputDir);
 
-            const jsFiles = await getFiles(outputDir, /.js$/);
-            expect(jsFiles.length).toBeGreaterThan(0);
+                const jsFiles = await getFiles(outputDir, /.js$/);
+                expect(jsFiles.length).toBeGreaterThan(0);
 
-            for (const file of jsFiles) {
-                const content = await fs.promises.readFile(file, 'utf8');
-                await expectSourceComment(content);
-            }
-        });
+                for (const file of jsFiles) {
+                    const content = await fs.promises.readFile(file, 'utf8');
+                    await expectSourceComment(content);
+                }
+            });
+        }
 
-        it('should inject debug ID into emitted sourcemap files', async () => {
-            const outputDir = result.compilation.outputOptions.path;
-            assert(outputDir);
+        if (opts?.testSourceMap ?? true) {
+            it('should inject debug ID into emitted sourcemap files', async () => {
+                const outputDir = result.compilation.outputOptions.path;
+                assert(outputDir);
 
-            const mapFiles = await getFiles(outputDir, /.js.map$/);
-            expect(mapFiles.length).toBeGreaterThan(0);
+                const mapFiles = await getFiles(outputDir, /.js.map$/);
+                expect(mapFiles.length).toBeGreaterThan(0);
 
-            for (const file of mapFiles) {
-                const content = await fs.promises.readFile(file, 'utf8');
-                await expectSourceMapSnippet(content);
-            }
-        });
+                for (const file of mapFiles) {
+                    const content = await fs.promises.readFile(file, 'utf8');
+                    await expectSourceMapSnippet(content);
+                }
+            });
+        }
     });
 }
