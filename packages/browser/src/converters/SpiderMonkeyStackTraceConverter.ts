@@ -1,10 +1,8 @@
-import { BacktraceReport, BacktraceStackTraceConverter } from '@backtrace/sdk-core';
+import { ANONYMOUS_FUNCTION, BacktraceReport, BacktraceStackTraceConverter, UNKNOWN_FRAME } from '@backtrace/sdk-core';
 import { BacktraceStackFrame } from '@backtrace/sdk-core/src/model/data/BacktraceStackTrace';
 import { JavaScriptEngine } from '@backtrace/sdk-core/src/model/data/JavaScriptEngine';
 
 export class SpiderMonkeyStackTraceConverter implements BacktraceStackTraceConverter {
-    public readonly UNKNOWN_FRAME = 'unknown';
-    public readonly ANONYMOUS_FUNCTION = 'anonymous';
     private readonly ANONYMOUS_FUNCTIONS = ['()', '(null)', ''];
 
     get engine(): JavaScriptEngine {
@@ -25,7 +23,7 @@ export class SpiderMonkeyStackTraceConverter implements BacktraceStackTraceConve
             }
             const frame = this.parseFrame(normalizedStackFrame);
             if (this.ANONYMOUS_FUNCTIONS.includes(frame.funcName)) {
-                frame.funcName = this.ANONYMOUS_FUNCTION;
+                frame.funcName = ANONYMOUS_FUNCTION;
             }
             result.push(frame);
         }
@@ -39,13 +37,13 @@ export class SpiderMonkeyStackTraceConverter implements BacktraceStackTraceConve
         if (functionSeparatorIndex === -1) {
             return {
                 funcName: stackFrame,
-                library: this.UNKNOWN_FRAME,
+                library: UNKNOWN_FRAME,
             };
         }
 
         let functionName = stackFrame.substring(0, functionSeparatorIndex);
         if (!functionName) {
-            functionName = this.ANONYMOUS_FUNCTION;
+            functionName = ANONYMOUS_FUNCTION;
         }
         let sourceCodeInformation = stackFrame.substring(functionSeparatorIndex + 1);
         if (sourceCodeInformation.indexOf('eval') !== -1) {

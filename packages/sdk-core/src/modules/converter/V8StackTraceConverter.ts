@@ -2,10 +2,9 @@ import { BacktraceStackFrame } from '../../model/data/BacktraceStackTrace';
 import { JavaScriptEngine } from '../../model/data/JavaScriptEngine';
 import { BacktraceReport } from '../../model/report/BacktraceReport';
 import { BacktraceStackTraceConverter } from './BacktraceStackTraceConverter';
+import { ANONYMOUS_FUNCTION, UNKNOWN_FRAME } from './consts/frameNamesConsts';
 
 export class V8StackTraceConverter implements BacktraceStackTraceConverter {
-    public readonly UNKNOWN_FRAME = 'unknown';
-    public readonly ANONYMOUS_FUNCTION = 'anonymous';
     get engine(): JavaScriptEngine {
         return 'v8';
     }
@@ -39,7 +38,7 @@ export class V8StackTraceConverter implements BacktraceStackTraceConverter {
         if (!stackFrame.startsWith(frameSeparator)) {
             return {
                 funcName: stackFrame,
-                library: this.UNKNOWN_FRAME,
+                library: UNKNOWN_FRAME,
             };
         }
 
@@ -49,7 +48,7 @@ export class V8StackTraceConverter implements BacktraceStackTraceConverter {
         const anonymousFunction = sourceCodeStartIndex === -1;
         if (anonymousFunction) {
             return {
-                funcName: this.ANONYMOUS_FUNCTION,
+                funcName: ANONYMOUS_FUNCTION,
                 ...this.parseSourceCodeInformation(stackFrame),
             };
         }
@@ -87,7 +86,7 @@ export class V8StackTraceConverter implements BacktraceStackTraceConverter {
         const sourceCodeEnd = evalSourceCodeInformation.indexOf(sourceCodeEndSeparatorChar);
         if (sourceCodeStart === -1 || sourceCodeEnd === -1 || sourceCodeStart > sourceCodeEnd) {
             return {
-                library: this.UNKNOWN_FRAME,
+                library: UNKNOWN_FRAME,
             };
         }
         const sourceCodeInformation = evalSourceCodeInformation.substring(

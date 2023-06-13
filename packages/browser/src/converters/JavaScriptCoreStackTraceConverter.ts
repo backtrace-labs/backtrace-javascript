@@ -1,11 +1,8 @@
-import { BacktraceReport, BacktraceStackTraceConverter } from '@backtrace/sdk-core';
+import { ANONYMOUS_FUNCTION, BacktraceReport, BacktraceStackTraceConverter, UNKNOWN_FRAME } from '@backtrace/sdk-core';
 import { BacktraceStackFrame } from '@backtrace/sdk-core/src/model/data/BacktraceStackTrace';
 import { JavaScriptEngine } from '@backtrace/sdk-core/src/model/data/JavaScriptEngine';
 
 export class JavaScriptCoreStackTraceConverter implements BacktraceStackTraceConverter {
-    public readonly UNKNOWN_FRAME = 'unknown';
-    public readonly ANONYMOUS_FUNCTION = 'anonymous';
-
     get engine(): JavaScriptEngine {
         return 'JavaScriptCore';
     }
@@ -29,10 +26,10 @@ export class JavaScriptCoreStackTraceConverter implements BacktraceStackTraceCon
     private parseFrame(stackFrame: string): BacktraceStackFrame {
         const functionSeparatorIndex = this.generateSeparatorIndex(stackFrame);
         let functionName =
-            functionSeparatorIndex === -1 ? this.ANONYMOUS_FUNCTION : stackFrame.substring(0, functionSeparatorIndex);
+            functionSeparatorIndex === -1 ? ANONYMOUS_FUNCTION : stackFrame.substring(0, functionSeparatorIndex);
 
         if (!functionName) {
-            functionName = this.ANONYMOUS_FUNCTION;
+            functionName = ANONYMOUS_FUNCTION;
         }
 
         const sourceCodeInformation = stackFrame.substring(functionSeparatorIndex + 1);
@@ -41,7 +38,7 @@ export class JavaScriptCoreStackTraceConverter implements BacktraceStackTraceCon
         if (sourceCodeParts.length === 1) {
             return {
                 funcName: functionName,
-                library: sourceCodeInformation ? sourceCodeInformation : this.UNKNOWN_FRAME,
+                library: sourceCodeInformation ? sourceCodeInformation : UNKNOWN_FRAME,
             };
         }
 

@@ -8,4 +8,4 @@ export * from './model/http/model/BacktraceSubmissionStatus';
 export * from './model/report/BacktraceAttachment';
 export * from './model/report/BacktraceErrorType';
 export * from './model/report/BacktraceReport';
-export * from './modules/converter/BacktraceStackTraceConverter';
+export * from './modules/converter';
