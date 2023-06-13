@@ -57,9 +57,11 @@ export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
             return new Promise<BacktraceReportSubmissionResult<T>>((res) => {
                 const request = httpClient.request(
                     {
+                        hostname: url.hostname,
+                        path: url.pathname,
+                        port: url.port ?? 443,
                         rejectUnauthorized: this._options.ignoreSslCertificate === true,
                         timeout: this._timeout,
-                        port: url.port ?? 443,
                         method: 'POST',
                         headers: typeof payload === 'string' ? this.JSON_HEADERS : payload.getHeaders(),
                     },
@@ -93,6 +95,9 @@ export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
                 );
 
                 request.on('error', (err: Error) => {
+                    if (ConnectionError.isConnectionError(err)) {
+                        return res(BacktraceReportSubmissionResult.OnNetworkingError(err.message));
+                    }
                     return res(BacktraceReportSubmissionResult.OnInternalServerError(err.message));
                 });
 
@@ -127,8 +132,7 @@ export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
     }
     private createFormData(json: string, attachments?: BacktraceAttachment[]) {
         const formData = new FormData();
-        const blob = new Blob([json]);
-        formData.append(this.UPLOAD_FILE_NAME, blob, `${this.UPLOAD_FILE_NAME}.json`);
+        formData.append(this.UPLOAD_FILE_NAME, json, `${this.UPLOAD_FILE_NAME}.json`);
 
         if (!attachments || attachments.length === 0) {
             return formData;
