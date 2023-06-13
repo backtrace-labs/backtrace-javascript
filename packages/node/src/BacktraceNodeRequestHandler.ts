@@ -3,6 +3,7 @@ import {
     BacktraceReportSubmissionResult,
     BacktraceRequestHandler,
     BacktraceSubmissionResponse,
+    ConnectionError,
     DEFAULT_TIMEOUT,
 } from '@backtrace/sdk-core';
 import { BacktraceData } from '@backtrace/sdk-core/src/model/data/BacktraceData';
@@ -73,6 +74,11 @@ export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
                                     res(BacktraceReportSubmissionResult.Ok(this.parseServerResponse(result)));
                                     break;
                                 }
+                                case 401:
+                                case 403: {
+                                    res(BacktraceReportSubmissionResult.OnInvalidToken());
+                                    break;
+                                }
                                 case 429: {
                                     res(BacktraceReportSubmissionResult.OnLimitReached());
                                     break;
@@ -99,10 +105,8 @@ export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
                 request.end();
             });
         } catch (err) {
-            const error = err as Error & { code: string };
-
-            if (error.code === 'ETIMEDOUT' || error.code === 'ECONNRESET' || error.code === 'ECONNABORTED') {
-                return BacktraceReportSubmissionResult.OnNetworkingError(error.message);
+            if (ConnectionError.isConnectionError(err)) {
+                return BacktraceReportSubmissionResult.OnNetworkingError(err.message);
             }
 
             const errorMessage = err instanceof Error ? err.message : (err as string);

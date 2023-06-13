@@ -26,6 +26,10 @@ export class BacktraceReportSubmissionResult<T> {
         return new BacktraceReportSubmissionResult('Server Error', message);
     }
 
+    public static OnInvalidToken<T>(): BacktraceReportSubmissionResult<T> {
+        return new BacktraceReportSubmissionResult<T>('Invalid token');
+    }
+
     public static OnUnknownError<T>(message: string): BacktraceReportSubmissionResult<T> {
         return new BacktraceReportSubmissionResult('Unknown', message);
     }

@@ -16,6 +16,10 @@ export type BacktraceSubmissionStatus =
      */
     | 'Server Error'
     /**
+     * Invalid submission token
+     */
+    | 'Invalid token'
+    /**
      * Unknown error
      */
     | 'Unknown';
