@@ -15,7 +15,7 @@ export class BacktraceWebpackSourceGenerator {
 
     public addDebugIdCommentToSource(source: Source, debugId: string): ConcatSource {
         const comment = this._debugIdGenerator.generateSourceComment(debugId);
-        return new ConcatSource(source, comment);
+        return new ConcatSource(source, '\n' + comment);
     }
 
     public addDebugIdToSourceMap(sourceMapSource: SourceMapSource, debugId: string): SourceMapSource {
