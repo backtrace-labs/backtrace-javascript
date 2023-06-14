@@ -1,4 +1,5 @@
 import { BacktraceReport } from '../../src';
+import { TimeHelper } from '../../src/common/TimeHelper';
 import { ReportConverter } from '../../src/modules/converter/ReportConverter';
 import { V8StackTraceConverter } from '../../src/modules/converter/V8StackTraceConverter';
 
@@ -27,12 +28,13 @@ describe('Data generation tests', () => {
     });
 
     it('Should generate correct timestamp', () => {
-        const timeNowInSec = Math.floor(Date.now() / 1000);
+        const timestamp = Date.now();
+        jest.spyOn(TimeHelper, 'now').mockImplementation(() => {
+            return timestamp;
+        });
         const backtraceData = reportConverter.convert(new BacktraceReport(new Error()));
-        const timeAfterConversionInSec = Math.floor(Date.now() / 1000);
 
-        expect(backtraceData.timestamp).toBeGreaterThanOrEqual(timeNowInSec);
-        expect(backtraceData.timestamp).toBeLessThanOrEqual(timeAfterConversionInSec);
+        expect(backtraceData.timestamp).toEqual(timestamp);
     });
 
     it('Should set classifiers based on the error report', () => {

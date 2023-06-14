@@ -1,3 +1,4 @@
+import { TimeHelper } from '../../common/TimeHelper';
 import { BacktraceAttachment } from './BacktraceAttachment';
 import { BacktraceErrorType } from './BacktraceErrorType';
 
@@ -28,7 +29,7 @@ export class BacktraceReport {
     /**
      * Report timestamp in sec
      */
-    public readonly timestamp = Math.floor(Date.now() / 1000);
+    public readonly timestamp = TimeHelper.now();
 
     /**
      * Sets how many top frames should be skipped.
