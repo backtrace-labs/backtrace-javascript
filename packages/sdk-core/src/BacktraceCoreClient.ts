@@ -1,6 +1,7 @@
 import { BacktraceStackTraceConverter } from '.';
 import { SdkOptions } from './builder/SdkOptions';
 import { BacktraceConfiguration } from './model/configuration/BacktraceConfiguration';
+import { RateLimitWatcher } from './model/data/RateLimitWatcher';
 import { BacktraceReportSubmission } from './model/http/BacktraceReportSubmission';
 import { BacktraceRequestHandler } from './model/http/BacktraceRequestHandler';
 import { BacktraceAttachment } from './model/report/BacktraceAttachment';
@@ -23,6 +24,7 @@ export abstract class BacktraceCoreClient {
 
     private readonly _reportConverter: ReportConverter;
     private readonly _reportSubmission: BacktraceReportSubmission;
+    private readonly _rateLimitWatcher: RateLimitWatcher;
 
     protected constructor(
         protected readonly options: BacktraceConfiguration,
@@ -32,6 +34,7 @@ export abstract class BacktraceCoreClient {
     ) {
         this._reportConverter = new ReportConverter(this._sdkOptions, stackTraceConverter);
         this._reportSubmission = new BacktraceReportSubmission(options, requestHandler);
+        this._rateLimitWatcher = new RateLimitWatcher(options.rateLimit);
     }
 
     /**
@@ -73,6 +76,9 @@ export abstract class BacktraceCoreClient {
                   skipFrames: this.skipFrameOnMessage(data),
               });
 
+        if (this._rateLimitWatcher.skipReport(report)) {
+            return;
+        }
         const backtraceData = this._reportConverter.convert(report, {}, {});
         await this._reportSubmission.send(backtraceData, attachments);
     }
