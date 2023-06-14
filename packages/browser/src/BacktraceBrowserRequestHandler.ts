@@ -51,7 +51,7 @@ export class BacktraceBrowserRequestHandler implements BacktraceRequestHandler {
 
             switch (response.status) {
                 case 200: {
-                    const result = response.json() as T;
+                    const result: T = await response.json();
                     return BacktraceReportSubmissionResult.Ok(result);
                 }
                 case 401:

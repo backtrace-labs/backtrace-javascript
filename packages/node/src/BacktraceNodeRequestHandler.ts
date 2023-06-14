@@ -73,7 +73,7 @@ export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
                         response.on('end', () => {
                             switch (response.statusCode) {
                                 case 200: {
-                                    res(BacktraceReportSubmissionResult.Ok(this.parseServerResponse(result)));
+                                    res(BacktraceReportSubmissionResult.Ok(JSON.parse(result)));
                                     break;
                                 }
                                 case 401:
@@ -121,14 +121,6 @@ export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
 
     private getHttpClient(submissionUrl: URL) {
         return submissionUrl.protocol === 'http' ? http : https;
-    }
-
-    private parseServerResponse<T>(response: string): T {
-        try {
-            return JSON.parse(response);
-        } catch {
-            return {} as T;
-        }
     }
     private createFormData(json: string, attachments?: BacktraceAttachment[]) {
         const formData = new FormData();
