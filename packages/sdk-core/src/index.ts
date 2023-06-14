@@ -1,6 +1,7 @@
 export * from './BacktraceCoreClient';
 export * from './model/configuration/BacktraceConfiguration';
 export * from './model/configuration/BacktraceDatabaseConfiguration';
+export * from './model/http';
 export * from './model/report/BacktraceAttachment';
 export * from './model/report/BacktraceErrorType';
 export * from './model/report/BacktraceReport';
