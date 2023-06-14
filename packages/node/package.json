@@ -5,6 +5,8 @@
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
     "scripts": {
+        "start": "NODE_ENV=production node ./lib/test.js",
+        "debug": "NODE_ENV=development node --inspect-brk=0.0.0.0:9229  ./lib/test.js",
         "build": "tsc",
         "clean": "tsc -b --clean && rimraf \"lib\"",
         "format": "prettier --write '**/*.ts'",
@@ -42,6 +44,7 @@
         "typescript": "^5.0.4"
     },
     "dependencies": {
-        "form-data": "^4.0.0"
+        "form-data": "^4.0.0",
+        "native-reg": "^1.1.1"
     }
 }

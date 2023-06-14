@@ -1,6 +1,7 @@
 export * from './BacktraceCoreClient';
 export * from './builder/BacktraceCoreClientBuilder';
 export * from './builder/SdkOptions';
+export * from './common/IdGenerator';
 export * from './model/configuration/BacktraceConfiguration';
 export * from './model/configuration/BacktraceDatabaseConfiguration';
 export * from './model/http';

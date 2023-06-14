@@ -1,13 +1,21 @@
 import { BacktraceAttributeProvider, BacktraceConfiguration, BacktraceCoreClientBuilder } from '@backtrace/sdk-core';
 import { BacktraceClient } from '../BacktraceClient';
 import { BacktraceNodeRequestHandler } from '../BacktraceNodeRequestHandler';
-import { MachineAttributeProvider, ProcessStatusAttributeProvider } from '../providers';
+import {
+    LinuxProcesStatusAttributeProvider,
+    MachineAttributeProvider,
+    MachineIdentitfierAttributeProvider,
+    ProcessInformationAttributeProvider,
+    ProcessStatusAttributeProvider,
+} from '../providers';
 
 export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<BacktraceClient> {
     private readonly _attributeProviders: BacktraceAttributeProvider[] = [
         new ProcessStatusAttributeProvider(),
         new MachineAttributeProvider(),
-        new ProcessStatusAttributeProvider(),
+        new ProcessInformationAttributeProvider(),
+        new LinuxProcesStatusAttributeProvider(),
+        new MachineIdentitfierAttributeProvider(),
     ];
     constructor(private readonly _options: BacktraceConfiguration) {
         super(new BacktraceNodeRequestHandler(_options));
