@@ -1,13 +1,13 @@
 import { BacktraceStackTraceConverter } from '.';
 import { SdkOptions } from './builder/SdkOptions';
 import { BacktraceConfiguration } from './model/configuration/BacktraceConfiguration';
-import { RateLimitWatcher } from './model/data/RateLimitWatcher';
 import { BacktraceReportSubmission } from './model/http/BacktraceReportSubmission';
 import { BacktraceRequestHandler } from './model/http/BacktraceRequestHandler';
 import { BacktraceAttachment } from './model/report/BacktraceAttachment';
 import { BacktraceReport } from './model/report/BacktraceReport';
 import { ReportConverter } from './modules/converter/ReportConverter';
 import { V8StackTraceConverter } from './modules/converter/V8StackTraceConverter';
+import { RateLimitWatcher } from './modules/rateLimiter/RateLimitWatcher';
 export abstract class BacktraceCoreClient {
     /**
      * Backtrace SDK name
