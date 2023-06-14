@@ -1,5 +1,4 @@
 import { TimeHelper } from '../../common/TimeHelper';
-import { BacktraceReport } from '../report/BacktraceReport';
 
 export class RateLimitWatcher {
     /**
@@ -26,20 +25,20 @@ export class RateLimitWatcher {
         this._watcherEnable = reportPerMin > 0;
     }
 
-    public skipReport(report: BacktraceReport): boolean {
+    public skipReport(): boolean {
+        const time = TimeHelper.now();
         if (!this._watcherEnable) {
             return false;
         }
-        this.clear();
+        this.clear(time);
         if (this._reportQueue.length >= this._reportPerMin) {
             return true;
         }
-        this._reportQueue.push(report.timestamp);
+        this._reportQueue.push(time);
         return false;
     }
 
-    private clear(): void {
-        const time = TimeHelper.now();
+    private clear(time: number): void {
         if (this._reportQueue.length === 0) {
             return;
         }

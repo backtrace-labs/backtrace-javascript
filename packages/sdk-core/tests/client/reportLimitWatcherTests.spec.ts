@@ -1,4 +1,3 @@
-import { BacktraceReport } from '../../src';
 import { TimeHelper } from '../../src/common/TimeHelper';
 import { RateLimitWatcher } from '../../src/model/data/RateLimitWatcher';
 describe('Report Limit Watcher tests', () => {
@@ -10,7 +9,7 @@ describe('Report Limit Watcher tests', () => {
 
         it(`Skip report method should always return false for disabled rate limiter`, () => {
             const rateLimitWatcher = new RateLimitWatcher(0);
-            expect(rateLimitWatcher.skipReport(new BacktraceReport(''))).toBeFalsy();
+            expect(rateLimitWatcher.skipReport()).toBeFalsy();
         });
 
         it('Should disable rate limit watcher on undefined options', () => {
@@ -22,27 +21,27 @@ describe('Report Limit Watcher tests', () => {
     describe('Enabled rate limit watcher', () => {
         it(`Shouldn't skip if the queue size can fit the report`, () => {
             const rateLimitWatcher = new RateLimitWatcher(1);
-            expect(rateLimitWatcher.skipReport(new BacktraceReport(''))).toBeFalsy();
+            expect(rateLimitWatcher.skipReport()).toBeFalsy();
         });
 
         it(`Should skip if the queue size extends the limit`, () => {
             const rateLimitWatcher = new RateLimitWatcher(1);
-            expect(rateLimitWatcher.skipReport(new BacktraceReport(''))).toBeFalsy();
-            expect(rateLimitWatcher.skipReport(new BacktraceReport(''))).toBeTruthy();
+            expect(rateLimitWatcher.skipReport()).toBeFalsy();
+            expect(rateLimitWatcher.skipReport()).toBeTruthy();
         });
 
-        it(`Should remove reports before checking the report`, () => {
+        it(`Should remove timestamps before checking the report`, () => {
             let timestamp = Date.now();
             jest.spyOn(TimeHelper, 'now').mockImplementation(() => {
                 return timestamp++;
             });
             const rateLimitWatcher = new RateLimitWatcher(1);
 
-            rateLimitWatcher.skipReport(new BacktraceReport(''));
+            rateLimitWatcher.skipReport();
             // skip 60 secs
             timestamp = timestamp + rateLimitWatcher.MAXIMUM_TIME_IN_QUEUE + 1;
 
-            expect(rateLimitWatcher.skipReport(new BacktraceReport(''))).toBeFalsy();
+            expect(rateLimitWatcher.skipReport()).toBeFalsy();
         });
     });
 });

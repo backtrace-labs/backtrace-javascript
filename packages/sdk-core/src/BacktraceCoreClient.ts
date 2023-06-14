@@ -70,15 +70,16 @@ export abstract class BacktraceCoreClient {
         attributes: Record<string, unknown> = {},
         attachments: BacktraceAttachment[] = [],
     ): Promise<void> {
+        if (this._rateLimitWatcher.skipReport()) {
+            return;
+        }
+
         const report = this.isReport(data)
             ? data
             : new BacktraceReport(data, attributes, attachments, {
                   skipFrames: this.skipFrameOnMessage(data),
               });
 
-        if (this._rateLimitWatcher.skipReport(report)) {
-            return;
-        }
         const backtraceData = this._reportConverter.convert(report, {}, {});
         await this._reportSubmission.send(backtraceData, attachments);
     }
