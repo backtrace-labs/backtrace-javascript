@@ -1,7 +1,9 @@
 import { BacktraceClient } from '../../src/';
 describe('Client tests', () => {
     it('Should create a client', () => {
-        const client = new BacktraceClient();
+        const client = BacktraceClient.builder({
+            url: 'https://submit.backtrace.io/foo/bar/baz',
+        });
 
         expect(client).toBeDefined();
     });

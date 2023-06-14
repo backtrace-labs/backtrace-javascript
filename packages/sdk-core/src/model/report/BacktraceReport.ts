@@ -26,6 +26,11 @@ export class BacktraceReport {
     public readonly innerReport: unknown[] = [];
 
     /**
+     * Report timestamp in sec
+     */
+    public readonly timestamp = Math.floor(Date.now() / 1000);
+
+    /**
      * Sets how many top frames should be skipped.
      */
     public skipFrames = 0;

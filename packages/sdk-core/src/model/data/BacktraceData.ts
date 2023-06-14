@@ -12,6 +12,6 @@ export interface BacktraceData {
     mainThread: string;
     classifiers: string[];
     attributes: Record<string, AttributeType>;
-    annotations: Record<string, object>;
+    annotations: Record<string, unknown>;
     threads: Record<string, BacktraceStackTrace>;
 }
