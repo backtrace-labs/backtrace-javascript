@@ -62,5 +62,6 @@ export class BacktraceReport {
         if (!this.attributes['error.type']) {
             this.attributes['error.type'] = errorType;
         }
+        this.attributes['error.message'] = this.message;
     }
 }

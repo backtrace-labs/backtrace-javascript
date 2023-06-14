@@ -2,7 +2,7 @@ import { SdkOptions } from '../../builder/SdkOptions';
 import { IdGenerator } from '../../common/IdGenerator';
 import { AttributeType, BacktraceData } from '../../model/data/BacktraceData';
 import { BacktraceReport } from '../../model/report/BacktraceReport';
-import { AttributeConverter } from './AttributeConverter';
+import { AttributeConverter } from '../attribute/AttributeConverter';
 import { BacktraceStackTraceConverter } from './BacktraceStackTraceConverter';
 
 export class ReportConverter {
@@ -11,19 +11,15 @@ export class ReportConverter {
     constructor(
         private readonly _sdkOptions: SdkOptions,
         private readonly _stackTraceConverter: BacktraceStackTraceConverter,
-        private readonly _attributeConverter: AttributeConverter = new AttributeConverter(),
     ) {}
 
     public convert(
         report: BacktraceReport,
         clientAttributes: Record<string, AttributeType> = {},
-        clientAnnotations: Record<string, object> = {},
+        clientAnnotations: Record<string, unknown> = {},
     ): BacktraceData {
-        const { attributes, annotations } = this._attributeConverter.convert(
-            report,
-            clientAttributes,
-            clientAnnotations,
-        );
+        const reportAttributes = AttributeConverter.convert(report.attributes);
+
         return {
             uuid: IdGenerator.uuid(),
             timestamp: report.timestamp,
@@ -40,8 +36,15 @@ export class ReportConverter {
                     stack: this._stackTraceConverter.convert(report),
                 },
             },
-            annotations,
-            attributes,
+            annotations: {
+                ...clientAnnotations,
+                ...reportAttributes.annotations,
+                ...report.annotations,
+            },
+            attributes: {
+                ...clientAttributes,
+                ...reportAttributes.attributes,
+            },
         };
     }
 }
