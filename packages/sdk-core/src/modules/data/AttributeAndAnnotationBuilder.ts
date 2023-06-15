@@ -21,6 +21,7 @@ export class AttributeAndAnnotationBuilder {
 
             if (value == null) {
                 attributes[attributeKey] = value;
+                continue;
             }
 
             switch (typeof value) {
