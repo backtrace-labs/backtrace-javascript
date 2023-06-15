@@ -47,18 +47,11 @@ export class RateLimitWatcher {
             return;
         }
 
-        // the queue can be cleaned up
-        if (time - this._reportQueue[this._reportQueue.length - 1] > this.MAXIMUM_TIME_IN_QUEUE) {
-            // if the last report is longer than it should
-            // we know we can clear the queue
-            this._reportQueue.length = 0;
-            return;
+        for (let queueIndex = this._reportQueue.length - 1; queueIndex != 0; queueIndex--) {
+            if (time - this._reportQueue[queueIndex] >= this.MAXIMUM_TIME_IN_QUEUE) {
+                this._reportQueue = this._reportQueue.slice(queueIndex);
+                return;
+            }
         }
-
-        const index = this._reportQueue.findIndex((n) => time - n <= this.MAXIMUM_TIME_IN_QUEUE);
-        if (index === -1) {
-            return;
-        }
-        this._reportQueue = this._reportQueue.slice(index);
     }
 }
