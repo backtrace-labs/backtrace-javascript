@@ -3,6 +3,7 @@ import { execSync } from 'child_process';
 import { getValue, HKEY } from 'native-reg';
 
 export class MachineIdentitfierAttributeProvider implements BacktraceAttributeProvider {
+    public static readonly SUPPORTED_PLATFORMS = ['win32', 'darwin', 'linux', 'freebsd'];
     private readonly MACHINE_ID_ATTRIBUTE = 'guid';
 
     private readonly COMMANDS = {
@@ -15,14 +16,14 @@ export class MachineIdentitfierAttributeProvider implements BacktraceAttributePr
         return 'scoped';
     }
     public get(): Record<string, unknown> {
-        const guid = this.generateGuid();
+        const guid = this.generateGuid() ?? IdGenerator.uuid();
 
         return {
-            [this.MACHINE_ID_ATTRIBUTE]: guid ?? IdGenerator.uuid(),
+            [this.MACHINE_ID_ATTRIBUTE]: guid,
         };
     }
 
-    private generateGuid() {
+    public generateGuid() {
         switch (process.platform) {
             case 'win32': {
                 return this.getWindowsMachineId()

@@ -4,7 +4,7 @@ export class RateLimitWatcher {
     /**
      * Time the single report can stay in the queue.
      */
-    public MAXIMUM_TIME_IN_QUEUE = 60;
+    public readonly MAXIMUM_TIME_IN_QUEUE = 60;
 
     private readonly _reportPerMin: number;
     private readonly _watcherEnable: boolean;
@@ -26,7 +26,7 @@ export class RateLimitWatcher {
     }
 
     public skipReport(): boolean {
-        const time = TimeHelper.now();
+        const time = TimeHelper.timeNowInSec();
         if (!this._watcherEnable) {
             return false;
         }

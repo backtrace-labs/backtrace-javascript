@@ -1,11 +1,11 @@
+import { BacktraceStackTraceConverter } from '../..';
 import { SdkOptions } from '../../builder/SdkOptions';
 import { IdGenerator } from '../../common/IdGenerator';
 import { AttributeType, BacktraceData } from '../../model/data/BacktraceData';
 import { BacktraceReport } from '../../model/report/BacktraceReport';
-import { AttributeConverter } from '../attribute/AttributeConverter';
-import { BacktraceStackTraceConverter } from './BacktraceStackTraceConverter';
+import { AttributeAndAnnotationConverter } from '../attribute/AttributeConverter';
 
-export class ReportConverter {
+export class BacktraceDataBuilder {
     public readonly MAIN_THREAD_NAME = 'main';
 
     constructor(
@@ -13,12 +13,12 @@ export class ReportConverter {
         private readonly _stackTraceConverter: BacktraceStackTraceConverter,
     ) {}
 
-    public convert(
+    public build(
         report: BacktraceReport,
         clientAttributes: Record<string, AttributeType> = {},
         clientAnnotations: Record<string, unknown> = {},
     ): BacktraceData {
-        const reportAttributes = AttributeConverter.convert(report.attributes);
+        const reportAttributes = AttributeAndAnnotationConverter.convert(report.attributes);
 
         return {
             uuid: IdGenerator.uuid(),
