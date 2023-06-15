@@ -8,8 +8,8 @@ export class ProcessInformationAttributeProvider implements BacktraceAttributePr
         return {
             application: process.title,
             // this information is only available if someone uses npm command
-            // if it is, then it's fine. If it isn't we have to get this information
-            // in a different way
+            // If it isn't we have to get this information in a different way
+            // probably by reading the package.json file or process info
             'application.version': process.env.npm_package_version,
             'process.thread.count': 1,
             pid: process.pid,
