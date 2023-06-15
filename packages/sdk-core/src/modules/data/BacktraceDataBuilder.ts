@@ -3,7 +3,7 @@ import { SdkOptions } from '../../builder/SdkOptions';
 import { IdGenerator } from '../../common/IdGenerator';
 import { AttributeType, BacktraceData } from '../../model/data/BacktraceData';
 import { BacktraceReport } from '../../model/report/BacktraceReport';
-import { AttributeAndAnnotationConverter } from '../attribute/AttributeConverter';
+import { AttributeAndAnnotationConverter } from '../attribute/AttributeAndAnnotationConverter';
 
 export class BacktraceDataBuilder {
     public readonly MAIN_THREAD_NAME = 'main';

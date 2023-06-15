@@ -1,6 +1,6 @@
 import { AttributeType } from '../../model/data/BacktraceData';
 import { ReportAttribute } from '../../model/report/ReportAttribute';
-import { AttributeAndAnnotationConverter } from './AttributeConverter';
+import { AttributeAndAnnotationConverter } from './AttributeAndAnnotationConverter';
 import { BacktraceAttributeProvider } from './BacktraceAttributeProvider';
 
 export class AttributeManager {
