@@ -26,7 +26,7 @@ export class RateLimitWatcher {
     }
 
     public skipReport(): boolean {
-        const time = TimeHelper.now();
+        const time = TimeHelper.timeNowInSec();
         if (!this._watcherEnable) {
             return false;
         }

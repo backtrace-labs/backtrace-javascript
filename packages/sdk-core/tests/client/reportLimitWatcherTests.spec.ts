@@ -32,7 +32,7 @@ describe('Report Limit Watcher tests', () => {
 
         it(`Should remove timestamps before checking the report`, () => {
             let timestamp = Date.now();
-            jest.spyOn(TimeHelper, 'now').mockImplementation(() => {
+            jest.spyOn(TimeHelper, 'timeNowInSec').mockImplementation(() => {
                 return timestamp++;
             });
             const rateLimitWatcher = new RateLimitWatcher(1);

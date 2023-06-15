@@ -5,8 +5,8 @@ import { BacktraceReportSubmission } from './model/http/BacktraceReportSubmissio
 import { BacktraceRequestHandler } from './model/http/BacktraceRequestHandler';
 import { BacktraceAttachment } from './model/report/BacktraceAttachment';
 import { BacktraceReport } from './model/report/BacktraceReport';
-import { ReportConverter } from './modules/converter/ReportConverter';
 import { V8StackTraceConverter } from './modules/converter/V8StackTraceConverter';
+import { BacktraceDataBuilder } from './modules/data/BacktraceDataBuilder';
 import { RateLimitWatcher } from './modules/rateLimiter/RateLimitWatcher';
 export abstract class BacktraceCoreClient {
     /**
@@ -22,7 +22,7 @@ export abstract class BacktraceCoreClient {
         return this._sdkOptions.agentVersion;
     }
 
-    private readonly _reportConverter: ReportConverter;
+    private readonly _dataBuilder: BacktraceDataBuilder;
     private readonly _reportSubmission: BacktraceReportSubmission;
     private readonly _rateLimitWatcher: RateLimitWatcher;
 
@@ -32,7 +32,7 @@ export abstract class BacktraceCoreClient {
         requestHandler: BacktraceRequestHandler,
         stackTraceConverter: BacktraceStackTraceConverter = new V8StackTraceConverter(),
     ) {
-        this._reportConverter = new ReportConverter(this._sdkOptions, stackTraceConverter);
+        this._dataBuilder = new BacktraceDataBuilder(this._sdkOptions, stackTraceConverter);
         this._reportSubmission = new BacktraceReportSubmission(options, requestHandler);
         this._rateLimitWatcher = new RateLimitWatcher(options.rateLimit);
     }
@@ -80,7 +80,7 @@ export abstract class BacktraceCoreClient {
                   skipFrames: this.skipFrameOnMessage(data),
               });
 
-        const backtraceData = this._reportConverter.convert(report, {}, {});
+        const backtraceData = this._dataBuilder.build(report, {}, {});
         await this._reportSubmission.send(backtraceData, attachments);
     }
 

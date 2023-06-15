@@ -1,14 +1,14 @@
 import { BacktraceReport } from '../../lib';
 import { AttributeType } from '../../lib/model/data/BacktraceData';
-import { AttributeConverter } from '../../src/modules/converter/AttributeConverter';
+import { AttributeAndAnnotationBuilder } from '../../src/modules/data/AttributeAndAnnotationBuilder';
 describe('Attribute converter tests', () => {
-    const attributeConverter = new AttributeConverter();
+    const attributeAndAnnotationBuilder = new AttributeAndAnnotationBuilder();
     describe('Annotations tests', () => {
         it('Should include error information from the report annotations', () => {
             const error = new Error('foo');
             const report = new BacktraceReport(error);
 
-            const { annotations } = attributeConverter.convert(report, {}, {});
+            const { annotations } = attributeAndAnnotationBuilder.generate(report, {}, {});
 
             const receivedError = annotations['error'] as Error;
             expect(receivedError).toBeDefined();
@@ -24,7 +24,7 @@ describe('Attribute converter tests', () => {
                     b: 2,
                 },
             };
-            const { annotations } = attributeConverter.convert(report, {}, clientAnnotations);
+            const { annotations } = attributeAndAnnotationBuilder.generate(report, {}, clientAnnotations);
 
             for (const clientAnnotationKey in clientAnnotations) {
                 expect(annotations[clientAnnotationKey]).toEqual(clientAnnotations[clientAnnotationKey]);
@@ -52,7 +52,7 @@ describe('Attribute converter tests', () => {
                     b: 2,
                 },
             };
-            const { annotations } = attributeConverter.convert(report, {}, clientAnnotations);
+            const { annotations } = attributeAndAnnotationBuilder.generate(report, {}, clientAnnotations);
 
             expect(annotations[annotationKey]).toEqual(reportAnnotation);
         });
@@ -64,7 +64,7 @@ describe('Attribute converter tests', () => {
             const clientAttributes: Record<string, AttributeType> = { baz: 1 };
             const report = new BacktraceReport(new Error('foo'), reportAttributes);
 
-            const { attributes } = attributeConverter.convert(report, clientAttributes, {});
+            const { attributes } = attributeAndAnnotationBuilder.generate(report, clientAttributes, {});
 
             for (const reportAttributeKey in reportAttributes) {
                 expect(attributes[reportAttributeKey]).toEqual(reportAttributes[reportAttributeKey]);
@@ -81,7 +81,7 @@ describe('Attribute converter tests', () => {
             const clientAttributes = { [attributeName]: 'client attribute' };
             const report = new BacktraceReport(new Error('foo'), reportAttributes);
 
-            const { attributes } = attributeConverter.convert(report, clientAttributes, {});
+            const { attributes } = attributeAndAnnotationBuilder.generate(report, clientAttributes, {});
 
             expect(attributes[attributeName]).toEqual(reportAttributes[attributeName]);
         });
@@ -93,12 +93,12 @@ describe('Attribute converter tests', () => {
             const reportAttributes = { [attributeName]: testedValue };
             const report = new BacktraceReport(new Error('foo'), reportAttributes);
 
-            const { attributes } = attributeConverter.convert(report, {}, {});
+            const { attributes } = attributeAndAnnotationBuilder.generate(report, {}, {});
 
             expect(attributes[attributeName]).toEqual(expectedValue);
         });
 
-        it(`Should allow to set undefined/null/0/''`, () => {
+        it(`Should allow to set undefined or null or 0 or empty string`, () => {
             const reportAttributes: Record<string, AttributeType> = {
                 undefinedTest: undefined,
                 nullTest: null,
@@ -107,7 +107,7 @@ describe('Attribute converter tests', () => {
             };
             const report = new BacktraceReport(new Error('foo'), reportAttributes);
 
-            const { attributes } = attributeConverter.convert(report, {}, {});
+            const { attributes } = attributeAndAnnotationBuilder.generate(report, {}, {});
 
             for (const attributeKey in reportAttributes) {
                 expect(attributes[attributeKey]).toEqual(reportAttributes[attributeKey]);
