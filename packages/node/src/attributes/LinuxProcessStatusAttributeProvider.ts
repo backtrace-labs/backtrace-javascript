@@ -42,10 +42,7 @@ export class LinuxProcesStatusAttributeProvider implements BacktraceAttributePro
             }
 
             let number = parseInt(match[2], 10);
-            let units = match[3];
-            if (number === 0) {
-                units = 'B';
-            }
+            const units = match[3];
             if (units === 'kB') {
                 number *= 1024;
             }
