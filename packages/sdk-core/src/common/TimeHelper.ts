@@ -1,5 +1,5 @@
 export class TimeHelper {
-    public static now(): number {
+    public static timeNowInSec(): number {
         return Math.floor(new Date().getTime() / 1000);
     }
 }

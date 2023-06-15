@@ -1,25 +1,25 @@
+import { BacktraceStackTraceConverter } from '../..';
 import { SdkOptions } from '../../builder/SdkOptions';
 import { IdGenerator } from '../../common/IdGenerator';
 import { AttributeType, BacktraceData } from '../../model/data/BacktraceData';
 import { BacktraceReport } from '../../model/report/BacktraceReport';
-import { AttributeConverter } from './AttributeConverter';
-import { BacktraceStackTraceConverter } from './BacktraceStackTraceConverter';
+import { AttributeAndAnnotationBuilder } from './AttributeAndAnnotationBuilder';
 
-export class ReportConverter {
+export class BacktraceDataBuilder {
     public readonly MAIN_THREAD_NAME = 'main';
 
     constructor(
         private readonly _sdkOptions: SdkOptions,
         private readonly _stackTraceConverter: BacktraceStackTraceConverter,
-        private readonly _attributeConverter: AttributeConverter = new AttributeConverter(),
+        private readonly _attributeAndAnnotationBuilder: AttributeAndAnnotationBuilder = new AttributeAndAnnotationBuilder(),
     ) {}
 
-    public convert(
+    public build(
         report: BacktraceReport,
         clientAttributes: Record<string, AttributeType> = {},
         clientAnnotations: Record<string, object> = {},
     ): BacktraceData {
-        const { attributes, annotations } = this._attributeConverter.convert(
+        const { attributes, annotations } = this._attributeAndAnnotationBuilder.generate(
             report,
             clientAttributes,
             clientAnnotations,

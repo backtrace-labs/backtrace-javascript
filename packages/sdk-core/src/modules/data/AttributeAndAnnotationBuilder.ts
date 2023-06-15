@@ -1,8 +1,8 @@
 import { AttributeType } from '../../model/data/BacktraceData';
 import { BacktraceReport } from '../../model/report/BacktraceReport';
 
-export class AttributeConverter {
-    public convert(
+export class AttributeAndAnnotationBuilder {
+    public generate(
         report: BacktraceReport,
         clientAttributes: Record<string, AttributeType>,
         clientAnnotations: Record<string, object>,
@@ -18,6 +18,7 @@ export class AttributeConverter {
 
         for (const attributeKey in report.attributes) {
             const value = report.attributes[attributeKey];
+
             if (value == null) {
                 attributes[attributeKey] = value;
             }
