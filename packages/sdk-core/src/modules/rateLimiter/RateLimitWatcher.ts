@@ -55,6 +55,10 @@ export class RateLimitWatcher {
             return;
         }
 
-        this._reportQueue = this._reportQueue.filter((n) => time - n < this.MAXIMUM_TIME_IN_QUEUE);
+        const index = this._reportQueue.findIndex((n) => time - n <= this.MAXIMUM_TIME_IN_QUEUE);
+        if (index === -1) {
+            return;
+        }
+        this._reportQueue = this._reportQueue.slice(index);
     }
 }
