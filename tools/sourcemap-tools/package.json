@@ -4,6 +4,9 @@
     "description": "Backtrace-JavaScript sourcemap tools",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
+    "engines": {
+        "node": ">=14"
+    },
     "scripts": {
         "build": "tsc",
         "clean": "tsc -b --clean && rimraf \"lib\"",
@@ -23,7 +26,9 @@
         "Tool",
         "Bug",
         "Bugs",
-        "StackTrace"
+        "StackTrace",
+        "Sourcemaps",
+        "Source maps"
     ],
     "author": "Backtrace <team@backtrace.io>",
     "license": "MIT",
