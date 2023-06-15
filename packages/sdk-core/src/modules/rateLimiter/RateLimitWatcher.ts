@@ -47,8 +47,8 @@ export class RateLimitWatcher {
             return;
         }
 
-        for (let queueIndex = this._reportQueue.length - 1; queueIndex != 0; queueIndex--) {
-            if (time - this._reportQueue[queueIndex] >= this.MAXIMUM_TIME_IN_QUEUE) {
+        for (let queueIndex = this._reportQueue.length; queueIndex != 0; queueIndex--) {
+            if (time - this._reportQueue[queueIndex - 1] > this.MAXIMUM_TIME_IN_QUEUE) {
                 this._reportQueue = this._reportQueue.slice(queueIndex);
                 return;
             }
