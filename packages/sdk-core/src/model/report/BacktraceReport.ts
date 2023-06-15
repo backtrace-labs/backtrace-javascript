@@ -43,8 +43,10 @@ export class BacktraceReport {
             this.classifiers = [data.name];
             this.message = data.message;
             this.stackTrace = data.stack ?? '';
-            if (data.cause) {
-                this.innerReport.push(data.cause);
+
+            // Supported in ES2022
+            if ((data as { cause?: unknown }).cause) {
+                this.innerReport.push((data as { cause?: unknown }).cause);
             }
         } else {
             this.message = data;
