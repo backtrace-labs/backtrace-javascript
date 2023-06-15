@@ -34,7 +34,7 @@ export class MachineIdentitfierAttributeProvider implements BacktraceAttributePr
                     .toString()
                     .split('IOPlatformUUID')[1]
                     .split('\n')[0]
-                    .replace(/\=|\s+|\"/gi, '')
+                    .replace(/=|\s+|"/gi, '')
                     .toLowerCase();
             }
             case 'linux':
