@@ -1,5 +1,5 @@
 import { AttributeType } from '../../model/data/BacktraceData';
-import { ReportAttribute } from '../../model/report/ReportAttribute';
+import { ReportData } from '../../model/report/ReportData';
 import { AttributeAndAnnotationConverter } from './AttributeAndAnnotationConverter';
 import { BacktraceAttributeProvider } from './BacktraceAttributeProvider';
 
@@ -41,7 +41,7 @@ export class AttributeManager {
      * Gets client attributes
      * @returns Report attribute - client attributes and annotations
      */
-    public get(): ReportAttribute {
+    public get(): ReportData {
         const result = {
             annotations: {
                 ...this.annotations,
