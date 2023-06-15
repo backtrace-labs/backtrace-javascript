@@ -72,7 +72,7 @@ export class AttributeManager {
         }
 
         for (const annotationKey in reportAttributes.annotations) {
-            this.annotations[annotationKey] = reportAttributes.attributes[annotationKey];
+            this.annotations[annotationKey] = reportAttributes.annotations[annotationKey];
         }
     }
 }
