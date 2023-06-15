@@ -1,10 +1,39 @@
+import { BacktraceStackTraceConverter } from '.';
+import { SdkOptions } from './builder/SdkOptions';
+import { BacktraceConfiguration } from './model/configuration/BacktraceConfiguration';
+import { BacktraceReportSubmission } from './model/http/BacktraceReportSubmission';
+import { BacktraceRequestHandler } from './model/http/BacktraceRequestHandler';
 import { BacktraceAttachment } from './model/report/BacktraceAttachment';
 import { BacktraceReport } from './model/report/BacktraceReport';
-import { BacktraceStackTraceConverter } from './modules/converter/BacktraceStackTraceConverter';
 import { V8StackTraceConverter } from './modules/converter/V8StackTraceConverter';
+import { BacktraceDataBuilder } from './modules/data/BacktraceDataBuilder';
+export abstract class BacktraceCoreClient {
+    /**
+     * Backtrace SDK name
+     */
+    public get agent(): string {
+        return this._sdkOptions.agent;
+    }
+    /**
+     * Backtrace SDK version
+     */
+    public get agentVersion(): string {
+        return this._sdkOptions.agentVersion;
+    }
 
-export class BacktraceCoreClient {
-    constructor(private readonly _stackTraceConverter: BacktraceStackTraceConverter = new V8StackTraceConverter()) {}
+    private readonly _dataBuilder: BacktraceDataBuilder;
+    private readonly _reportSubmission: BacktraceReportSubmission;
+
+    protected constructor(
+        protected readonly options: BacktraceConfiguration,
+        private readonly _sdkOptions: SdkOptions,
+        requestHandler: BacktraceRequestHandler,
+        stackTraceConverter: BacktraceStackTraceConverter = new V8StackTraceConverter(),
+    ) {
+        this._dataBuilder = new BacktraceDataBuilder(this._sdkOptions, stackTraceConverter);
+        this._reportSubmission = new BacktraceReportSubmission(options, requestHandler);
+    }
+
     /**
      * Asynchronously sends error data to Backtrace.
      * @param error Backtrace Report or error or message
@@ -44,7 +73,8 @@ export class BacktraceCoreClient {
                   skipFrames: this.skipFrameOnMessage(data),
               });
 
-        console.log(this._stackTraceConverter.convert(report));
+        const backtraceData = this._dataBuilder.build(report, {}, {});
+        await this._reportSubmission.send(backtraceData, attachments);
     }
 
     private skipFrameOnMessage(data: Error | string): number {
