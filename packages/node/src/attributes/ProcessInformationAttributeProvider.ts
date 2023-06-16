@@ -14,8 +14,22 @@ export class ProcessInformationAttributeProvider implements BacktraceAttributePr
             'process.thread.count': 1,
             pid: process.pid,
             'uname.machine': process.arch,
-            'uname.sysname': process.platform,
+            'uname.sysname': this.convertPlatformToAttribute(process.platform),
             environment: process.env.NODE_ENV,
         };
+    }
+
+    private convertPlatformToAttribute(platform: NodeJS.Platform): string {
+        switch (platform) {
+            case 'win32': {
+                return 'Windows';
+            }
+            case 'darwin': {
+                return 'Mac OS';
+            }
+            default: {
+                return platform.charAt(0).toUpperCase() + platform.slice(1);
+            }
+        }
     }
 }
