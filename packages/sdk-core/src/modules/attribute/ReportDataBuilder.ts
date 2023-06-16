@@ -1,8 +1,8 @@
 import { AttributeType } from '../../model/data/BacktraceData';
 import { ReportData } from '../../model/report/ReportData';
 
-export class AttributeAndAnnotationConverter {
-    public static convert(attributes: Record<string, unknown>): ReportData {
+export class ReportDataBuilder {
+    public static build(attributes: Record<string, unknown>): ReportData {
         const result: ReportData = { annotations: {}, attributes: {} };
         if (!attributes) {
             return result;

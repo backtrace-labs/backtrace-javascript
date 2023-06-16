@@ -3,7 +3,7 @@ import { SdkOptions } from '../../builder/SdkOptions';
 import { IdGenerator } from '../../common/IdGenerator';
 import { AttributeType, BacktraceData } from '../../model/data/BacktraceData';
 import { BacktraceReport } from '../../model/report/BacktraceReport';
-import { AttributeAndAnnotationConverter } from '../attribute/AttributeAndAnnotationConverter';
+import { ReportDataBuilder } from '../attribute/ReportDataBuilder';
 
 export class BacktraceDataBuilder {
     public readonly MAIN_THREAD_NAME = 'main';
@@ -18,7 +18,7 @@ export class BacktraceDataBuilder {
         clientAttributes: Record<string, AttributeType> = {},
         clientAnnotations: Record<string, unknown> = {},
     ): BacktraceData {
-        const reportAttributes = AttributeAndAnnotationConverter.convert(report.attributes);
+        const reportData = ReportDataBuilder.build(report.attributes);
 
         return {
             uuid: IdGenerator.uuid(),
@@ -38,12 +38,12 @@ export class BacktraceDataBuilder {
             },
             annotations: {
                 ...clientAnnotations,
-                ...reportAttributes.annotations,
+                ...reportData.annotations,
                 ...report.annotations,
             },
             attributes: {
                 ...clientAttributes,
-                ...reportAttributes.attributes,
+                ...reportData.attributes,
             },
         };
     }

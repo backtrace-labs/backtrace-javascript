@@ -1,7 +1,7 @@
 import { AttributeType } from '../../model/data/BacktraceData';
 import { ReportData } from '../../model/report/ReportData';
-import { AttributeAndAnnotationConverter } from './AttributeAndAnnotationConverter';
 import { BacktraceAttributeProvider } from './BacktraceAttributeProvider';
+import { ReportDataBuilder } from './ReportDataBuilder';
 
 export class AttributeManager {
     public readonly attributes: Record<string, AttributeType> = {};
@@ -50,7 +50,7 @@ export class AttributeManager {
         };
 
         for (const attributeProvider of this._dynamicAttributeProviders) {
-            const providerResult = AttributeAndAnnotationConverter.convert(attributeProvider.get());
+            const providerResult = ReportDataBuilder.build(attributeProvider.get());
             result.attributes = {
                 ...result.attributes,
                 ...providerResult.attributes,
@@ -66,7 +66,7 @@ export class AttributeManager {
     }
 
     private addStaticAttributes(attributes: Record<string, unknown>) {
-        const reportAttributes = AttributeAndAnnotationConverter.convert(attributes);
+        const reportAttributes = ReportDataBuilder.build(attributes);
         for (const attributeKey in reportAttributes.attributes) {
             this.attributes[attributeKey] = reportAttributes.attributes[attributeKey];
         }
