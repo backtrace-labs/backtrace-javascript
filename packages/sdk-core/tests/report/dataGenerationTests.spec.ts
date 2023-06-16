@@ -29,12 +29,12 @@ describe('Data generation tests', () => {
 
     it('Should generate correct timestamp', () => {
         const timestamp = Date.now();
-        jest.spyOn(TimeHelper, 'timeNowInSec').mockImplementation(() => {
+        jest.spyOn(TimeHelper, 'now').mockImplementation(() => {
             return timestamp;
         });
         const backtraceData = dataBuilder.build(new BacktraceReport(new Error()));
 
-        expect(backtraceData.timestamp).toEqual(timestamp);
+        expect(backtraceData.timestamp).toEqual(TimeHelper.toTimestampInSec(timestamp));
     });
 
     it('Should set classifiers based on the error report', () => {
