@@ -1,4 +1,5 @@
 import {
+    BacktraceAttributeProvider,
     BacktraceConfiguration,
     BacktraceCoreClient,
     BacktraceRequestHandler,
@@ -11,9 +12,10 @@ export class BacktraceClient extends BacktraceCoreClient {
     constructor(
         options: BacktraceConfiguration,
         handler: BacktraceRequestHandler,
+        attributeProviders: BacktraceAttributeProvider[],
         stackTraceConverter: BacktraceStackTraceConverter,
     ) {
-        super(options, AGENT, handler, [], stackTraceConverter);
+        super(options, AGENT, handler, attributeProviders, stackTraceConverter);
     }
 
     public static builder(options: BacktraceConfiguration): BacktraceClientBuilder {
