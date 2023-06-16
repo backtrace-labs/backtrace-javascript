@@ -10,7 +10,7 @@
             "path": "./tools/sourcemap-tools"
         },
         {
-            "path": "./tools/webpack-plugin"
+            "path": "./tools/webpack-plugin/tsconfig.build.json"
         }
     ]
 }
