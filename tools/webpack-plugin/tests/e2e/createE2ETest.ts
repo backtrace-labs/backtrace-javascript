@@ -16,6 +16,7 @@ interface E2ETestOptions {
     testSourceFunction?: boolean;
     testSourceComment?: boolean;
     testSourceMap?: boolean;
+    testSourceEval?: boolean;
 }
 
 export function createE2ETest(
@@ -62,6 +63,21 @@ export function createE2ETest(
                 for (const file of jsFiles) {
                     const content = await fs.promises.readFile(file, 'utf8');
                     await expectSourceComment(content);
+                }
+            });
+        }
+
+        if (opts?.testSourceEval ?? true) {
+            it('should eval emitted source without syntax errors', async () => {
+                const outputDir = result.compilation.outputOptions.path;
+                assert(outputDir);
+
+                const jsFiles = await getFiles(outputDir, /.js$/);
+                expect(jsFiles.length).toBeGreaterThan(0);
+
+                for (const file of jsFiles) {
+                    const content = await fs.promises.readFile(file, 'utf8');
+                    expect(() => eval(content)).not.toThrowError(SyntaxError);
                 }
             });
         }
