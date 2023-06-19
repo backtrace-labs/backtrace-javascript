@@ -10,7 +10,7 @@ export class BacktraceWebpackSourceGenerator {
 
     public addDebugIdToSource(source: Source, debugId: string): ConcatSource {
         const sourceSnippet = this._debugIdGenerator.generateSourceSnippet(debugId);
-        return new ConcatSource(source, sourceSnippet);
+        return new ConcatSource(source, '\n' + sourceSnippet);
     }
 
     public addDebugIdCommentToSource(source: Source, debugId: string): ConcatSource {
