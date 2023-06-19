@@ -1,5 +1,5 @@
 import { BacktraceReport, BacktraceRequestHandler } from '@backtrace/sdk-core';
-import { BacktraceClient } from '../../src/';
+import { BacktraceClient, BacktraceInMemoryAttachment } from '../../src/';
 
 describe('Client tests', () => {
     const requestHandler: BacktraceRequestHandler = {
@@ -46,12 +46,7 @@ describe('Client tests', () => {
 
     describe('Attachment tests', () => {
         it(`Should generate an attachment list based on the client options`, async () => {
-            const testedAttachment = {
-                name: 'client-in-memory-test',
-                get() {
-                    return new Uint8Array(0);
-                },
-            };
+            const testedAttachment = new BacktraceInMemoryAttachment('client-add-test', new Uint8Array(0));
             client = BacktraceClient.builder({
                 name: 'test',
                 version: '1.0.0',
@@ -67,12 +62,7 @@ describe('Client tests', () => {
         });
 
         it(`Should allow to add more attachments`, async () => {
-            const testedAttachment = {
-                name: 'client-add-test',
-                get() {
-                    return new Uint8Array(0);
-                },
-            };
+            const testedAttachment = new BacktraceInMemoryAttachment('client-add-test', new Uint8Array(0));
             client = BacktraceClient.builder({
                 name: 'test',
                 version: '1.0.0',
