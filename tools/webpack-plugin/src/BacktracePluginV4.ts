@@ -1,8 +1,8 @@
 import { ContentAppender, DebugIdGenerator } from '@backtrace/sourcemap-tools';
 import crypto from 'crypto';
 import { Compiler, WebpackPluginInstance } from 'webpack';
-import { BacktracePluginOptions } from '../lib/BacktracePlugin';
 import { BacktraceWebpackSourceGenerator } from './BacktraceWebpackSourceGenerator';
+import { BacktracePluginOptions } from './models/BacktracePluginOptions';
 
 export class BacktracePluginV4 implements WebpackPluginInstance {
     private readonly _sourceGenerator: BacktraceWebpackSourceGenerator;
