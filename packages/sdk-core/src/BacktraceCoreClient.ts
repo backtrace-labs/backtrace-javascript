@@ -1,13 +1,25 @@
-import { BacktraceStackTraceConverter } from '.';
+import { BacktraceAttributeProvider, BacktraceStackTraceConverter } from '.';
 import { SdkOptions } from './builder/SdkOptions';
+import { IdGenerator } from './common/IdGenerator';
 import { BacktraceConfiguration } from './model/configuration/BacktraceConfiguration';
+import { AttributeType } from './model/data/BacktraceData';
 import { BacktraceReportSubmission } from './model/http/BacktraceReportSubmission';
 import { BacktraceRequestHandler } from './model/http/BacktraceRequestHandler';
 import { BacktraceAttachment } from './model/report/BacktraceAttachment';
 import { BacktraceReport } from './model/report/BacktraceReport';
+import { AttributeManager } from './modules/attribute/AttributeManager';
+import { ClientAttributeProvider } from './modules/attribute/ClientAttributeProvider';
 import { V8StackTraceConverter } from './modules/converter/V8StackTraceConverter';
 import { BacktraceDataBuilder } from './modules/data/BacktraceDataBuilder';
+import { RateLimitWatcher } from './modules/rateLimiter/RateLimitWatcher';
 export abstract class BacktraceCoreClient {
+    /**
+     * Current session id
+     */
+    public get sessionId(): string {
+        return this._sessionId;
+    }
+
     /**
      * Backtrace SDK name
      */
@@ -21,17 +33,51 @@ export abstract class BacktraceCoreClient {
         return this._sdkOptions.agentVersion;
     }
 
+    /**
+     * Available cached client attributes
+     */
+    public get attributes(): Record<string, AttributeType> {
+        return this._attributeProvider.attributes;
+    }
+
+    /**
+     * Available cached client annotatations
+     */
+    public get annotations(): Record<string, unknown> {
+        return this._attributeProvider.annotations;
+    }
+
     private readonly _dataBuilder: BacktraceDataBuilder;
     private readonly _reportSubmission: BacktraceReportSubmission;
+    private readonly _rateLimitWatcher: RateLimitWatcher;
+    private readonly _attributeProvider: AttributeManager;
+    /**
+     * Current session Id
+     */
+    private readonly _sessionId: string = IdGenerator.uuid();
 
     protected constructor(
         protected readonly options: BacktraceConfiguration,
         private readonly _sdkOptions: SdkOptions,
         requestHandler: BacktraceRequestHandler,
+        attributeProviders: BacktraceAttributeProvider[] = [],
         stackTraceConverter: BacktraceStackTraceConverter = new V8StackTraceConverter(),
     ) {
         this._dataBuilder = new BacktraceDataBuilder(this._sdkOptions, stackTraceConverter);
         this._reportSubmission = new BacktraceReportSubmission(options, requestHandler);
+        this._rateLimitWatcher = new RateLimitWatcher(options.rateLimit);
+        this._attributeProvider = new AttributeManager([
+            new ClientAttributeProvider(_sdkOptions.agentVersion, this._sessionId, options.userAttributes ?? {}),
+            ...(attributeProviders ?? []),
+        ]);
+    }
+
+    /**
+     * Add attribute to Backtrace Client reports.
+     * @param attributes key-value object with attributes.
+     */
+    public addAttribute(attributes: Record<string, unknown>) {
+        this._attributeProvider.add(attributes);
     }
 
     /**
@@ -64,17 +110,22 @@ export abstract class BacktraceCoreClient {
     public async send(report: BacktraceReport): Promise<void>;
     public async send(
         data: BacktraceReport | Error | string,
-        attributes: Record<string, unknown> = {},
-        attachments: BacktraceAttachment[] = [],
+        reportAttributes: Record<string, unknown> = {},
+        reportAttachments: BacktraceAttachment[] = [],
     ): Promise<void> {
+        if (this._rateLimitWatcher.skipReport()) {
+            return;
+        }
+
         const report = this.isReport(data)
             ? data
-            : new BacktraceReport(data, attributes, attachments, {
+            : new BacktraceReport(data, reportAttributes, reportAttachments, {
                   skipFrames: this.skipFrameOnMessage(data),
               });
 
-        const backtraceData = this._dataBuilder.build(report, {}, {});
-        await this._reportSubmission.send(backtraceData, attachments);
+        const { annotations, attributes } = this._attributeProvider.get();
+        const backtraceData = this._dataBuilder.build(report, attributes, annotations);
+        await this._reportSubmission.send(backtraceData, report.attachments);
     }
 
     private skipFrameOnMessage(data: Error | string): number {

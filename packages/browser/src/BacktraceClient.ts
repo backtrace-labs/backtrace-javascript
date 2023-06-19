@@ -13,7 +13,7 @@ export class BacktraceClient extends BacktraceCoreClient {
         handler: BacktraceRequestHandler,
         stackTraceConverter: BacktraceStackTraceConverter,
     ) {
-        super(options, AGENT, handler, stackTraceConverter);
+        super(options, AGENT, handler, [], stackTraceConverter);
     }
 
     public static builder(options: BacktraceConfiguration): BacktraceClientBuilder {
