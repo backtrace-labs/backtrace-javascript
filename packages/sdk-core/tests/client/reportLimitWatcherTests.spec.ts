@@ -46,6 +46,7 @@ describe('Report Limit Watcher tests', () => {
 
         it(`Should not remove timestamp from the queue to make space for the new one`, () => {
             let timestamp = Date.now();
+
             jest.spyOn(TimeHelper, 'now').mockImplementation(() => {
                 return timestamp++;
             });
