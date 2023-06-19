@@ -1,5 +1,4 @@
 import { BacktraceAttachment, BacktraceAttributeProvider, BacktraceCoreClientBuilder } from '@backtrace/sdk-core';
-import { ReadStream } from 'fs';
 import {
     LinuxProcessStatusAttributeProvider,
     MachineAttributeProvider,
@@ -31,7 +30,7 @@ export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<Backtrace
      * Transform client attachments into the attachment model.
      * @returns attachments
      */
-    private transformAttachments(): BacktraceAttachment<Uint8Array | ReadStream>[] {
+    private transformAttachments(): BacktraceAttachment[] {
         return (
             this._options.attachments?.map((n) => (typeof n === 'string' ? new BacktraceFileAttachment(n) : n)) ?? []
         );
