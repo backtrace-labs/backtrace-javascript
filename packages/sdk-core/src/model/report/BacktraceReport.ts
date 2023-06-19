@@ -27,9 +27,9 @@ export class BacktraceReport {
     public readonly innerReport: unknown[] = [];
 
     /**
-     * Report timestamp in sec
+     * Report timestamp in ms
      */
-    public readonly timestamp = TimeHelper.timeNowInSec();
+    public readonly timestamp = TimeHelper.now();
 
     /**
      * Sets how many top frames should be skipped.

@@ -1,7 +1,7 @@
 import { BacktraceAttributeProvider } from '@backtrace/sdk-core';
 import { TimeHelper } from '@backtrace/sdk-core/src/common/TimeHelper';
 
-const PAGE_START_TIME = TimeHelper.timeNowInMs();
+const PAGE_START_TIME = TimeHelper.now();
 
 export class WebsiteAttributeProvider implements BacktraceAttributeProvider {
     public get type(): 'scoped' | 'dynamic' {

@@ -1,8 +1,9 @@
 export class TimeHelper {
-    public static timeNowInMs(): number {
+    public static now(): number {
         return Date.now();
     }
-    public static timeNowInSec(): number {
-        return Math.floor(Date.now() / 1000);
+
+    public static toTimestampInSec(timestampMs: number): number {
+        return Math.floor(timestampMs / 1000);
     }
 }
