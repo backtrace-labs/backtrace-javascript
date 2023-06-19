@@ -34,7 +34,6 @@ describe('Data generation tests', () => {
         });
         const backtraceData = dataBuilder.build(new BacktraceReport(new Error()));
 
-
         expect(backtraceData.timestamp).toEqual(TimeHelper.toTimestampInSec(timestamp));
     });
 
