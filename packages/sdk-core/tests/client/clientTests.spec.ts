@@ -26,4 +26,67 @@ describe('Client tests', () => {
             expect(client.requestHandler.postError).toBeCalled();
         });
     });
+
+    describe('Attachment tests', () => {
+        it(`Should generate an empty attachment list`, async () => {
+            const client = BacktraceTestClient.buildFakeClient();
+
+            expect(client.attachments).toBeDefined();
+            expect(client.attachments.length).toEqual(0);
+        });
+
+        it(`Should generate an attachment list based on the client options`, async () => {
+            const inMemoryAttachment = {
+                name: 'client-in-memory-test',
+                get() {
+                    return Buffer.from('test');
+                },
+            };
+
+            const client = BacktraceTestClient.buildFakeClient([], [inMemoryAttachment]);
+
+            expect(client.attachments).toBeDefined();
+            expect(client.attachments.length).toEqual(1);
+            expect(client.attachments[0]).toEqual(inMemoryAttachment);
+        });
+
+        it(`Should allow to add more attachments`, async () => {
+            const client = BacktraceTestClient.buildFakeClient();
+            const inMemoryAttachment = {
+                name: 'client-in-memory-test',
+                get() {
+                    return Buffer.from('test');
+                },
+            };
+
+            client.attachments.push(inMemoryAttachment);
+
+            expect(client.attachments).toBeDefined();
+            expect(client.attachments.length).toEqual(1);
+            expect(client.attachments[0]).toBe(inMemoryAttachment);
+        });
+
+        it(`Should merge client attachments with report attachments`, async () => {
+            const clientAttachment = {
+                name: 'client-add-test',
+                get() {
+                    return new Uint8Array(0);
+                },
+            };
+            const reportAttachment = {
+                name: 'report-test',
+                get() {
+                    return new Uint8Array(0);
+                },
+            };
+            const client = BacktraceTestClient.buildFakeClient([], [clientAttachment]);
+
+            await client.send(new Error(''), {}, [reportAttachment]);
+
+            expect(client.requestHandler.postError).toHaveBeenCalledWith(expect.any(String), expect.any(Object), [
+                clientAttachment,
+                reportAttachment,
+            ]);
+        });
+    });
 });

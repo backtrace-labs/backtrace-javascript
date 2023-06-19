@@ -1,4 +1,5 @@
-import { BacktraceAttributeProvider, BacktraceConfiguration, BacktraceCoreClientBuilder } from '@backtrace/sdk-core';
+import { BacktraceAttachment, BacktraceAttributeProvider, BacktraceCoreClientBuilder } from '@backtrace/sdk-core';
+import { ReadStream } from 'fs';
 import {
     LinuxProcessStatusAttributeProvider,
     MachineAttributeProvider,
@@ -7,7 +8,9 @@ import {
     ProcessStatusAttributeProvider,
 } from '../attributes';
 import { BacktraceClient } from '../BacktraceClient';
+import { BacktraceConfiguration } from '../BacktraceConfiguration';
 import { BacktraceNodeRequestHandler } from '../BacktraceNodeRequestHandler';
+import { BacktraceFileAttachment } from '../model/BacktraceFileAttachment';
 
 export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<BacktraceClient> {
     constructor(private readonly _options: BacktraceConfiguration) {
@@ -24,7 +27,21 @@ export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<Backtrace
         this.attributeProviders.push(provider);
     }
 
+    /**
+     * Transform client attachments into the attachment model.
+     * @returns attachments
+     */
+    private transformAttachments(): BacktraceAttachment<Uint8Array | ReadStream>[] {
+        return (
+            this._options.attachments?.map((n) => (typeof n === 'string' ? new BacktraceFileAttachment(n) : n)) ?? []
+        );
+    }
+
     public build(): BacktraceClient {
-        return new BacktraceClient(this._options, this.handler, this.attributeProviders);
+        return new BacktraceClient(
+            { ...this._options, attachments: this.transformAttachments() },
+            this.handler,
+            this.attributeProviders,
+        );
     }
 }

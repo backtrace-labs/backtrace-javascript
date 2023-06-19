@@ -8,11 +8,8 @@ import {
 } from '@backtrace/sdk-core';
 import { BacktraceData } from '@backtrace/sdk-core/src/model/data/BacktraceData';
 import FormData from 'form-data';
-import fs from 'fs';
 import http from 'http';
 import https from 'https';
-
-import path from 'path';
 
 export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
     private readonly UPLOAD_FILE_NAME = 'upload_file';
@@ -131,15 +128,11 @@ export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
         }
 
         for (const attachment of attachments) {
-            if (typeof attachment === 'string') {
-                if (!fs.existsSync(attachment)) {
-                    continue;
-                }
-                const name = path.basename(attachment);
-                formData.append(`attachment_${name}`, fs.createReadStream(attachment), name);
+            const data = attachment.get();
+            if (!data) {
                 continue;
             }
-            formData.append(`attachment_${attachment.name}`, attachment.data, attachment.name);
+            formData.append(`attachment_${attachment.name}`, data, attachment.name);
         }
 
         return formData;

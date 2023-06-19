@@ -1,11 +1,10 @@
-import { BacktraceAttributeProvider, BacktraceStackTraceConverter } from '.';
+import { BacktraceAttachment, BacktraceAttributeProvider, BacktraceStackTraceConverter } from '.';
 import { SdkOptions } from './builder/SdkOptions';
 import { IdGenerator } from './common/IdGenerator';
 import { BacktraceConfiguration } from './model/configuration/BacktraceConfiguration';
 import { AttributeType } from './model/data/BacktraceData';
 import { BacktraceReportSubmission } from './model/http/BacktraceReportSubmission';
 import { BacktraceRequestHandler } from './model/http/BacktraceRequestHandler';
-import { BacktraceAttachment } from './model/report/BacktraceAttachment';
 import { BacktraceReport } from './model/report/BacktraceReport';
 import { AttributeManager } from './modules/attribute/AttributeManager';
 import { ClientAttributeProvider } from './modules/attribute/ClientAttributeProvider';
@@ -47,10 +46,16 @@ export abstract class BacktraceCoreClient {
         return this._attributeProvider.annotations;
     }
 
+    /**
+     * Client cached attachments
+     */
+    public readonly attachments: BacktraceAttachment[];
+
     private readonly _dataBuilder: BacktraceDataBuilder;
     private readonly _reportSubmission: BacktraceReportSubmission;
     private readonly _rateLimitWatcher: RateLimitWatcher;
     private readonly _attributeProvider: AttributeManager;
+
     /**
      * Current session Id
      */
@@ -70,6 +75,7 @@ export abstract class BacktraceCoreClient {
             new ClientAttributeProvider(_sdkOptions.agentVersion, this._sessionId, options.userAttributes ?? {}),
             ...(attributeProviders ?? []),
         ]);
+        this.attachments = options.attachments ?? [];
     }
 
     /**
@@ -106,7 +112,6 @@ export abstract class BacktraceCoreClient {
      * Asynchronously sends error data to Backtrace
      * @param report Backtrace Report
      */
-
     public async send(report: BacktraceReport): Promise<void>;
     public async send(
         data: BacktraceReport | Error | string,
@@ -119,13 +124,20 @@ export abstract class BacktraceCoreClient {
 
         const report = this.isReport(data)
             ? data
-            : new BacktraceReport(data, reportAttributes, reportAttachments, {
+            : new BacktraceReport(data, reportAttributes, [], {
                   skipFrames: this.skipFrameOnMessage(data),
               });
 
         const { annotations, attributes } = this._attributeProvider.get();
         const backtraceData = this._dataBuilder.build(report, attributes, annotations);
-        await this._reportSubmission.send(backtraceData, report.attachments);
+        await this._reportSubmission.send(backtraceData, this.generateSubmissionAttachments(report, reportAttachments));
+    }
+
+    private generateSubmissionAttachments(
+        report: BacktraceReport,
+        reportAttachments: BacktraceAttachment[],
+    ): BacktraceAttachment[] {
+        return [...this.attachments, ...(report.attachments ?? []), ...(reportAttachments ?? [])];
     }
 
     private skipFrameOnMessage(data: Error | string): number {

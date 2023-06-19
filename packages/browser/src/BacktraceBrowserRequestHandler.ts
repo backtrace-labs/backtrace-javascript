@@ -81,7 +81,7 @@ export class BacktraceBrowserRequestHandler implements BacktraceRequestHandler {
         }
     }
 
-    private createFormData(json: string, attachments?: BacktraceAttachment[]) {
+    private createFormData(json: string, attachments: BacktraceAttachment[]) {
         const formData = new FormData();
         const blob = new Blob([json]);
         formData.append(this.UPLOAD_FILE_NAME, blob, `${this.UPLOAD_FILE_NAME}.json`);
@@ -90,11 +90,11 @@ export class BacktraceBrowserRequestHandler implements BacktraceRequestHandler {
             return formData;
         }
         for (const attachment of attachments) {
-            // no support for file paths
-            if (typeof attachment === 'string') {
+            const data = attachment.get();
+            if (!data) {
                 continue;
             }
-            formData.append(`attachment_${attachment.name}`, attachment.data.toString(), attachment.name);
+            formData.append(`attachment_${attachment.name}`, data.toString(), attachment.name);
         }
 
         return formData;

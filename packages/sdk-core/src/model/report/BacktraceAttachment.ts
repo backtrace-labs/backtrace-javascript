@@ -1,13 +1,11 @@
-export interface BacktraceInMemoryAttachment {
+export interface BacktraceAttachment<T = unknown> {
     /**
      * Attachment name
      */
-    name: string;
+    readonly name: string;
+
     /**
      * Attachment data
      */
-    data: Uint8Array;
+    get(): T | undefined;
 }
-
-export type BacktraceFileAttachment = string;
-export type BacktraceAttachment = BacktraceInMemoryAttachment | BacktraceFileAttachment;
