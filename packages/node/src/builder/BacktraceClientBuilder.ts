@@ -1,6 +1,6 @@
 import { BacktraceAttributeProvider, BacktraceConfiguration, BacktraceCoreClientBuilder } from '@backtrace/sdk-core';
 import {
-    LinuxProcesStatusAttributeProvider,
+    LinuxProcessStatusAttributeProvider,
     MachineAttributeProvider,
     MachineIdentitfierAttributeProvider,
     ProcessInformationAttributeProvider,
@@ -15,7 +15,7 @@ export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<Backtrace
             new ProcessStatusAttributeProvider(),
             new MachineAttributeProvider(),
             new ProcessInformationAttributeProvider(),
-            new LinuxProcesStatusAttributeProvider(),
+            new LinuxProcessStatusAttributeProvider(),
             new MachineIdentitfierAttributeProvider(),
         ]);
     }

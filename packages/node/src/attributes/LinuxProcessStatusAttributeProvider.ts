@@ -2,7 +2,7 @@ import { BacktraceAttributeProvider } from '@backtrace/sdk-core';
 import fs from 'fs';
 import { MEMORY_ATTRIBUTE_MAP, MEMORY_INFORMATION_REGEX, PROCESS_STATUS_MAP } from './processStatusInformationMap';
 
-export class LinuxProcesStatusAttributeProvider implements BacktraceAttributeProvider {
+export class LinuxProcessStatusAttributeProvider implements BacktraceAttributeProvider {
     private readonly _isLinux = process.platform === 'linux';
     public get type(): 'scoped' | 'dynamic' {
         return this._isLinux ? 'dynamic' : 'scoped';

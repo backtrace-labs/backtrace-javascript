@@ -43,5 +43,22 @@ describe('Report Limit Watcher tests', () => {
 
             expect(rateLimitWatcher.skipReport()).toBeFalsy();
         });
+
+        it(`Should not remove timestamp from the queue to make space for the new one`, () => {
+            let timestamp = Date.now();
+            jest.spyOn(TimeHelper, 'now').mockImplementation(() => {
+                return timestamp++;
+            });
+            const numberOfReports = 6;
+            const rateLimitWatcher = new RateLimitWatcher(numberOfReports);
+            for (let reportIndex = 0; reportIndex < numberOfReports; reportIndex++) {
+                rateLimitWatcher.skipReport();
+            }
+            expect(rateLimitWatcher.skipReport()).toBeTruthy();
+            // skip only part of reports
+            timestamp += rateLimitWatcher.MAXIMUM_TIME_IN_QUEUE - numberOfReports / 2;
+
+            expect(rateLimitWatcher.skipReport()).toBeFalsy();
+        });
     });
 });

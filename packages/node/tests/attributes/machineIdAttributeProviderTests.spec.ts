@@ -1,6 +1,6 @@
 import { MachineIdentitfierAttributeProvider } from '../../src/attributes/MachineIdentitfierAttributeProvider';
 
-describe('Machind id attribute provider test', () => {
+describe('Machine id attribute provider test', () => {
     if (MachineIdentitfierAttributeProvider.SUPPORTED_PLATFORMS.includes(process.platform)) {
         it('Should always generate the same identifier', () => {
             const machineIdentifier1 = new MachineIdentitfierAttributeProvider();
