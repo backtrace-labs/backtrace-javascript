@@ -44,10 +44,9 @@ describe('Report Limit Watcher tests', () => {
             expect(rateLimitWatcher.skipReport()).toBeFalsy();
         });
 
-        it(`Should not remove timestamp from the queue to make space for the new one`, () => {
+        it('Should remove timestamp from the queue to make space for the new one', () => {
             let timestamp = Date.now();
-
-            jest.spyOn(TimeHelper, 'now').mockImplementation(() => {
+            jest.spyOn(TimeHelper, 'timeNowInSec').mockImplementation(() => {
                 return timestamp++;
             });
             const numberOfReports = 6;
