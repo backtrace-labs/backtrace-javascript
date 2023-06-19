@@ -12,10 +12,13 @@ export class ProcessInformationAttributeProvider implements BacktraceAttributePr
             // probably by reading the package.json file or process info
             'application.version': process.env.npm_package_version,
             'process.thread.count': 1,
+            'process.cwd': process.cwd(),
             pid: process.pid,
             'uname.machine': process.arch,
             'uname.sysname': this.convertPlatformToAttribute(process.platform),
             environment: process.env.NODE_ENV,
+            'debug.port': process.debugPort,
+            'Exec Arguments': process.execArgv,
         };
     }
 
