@@ -1,4 +1,4 @@
-import { BacktraceConfiguration as CoreConfiguration } from '@backtrace/sdk-core';
+import { BacktraceAttachment, BacktraceConfiguration as CoreConfiguration } from '@backtrace/sdk-core';
 
 export interface BacktraceConfiguration extends CoreConfiguration {
     /**
@@ -10,4 +10,6 @@ export interface BacktraceConfiguration extends CoreConfiguration {
      * Application version
      */
     readonly version: string;
+
+    attachments: BacktraceAttachment<Blob | string>[];
 }
