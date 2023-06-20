@@ -3,16 +3,23 @@ import fs from 'fs';
 import path from 'path';
 
 export class ApplicationInformationAttributeProvider implements BacktraceAttributeProvider {
+    private readonly APPLICATION_ATTRIBUTE = 'application';
+    private readonly APPLICATION_VERSION_ATTRIBUTE = 'application.version';
     private _applicationInformation: Record<string, string> = {};
     public get type(): 'scoped' | 'dynamic' {
         return 'scoped';
     }
 
     constructor(options: BacktraceConfiguration) {
-        if (options.userAttributes?.['application'] && options.userAttributes?.['application.version']) {
-            this._applicationInformation['application'] = options.userAttributes['application'] as string;
-            this._applicationInformation['application.version'] = options.userAttributes[
-                'application.version'
+        if (
+            options.userAttributes?.[this.APPLICATION_ATTRIBUTE] &&
+            options.userAttributes?.[this.APPLICATION_VERSION_ATTRIBUTE]
+        ) {
+            this._applicationInformation[this.APPLICATION_ATTRIBUTE] = options.userAttributes[
+                this.APPLICATION_ATTRIBUTE
+            ] as string;
+            this._applicationInformation[this.APPLICATION_VERSION_ATTRIBUTE] = options.userAttributes[
+                this.APPLICATION_VERSION_ATTRIBUTE
             ] as string;
         }
     }
@@ -22,7 +29,7 @@ export class ApplicationInformationAttributeProvider implements BacktraceAttribu
         if (!applicationData) {
             if (!this._applicationInformation) {
                 throw new Error(
-                    'Cannot find information about the package. Please define application and application.versino attribute',
+                    'Cannot find information about the package. Please define application and application.version attribute',
                 );
             }
 
@@ -31,27 +38,30 @@ export class ApplicationInformationAttributeProvider implements BacktraceAttribu
 
         return {
             package: applicationData,
-            application: this._applicationInformation['application'] ?? applicationData['name'],
-            ['application.version']: this._applicationInformation['application.version'] ?? applicationData['version'],
+            application: this._applicationInformation[this.APPLICATION_ATTRIBUTE] ?? applicationData['name'],
+            [this.APPLICATION_VERSION_ATTRIBUTE]:
+                this._applicationInformation[this.APPLICATION_VERSION_ATTRIBUTE] ?? applicationData['version'],
         };
     }
 
     private readApplicationInformation(): Record<string, unknown> | undefined {
-        const maximumDepth = 5;
         const possibleSourcePaths = [process.cwd()];
         if (require.main?.path) {
-            possibleSourcePaths.unshift(path.resolve(require.main.path, '..'));
+            possibleSourcePaths.unshift(path.dirname(require.main.path));
         }
 
         for (let possibleSourcePath of possibleSourcePaths) {
-            for (let index = 0; index < maximumDepth; index++) {
-                const packagePath = path.join(possibleSourcePath, 'package.json');
-                if (!fs.existsSync(packagePath)) {
-                    possibleSourcePath = path.resolve(possibleSourcePath, '..');
-                    continue;
+            const packagePath = path.join(possibleSourcePath, 'package.json');
+            if (!fs.existsSync(packagePath)) {
+                const parentPath = path.dirname(possibleSourcePath);
+                // avoid checking the same directory twice.
+                if (parentPath === possibleSourcePath) {
+                    break;
                 }
-                return JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+                possibleSourcePath = parentPath;
+                continue;
             }
+            return JSON.parse(fs.readFileSync(packagePath, 'utf8'));
         }
     }
 }
