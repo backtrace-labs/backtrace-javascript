@@ -1,4 +1,4 @@
-import { BacktraceReport } from '../../src/';
+import { BacktraceReport, BacktraceStringAttachment } from '../../src/';
 import { BacktraceTestClient } from '../mocks/BacktraceTestClient';
 describe('Client tests', () => {
     describe('Send tests', () => {
@@ -64,6 +64,17 @@ describe('Client tests', () => {
             expect(client.attachments).toBeDefined();
             expect(client.attachments.length).toEqual(1);
             expect(client.attachments[0]).toBe(inMemoryAttachment);
+        });
+
+        it(`Should allow to use string attachment`, async () => {
+            const expectedAttachmentContent = 'test';
+            const testedAttachment = new BacktraceStringAttachment('client-add-test', expectedAttachmentContent);
+            const client = BacktraceTestClient.buildFakeClient();
+            client.attachments.push(testedAttachment);
+
+            expect(client.attachments).toBeDefined();
+            expect(client.attachments.length).toEqual(1);
+            expect(client.attachments[0]).toEqual(testedAttachment);
         });
 
         it(`Should merge client attachments with report attachments`, async () => {

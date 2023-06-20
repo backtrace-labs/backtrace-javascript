@@ -1,4 +1,4 @@
-import { BacktraceAttachment } from '../report/BacktraceAttachment';
+import { BacktraceAttachment } from '../attachment';
 import { BacktraceDatabaseConfiguration } from './BacktraceDatabaseConfiguration';
 
 export interface BacktraceMetricsSupport {

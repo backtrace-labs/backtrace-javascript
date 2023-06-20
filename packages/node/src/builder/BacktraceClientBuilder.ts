@@ -1,4 +1,5 @@
 import { BacktraceAttachment, BacktraceAttributeProvider, BacktraceCoreClientBuilder } from '@backtrace/sdk-core';
+import { BacktraceFileAttachment } from '../attachment';
 import {
     LinuxProcessStatusAttributeProvider,
     MachineAttributeProvider,
@@ -9,7 +10,6 @@ import {
 import { BacktraceClient } from '../BacktraceClient';
 import { BacktraceConfiguration } from '../BacktraceConfiguration';
 import { BacktraceNodeRequestHandler } from '../BacktraceNodeRequestHandler';
-import { BacktraceFileAttachment } from '../model/BacktraceFileAttachment';
 
 export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<BacktraceClient> {
     constructor(private readonly _options: BacktraceConfiguration) {

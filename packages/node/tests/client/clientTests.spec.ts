@@ -1,7 +1,7 @@
 import { BacktraceReport, BacktraceRequestHandler } from '@backtrace/sdk-core';
 import fs from 'fs';
 import path from 'path';
-import { BacktraceClient, BacktraceFileAttachment } from '../../src/';
+import { BacktraceBufferAttachment, BacktraceClient, BacktraceFileAttachment } from '../../src/';
 describe('Client tests', () => {
     const requestHandler: BacktraceRequestHandler = {
         post: jest.fn().mockResolvedValue(Promise.resolve()),
@@ -61,6 +61,20 @@ describe('Client tests', () => {
             input.on('end', () => {
                 expect(Buffer.concat(chunks).toString()).toEqual(fileContent);
             });
+        });
+
+        it(`Should allow to setup bufer attachment`, async () => {
+            const testedBuffer = Buffer.from('test');
+            client = BacktraceClient.builder({
+                url: 'https://submit.backtrace.io/foo/bar/baz',
+                attachments: [new BacktraceBufferAttachment('test', testedBuffer)],
+            })
+                .useRequestHandler(requestHandler)
+                .build();
+
+            expect(client.attachments).toBeDefined();
+            expect(client.attachments.length).toEqual(1);
+            expect(client.attachments[0].get()).toEqual(testedBuffer);
         });
 
         it(`Should allow to add more attachments`, async () => {

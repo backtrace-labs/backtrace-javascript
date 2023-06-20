@@ -94,7 +94,7 @@ export class BacktraceBrowserRequestHandler implements BacktraceRequestHandler {
             if (!data) {
                 continue;
             }
-            formData.append(`attachment_${attachment.name}`, data.toString(), attachment.name);
+            formData.append(`attachment_${attachment.name}`, data as string | Blob, attachment.name);
         }
 
         return formData;
