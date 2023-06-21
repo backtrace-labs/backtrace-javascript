@@ -4,6 +4,8 @@ import path from 'path';
 import { AssetInfo, Compilation, Compiler, WebpackPluginInstance } from 'webpack';
 import { SourceMapSource } from 'webpack-sources';
 import { BacktraceWebpackSourceGenerator } from './BacktraceWebpackSourceGenerator';
+import { statsPrinter } from './helpers/statsPrinter';
+import { AssetStats } from './models/AssetStats';
 import { BacktracePluginOptions } from './models/BacktracePluginOptions';
 
 export class BacktracePluginV5 implements WebpackPluginInstance {
@@ -21,8 +23,7 @@ export class BacktracePluginV5 implements WebpackPluginInstance {
     }
 
     public apply(compiler: Compiler) {
-        const assetDebugIds = new Map<string, string>();
-        const processedSourceMapsForSources = new Set<string>();
+        const assetStats = new Map<string, AssetStats>();
 
         compiler.hooks.thisCompilation.tap(BacktracePluginV5.name, (compilation) => {
             compilation.hooks.processAssets.tap(
@@ -31,11 +32,45 @@ export class BacktracePluginV5 implements WebpackPluginInstance {
                     stage: Compilation.PROCESS_ASSETS_STAGE_ADDITIONS,
                 },
                 (assets) => {
-                    for (const key in assets) {
-                        const debugId = crypto.randomUUID();
-                        assetDebugIds.set(key, debugId);
+                    const logger = compilation.getLogger(BacktracePluginV5.name);
 
-                        this.injectSourceSnippet(compilation, key, debugId);
+                    for (const key in assets) {
+                        if (!key.match(/\.(c|m)?jsx?$/)) {
+                            continue;
+                        }
+
+                        const debugId = crypto.randomUUID();
+                        assetStats.set(key, { debugId });
+
+                        logger.log(`[${key}] generated debug ID ${debugId}`);
+                    }
+                },
+            );
+
+            compilation.hooks.processAssets.tap(
+                {
+                    name: BacktracePluginV5.name,
+                    stage: Compilation.PROCESS_ASSETS_STAGE_ADDITIONS,
+                },
+                (assets) => {
+                    const logger = compilation.getLogger(BacktracePluginV5.name);
+
+                    for (const key in assets) {
+                        const stats = assetStats.get(key);
+                        if (!stats) {
+                            continue;
+                        }
+
+                        const debugId = stats.debugId;
+
+                        logger.time(`[${key}] inject source snippet`);
+                        try {
+                            this.injectSourceSnippet(compilation, key, debugId);
+                            logger.timeEnd(`[${key}] inject source snippet`);
+                            stats.sourceSnippet = true;
+                        } catch (err) {
+                            stats.sourceSnippet = err instanceof Error ? err : new Error('Unknown error.');
+                        }
                     }
                 },
             );
@@ -47,14 +82,26 @@ export class BacktracePluginV5 implements WebpackPluginInstance {
                     additionalAssets: true,
                 },
                 (assets) => {
+                    const logger = compilation.getLogger(BacktracePluginV5.name);
+
                     for (const key in assets) {
-                        const debugId = assetDebugIds.get(key);
-                        if (!debugId) {
+                        const stats = assetStats.get(key);
+                        if (!stats) {
                             continue;
                         }
 
-                        if (this.injectSourceMapDebugId(compilation, key, debugId)) {
-                            processedSourceMapsForSources.add(key);
+                        const debugId = stats.debugId;
+
+                        logger.time(`[${key}] inject sourcemap key`);
+                        try {
+                            if (this.injectSourceMapDebugId(compilation, key, debugId)) {
+                                logger.timeEnd(`[${key}] inject sourcemap key`);
+                                stats.sourceMapAppend = true;
+                            } else {
+                                stats.sourceMapAppend = false;
+                            }
+                        } catch (err) {
+                            stats.sourceComment = err instanceof Error ? err : new Error('Unknown error.');
                         }
                     }
                     return;
@@ -68,24 +115,43 @@ export class BacktracePluginV5 implements WebpackPluginInstance {
                     stage: Compilation.PROCESS_ASSETS_STAGE_SUMMARIZE,
                 },
                 (assets) => {
+                    const logger = compilation.getLogger(BacktracePluginV5.name);
+
                     for (const key in assets) {
                         const asset = compilation.getAsset(key);
                         if (!asset) {
                             continue;
                         }
 
-                        const debugId = assetDebugIds.get(key);
-                        if (!debugId) {
+                        const stats = assetStats.get(key);
+                        if (!stats) {
                             continue;
                         }
 
-                        this.injectSourceComment(compilation, key, debugId);
+                        const debugId = stats.debugId;
+
+                        logger.time(`[${key}] inject source comment`);
+                        try {
+                            this.injectSourceComment(compilation, key, debugId);
+                            logger.timeEnd(`[${key}] inject source comment`);
+                            stats.sourceComment = true;
+                        } catch (err) {
+                            stats.sourceComment = err instanceof Error ? err : new Error('Unknown error.');
+                        }
 
                         // If the sourcemap has not been processed for some reason,
                         // attempt to manually append the information
-                        if (!processedSourceMapsForSources.has(key)) {
-                            if (this.appendSourceMapDebugId(compilation, key, debugId, processedSourceMaps)) {
-                                processedSourceMapsForSources.add(key);
+                        if (!stats.sourceMapAppend) {
+                            logger.time(`[${key}] append sourcemap key`);
+                            try {
+                                if (this.appendSourceMapDebugId(compilation, key, debugId, processedSourceMaps)) {
+                                    logger.timeEnd(`[${key}] append sourcemap key`);
+                                    stats.sourceMapAppend = true;
+                                } else {
+                                    stats.sourceMapAppend = false;
+                                }
+                            } catch (err) {
+                                stats.sourceMapAppend = err instanceof Error ? err : new Error('Unknown error.');
                             }
                         }
                     }
@@ -93,42 +159,61 @@ export class BacktracePluginV5 implements WebpackPluginInstance {
             );
         });
 
-        const uploader = this._sourceMapUploader;
-        if (uploader) {
-            compiler.hooks.afterEmit.tapPromise(BacktracePluginV5.name, async (compilation) => {
-                const outputPath = compilation.outputOptions.path;
-                if (!outputPath) {
-                    throw new Error('Output path is required to upload sourcemaps.');
+        compiler.hooks.afterEmit.tapPromise(BacktracePluginV5.name, async (compilation) => {
+            const logger = compilation.getLogger(BacktracePluginV5.name);
+
+            const outputPath = compilation.outputOptions.path;
+            if (!outputPath) {
+                throw new Error('Output path is required to upload sourcemaps.');
+            }
+
+            for (const key in compilation.assets) {
+                const asset = compilation.getAsset(key);
+                if (!asset) {
+                    continue;
                 }
 
-                for (const key in compilation.assets) {
-                    const asset = compilation.getAsset(key);
-                    if (!asset) {
+                const stats = assetStats.get(key);
+                if (!stats) {
+                    continue;
+                }
+
+                const sourceMapKeys = this.getSourceMapKeys(asset.info);
+                if (!sourceMapKeys) {
+                    stats.sourceMapUpload = false;
+                    continue;
+                }
+
+                if (!this._sourceMapUploader) {
+                    stats.sourceMapUpload = false;
+                    continue;
+                }
+
+                for (const key of sourceMapKeys) {
+                    const sourceMapAsset = compilation.getAsset(key);
+                    if (!sourceMapAsset) {
                         continue;
                     }
 
-                    const debugId = assetDebugIds.get(key);
-                    if (!debugId) {
-                        continue;
-                    }
-
-                    const sourceMapKeys = this.getSourceMapKeys(asset.info);
-                    if (!sourceMapKeys) {
-                        continue;
-                    }
-
-                    for (const key of sourceMapKeys) {
-                        const sourceMapAsset = compilation.getAsset(key);
-                        if (!sourceMapAsset) {
-                            continue;
-                        }
-
-                        const sourceMapPath = path.join(outputPath, sourceMapAsset.name);
-                        await uploader.upload(sourceMapPath, debugId);
+                    logger.time(`[${key}] upload sourcemap`);
+                    const sourceMapPath = path.join(outputPath, sourceMapAsset.name);
+                    try {
+                        const result = await this._sourceMapUploader.upload(sourceMapPath, stats.debugId);
+                        logger.timeEnd(`[${key}] upload sourcemap`);
+                        stats.sourceMapUpload = result;
+                    } catch (err) {
+                        stats.sourceMapUpload = err instanceof Error ? err : new Error('Unknown error.');
                     }
                 }
-            });
-        }
+            }
+        });
+
+        compiler.hooks.afterEmit.tap(BacktracePluginV5.name, (compilation) => {
+            const printer = statsPrinter(compilation.getLogger(BacktracePluginV5.name));
+            for (const [key, stats] of assetStats) {
+                printer(key, stats);
+            }
+        });
     }
 
     private injectSourceSnippet(compilation: Compilation, key: string, debugId: string): boolean {
