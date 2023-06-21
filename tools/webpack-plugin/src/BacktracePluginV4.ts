@@ -22,13 +22,13 @@ export class BacktracePluginV4 implements WebpackPluginInstance {
                 let source = compilation.assets[key];
 
                 let debugId;
-                if (key.endsWith('.js')) {
+                if (key.match(/.(c|m)?jsx?/)) {
                     debugId = crypto.randomUUID();
                     assetDebugIds.set(key, debugId);
 
                     source = this._sourceGenerator.addDebugIdToSource(source as never, debugId) as typeof source;
                     source = this._sourceGenerator.addDebugIdCommentToSource(source as never, debugId) as typeof source;
-                } else if (key.endsWith('.map')) {
+                } else if (key.match(/\.(c|m)?jsx?\.map$/)) {
                     // The .map replacement should account for most of the use cases
                     const sourceKey = key.replace(/.map$/, '');
                     debugId = assetDebugIds.get(sourceKey);
