@@ -3,65 +3,72 @@ import fs from 'fs';
 import path from 'path';
 
 export class ApplicationInformationAttributeProvider implements BacktraceAttributeProvider {
-    private readonly APPLICATION_ATTRIBUTE = 'application';
-    private readonly APPLICATION_VERSION_ATTRIBUTE = 'application.version';
-    private _applicationInformation: Record<string, string> = {};
+    public readonly APPLICATION_ATTRIBUTE = 'application';
+    public readonly APPLICATION_VERSION_ATTRIBUTE = 'application.version';
+
+    private _application?: string;
+    private _applicationVersion?: string;
+
+    public readonly applicationSearchPaths: string[];
     public get type(): 'scoped' | 'dynamic' {
         return 'scoped';
     }
 
-    constructor(options: BacktraceConfiguration) {
+    constructor(options: BacktraceConfiguration, applicationSearchPaths?: string[]) {
         if (
             options.userAttributes?.[this.APPLICATION_ATTRIBUTE] &&
             options.userAttributes?.[this.APPLICATION_VERSION_ATTRIBUTE]
         ) {
-            this._applicationInformation[this.APPLICATION_ATTRIBUTE] = options.userAttributes[
-                this.APPLICATION_ATTRIBUTE
-            ] as string;
-            this._applicationInformation[this.APPLICATION_VERSION_ATTRIBUTE] = options.userAttributes[
-                this.APPLICATION_VERSION_ATTRIBUTE
-            ] as string;
+            this._application = options.userAttributes[this.APPLICATION_ATTRIBUTE] as string;
+            this._applicationVersion = options.userAttributes[this.APPLICATION_VERSION_ATTRIBUTE] as string;
         }
+
+        this.applicationSearchPaths = applicationSearchPaths ?? this.generateDefaultApplicationSearchPaths();
     }
 
     public get(): Record<string, unknown> {
         const applicationData = this.readApplicationInformation();
-        if (!applicationData) {
-            if (!this._applicationInformation) {
-                throw new Error(
-                    'Cannot find information about the package. Please define application and application.version attribute',
-                );
-            }
+        if (applicationData) {
+            this._application = this._application ?? (applicationData['name'] as string);
+            this._applicationVersion = this._applicationVersion ?? (applicationData['version'] as string);
+        }
 
-            return this._applicationInformation;
+        if (!this._application && !this._applicationVersion) {
+            throw new Error(
+                'Cannot find information about the package. Please define application and application.version attribute',
+            );
         }
 
         return {
             package: applicationData,
-            application: this._applicationInformation[this.APPLICATION_ATTRIBUTE] ?? applicationData['name'],
-            [this.APPLICATION_VERSION_ATTRIBUTE]:
-                this._applicationInformation[this.APPLICATION_VERSION_ATTRIBUTE] ?? applicationData['version'],
+            [this.APPLICATION_ATTRIBUTE]: this._application,
+            [this.APPLICATION_VERSION_ATTRIBUTE]: this._applicationVersion,
         };
     }
 
-    private readApplicationInformation(): Record<string, unknown> | undefined {
+    private generateDefaultApplicationSearchPaths() {
         const possibleSourcePaths = [process.cwd()];
         if (require.main?.path) {
             possibleSourcePaths.unshift(path.dirname(require.main.path));
         }
+        return possibleSourcePaths;
+    }
 
-        for (let possibleSourcePath of possibleSourcePaths) {
-            const packagePath = path.join(possibleSourcePath, 'package.json');
-            if (!fs.existsSync(packagePath)) {
-                const parentPath = path.dirname(possibleSourcePath);
-                // avoid checking the same directory twice.
-                if (parentPath === possibleSourcePath) {
-                    break;
+    private readApplicationInformation(): Record<string, unknown> | undefined {
+        for (let possibleSourcePath of this.applicationSearchPaths) {
+            while (possibleSourcePath !== '.') {
+                const packagePath = path.join(possibleSourcePath, 'package.json');
+                if (!fs.existsSync(packagePath)) {
+                    const parentPath = path.dirname(possibleSourcePath);
+                    // avoid checking the same directory twice.
+                    if (parentPath === possibleSourcePath) {
+                        break;
+                    }
+                    possibleSourcePath = parentPath;
+                    continue;
                 }
-                possibleSourcePath = parentPath;
-                continue;
+                return JSON.parse(fs.readFileSync(packagePath, 'utf8'));
             }
-            return JSON.parse(fs.readFileSync(packagePath, 'utf8'));
         }
     }
 }
