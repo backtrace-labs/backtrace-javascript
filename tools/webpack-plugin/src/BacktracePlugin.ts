@@ -1,6 +1,8 @@
 import { DebugIdGenerator, SourceMapUploader, SourceProcessor } from '@backtrace/sourcemap-tools';
 import path from 'path';
 import webpack, { WebpackPluginInstance } from 'webpack';
+import { statsPrinter } from './helpers/statsPrinter';
+import { AssetStats } from './models/AssetStats';
 import { BacktracePluginOptions } from './models/BacktracePluginOptions';
 
 export class BacktracePlugin implements WebpackPluginInstance {
@@ -15,6 +17,8 @@ export class BacktracePlugin implements WebpackPluginInstance {
     }
 
     public apply(compiler: webpack.Compiler) {
+        const assetStats = new Map<string, AssetStats>();
+
         compiler.hooks.afterEmit.tapPromise(BacktracePlugin.name, async (compilation) => {
             const logger = compilation.getLogger(BacktracePlugin.name);
             if (!compilation.outputOptions.path) {
@@ -48,13 +52,20 @@ export class BacktracePlugin implements WebpackPluginInstance {
             logger.log(`received ${entries.length} files for processing`);
 
             for (const [asset, sourcePath, sourceMapPath] of entries) {
+                const stats: AssetStats = {};
+                assetStats.set(asset, stats);
+
                 let debugId: string;
 
                 logger.time(`[${asset}] process source and sourcemap`);
                 try {
                     debugId = await this._sourceProcessor.processSourceAndSourceMapFiles(sourcePath, sourceMapPath);
+                    stats.debugId = debugId;
+                    stats.processSource = true;
+                    logger.timeEnd(`[${asset}] process source and sourcemap`);
                 } catch (err) {
                     logger.error(`[${asset}] process source and sourcemap failed:`, err);
+                    stats.processSource = err instanceof Error ? err : new Error('Unknown error.');
                     continue;
                 } finally {
                     logger.timeEnd(`[${asset}] process source and sourcemap`);
@@ -67,13 +78,20 @@ export class BacktracePlugin implements WebpackPluginInstance {
 
                 logger.time(`[${asset}] upload sourcemap`);
                 try {
-                    await this._sourceMapUploader.upload(sourceMapPath, debugId);
+                    const result = await this._sourceMapUploader.upload(sourceMapPath, debugId);
+                    stats.sourceMapUpload = result;
                     logger.info(`[${asset}] file processed and sourcemap uploaded`);
                 } catch (err) {
                     logger.error(`[${asset}] upload sourcemap failed:`, err);
+                    stats.sourceMapUpload = err instanceof Error ? err : new Error('Unknown error.');
                 } finally {
                     logger.timeEnd(`[${asset}] upload sourcemap`);
                 }
+            }
+
+            const printer = statsPrinter(compilation.getLogger(BacktracePlugin.name));
+            for (const [key, stats] of assetStats) {
+                printer(key, stats);
             }
         });
     }
