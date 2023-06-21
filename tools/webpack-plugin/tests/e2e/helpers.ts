@@ -1,3 +1,4 @@
+import { SourceMapUploader } from '@backtrace/sourcemap-tools';
 import fs from 'fs';
 import path from 'path';
 import webpack from 'webpack';
@@ -30,7 +31,14 @@ export function getBaseConfig(config: webpack.Configuration, options?: BaseConfi
                 },
             ],
         },
-        plugins: [new BacktracePlugin(options?.pluginOptions ?? { debugIdGenerator: new TestDebugIdGenerator() })],
+        plugins: [
+            new BacktracePlugin(
+                options?.pluginOptions ?? {
+                    debugIdGenerator: new TestDebugIdGenerator(),
+                    sourceMapUploader: new SourceMapUploader('http://localhost'),
+                },
+            ),
+        ],
         ...config,
     };
 }

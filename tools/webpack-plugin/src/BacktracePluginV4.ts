@@ -1,17 +1,22 @@
-import { ContentAppender, DebugIdGenerator } from '@backtrace/sourcemap-tools';
+import { ContentAppender, DebugIdGenerator, SourceMapUploader } from '@backtrace/sourcemap-tools';
 import crypto from 'crypto';
+import path from 'path';
 import { Compiler, WebpackPluginInstance } from 'webpack';
 import { BacktraceWebpackSourceGenerator } from './BacktraceWebpackSourceGenerator';
 import { BacktracePluginOptions } from './models/BacktracePluginOptions';
 
 export class BacktracePluginV4 implements WebpackPluginInstance {
     private readonly _sourceGenerator: BacktraceWebpackSourceGenerator;
+    private readonly _sourceMapUploader?: SourceMapUploader;
 
     constructor(public readonly options?: BacktracePluginOptions) {
         this._sourceGenerator = new BacktraceWebpackSourceGenerator(
             options?.debugIdGenerator ?? new DebugIdGenerator(),
             new ContentAppender(),
         );
+
+        this._sourceMapUploader =
+            options?.sourceMapUploader ?? (options?.uploadUrl ? new SourceMapUploader(options.uploadUrl) : undefined);
     }
 
     public apply(compiler: Compiler) {
@@ -42,5 +47,35 @@ export class BacktracePluginV4 implements WebpackPluginInstance {
                 compilation.assets[key] = source;
             }
         });
+
+        const uploader = this._sourceMapUploader;
+        if (uploader) {
+            compiler.hooks.afterEmit.tapPromise(BacktracePluginV4.name, async (compilation) => {
+                const outputPath = compilation.outputOptions.path;
+                if (!outputPath) {
+                    throw new Error('Output path is required to upload sourcemaps.');
+                }
+
+                for (const key in compilation.assets) {
+                    if (!key.match(/\.(c|m)?jsx?\.map$/)) {
+                        continue;
+                    }
+
+                    const sourceKey = key.replace(/.map$/, '');
+                    const debugId = assetDebugIds.get(sourceKey);
+                    if (!debugId) {
+                        continue;
+                    }
+
+                    const sourceMapAsset = compilation.getAsset(key);
+                    if (!sourceMapAsset) {
+                        continue;
+                    }
+
+                    const sourceMapPath = path.join(outputPath, sourceMapAsset.name);
+                    await uploader.upload(sourceMapPath, debugId);
+                }
+            });
+        }
     }
 }
