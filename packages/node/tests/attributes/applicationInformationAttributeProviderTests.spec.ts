@@ -1,6 +1,6 @@
-import { BacktraceConfiguration } from '@backtrace/sdk-core';
 import fs from 'fs';
 import path from 'path';
+import { BacktraceConfiguration } from '../../src';
 import { ApplicationInformationAttributeProvider } from '../../src/attributes/ApplicationInformationAttributeProvider';
 
 describe('Application information attribute provider tests', () => {
