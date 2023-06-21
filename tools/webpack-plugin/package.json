@@ -9,6 +9,7 @@
     },
     "scripts": {
         "build": "tsc -b ./tsconfig.build.json",
+        "build:webpack": "webpack",
         "clean": "tsc -b ./tsconfig.build.json --clean && rimraf \"lib\"",
         "format": "prettier --write '**/*.ts'",
         "lint": "eslint . --ext .ts",
@@ -42,9 +43,11 @@
         "jest": "^29.5.0",
         "ts-jest": "^29.1.0",
         "ts-loader": "^9.4.3 || ^8.4.0",
+        "ts-loader-webpack-4": "npm:ts-loader@^8.4.0",
         "typescript": "^5.0.4",
         "webpack-4": "npm:webpack@^4.46.0",
-        "ts-loader-webpack-4": "npm:ts-loader@^8.4.0",
+        "webpack-cli": "^5.1.4",
+        "webpack-node-externals": "^3.0.0",
         "webpack-sources-webpack-4": "npm:webpack-sources@^1.4.1"
     },
     "dependencies": {
