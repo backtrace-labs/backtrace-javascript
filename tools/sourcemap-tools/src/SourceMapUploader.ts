@@ -1,10 +1,11 @@
 import crypto from 'crypto';
 import fs from 'fs';
 import http from 'http';
+import https from 'https';
 import { Readable } from 'stream';
 import { SOURCEMAP_DEBUG_ID_KEY } from './DebugIdGenerator';
 
-const DEBUG_ID_QUERY = 'symbolication_id';
+export const DEBUG_ID_QUERY = 'symbolication_id';
 
 interface Sourcemap {
     version: number;
@@ -66,9 +67,10 @@ export class SourceMapUploader {
         }
 
         const uploadUrl = this.buildUploadUrl(debugId);
+        const protocol = uploadUrl.protocol === 'https:' ? https : http;
 
         return new Promise<UploadResult>((resolve, reject) => {
-            const request = http.request(
+            const request = protocol.request(
                 {
                     hostname: uploadUrl.hostname,
                     port: uploadUrl.port,
@@ -119,8 +121,8 @@ export class SourceMapUploader {
         }
 
         const sourcemap = value as Partial<Sourcemap>;
-        if (sourcemap.version !== 3) {
-            throw new Error('Sourcemap version is not supported.');
+        if (!sourcemap.version) {
+            throw new Error('Sourcemap object does not have a version.');
         }
     }
 
