@@ -26,12 +26,31 @@ export class BacktracePlugin implements WebpackPluginInstance {
             compilation.hooks.processAssets.tap(
                 {
                     name: BacktracePlugin.name,
+                    stage: Compilation.PROCESS_ASSETS_STAGE_PRE_PROCESS,
+                },
+                (assets) => {
+                    for (const key in assets) {
+                        if (!key.match(/.(c|m)?jsx?/)) {
+                            continue;
+                        }
+
+                        const debugId = crypto.randomUUID();
+                        assetDebugIds.set(key, debugId);
+                    }
+                },
+            );
+
+            compilation.hooks.processAssets.tap(
+                {
+                    name: BacktracePlugin.name,
                     stage: Compilation.PROCESS_ASSETS_STAGE_ADDITIONS,
                 },
                 (assets) => {
                     for (const key in assets) {
-                        const debugId = crypto.randomUUID();
-                        assetDebugIds.set(key, debugId);
+                        const debugId = assetDebugIds.get(key);
+                        if (!debugId) {
+                            continue;
+                        }
 
                         this.injectSourceSnippet(compilation, key, debugId);
                     }
