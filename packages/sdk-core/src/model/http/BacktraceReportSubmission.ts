@@ -1,6 +1,6 @@
+import { BacktraceAttachment } from '../attachment';
 import { BacktraceConfiguration } from '../configuration/BacktraceConfiguration';
 import { BacktraceData } from '../data/BacktraceData';
-import { BacktraceAttachment } from '../report/BacktraceAttachment';
 import { BacktraceRequestHandler } from './BacktraceRequestHandler';
 
 export class BacktraceReportSubmission {

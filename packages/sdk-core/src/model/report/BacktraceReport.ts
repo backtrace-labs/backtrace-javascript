@@ -1,5 +1,5 @@
 import { TimeHelper } from '../../common/TimeHelper';
-import { BacktraceAttachment } from './BacktraceAttachment';
+import { BacktraceAttachment } from '../attachment';
 import { BacktraceErrorType } from './BacktraceErrorType';
 
 export class BacktraceReport {
