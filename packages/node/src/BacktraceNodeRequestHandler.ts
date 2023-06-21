@@ -8,12 +8,9 @@ import {
 } from '@backtrace/sdk-core';
 import { BacktraceData } from '@backtrace/sdk-core/src/model/data/BacktraceData';
 import FormData from 'form-data';
-import fs from 'fs';
 import http from 'http';
 import https from 'https';
-
-import path from 'path';
-
+import { Readable } from 'stream';
 export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
     private readonly UPLOAD_FILE_NAME = 'upload_file';
     private readonly _timeout: number;
@@ -36,7 +33,7 @@ export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
     public async postError(
         submissionUrl: string,
         data: BacktraceData,
-        attachments: BacktraceAttachment[],
+        attachments: BacktraceAttachment<Buffer | Readable | string | Uint8Array>[],
     ): Promise<BacktraceReportSubmissionResult<BacktraceSubmissionResponse>> {
         const formData = this.createFormData(JSON.stringify(data), attachments);
         return this.send<BacktraceSubmissionResponse>(submissionUrl, formData);
@@ -122,7 +119,7 @@ export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
     private getHttpClient(submissionUrl: URL) {
         return submissionUrl.protocol === 'http' ? http : https;
     }
-    private createFormData(json: string, attachments?: BacktraceAttachment[]) {
+    private createFormData(json: string, attachments?: BacktraceAttachment<Buffer | Readable | string | Uint8Array>[]) {
         const formData = new FormData();
         formData.append(this.UPLOAD_FILE_NAME, json, `${this.UPLOAD_FILE_NAME}.json`);
 
@@ -131,15 +128,11 @@ export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
         }
 
         for (const attachment of attachments) {
-            if (typeof attachment === 'string') {
-                if (!fs.existsSync(attachment)) {
-                    continue;
-                }
-                const name = path.basename(attachment);
-                formData.append(`attachment_${name}`, fs.createReadStream(attachment), name);
+            const data = attachment.get();
+            if (!data) {
                 continue;
             }
-            formData.append(`attachment_${attachment.name}`, attachment.data, attachment.name);
+            formData.append(`attachment_${attachment.name}`, data, attachment.name);
         }
 
         return formData;

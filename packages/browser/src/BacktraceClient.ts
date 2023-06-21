@@ -1,11 +1,11 @@
 import {
     BacktraceAttributeProvider,
-    BacktraceConfiguration,
     BacktraceCoreClient,
     BacktraceRequestHandler,
     BacktraceStackTraceConverter,
 } from '@backtrace/sdk-core';
 import { AGENT } from './agentDefinition';
+import { BacktraceConfiguration } from './BacktraceConfiguration';
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 
 export class BacktraceClient extends BacktraceCoreClient {
