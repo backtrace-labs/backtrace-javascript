@@ -26,7 +26,7 @@ export class BacktraceBrowserRequestHandler implements BacktraceRequestHandler {
     public async postError<T>(
         submissionUrl: string,
         data: BacktraceData,
-        attachments: BacktraceAttachment[],
+        attachments: BacktraceAttachment<Blob | string>[],
     ): Promise<BacktraceReportSubmissionResult<T>> {
         const formData = this.createFormData(JSON.stringify(data), attachments);
         return this.post(submissionUrl, formData);
@@ -81,7 +81,7 @@ export class BacktraceBrowserRequestHandler implements BacktraceRequestHandler {
         }
     }
 
-    private createFormData(json: string, attachments: BacktraceAttachment[]) {
+    private createFormData(json: string, attachments: BacktraceAttachment<Blob | string>[]) {
         const formData = new FormData();
         const blob = new Blob([json]);
         formData.append(this.UPLOAD_FILE_NAME, blob, `${this.UPLOAD_FILE_NAME}.json`);
@@ -94,7 +94,7 @@ export class BacktraceBrowserRequestHandler implements BacktraceRequestHandler {
             if (!data) {
                 continue;
             }
-            formData.append(`attachment_${attachment.name}`, data as string | Blob, attachment.name);
+            formData.append(`attachment_${attachment.name}`, data, attachment.name);
         }
 
         return formData;
