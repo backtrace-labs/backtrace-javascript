@@ -49,7 +49,7 @@ describe('Application information attribute provider tests', () => {
         });
 
         it('Should throw an error when the package.json information does exist', () => {
-            const testedPackageDir = path.join('foo', 'bar', 'baz', '123', 'foo', 'bar');
+            const testedPackageDir = path.join('/foo', 'bar', 'baz', '123', 'foo', 'bar');
             const provider = new ApplicationInformationAttributeProvider({} as BacktraceConfiguration, [
                 testedPackageDir,
             ]);
