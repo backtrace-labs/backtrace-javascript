@@ -5,8 +5,8 @@
     "author": "Backtrace <team@backtrace.io>",
     "license": "MIT",
     "scripts": {
-        "build": "tsc -b ./tsconfig.packages.json",
-        "clean": "tsc -b --clean && rimraf \"packages/*/lib\" \"lib\"",
+        "build": "tsc -b ./tsconfig.packages.json && npm run build --ws --if-present",
+        "clean": "tsc -b --clean && rimraf \"lib\" && npm run clean --ws --if-present",
         "format": "prettier --write '**/*.ts'",
         "format:check": "prettier --check '**/*.ts'",
         "lint": "eslint . --ext .ts",
