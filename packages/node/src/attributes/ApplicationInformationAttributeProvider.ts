@@ -57,19 +57,13 @@ export class ApplicationInformationAttributeProvider implements BacktraceAttribu
 
     private readApplicationInformation(): Record<string, unknown> | undefined {
         for (let possibleSourcePath of this.applicationSearchPaths) {
-            while (possibleSourcePath !== '.') {
+            do {
                 const packagePath = path.join(possibleSourcePath, 'package.json');
-                if (!fs.existsSync(packagePath)) {
-                    const parentPath = path.dirname(possibleSourcePath);
-                    // avoid checking the same directory twice.
-                    if (parentPath === possibleSourcePath) {
-                        break;
-                    }
-                    possibleSourcePath = parentPath;
-                    continue;
+                if (fs.existsSync(packagePath)) {
+                    return JSON.parse(fs.readFileSync(packagePath, 'utf8'));
                 }
-                return JSON.parse(fs.readFileSync(packagePath, 'utf8'));
-            }
+                possibleSourcePath = path.dirname(possibleSourcePath);
+            } while (possibleSourcePath !== path.dirname(possibleSourcePath));
         }
     }
 }
