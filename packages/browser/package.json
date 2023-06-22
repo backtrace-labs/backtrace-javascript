@@ -4,6 +4,7 @@
     "description": "Backtrace-JavaScript web browser integration",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
+    "browser": "lib/index.js",
     "scripts": {
         "build": "webpack",
         "clean": "rimraf \"lib\"",
