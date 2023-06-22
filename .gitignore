@@ -134,3 +134,6 @@ lib
 
 dist/
 
+# VSCode settings
+settings.json
+

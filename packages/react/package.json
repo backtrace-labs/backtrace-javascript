@@ -1,0 +1,37 @@
+{
+    "name": "@backtrace/react",
+    "version": "0.0.1",
+    "description": "Backtrace-Javascript React integration",
+    "main": "lib/index.js",
+    "scripts": {
+        "build": "webpack",
+        "clean": "rimraf \"lib\"",
+        "format": "prettier --write '**/*.ts'",
+        "lint": "eslint . --ext .ts",
+        "watch": "webpack -w",
+        "test": "NODE_ENV=test jest"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/backtrace-labs/backtrace-javascript.git"
+    },
+    "keywords": [
+        "Error",
+        "Reporting",
+        "Diagnostic",
+        "Tool",
+        "Bug",
+        "Bugs",
+        "StackTrace",
+        "React"
+    ],
+    "author": "Backtrace <team@backtrace.io>",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/backtrace-labs/backtrace-javascript/issues"
+    },
+    "homepage": "https://github.com/backtrace-labs/backtrace-javascript#readme",
+    "dependencies": {
+        "typescript": "^5.0.4"
+    }
+}
