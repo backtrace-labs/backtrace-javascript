@@ -57,6 +57,10 @@ export class ApplicationInformationAttributeProvider implements BacktraceAttribu
 
     private readApplicationInformation(): Record<string, unknown> | undefined {
         for (let possibleSourcePath of this.applicationSearchPaths) {
+            // to make sure we check all directories including `/` we want to assign the parent
+            // directory to the current path after checking if the parent directory is equal the current
+            // directory. Because of that in the while condition, there is an assignement to the
+            // current directory to check next dir in the dir strucutre.
             do {
                 const packageJson = this.readPackageFromDir(possibleSourcePath);
                 if (packageJson) {
