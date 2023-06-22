@@ -8,12 +8,17 @@
         "node": ">=14"
     },
     "scripts": {
-        "build": "tsc",
-        "clean": "tsc -b --clean && rimraf \"lib\"",
+        "build": "tsc -b ./tsconfig.build.json",
+        "clean": "tsc -b ./tsconfig.build.json --clean && rimraf \"lib\"",
         "format": "prettier --write '**/*.ts'",
         "lint": "eslint . --ext .ts",
-        "watch": "tsc -w",
-        "test": "NODE_ENV=test jest"
+        "watch": "tsc -b ./tsconfig.packages.json -w",
+        "test": "npm run test:webpackv5 && npm run test:webpackv4",
+        "test:webpackv4": "NODE_ENV=test jest --config ./webpack4.jest.config.js",
+        "test:webpackv5": "NODE_ENV=test jest",
+        "test:e2e": "npm run test:e2e:webpackv5 && npm run test:e2e:webpackv4",
+        "test:e2e:webpackv4": "NODE_ENV=test jest --config ./webpack4.e2e.jest.config.js",
+        "test:e2e:webpackv5": "NODE_ENV=test jest --config ./e2e.jest.config.js"
     },
     "repository": {
         "type": "git",
@@ -36,16 +41,19 @@
     "homepage": "https://github.com/backtrace-labs/backtrace-javascript#readme",
     "devDependencies": {
         "@types/jest": "^29.5.1",
-        "@types/webpack-sources": "^3.2.0",
+        "@types/webpack-sources": "^3.2.0 || ^1.4.1",
         "jest": "^29.5.0",
         "ts-jest": "^29.1.0",
-        "ts-loader": "^9.4.3",
-        "typescript": "^5.0.4"
+        "ts-loader": "^9.4.3 || ^8.4.0",
+        "typescript": "^5.0.4",
+        "webpack-4": "npm:webpack@^4.46.0",
+        "ts-loader-webpack-4": "npm:ts-loader@^8.4.0",
+        "webpack-sources-webpack-4": "npm:webpack-sources@^1.4.1"
     },
     "dependencies": {
         "@backtrace/sourcemap-tools": "^0.0.1"
     },
     "peerDependencies": {
-        "webpack": "^5.85.0"
+        "webpack": "^5.85.0 || ^4.46.0"
     }
 }

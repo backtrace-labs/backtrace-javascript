@@ -35,7 +35,7 @@ export function createE2ETest(
             const webpackResult = await asyncWebpack(config);
             expectSuccess(webpackResult);
             result = webpackResult;
-        }, 30000);
+        }, 120000);
 
         if (opts?.testSourceFunction ?? true) {
             it('should inject function into emitted source files', async () => {

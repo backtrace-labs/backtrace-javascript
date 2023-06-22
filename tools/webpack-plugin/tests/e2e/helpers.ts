@@ -1,8 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import webpack from 'webpack';
-import { BacktracePlugin } from '../../src';
-import { BacktracePluginOptions } from '../../src/BacktracePlugin';
+import { BacktracePlugin, BacktracePluginOptions } from '../../src';
 import { TestDebugIdGenerator } from '../__mocks__/TestDebugIdGenerator';
 
 export interface BaseConfigOptions {
