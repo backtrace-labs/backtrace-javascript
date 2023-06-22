@@ -29,7 +29,10 @@
         "Tool",
         "Bug",
         "Bugs",
-        "StackTrace"
+        "StackTrace",
+        "Source maps",
+        "Sourcemaps",
+        "Webpack"
     ],
     "bugs": {
         "url": "https://github.com/backtrace-labs/backtrace-javascript/issues"

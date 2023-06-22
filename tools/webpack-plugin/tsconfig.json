@@ -1,0 +1,13 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "rootDir": "./src",
+        "outDir": "./lib"
+    },
+    "exclude": ["node_modules", "tests", "lib"],
+    "references": [
+        {
+            "path": "../sourcemap-tools/tsconfig.json"
+        }
+    ]
+}
