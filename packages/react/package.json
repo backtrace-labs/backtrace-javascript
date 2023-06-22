@@ -8,8 +8,7 @@
         "clean": "rimraf \"lib\"",
         "format": "prettier --write '**/*.ts'",
         "lint": "eslint . --ext .ts",
-        "watch": "webpack -w",
-        "test": "NODE_ENV=test jest"
+        "watch": "webpack -w"
     },
     "repository": {
         "type": "git",
