@@ -5,9 +5,6 @@
             "path": "packages/sdk-core"
         },
         {
-            "path": "packages/browser"
-        },
-        {
             "path": "packages/node"
         }
     ]
