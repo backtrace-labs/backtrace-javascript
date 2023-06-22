@@ -4,6 +4,9 @@
     "description": "Backtrace Webpack plugin",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
+    "engines": {
+        "node": ">=14"
+    },
     "scripts": {
         "build": "tsc",
         "clean": "tsc -b --clean && rimraf \"lib\"",
