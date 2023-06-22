@@ -1,4 +1,8 @@
-import { SdkOptions } from '@backtrace/sdk-core/src/builder/SdkOptions';
+import type { SdkOptions } from '@backtrace/sdk-core/lib/builder/SdkOptions';
+
+// These variables will be set on compilation stage
+declare const BACKTRACE_AGENT_NAME: string;
+declare const BACKTRACE_AGENT_VERSION: string;
 
 export const AGENT: SdkOptions = {
     langName: 'js',
@@ -9,6 +13,6 @@ export const AGENT: SdkOptions = {
      * it now, I'm leaving it hardcoded, but in the future we want
      * to change it and use webpack to generate it
      */
-    agent: 'backtrace-js',
-    agentVersion: '0.0.1',
+    agent: BACKTRACE_AGENT_NAME,
+    agentVersion: BACKTRACE_AGENT_VERSION,
 };

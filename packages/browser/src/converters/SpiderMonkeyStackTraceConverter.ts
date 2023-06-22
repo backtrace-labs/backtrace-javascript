@@ -1,6 +1,6 @@
 import { ANONYMOUS_FUNCTION, BacktraceReport, BacktraceStackTraceConverter, UNKNOWN_FRAME } from '@backtrace/sdk-core';
-import { BacktraceStackFrame } from '@backtrace/sdk-core/src/model/data/BacktraceStackTrace';
-import { JavaScriptEngine } from '@backtrace/sdk-core/src/model/data/JavaScriptEngine';
+import { BacktraceStackFrame } from '@backtrace/sdk-core/lib/model/data/BacktraceStackTrace';
+import { JavaScriptEngine } from '@backtrace/sdk-core/lib/model/data/JavaScriptEngine';
 
 export class SpiderMonkeyStackTraceConverter implements BacktraceStackTraceConverter {
     private readonly ANONYMOUS_FUNCTIONS = ['()', '(null)', ''];
