@@ -1,12 +1,12 @@
 import { BacktraceCoreClientBuilder, BacktraceStackTraceConverter } from '@backtrace/sdk-core';
-import { V8StackTraceConverter } from '@backtrace/sdk-core/src/modules/converter/V8StackTraceConverter';
+import { V8StackTraceConverter } from '@backtrace/sdk-core/lib/modules/converter/V8StackTraceConverter';
+import { BacktraceBrowserRequestHandler } from '../BacktraceBrowserRequestHandler';
+import { BacktraceClient } from '../BacktraceClient';
+import { BacktraceConfiguration } from '../BacktraceConfiguration';
 import { UserAgentAttributeProvider } from '../attributes/UserAgentAttributeProvider';
 import { UserIdentifierAttributeProvider } from '../attributes/UserIdentifierAttributeProvider';
 import { WebsiteAttributeProvider } from '../attributes/WebsiteAttributeProvider';
 import { WindowAttributeProvider } from '../attributes/WindowAttributeProvider';
-import { BacktraceBrowserRequestHandler } from '../BacktraceBrowserRequestHandler';
-import { BacktraceClient } from '../BacktraceClient';
-import { BacktraceConfiguration } from '../BacktraceConfiguration';
 import { JavaScriptCoreStackTraceConverter } from '../converters/JavaScriptCoreStackTraceConverter';
 import { SpiderMonkeyStackTraceConverter } from '../converters/SpiderMonkeyStackTraceConverter';
 import { getEngine } from '../engineDetector';

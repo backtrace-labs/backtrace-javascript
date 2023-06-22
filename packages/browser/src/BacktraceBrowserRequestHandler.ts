@@ -5,7 +5,7 @@ import {
     ConnectionError,
     DEFAULT_TIMEOUT,
 } from '@backtrace/sdk-core';
-import { BacktraceData } from '@backtrace/sdk-core/src/model/data/BacktraceData';
+import { BacktraceData } from '@backtrace/sdk-core/lib/model/data/BacktraceData';
 
 export class BacktraceBrowserRequestHandler implements BacktraceRequestHandler {
     private readonly UPLOAD_FILE_NAME = 'upload_file';
