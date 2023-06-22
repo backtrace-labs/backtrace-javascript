@@ -48,7 +48,7 @@ describe('Application information attribute provider tests', () => {
             expect(attributes[provider.APPLICATION_VERSION_ATTRIBUTE]).toBe(expectedPackageJson.version);
         });
 
-        it('Should throw an error when the package.json information does exist', () => {
+        it('Should throw an error when the package.json information does not exist', () => {
             const testedPackageDir = path.join('/foo', 'bar', 'baz', '123', 'foo', 'bar');
             const provider = new ApplicationInformationAttributeProvider({} as BacktraceConfiguration, [
                 testedPackageDir,
