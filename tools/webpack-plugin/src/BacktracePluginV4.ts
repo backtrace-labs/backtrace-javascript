@@ -22,7 +22,7 @@ export class BacktracePluginV4 implements WebpackPluginInstance {
                 let source = compilation.assets[key];
 
                 let debugId;
-                if (key.match(/.(c|m)?jsx?/)) {
+                if (key.match(/.(c|m)?jsx?$/)) {
                     debugId = crypto.randomUUID();
                     assetDebugIds.set(key, debugId);
 
