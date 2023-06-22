@@ -3,9 +3,6 @@
     "references": [
         {
             "path": "packages/sdk-core"
-        },
-        {
-            "path": "packages/node"
         }
     ]
 }
