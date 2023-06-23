@@ -1,4 +1,4 @@
-import { ANONYMOUS_FUNCTION, BacktraceReport, BacktraceStackTraceConverter, UNKNOWN_FRAME } from '@backtrace/sdk-core';
+import { ANONYMOUS_FUNCTION, BacktraceStackTraceConverter, UNKNOWN_FRAME } from '@backtrace/sdk-core';
 import { BacktraceStackFrame } from '@backtrace/sdk-core/lib/model/data/BacktraceStackTrace';
 import { JavaScriptEngine } from '@backtrace/sdk-core/lib/model/data/JavaScriptEngine';
 
@@ -7,12 +7,9 @@ export class JavaScriptCoreStackTraceConverter implements BacktraceStackTraceCon
         return 'JavaScriptCore';
     }
 
-    public convert(report: BacktraceReport): BacktraceStackFrame[] {
+    public convert(stackTrace: string): BacktraceStackFrame[] {
         const result: BacktraceStackFrame[] = [];
-        if (!report.stackTrace) {
-            return result;
-        }
-        const stackFrames = report.stackTrace.split('\n');
+        const stackFrames = stackTrace.split('\n');
 
         for (const stackFrame of stackFrames) {
             const normalizedStackFrame = stackFrame.trim();
