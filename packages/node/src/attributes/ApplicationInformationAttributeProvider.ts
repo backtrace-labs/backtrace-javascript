@@ -35,7 +35,7 @@ export class ApplicationInformationAttributeProvider implements BacktraceAttribu
             this._applicationVersion = this._applicationVersion ?? (applicationData['version'] as string);
         }
 
-        if (!this._application && !this._applicationVersion) {
+        if (!this._application || !this._applicationVersion) {
             throw new Error(
                 'Cannot find information about the package. Please define application and application.version attribute',
             );
