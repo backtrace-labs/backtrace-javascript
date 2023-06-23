@@ -1,6 +1,5 @@
 import { BacktraceStackFrame } from '../../model/data/BacktraceStackTrace';
 import { JavaScriptEngine } from '../../model/data/JavaScriptEngine';
-import { BacktraceReport } from '../../model/report/BacktraceReport';
 import { BacktraceStackTraceConverter } from './BacktraceStackTraceConverter';
 import { ANONYMOUS_FUNCTION, UNKNOWN_FRAME } from './consts/frameNamesConsts';
 
@@ -9,13 +8,10 @@ export class V8StackTraceConverter implements BacktraceStackTraceConverter {
         return 'v8';
     }
 
-    convert(report: BacktraceReport): BacktraceStackFrame[] {
+    convert(stackTrace: string, message: string): BacktraceStackFrame[] {
         const result: BacktraceStackFrame[] = [];
-        if (!report.stackTrace) {
-            return result;
-        }
-        let stackFrames = report.stackTrace.split('\n');
-        const errorHeader = report.message.split('\n');
+        let stackFrames = stackTrace.split('\n');
+        const errorHeader = message.split('\n');
 
         // remove error header from stack trace - if the error header exists
         if (stackFrames[0].indexOf(errorHeader[0]) !== -1) {
