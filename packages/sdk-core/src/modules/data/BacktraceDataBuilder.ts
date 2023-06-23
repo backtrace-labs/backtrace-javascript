@@ -34,7 +34,7 @@ export class BacktraceDataBuilder {
                 [this.MAIN_THREAD_NAME]: {
                     fault: true,
                     name: this.MAIN_THREAD_NAME,
-                    stack: this._stackTraceConverter.convert(report),
+                    stack: this._stackTraceConverter.convert(report.stackTrace, report.message),
                 },
             },
             annotations: {
