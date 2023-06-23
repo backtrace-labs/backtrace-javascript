@@ -1,6 +1,7 @@
 import { BacktraceAttributeProvider } from '@backtrace/sdk-core';
 import fs from 'fs';
 import path from 'path';
+import process from 'process';
 import { BacktraceConfiguration } from '../BacktraceConfiguration';
 
 export class ApplicationInformationAttributeProvider implements BacktraceAttributeProvider {
@@ -8,7 +9,7 @@ export class ApplicationInformationAttributeProvider implements BacktraceAttribu
     public readonly APPLICATION_VERSION_ATTRIBUTE = 'application.version';
 
     private _application?: string;
-    private _applicationVersion?: string;
+    private _applicationVersion?: string = process.env.npm_package_version;
 
     public readonly applicationSearchPaths: string[];
     public get type(): 'scoped' | 'dynamic' {

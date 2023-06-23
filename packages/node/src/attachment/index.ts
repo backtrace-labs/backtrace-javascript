@@ -1,3 +1,3 @@
-export * from '@backtrace/sdk-core/lib/model/attachment';
+export { BacktraceAttachment, BacktraceStringAttachment, BacktraceUint8ArrayAttachment } from '@backtrace/sdk-core';
 export * from './BacktraceBufferAttachment';
 export * from './BacktraceFileAttachment';

@@ -53,10 +53,8 @@ export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
 
             return new Promise<BacktraceReportSubmissionResult<T>>((res) => {
                 const request = httpClient.request(
+                    url,
                     {
-                        hostname: url.hostname,
-                        path: url.pathname,
-                        port: url.port ?? 443,
                         rejectUnauthorized: this._options.ignoreSslCertificate === true,
                         timeout: this._timeout,
                         method: 'POST',
@@ -100,11 +98,10 @@ export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
 
                 if (typeof payload === 'string') {
                     request.write(payload);
+                    request.end();
                 } else {
                     payload.pipe(request);
                 }
-
-                request.end();
             });
         } catch (err) {
             if (ConnectionError.isConnectionError(err)) {
