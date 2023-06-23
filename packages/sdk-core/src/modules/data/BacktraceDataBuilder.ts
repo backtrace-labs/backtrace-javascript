@@ -1,4 +1,4 @@
-import { BacktraceStackTraceConverter } from '../..';
+import { BacktraceStackTraceConverter, DebugIdProvider } from '../..';
 import { SdkOptions } from '../../builder/SdkOptions';
 import { IdGenerator } from '../../common/IdGenerator';
 import { TimeHelper } from '../../common/TimeHelper';
@@ -12,6 +12,7 @@ export class BacktraceDataBuilder {
     constructor(
         private readonly _sdkOptions: SdkOptions,
         private readonly _stackTraceConverter: BacktraceStackTraceConverter,
+        private readonly _debugIdProvider: DebugIdProvider,
     ) {}
 
     public build(
@@ -20,6 +21,13 @@ export class BacktraceDataBuilder {
         clientAnnotations: Record<string, unknown> = {},
     ): BacktraceData {
         const reportData = ReportDataBuilder.build(report.attributes);
+
+        const stackTrace = this._stackTraceConverter.convert(report.stackTrace, report.message);
+
+        this._debugIdProvider.loadDebugIds();
+        for (const frame of stackTrace) {
+            frame.debugId = this._debugIdProvider.getDebugId(frame.library);
+        }
 
         return {
             uuid: IdGenerator.uuid(),
@@ -34,7 +42,7 @@ export class BacktraceDataBuilder {
                 [this.MAIN_THREAD_NAME]: {
                     fault: true,
                     name: this.MAIN_THREAD_NAME,
-                    stack: this._stackTraceConverter.convert(report.stackTrace, report.message),
+                    stack: stackTrace,
                 },
             },
             annotations: {

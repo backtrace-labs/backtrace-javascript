@@ -4,7 +4,7 @@ import { DebugIdMapProvider } from './interfaces/DebugIdMapProvider';
 export const SOURCE_DEBUG_ID_VARIABLE = '_btDebugIds';
 
 export class DebugIdProvider {
-    private readonly _fileDebugIds: Record<string, string> = {};
+    private _fileDebugIds?: Record<string, string>;
 
     constructor(
         private readonly _stackTraceConverter: BacktraceStackTraceConverter,
@@ -12,6 +12,10 @@ export class DebugIdProvider {
     ) {}
 
     public loadDebugIds(debugIdMap?: Record<string, string>) {
+        if (this._fileDebugIds) {
+            return this._fileDebugIds;
+        }
+
         if (!debugIdMap) {
             debugIdMap = this._debugIdMapProvider?.getDebugIdMap();
             if (!debugIdMap) {
@@ -21,8 +25,7 @@ export class DebugIdProvider {
 
         const message = new Error().message;
         const result: Record<string, string> = {};
-        for (const entry in Object.entries(debugIdMap)) {
-            const [rawStack, debugId] = entry;
+        for (const [rawStack, debugId] of Object.entries(debugIdMap)) {
             const frames = this._stackTraceConverter.convert(rawStack, message);
             if (!frames.length) {
                 continue;
@@ -33,12 +36,10 @@ export class DebugIdProvider {
             result[frame.library] = debugId;
         }
 
-        Object.assign(this._fileDebugIds, result);
-
-        return result;
+        return (this._fileDebugIds = result);
     }
 
     public getDebugId(file: string): string | undefined {
-        return this._fileDebugIds[file];
+        return this._fileDebugIds?.[file];
     }
 }
