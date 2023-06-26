@@ -24,6 +24,7 @@ export interface UploadResult {
 
 export interface SourceMapUploaderOptions {
     ignoreSsl?: boolean;
+    headers?: http.OutgoingHttpHeaders;
 }
 
 /**
@@ -104,13 +105,11 @@ export class SourceMapUploader {
 
         return new Promise<UploadResult>((resolve, reject) => {
             const request = protocol.request(
+                uploadUrl,
                 {
-                    hostname: uploadUrl.hostname,
-                    port: uploadUrl.port,
-                    protocol: uploadUrl.protocol,
-                    path: uploadUrl.pathname + uploadUrl.search,
                     method: 'POST',
                     rejectUnauthorized: !this._options?.ignoreSsl,
+                    headers: this._options?.headers,
                 },
                 (response) => {
                     if (!response.statusCode) {
