@@ -1,7 +1,7 @@
 import { SourceMapConsumer } from 'source-map';
 import { DebugIdGenerator, SOURCEMAP_DEBUG_ID_KEY, SourceProcessor } from '../src';
 
-describe('SourceMapProcessor', () => {
+describe('SourceProcessor', () => {
     const source = `function foo(){console.log("Hello World!")}foo();`;
     const sourceMap = {
         version: 3,
