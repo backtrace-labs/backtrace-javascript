@@ -22,6 +22,10 @@ export interface UploadResult {
     debugId: string;
 }
 
+export interface SourceMapUploaderOptions {
+    ignoreSsl?: boolean;
+}
+
 /**
  * Class responsible for uploading source maps to Backtrace.
  *
@@ -30,7 +34,7 @@ export interface UploadResult {
 export class SourceMapUploader {
     private readonly _url: URL;
 
-    constructor(url: string | URL) {
+    constructor(url: string | URL, private readonly _options?: SourceMapUploaderOptions) {
         this._url = new URL(url);
     }
 
@@ -106,14 +110,11 @@ export class SourceMapUploader {
                     protocol: uploadUrl.protocol,
                     path: uploadUrl.pathname + uploadUrl.search,
                     method: 'POST',
+                    rejectUnauthorized: !this._options?.ignoreSsl,
                 },
                 (response) => {
                     if (!response.statusCode) {
                         return reject(new Error('Failed to upload sourcemap: failed to make the request.'));
-                    }
-
-                    if (response.statusCode < 200 || response.statusCode >= 300) {
-                        return reject(new Error(`Failed to upload sourcemap: ${response.statusCode}`));
                     }
 
                     const data: Buffer[] = [];
@@ -122,12 +123,27 @@ export class SourceMapUploader {
                     });
 
                     response.on('end', () => {
-                        const responseData = JSON.parse(Buffer.concat(data).toString('utf-8')) as UploadResponse;
-                        if (responseData.response === 'ok') {
-                            return resolve({
-                                debugId: debugId as string,
-                                rxid: responseData._rxid,
-                            });
+                        const rawResponse = Buffer.concat(data).toString('utf-8');
+                        if (!response.statusCode || response.statusCode < 200 || response.statusCode >= 300) {
+                            return reject(
+                                new Error(
+                                    `Failed to upload sourcemap: ${response.statusCode}. Response data: ${rawResponse}`,
+                                ),
+                            );
+                        }
+
+                        try {
+                            const responseData = JSON.parse(rawResponse) as UploadResponse;
+                            if (responseData.response === 'ok') {
+                                return resolve({
+                                    debugId: debugId as string,
+                                    rxid: responseData._rxid,
+                                });
+                            } else {
+                                return reject(new Error(`Non-OK response received from Coroner: ${responseData}`));
+                            }
+                        } catch (err) {
+                            return reject(new Error(`Cannot parse response from Coroner: ${rawResponse}`));
                         }
                     });
                 },
