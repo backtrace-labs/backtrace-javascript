@@ -22,6 +22,11 @@ export interface UploadResult {
     debugId: string;
 }
 
+/**
+ * Class responsible for uploading source maps to Backtrace.
+ *
+ * Expects symbol upload responses.
+ */
 export class SourceMapUploader {
     private readonly _url: URL;
 
@@ -29,7 +34,19 @@ export class SourceMapUploader {
         this._url = new URL(url);
     }
 
+    /**
+     * Uploads the sourcemap to Backtrace from stream. The sourcemap will be parsed from JSON.
+     * @param fileStream File stream to use.
+     * @param debugId Debug ID to use. If not provided, debug ID will be read from the sourcemap.
+     * If not available, a random one will be generated.
+     */
     public async upload(fileStream: Readable, debugId?: string): Promise<UploadResult>;
+    /**
+     * Uploads the sourcemap to Backtrace from file. The sourcemap will be parsed from JSON.
+     * @param filePath File path to use.
+     * @param debugId Debug ID to use. If not provided, debug ID will be read from the sourcemap.
+     * If not available, a random one will be generated.
+     */
     public async upload(filePath: string, debugId?: string): Promise<UploadResult>;
     public async upload(pathOrStream: string | Readable, debugId?: string): Promise<UploadResult> {
         if (typeof pathOrStream === 'string') {
@@ -44,7 +61,19 @@ export class SourceMapUploader {
         return this.uploadSourcemap(sourcemap, debugId);
     }
 
+    /**
+     * Uploads the sourcemap to Backtrace from string. The sourcemap will be parsed from JSON.
+     * @param content Sourcemap JSON string.
+     * @param debugId Debug ID to use. If not provided, debug ID will be read from the sourcemap.
+     * If not available, a random one will be generated.
+     */
     public async uploadContent(content: string, debugId?: string): Promise<UploadResult>;
+    /**
+     * Uploads the sourcemap to Backtrace.
+     * @param content Sourcemap JSON object.
+     * @param debugId Debug ID to use. If not provided, debug ID will be read from the sourcemap.
+     * If not available, a random one will be generated.
+     */
     public async uploadContent(content: object, debugId?: string): Promise<UploadResult>;
     public uploadContent(content: string | object, debugId?: string): Promise<UploadResult> {
         if (typeof content === 'string') {
