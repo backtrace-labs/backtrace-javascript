@@ -42,5 +42,8 @@
         "nock": "^13.3.1",
         "ts-jest": "^29.1.0",
         "typescript": "^5.0.4"
+    },
+    "dependencies": {
+        "source-map": "^0.7.4"
     }
 }
