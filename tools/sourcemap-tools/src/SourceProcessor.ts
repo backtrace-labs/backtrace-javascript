@@ -51,15 +51,16 @@ export class SourceProcessor {
                 return;
             }
 
+            // Despite how the mappings are written, addMapping expects here a null value if the column/line is not set
             newSourceMap.addMapping({
                 source: m.source,
                 name: m.name,
                 generated:
-                    m?.generatedColumn != null
+                    m?.generatedColumn != null && m?.generatedLine != null
                         ? { column: m.generatedColumn, line: m.generatedLine + count }
                         : (null as unknown as Position),
                 original:
-                    m?.originalColumn != null
+                    m?.originalColumn != null && m?.originalLine != null
                         ? { column: m.originalColumn, line: m.originalLine }
                         : (null as unknown as Position),
             });
