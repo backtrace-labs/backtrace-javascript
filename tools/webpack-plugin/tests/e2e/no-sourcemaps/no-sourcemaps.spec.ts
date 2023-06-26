@@ -1,13 +1,13 @@
+import { SourceProcessor } from '@backtrace/sourcemap-tools';
 import path from 'path';
-import { createE2ETest } from '../createE2ETest';
-import { getBaseConfig } from '../helpers';
+import { asyncWebpack, expectSuccess, getBaseConfig, removeDir, webpackModeTest } from '../helpers';
 
 describe('No sourcemaps', () => {
     const outputDir = path.join(__dirname, './output');
 
-    createE2ETest(
-        (mode) =>
-            getBaseConfig(
+    webpackModeTest((mode) => {
+        it('should not call SourceProcessor when devtool is false', async () => {
+            const config = getBaseConfig(
                 {
                     mode,
                     devtool: false,
@@ -18,9 +18,18 @@ describe('No sourcemaps', () => {
                     },
                 },
                 { tsconfigPath: path.join(__dirname, './tsconfig.test.json') },
-            ),
-        {
-            testSourceMap: false,
-        },
-    );
+            );
+
+            if (config.output?.path) {
+                await removeDir(config.output.path);
+            }
+
+            const sourceProcessorSpy = jest.spyOn(SourceProcessor.prototype, 'processSourceAndSourceMap');
+
+            const webpackResult = await asyncWebpack(config);
+            expectSuccess(webpackResult);
+
+            expect(sourceProcessorSpy).not.toBeCalled();
+        }, 120000);
+    });
 });

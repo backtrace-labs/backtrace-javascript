@@ -1,5 +1,7 @@
+import { SourceMapUploader } from '@backtrace/sourcemap-tools';
 import assert from 'assert';
 import fs from 'fs';
+import path from 'path';
 import webpack from 'webpack';
 import {
     asyncWebpack,
@@ -17,6 +19,7 @@ interface E2ETestOptions {
     testSourceComment?: boolean;
     testSourceMap?: boolean;
     testSourceEval?: boolean;
+    testSourceMapUpload?: boolean;
 }
 
 export function createE2ETest(
@@ -24,9 +27,21 @@ export function createE2ETest(
     opts?: E2ETestOptions,
 ) {
     webpackModeTest((mode) => {
+        function mockUploader() {
+            return jest.spyOn(SourceMapUploader.prototype, 'upload').mockImplementation((_, debugId) =>
+                Promise.resolve({
+                    debugId: debugId ?? crypto.randomUUID(),
+                    rxid: crypto.randomUUID(),
+                }),
+            );
+        }
+
         let result: webpack.Stats;
+        let uploadSpy: ReturnType<typeof mockUploader>;
 
         beforeAll(async () => {
+            uploadSpy = mockUploader();
+
             const config = configBuilder(mode);
             if (config.output?.path) {
                 await removeDir(config.output.path);
@@ -93,6 +108,21 @@ export function createE2ETest(
                 for (const file of mapFiles) {
                     const content = await fs.promises.readFile(file, 'utf8');
                     await expectSourceMapSnippet(content);
+                }
+            });
+        }
+
+        if (opts?.testSourceMapUpload ?? true) {
+            it('should upload sourcemaps using SourceMapUploader', async () => {
+                const outputDir = result.compilation.outputOptions.path;
+                assert(outputDir);
+
+                const mapFiles = await getFiles(outputDir, /.js.map$/);
+                expect(mapFiles.length).toBeGreaterThan(0);
+
+                const uploadedFiles = uploadSpy.mock.calls.map((c) => path.resolve(c[0]));
+                for (const file of mapFiles) {
+                    expect(uploadedFiles).toContain(path.resolve(file));
                 }
             });
         }
