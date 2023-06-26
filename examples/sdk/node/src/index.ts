@@ -22,34 +22,41 @@ const client = BacktraceClient.builder({
     },
 }).build();
 
-console.log(
-    `Welcome to the Backtrace demo. Please pick one of available options
-    1. Send an exception
-    2. Send a message
+console.log('Welcome to the @Backtrace/node demo');
+const menu = `Please pick one of available options:
+1. Send an exception
+2. Send a message
+0. Exit
+    
+Type the option number:`;
 
-    0. Exit`,
-);
+async function sendHandledException(attributes: Record<string, number>) {
+    console.log('Sending an error to Backtrace');
+    try {
+        fs.readFileSync('/path/to/not/existing/file');
+    } catch (err) {
+        await client.send(err as Error, attributes);
+    }
+}
+
+async function sendMessage(message: string, attributes: Record<string, number>) {
+    console.log('Sending a text message to Backtrace');
+    await client.send(message, attributes);
+}
 
 function showMenu() {
-    reader.question('Select the option... \n', async function executeUserOption(optionString: string) {
+    reader.question(menu, async function executeUserOption(optionString: string) {
         const option = parseInt(optionString);
-        if (isNaN(option)) {
-            console.error('Selected invalid option');
-            return exit(1);
-        }
+
         const attributes = { selectedOption: option };
 
         switch (option) {
             case 1: {
-                try {
-                    fs.readFileSync('/path/to/not/existing/file');
-                } catch (err) {
-                    await client.send(err as Error, attributes);
-                }
+                await sendHandledException(attributes);
                 break;
             }
             case 2: {
-                await client.send('test message', attributes);
+                await sendMessage('test message', attributes);
                 break;
             }
             case 0: {
@@ -57,7 +64,7 @@ function showMenu() {
                 return exit(0);
             }
             default: {
-                console.log('Selected unrecognized option. Please try again.');
+                console.log('Selected invalid option. Please try again.');
             }
         }
         return showMenu();
