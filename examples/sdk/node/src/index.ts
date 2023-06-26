@@ -15,7 +15,7 @@ const client = BacktraceClient.builder({
     rateLimit: 5,
     userAttributes: {
         'custom-attribute': 'test',
-        'complex-attribute': {
+        'custom-annotation': {
             prop1: true,
             prop2: 123,
         },
@@ -23,7 +23,7 @@ const client = BacktraceClient.builder({
 }).build();
 
 console.log(
-    `Welcome in the Backtrace demo. Please pick one of available options
+    `Welcome to the Backtrace demo. Please pick one of available options
     1. Send an exception
     2. Send a message
 
