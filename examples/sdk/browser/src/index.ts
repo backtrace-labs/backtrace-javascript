@@ -22,7 +22,7 @@ function parseNotExistingDomElement(): string {
 const sendErrorButton = document.getElementById('send-error') as HTMLElement;
 const sendMessageButton = document.getElementById('send-message') as HTMLElement;
 
-sendErrorButton.onclick = async () => {
+async function sendHandledException() {
     try {
         console.log('send-error click');
         parseNotExistingDomElement();
@@ -31,11 +31,14 @@ sendErrorButton.onclick = async () => {
             new BacktraceStringAttachment('test.txt', 'sample attachment content'),
         ]);
     }
-};
+}
 
-sendMessageButton.onclick = async () => {
+async function sendMessage() {
     console.log('send-message click');
     await client.send('test-message', { action: 'send-message' }, [
         new BacktraceStringAttachment('test.txt', 'sample attachment content'),
     ]);
-};
+}
+
+sendErrorButton.onclick = sendHandledException;
+sendMessageButton.onclick = sendMessage;
