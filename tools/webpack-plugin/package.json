@@ -13,9 +13,6 @@
         "format": "prettier --write '**/*.ts'",
         "lint": "eslint . --ext .ts",
         "watch": "tsc -b ./tsconfig.build.json -w",
-        "test": "npm run test:webpackv5 && npm run test:webpackv4",
-        "test:webpackv4": "NODE_ENV=test jest --config ./webpack4.jest.config.js",
-        "test:webpackv5": "NODE_ENV=test jest",
         "test:e2e": "npm run test:e2e:webpackv5 && npm run test:e2e:webpackv4",
         "test:e2e:webpackv4": "NODE_ENV=test jest --config ./webpack4.e2e.jest.config.js",
         "test:e2e:webpackv5": "NODE_ENV=test jest --config ./e2e.jest.config.js"
