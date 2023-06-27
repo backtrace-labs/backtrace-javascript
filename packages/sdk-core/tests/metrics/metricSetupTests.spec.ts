@@ -1,6 +1,6 @@
 import { AttributeManager } from '../../src/modules/attribute/AttributeManager';
-import { BacktraceSingleSessionProvider } from '../../src/modules/metrics/BacktraceSingleSessionProvider';
 import { MetricsBuilder } from '../../src/modules/metrics/MetricsBuilder';
+import { SingleSessionProvider } from '../../src/modules/metrics/SingleSessionProvider';
 import { APPLICATION, APPLICATION_VERSION, TEST_SUBMISSION_URL } from '../mocks/BacktraceTestClient';
 import { testHttpClient } from '../mocks/testHttpClient';
 
@@ -25,7 +25,7 @@ describe('Metric setup', () => {
                         autoSendInterval: 0,
                     },
                 },
-                new BacktraceSingleSessionProvider(),
+                new SingleSessionProvider(),
                 attributeManager,
                 testHttpClient,
             ).build();
@@ -46,7 +46,7 @@ describe('Metric setup', () => {
                         autoSendInterval: 0,
                     },
                 },
-                new BacktraceSingleSessionProvider(),
+                new SingleSessionProvider(),
                 attributeManager,
                 testHttpClient,
             ).build();
@@ -66,7 +66,7 @@ describe('Metric setup', () => {
                         autoSendInterval: 0,
                     },
                 },
-                new BacktraceSingleSessionProvider(),
+                new SingleSessionProvider(),
                 attributeManager,
                 testHttpClient,
             ).build();
@@ -83,7 +83,7 @@ describe('Metric setup', () => {
                 {
                     url: TEST_SUBMISSION_URL,
                 },
-                new BacktraceSingleSessionProvider(),
+                new SingleSessionProvider(),
                 attributeManager,
                 testHttpClient,
             ).build();
@@ -100,7 +100,7 @@ describe('Metric setup', () => {
                 {
                     url: TEST_SUBMISSION_URL,
                 },
-                new BacktraceSingleSessionProvider(),
+                new SingleSessionProvider(),
                 attributeManager,
                 testHttpClient,
             ).build();
@@ -116,7 +116,7 @@ describe('Metric setup', () => {
                         enable: false,
                     },
                 },
-                new BacktraceSingleSessionProvider(),
+                new SingleSessionProvider(),
                 attributeManager,
                 testHttpClient,
             ).build();
