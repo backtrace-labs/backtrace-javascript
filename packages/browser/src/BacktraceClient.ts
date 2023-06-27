@@ -5,6 +5,7 @@ import {
     BacktraceStackTraceConverter,
 } from '@backtrace/sdk-core';
 import { AGENT } from './agentDefinition';
+import { BacktraceBrowserSessionProvider } from './BacktraceBrowserSessionProvider';
 import { BacktraceConfiguration } from './BacktraceConfiguration';
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 
@@ -15,7 +16,7 @@ export class BacktraceClient extends BacktraceCoreClient {
         attributeProviders: BacktraceAttributeProvider[],
         stackTraceConverter: BacktraceStackTraceConverter,
     ) {
-        super(options, AGENT, handler, attributeProviders, stackTraceConverter);
+        super(options, AGENT, handler, attributeProviders, stackTraceConverter, new BacktraceBrowserSessionProvider());
     }
 
     public static builder(options: BacktraceConfiguration): BacktraceClientBuilder {

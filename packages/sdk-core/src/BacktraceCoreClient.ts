@@ -1,6 +1,10 @@
-import { BacktraceAttachment, BacktraceAttributeProvider, BacktraceStackTraceConverter } from '.';
+import {
+    BacktraceAttachment,
+    BacktraceAttributeProvider,
+    BacktraceSessionProvider,
+    BacktraceStackTraceConverter,
+} from '.';
 import { SdkOptions } from './builder/SdkOptions';
-import { IdGenerator } from './common/IdGenerator';
 import { BacktraceConfiguration } from './model/configuration/BacktraceConfiguration';
 import { AttributeType } from './model/data/BacktraceData';
 import { BacktraceReportSubmission } from './model/http/BacktraceReportSubmission';
@@ -10,13 +14,16 @@ import { AttributeManager } from './modules/attribute/AttributeManager';
 import { ClientAttributeProvider } from './modules/attribute/ClientAttributeProvider';
 import { V8StackTraceConverter } from './modules/converter/V8StackTraceConverter';
 import { BacktraceDataBuilder } from './modules/data/BacktraceDataBuilder';
+import { BacktraceMetrics } from './modules/metrics/BacktraceMetrics';
+import { MetricsBuilder } from './modules/metrics/MetricsBuilder';
+import { SingleSessionProvider } from './modules/metrics/SingleSessionProvider';
 import { RateLimitWatcher } from './modules/rateLimiter/RateLimitWatcher';
 export abstract class BacktraceCoreClient {
     /**
      * Current session id
      */
     public get sessionId(): string {
-        return this._sessionId;
+        return this.sessionProvider.sessionId;
     }
 
     /**
@@ -46,6 +53,10 @@ export abstract class BacktraceCoreClient {
         return this._attributeProvider.annotations;
     }
 
+    public get metrics(): BacktraceMetrics | undefined {
+        return this._metrics;
+    }
+
     /**
      * Client cached attachments
      */
@@ -55,11 +66,7 @@ export abstract class BacktraceCoreClient {
     private readonly _reportSubmission: BacktraceReportSubmission;
     private readonly _rateLimitWatcher: RateLimitWatcher;
     private readonly _attributeProvider: AttributeManager;
-
-    /**
-     * Current session Id
-     */
-    private readonly _sessionId: string = IdGenerator.uuid();
+    private readonly _metrics?: BacktraceMetrics;
 
     protected constructor(
         protected readonly options: BacktraceConfiguration,
@@ -67,15 +74,25 @@ export abstract class BacktraceCoreClient {
         requestHandler: BacktraceRequestHandler,
         attributeProviders: BacktraceAttributeProvider[] = [],
         stackTraceConverter: BacktraceStackTraceConverter = new V8StackTraceConverter(),
+        private sessionProvider: BacktraceSessionProvider = new SingleSessionProvider(),
     ) {
         this._dataBuilder = new BacktraceDataBuilder(this._sdkOptions, stackTraceConverter);
         this._reportSubmission = new BacktraceReportSubmission(options, requestHandler);
         this._rateLimitWatcher = new RateLimitWatcher(options.rateLimit);
         this._attributeProvider = new AttributeManager([
-            new ClientAttributeProvider(_sdkOptions.agentVersion, this._sessionId, options.userAttributes ?? {}),
+            new ClientAttributeProvider(
+                _sdkOptions.agentVersion,
+                sessionProvider.sessionId,
+                options.userAttributes ?? {},
+            ),
             ...(attributeProviders ?? []),
         ]);
         this.attachments = options.attachments ?? [];
+        const metrics = new MetricsBuilder(options, sessionProvider, this._attributeProvider, requestHandler).build();
+        if (metrics) {
+            this._metrics = metrics;
+            this._metrics.start();
+        }
     }
 
     /**

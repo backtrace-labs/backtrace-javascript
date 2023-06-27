@@ -38,11 +38,27 @@ async function sendMessage(message: string, attributes: Record<string, number>) 
     await client.send(message, attributes);
 }
 
+function addEvent(name: string, attributes: Record<string, number>) {
+    if (!client.metrics) {
+        console.log('metrics are unavailable');
+        return;
+    }
+    client.metrics.addSummedEvent(name, attributes);
+}
+function sendMetrics() {
+    if (!client.metrics) {
+        console.log('metrics are unavailable');
+        return;
+    }
+    client.metrics.send();
+}
 function showMenu() {
     const menu =
         `Please pick one of available options:\n` +
         `1. Send an exception\n` +
         `2. Send a message\n` +
+        `3. Add a new summed event\n` +
+        `4. Send all metrics\n` +
         `0. Exit\n` +
         `Type the option number:`;
     reader.question(menu, async function executeUserOption(optionString: string) {
@@ -57,6 +73,14 @@ function showMenu() {
             }
             case 2: {
                 await sendMessage('test message', attributes);
+                break;
+            }
+            case 3: {
+                addEvent('Option clicked', attributes);
+                break;
+            }
+            case 4: {
+                sendMetrics();
                 break;
             }
             case 0: {
