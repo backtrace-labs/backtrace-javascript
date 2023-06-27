@@ -4,7 +4,7 @@ export class MetricsUrlInformation {
     public static generateSummedEventsUrl(
         hostname: string,
         submissionUrl: string,
-        credentialsToken: string | null,
+        credentialsToken?: string | null,
     ): string | undefined {
         const submissionInformation = this.findSubmissionInformation(submissionUrl, credentialsToken);
         if (!submissionInformation) {
@@ -21,7 +21,7 @@ export class MetricsUrlInformation {
     public static generateUniqueEventsUrl(
         hostname: string,
         submissionUrl: string,
-        credentialsToken: string | null,
+        credentialsToken?: string | null,
     ): string | undefined {
         const submissionInformation = this.findSubmissionInformation(submissionUrl, credentialsToken);
         if (!submissionInformation) {
@@ -47,7 +47,7 @@ export class MetricsUrlInformation {
 
     private static findSubmissionInformation(
         submissionUrl: string,
-        token: string | null,
+        token?: string | null,
     ): { universe: string; token: string } | undefined {
         const universe = SubmissionUrlInformation.findUniverse(submissionUrl);
         if (!universe) {
