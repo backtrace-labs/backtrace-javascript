@@ -47,18 +47,25 @@ describe('SourceProcessor', () => {
         expect(result.sourceMap).toStrictEqual(expected);
     });
 
-    it('should offset sourcemap by one line', async () => {
+    it('should offset sourcemap lines by number of newlines in source snippet + 1', async () => {
         const debugIdGenerator = new DebugIdGenerator();
         const sourceProcessor = new SourceProcessor(debugIdGenerator);
+        const snippet = 'a\nb\nc\nd';
+        const expectedNewLineCount = (snippet.match(/\n/g)?.length ?? 0) + 1;
+
+        jest.spyOn(debugIdGenerator, 'generateSourceSnippet').mockReturnValue(snippet);
 
         const unmodifiedConsumer = await new SourceMapConsumer(sourceMap);
-        const expected = unmodifiedConsumer.originalPositionFor({ line: 1, column: source.indexOf('foo();') });
+        const expectedPosition = unmodifiedConsumer.originalPositionFor({ line: 1, column: source.indexOf('foo();') });
 
         const result = await sourceProcessor.processSourceAndSourceMap(source, sourceMap);
 
         const modifiedConsumer = await new SourceMapConsumer(result.sourceMap);
-        const actual = modifiedConsumer.originalPositionFor({ line: 2, column: source.indexOf('foo();') });
+        const actualPosition = modifiedConsumer.originalPositionFor({
+            line: 1 + expectedNewLineCount,
+            column: source.indexOf('foo();'),
+        });
 
-        expect(actual).toEqual(expected);
+        expect(actualPosition).toEqual(expectedPosition);
     });
 });
