@@ -1,3 +1,4 @@
+import { fail } from 'assert';
 import crypto from 'crypto';
 import fs from 'fs';
 import nock from 'nock';
@@ -190,6 +191,52 @@ describe('SourceMapUploader', () => {
 
         const uploader = new SourceMapUploader(uploadUrl);
         await expect(() => uploader.uploadContent(sourcemap)).rejects.toThrow();
+
+        scope.done();
+    });
+
+    it('should throw on non 2xx HTTP response with response data', async () => {
+        const expected = 'RESPONSE FROM SERVER';
+        const sourcemap = getSourcemap();
+        const uploadUrl = new URL(`https://upload-test/`);
+
+        const scope = nock(uploadUrl.origin).post('/').query(true).reply(400, expected);
+
+        const uploader = new SourceMapUploader(uploadUrl);
+        try {
+            await uploader.uploadContent(sourcemap);
+            fail();
+        } catch (err) {
+            expect((err as Error).message).toContain(expected);
+        }
+
+        scope.done();
+    });
+
+    it('should throw on response with response not equal to "ok"', async () => {
+        const sourcemap = getSourcemap();
+        const uploadUrl = new URL(`https://upload-test/`);
+
+        const scope = nock(uploadUrl.origin).post('/').query(true).reply(200, { response: 'not-ok', _rxid: 'rxid' });
+        const uploader = new SourceMapUploader(uploadUrl);
+        await expect(() => uploader.uploadContent(sourcemap)).rejects.toThrow();
+
+        scope.done();
+    });
+
+    it('should throw on response with response not equal to "ok" with response data', async () => {
+        const expected = JSON.stringify({ response: 'not-ok', _rxid: 'rxid' });
+        const sourcemap = getSourcemap();
+        const uploadUrl = new URL(`https://upload-test/`);
+
+        const scope = nock(uploadUrl.origin).post('/').query(true).reply(200, expected);
+        const uploader = new SourceMapUploader(uploadUrl);
+        try {
+            await uploader.uploadContent(sourcemap);
+            fail();
+        } catch (err) {
+            expect((err as Error).message).toContain(expected);
+        }
 
         scope.done();
     });

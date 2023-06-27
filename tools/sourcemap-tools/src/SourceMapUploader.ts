@@ -139,7 +139,7 @@ export class SourceMapUploader {
                                     rxid: responseData._rxid,
                                 });
                             } else {
-                                return reject(new Error(`Non-OK response received from Coroner: ${responseData}`));
+                                return reject(new Error(`Non-OK response received from Coroner: ${rawResponse}`));
                             }
                         } catch (err) {
                             return reject(new Error(`Cannot parse response from Coroner: ${rawResponse}`));
