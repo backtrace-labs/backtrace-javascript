@@ -1,14 +1,13 @@
 {
-    "extends": "../../tsconfig.base.json",
+    "extends": "../../../tsconfig.base.json",
     "compilerOptions": {
         "outDir": "./lib",
-        "rootDir": "./src",
-        "composite": true
+        "rootDir": "./src"
     },
     "exclude": ["node_modules", "tests", "lib"],
     "references": [
         {
-            "path": "../sdk-core/tsconfig.json"
+            "path": "../../../packages/node/tsconfig.json"
         }
     ]
 }

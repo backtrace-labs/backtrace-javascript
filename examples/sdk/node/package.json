@@ -1,0 +1,39 @@
+{
+    "name": "@backtrace/node-example",
+    "version": "1.0.0",
+    "description": "@backtrace/node example",
+    "main": "lib/index.js",
+    "types": "lib/index.d.ts",
+    "engines": {
+        "node": ">=14"
+    },
+    "scripts": {
+        "build": "tsc",
+        "clean": "rimraf \"lib\"",
+        "format": "prettier --write '**/*.ts'",
+        "lint": "eslint . --ext .ts",
+        "watch": "tsc -w"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/backtrace-labs/backtrace-javascript.git"
+    },
+    "keywords": [
+        "Error",
+        "Reporting",
+        "Diagnostic",
+        "Tool",
+        "Bug",
+        "Bugs",
+        "StackTrace"
+    ],
+    "author": "Backtrace <team@backtrace.io>",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/backtrace-labs/backtrace-javascript/issues"
+    },
+    "homepage": "https://github.com/backtrace-labs/backtrace-javascript#readme",
+    "devDependencies": {
+        "typescript": "^5.1.3"
+    }
+}

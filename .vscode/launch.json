@@ -1,0 +1,17 @@
+{
+    "version": "0.1.0",
+    "configurations": [
+        {
+            "name": "Launch",
+            "program": "${workspaceFolder}/examples/sdk/node/lib/index.js",
+            "request": "launch",
+            "localRoot": "${workspaceFolder}",
+            "remoteRoot": "${workspaceFolder}",
+            "skipFiles": ["<node_internals>/**", "${workspaceFolder}/node_modules/tslib/**/*.js"],
+            "outFiles": ["${workspaceFolder}/examples/sdk/node/lib/**/*.js"],
+            "sourceMaps": true,
+            "type": "pwa-node",
+            "console": "integratedTerminal"
+        }
+    ]
+}
