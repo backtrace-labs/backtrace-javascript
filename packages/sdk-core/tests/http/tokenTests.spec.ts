@@ -11,8 +11,8 @@ describe('Token tests', () => {
     });
 
     describe('Direct', () => {
-        it(`Should return undefined if the url doesn't contain the submission token`, () => {
-            expect(SubmissionUrlInformation.findToken(`https://foo.sp.backtrace.io`)).toBeUndefined();
+        it(`Should return null if the url doesn't contain the submission token`, () => {
+            expect(SubmissionUrlInformation.findToken(`https://foo.sp.backtrace.io`)).toBeNull();
         });
 
         it(`Should return token from the direct url`, () => {
