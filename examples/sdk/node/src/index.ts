@@ -40,10 +40,10 @@ async function sendMessage(message: string, attributes: Record<string, number>) 
 
 function showMenu() {
     const menu =
-        `Please pick one of available options:` +
-        `1. Send an exception` +
-        `2. Send a message` +
-        `0. Exit` +
+        `Please pick one of available options:\n` +
+        `1. Send an exception\n` +
+        `2. Send a message\n` +
+        `0. Exit\n` +
         `Type the option number:`;
     reader.question(menu, async function executeUserOption(optionString: string) {
         const option = parseInt(optionString);
@@ -52,10 +52,12 @@ function showMenu() {
 
         switch (option) {
             case 1: {
-                return await sendHandledException(attributes);
+                await sendHandledException(attributes);
+                break;
             }
             case 2: {
-                return await sendMessage('test message', attributes);
+                await sendMessage('test message', attributes);
+                break;
             }
             case 0: {
                 reader.close();
