@@ -24,7 +24,10 @@ export class SubmissionUrlInformation {
             return url;
         }
 
-        return new URL(`/post?format=json&token=${token}`, url).href;
+        const result = new URL(`/post`, url);
+        result.searchParams.append('format', 'json');
+        result.searchParams.append('token', token);
+        return result.href;
     }
 
     /**
@@ -32,23 +35,28 @@ export class SubmissionUrlInformation {
      * @param submissionUrl submission URL
      * @returns universe name
      */
-    public static findUniverse(submissionUrl: string): string {
+    public static findUniverse(submissionUrl: string): string | undefined {
         const submitIndex = submissionUrl.indexOf(this.SUBMIT_PREFIX);
         if (submitIndex !== -1) {
+            // submit format URL
+            // submit.backtrace.io/universe/token/format
+            // we can expect the universe name just after the hostname
             const universeStartIndex = submitIndex + this.SUBMIT_PREFIX.length;
             const endOfUniverseName = submissionUrl.indexOf('/', universeStartIndex);
             return submissionUrl.substring(universeStartIndex, endOfUniverseName);
         }
         // the universe name should be available in the hostname
         // for example abc.sp.backtrace.io or zyx.in.backtrace.io or foo.backtrace.io
-        const hostname = new URL(submissionUrl).host;
-        const endOfUniverseName = hostname.indexOf('.');
+        const hostname = new URL(submissionUrl).hostname;
+        if (!hostname.endsWith('backtrace.io')) {
+            return undefined;
+        }
 
+        const endOfUniverseName = hostname.indexOf('.');
         return hostname.substring(0, endOfUniverseName);
     }
 
-    public static findToken(submissionUrl: string): string | undefined {
-        const tokenLength = 64;
+    public static findToken(submissionUrl: string): string | null {
         const submitIndex = submissionUrl.indexOf(this.SUBMIT_PREFIX);
         if (submitIndex !== -1) {
             const submissionUrlParts = submissionUrl.split('/');
@@ -59,13 +67,8 @@ export class SubmissionUrlInformation {
             return submissionUrlParts[submissionUrlParts.length - 2];
         }
 
-        const tokenQueryParameter = 'token=';
-        const tokenQueryParameterIndex = submissionUrl.indexOf(tokenQueryParameter);
-        if (tokenQueryParameterIndex === -1) {
-            return undefined;
-        }
+        const url = new URL(submissionUrl);
 
-        const tokenStartIndex = tokenQueryParameterIndex + tokenQueryParameter.length;
-        return submissionUrl.substring(tokenStartIndex, tokenStartIndex + tokenLength);
+        return url.searchParams.get('token');
     }
 }
