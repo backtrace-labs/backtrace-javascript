@@ -6,6 +6,13 @@ import { stringToUuid } from './helpers/stringToUuid';
 export class SourceProcessor {
     constructor(private readonly _debugIdGenerator: DebugIdGenerator) {}
 
+    /**
+     * Adds required snippets and comments to source, and modifies sourcemap to include debug ID.
+     * @param source Source content.
+     * @param sourceMap Sourcemap object or JSON.
+     * @param debugId Debug ID. If not provided, one will be generated from `source`.
+     * @returns Used debug ID, new source and new sourcemap.
+     */
     public async processSourceAndSourceMap(source: string, sourceMap: string | RawSourceMap, debugId?: string) {
         if (!debugId) {
             debugId = stringToUuid(source);
@@ -23,6 +30,14 @@ export class SourceProcessor {
         return { debugId, source: newSource, sourceMap: newSourceMap };
     }
 
+    /**
+     * Adds required snippets and comments to source, and modifies sourcemap to include debug ID.
+     * Will write modified content to the files.
+     * @param sourcePath Path to the source.
+     * @param sourceMapPath Path to the sourcemap.
+     * @param debugId Debug ID. If not provided, one will be generated from `source`.
+     * @returns Used debug ID.
+     */
     public async processSourceAndSourceMapFiles(sourcePath: string, sourceMapPath: string, debugId?: string) {
         const source = await fs.promises.readFile(sourcePath, 'utf8');
         const sourceMap = await fs.promises.readFile(sourceMapPath, 'utf8');
