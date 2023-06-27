@@ -23,12 +23,6 @@ const client = BacktraceClient.builder({
 }).build();
 
 console.log('Welcome to the @Backtrace/node demo');
-const menu = `Please pick one of available options:
-1. Send an exception
-2. Send a message
-0. Exit
-    
-Type the option number:`;
 
 async function sendHandledException(attributes: Record<string, number>) {
     console.log('Sending an error to Backtrace');
@@ -45,6 +39,12 @@ async function sendMessage(message: string, attributes: Record<string, number>) 
 }
 
 function showMenu() {
+    const menu =
+        `Please pick one of available options:` +
+        `1. Send an exception` +
+        `2. Send a message` +
+        `0. Exit` +
+        `Type the option number:`;
     reader.question(menu, async function executeUserOption(optionString: string) {
         const option = parseInt(optionString);
 
@@ -52,12 +52,10 @@ function showMenu() {
 
         switch (option) {
             case 1: {
-                await sendHandledException(attributes);
-                break;
+                return await sendHandledException(attributes);
             }
             case 2: {
-                await sendMessage('test message', attributes);
-                break;
+                return await sendMessage('test message', attributes);
             }
             case 0: {
                 reader.close();
