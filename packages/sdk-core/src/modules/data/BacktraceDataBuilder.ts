@@ -26,7 +26,7 @@ export class BacktraceDataBuilder {
 
         this._debugIdProvider.loadDebugIds();
         for (const frame of stackTrace) {
-            frame.debugId = this._debugIdProvider.getDebugId(frame.library);
+            frame.debug_identifier = this._debugIdProvider.getDebugId(frame.library);
         }
 
         return {
