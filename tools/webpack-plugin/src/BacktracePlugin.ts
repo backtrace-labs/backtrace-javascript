@@ -72,7 +72,7 @@ export class BacktracePlugin implements WebpackPluginInstance {
                 }
 
                 if (!this._sourceMapUploader) {
-                    logger.info(`[${asset}] file processed`);
+                    logger.log(`[${asset}] file processed`);
                     continue;
                 }
 
@@ -80,7 +80,7 @@ export class BacktracePlugin implements WebpackPluginInstance {
                 try {
                     const result = await this._sourceMapUploader.upload(sourceMapPath, debugId);
                     stats.sourceMapUpload = result;
-                    logger.info(`[${asset}] file processed and sourcemap uploaded`);
+                    logger.log(`[${asset}] file processed and sourcemap uploaded`);
                 } catch (err) {
                     logger.error(`[${asset}] upload sourcemap failed:`, err);
                     stats.sourceMapUpload = err instanceof Error ? err : new Error('Unknown error.');
