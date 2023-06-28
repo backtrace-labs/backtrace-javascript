@@ -4,14 +4,14 @@ import webpack, { WebpackPluginInstance } from 'webpack';
 import { BacktracePluginOptions } from './models/BacktracePluginOptions';
 
 export class BacktracePlugin implements WebpackPluginInstance {
-    private readonly _sourceMapProcessor: SourceProcessor;
+    private readonly _sourceProcessor: SourceProcessor;
     private readonly _sourceMapUploader?: SourceMapUploader;
 
     constructor(public readonly options?: BacktracePluginOptions) {
-        this._sourceMapProcessor = new SourceProcessor(options?.debugIdGenerator ?? new DebugIdGenerator());
-
-        this._sourceMapUploader =
-            options?.sourceMapUploader ?? (options?.uploadUrl ? new SourceMapUploader(options.uploadUrl) : undefined);
+        this._sourceProcessor = new SourceProcessor(new DebugIdGenerator());
+        this._sourceMapUploader = options?.uploadUrl
+            ? new SourceMapUploader(options.uploadUrl, options.uploadOptions)
+            : undefined;
     }
 
     public apply(compiler: webpack.Compiler) {
@@ -46,30 +46,31 @@ export class BacktracePlugin implements WebpackPluginInstance {
             logger.log(`received ${entries.length} files for processing`);
 
             for (const [asset, sourcePath, sourceMapPath] of entries) {
-                logger.time(`[${asset}] process source and sourcemap`);
-
                 let debugId: string;
+
+                logger.time(`[${asset}] process source and sourcemap`);
                 try {
-                    debugId = await this._sourceMapProcessor.processSourceAndSourceMapFiles(sourcePath, sourceMapPath);
-                    logger.timeEnd(`[${asset}] process source and sourcemap`);
+                    debugId = await this._sourceProcessor.processSourceAndSourceMapFiles(sourcePath, sourceMapPath);
                 } catch (err) {
-                    logger.timeEnd(`[${asset}] process source and sourcemap`);
                     logger.error(`[${asset}] process source and sourcemap failed:`, err);
+                    continue;
+                } finally {
+                    logger.timeEnd(`[${asset}] process source and sourcemap`);
+                }
+
+                if (!this._sourceMapUploader) {
+                    logger.info(`[${asset}] file processed`);
                     continue;
                 }
 
-                if (this._sourceMapUploader) {
-                    logger.time(`[${asset}] upload sourcemap`);
-                    try {
-                        await this._sourceMapUploader.upload(sourceMapPath, debugId);
-                        logger.timeEnd(`[${asset}] upload sourcemap`);
-                    } catch (err) {
-                        logger.timeEnd(`[${asset}] upload sourcemap`);
-                        logger.error(`[${asset}] upload sourcemap failed:`, err);
-                    }
-                    logger.log(`[${asset}] file processed and sourcemap uploaded`);
-                } else {
-                    logger.log(`[${asset}] file processed`);
+                logger.time(`[${asset}] upload sourcemap`);
+                try {
+                    await this._sourceMapUploader.upload(sourceMapPath, debugId);
+                    logger.info(`[${asset}] file processed and sourcemap uploaded`);
+                } catch (err) {
+                    logger.error(`[${asset}] upload sourcemap failed:`, err);
+                } finally {
+                    logger.timeEnd(`[${asset}] upload sourcemap`);
                 }
             }
         });
