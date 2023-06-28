@@ -18,7 +18,9 @@ export class BacktracePlugin implements WebpackPluginInstance {
         compiler.hooks.afterEmit.tapPromise(BacktracePlugin.name, async (compilation) => {
             const logger = compilation.getLogger(BacktracePlugin.name);
             if (!compilation.outputOptions.path) {
-                logger.error('skipping everything because outputOptions.path is not set, a bug?');
+                logger.error(
+                    'Skipping everything because outputOptions.path is not set. If you see this error, please report this to Backtrace.',
+                );
                 return;
             }
 
