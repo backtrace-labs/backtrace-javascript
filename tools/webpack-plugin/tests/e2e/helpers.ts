@@ -30,7 +30,7 @@ export function getBaseConfig(config: webpack.Configuration, options?: BaseConfi
                 },
             ],
         },
-        plugins: [new BacktracePlugin(options?.pluginOptions ?? { debugIdGenerator: new TestDebugIdGenerator() })],
+        plugins: [new BacktracePlugin({ uploadUrl: 'https://localhost', ...options?.pluginOptions })],
         ...config,
     };
 }
