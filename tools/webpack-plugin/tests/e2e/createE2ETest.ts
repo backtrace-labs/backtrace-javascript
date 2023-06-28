@@ -1,31 +1,11 @@
-import { SourceMapUploader } from '@backtrace/sourcemap-tools';
+import { SourceMapUploader, SourceProcessor } from '@backtrace/sourcemap-tools';
 import assert from 'assert';
 import fs from 'fs';
 import path from 'path';
 import webpack from 'webpack';
-import {
-    asyncWebpack,
-    expectSourceComment,
-    expectSourceMapSnippet,
-    expectSourceSnippet,
-    expectSuccess,
-    getFiles,
-    removeDir,
-    webpackModeTest,
-} from './helpers';
+import { asyncWebpack, expectSuccess, getFiles, removeDir, webpackModeTest } from './helpers';
 
-interface E2ETestOptions {
-    testSourceFunction?: boolean;
-    testSourceComment?: boolean;
-    testSourceMap?: boolean;
-    testSourceEval?: boolean;
-    testSourceMapUpload?: boolean;
-}
-
-export function createE2ETest(
-    configBuilder: (mode: webpack.Configuration['mode']) => webpack.Configuration,
-    opts?: E2ETestOptions,
-) {
+export function createE2ETest(configBuilder: (mode: webpack.Configuration['mode']) => webpack.Configuration) {
     webpackModeTest((mode) => {
         function mockUploader() {
             return jest.spyOn(SourceMapUploader.prototype, 'upload').mockImplementation((_, debugId) =>
@@ -36,11 +16,21 @@ export function createE2ETest(
             );
         }
 
+        function mockProcessor() {
+            return jest
+                .spyOn(SourceProcessor.prototype, 'processSourceAndSourceMapFiles')
+                .mockImplementation(async (_, __, debugId) => debugId ?? 'debugId');
+        }
+
         let result: webpack.Stats;
         let uploadSpy: ReturnType<typeof mockUploader>;
+        let processSpy: ReturnType<typeof mockProcessor>;
 
         beforeAll(async () => {
+            jest.resetAllMocks();
+
             uploadSpy = mockUploader();
+            processSpy = mockProcessor();
 
             const config = configBuilder(mode);
             if (config.output?.path) {
@@ -52,79 +42,40 @@ export function createE2ETest(
             result = webpackResult;
         }, 120000);
 
-        if (opts?.testSourceFunction ?? true) {
-            it('should inject function into emitted source files', async () => {
-                const outputDir = result.compilation.outputOptions.path;
-                assert(outputDir);
+        it('should call SourceProcessor for every emitted source file and sourcemap pair', async () => {
+            const outputDir = result.compilation.outputOptions.path;
+            assert(outputDir);
 
-                const jsFiles = await getFiles(outputDir, /.js$/);
-                expect(jsFiles.length).toBeGreaterThan(0);
+            const jsFiles = await getFiles(outputDir, /.js$/);
+            expect(jsFiles.length).toBeGreaterThan(0);
 
-                for (const file of jsFiles) {
-                    const content = await fs.promises.readFile(file, 'utf8');
-                    await expectSourceSnippet(content);
-                }
-            });
-        }
+            const processedPairs = processSpy.mock.calls.map(
+                ([p1, p2]) => [path.resolve(p1), path.resolve(p2)] as const,
+            );
+            for (const file of jsFiles) {
+                const content = await fs.promises.readFile(file, 'utf8');
+                const matches = [...content.matchAll(/^\/\/# sourceMappingURL=(.+)$/gm)];
+                expect(matches.length).toEqual(1);
+                const [, sourceMapPath] = matches[0];
 
-        if (opts?.testSourceComment ?? true) {
-            it('should inject debug ID comment into emitted source files', async () => {
-                const outputDir = result.compilation.outputOptions.path;
-                assert(outputDir);
+                expect(processedPairs).toContainEqual([
+                    path.resolve(file),
+                    path.resolve(path.dirname(file), sourceMapPath),
+                ]);
+            }
+        });
 
-                const jsFiles = await getFiles(outputDir, /.js$/);
-                expect(jsFiles.length).toBeGreaterThan(0);
+        it('should call SourceMapUploader for every emitted sourcemap', async () => {
+            const outputDir = result.compilation.outputOptions.path;
+            assert(outputDir);
 
-                for (const file of jsFiles) {
-                    const content = await fs.promises.readFile(file, 'utf8');
-                    await expectSourceComment(content);
-                }
-            });
-        }
+            const mapFiles = await getFiles(outputDir, /.js.map$/);
+            expect(mapFiles.length).toBeGreaterThan(0);
 
-        if (opts?.testSourceEval ?? true) {
-            it('should eval emitted source without syntax errors', async () => {
-                const outputDir = result.compilation.outputOptions.path;
-                assert(outputDir);
-
-                const jsFiles = await getFiles(outputDir, /.js$/);
-                expect(jsFiles.length).toBeGreaterThan(0);
-
-                for (const file of jsFiles) {
-                    const content = await fs.promises.readFile(file, 'utf8');
-                    expect(() => eval(content)).not.toThrowError(SyntaxError);
-                }
-            });
-        }
-
-        if (opts?.testSourceMap ?? true) {
-            it('should inject debug ID into emitted sourcemap files', async () => {
-                const outputDir = result.compilation.outputOptions.path;
-                assert(outputDir);
-
-                const mapFiles = await getFiles(outputDir, /.js.map$/);
-                expect(mapFiles.length).toBeGreaterThan(0);
-
-                for (const file of mapFiles) {
-                    const content = await fs.promises.readFile(file, 'utf8');
-                    await expectSourceMapSnippet(content);
-                }
-            });
-        }
-
-        if (opts?.testSourceMapUpload ?? true) {
-            it('should upload sourcemaps using SourceMapUploader', async () => {
-                const outputDir = result.compilation.outputOptions.path;
-                assert(outputDir);
-
-                const mapFiles = await getFiles(outputDir, /.js.map$/);
-                expect(mapFiles.length).toBeGreaterThan(0);
-
-                const uploadedFiles = uploadSpy.mock.calls.map((c) => path.resolve(c[0]));
-                for (const file of mapFiles) {
-                    expect(uploadedFiles).toContain(path.resolve(file));
-                }
-            });
-        }
+            const uploadedFiles = uploadSpy.mock.calls.map((c) => path.resolve(c[0]));
+            for (const file of mapFiles) {
+                expect(uploadedFiles).toContain(path.resolve(file));
+            }
+        });
     });
 }
