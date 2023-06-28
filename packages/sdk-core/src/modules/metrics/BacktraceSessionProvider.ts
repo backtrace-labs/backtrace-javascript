@@ -1,6 +1,6 @@
 export interface BacktraceSessionProvider {
     /**
-     * Determinates if the session just started
+     * Determines if the session just started
      */
     readonly newSession: boolean;
 

@@ -17,7 +17,7 @@ export class BacktraceBrowserSessionProvider implements BacktraceSessionProvider
         return this._lastActive;
     }
     /**
-     * Determinates if the current session is new.
+     * Determines if the current session is new.
      */
     public readonly newSession: boolean = true;
     /**

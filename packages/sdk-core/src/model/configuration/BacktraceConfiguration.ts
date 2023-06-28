@@ -7,7 +7,7 @@ export interface BacktraceMetricsOptions {
      */
     metricsSubmissionUrl?: string;
     /**
-     * Determinates if the metrics support is enabled. By default the value is set to true.
+     * Determines if the metrics support is enabled. By default the value is set to true.
      */
     enable?: boolean;
     /**
