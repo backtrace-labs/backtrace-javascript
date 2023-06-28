@@ -1,0 +1,39 @@
+{
+    "name": "@backtrace/javascript-cli",
+    "version": "0.0.1",
+    "description": "Backtrace CLI for working with Javascript files.",
+    "main": "lib/index.js",
+    "types": "lib/index.d.ts",
+    "engines": {
+        "node": ">=14"
+    },
+    "devDependencies": {},
+    "scripts": {
+        "build": "tsc",
+        "clean": "tsc -b --clean && rimraf \"lib\"",
+        "format": "prettier --write '**/*.ts'",
+        "lint": "eslint . --ext .ts",
+        "watch": "tsc -w"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/backtrace-labs/backtrace-javascript.git"
+    },
+    "keywords": [
+        "Error",
+        "Reporting",
+        "Diagnostic",
+        "Tool",
+        "Bug",
+        "Bugs",
+        "StackTrace",
+        "Source maps",
+        "Sourcemaps"
+    ],
+    "author": "Backtrace <team@backtrace.io>",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/backtrace-labs/backtrace-javascript/issues"
+    },
+    "homepage": "https://github.com/backtrace-labs/backtrace-javascript#readme"
+}
