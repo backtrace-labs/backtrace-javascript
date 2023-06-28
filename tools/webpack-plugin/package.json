@@ -28,7 +28,10 @@
         "Tool",
         "Bug",
         "Bugs",
-        "StackTrace"
+        "StackTrace",
+        "Source maps",
+        "Sourcemaps",
+        "Webpack"
     ],
     "author": "Backtrace <team@backtrace.io>",
     "license": "MIT",
