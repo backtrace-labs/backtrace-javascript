@@ -13,7 +13,7 @@ export class MetricsSubmissionQueue<T extends MetricsEvent> implements MetricsQu
         return this._submissionUrl;
     }
 
-    public readonly TIMEOUT_BETWEEN_REQUESTS = TimeHelper.convertSecondsToMilliseconds(10);
+    public readonly DELAY_BETWEEN_REQUESTS = TimeHelper.convertSecondsToMilliseconds(10);
 
     private _events: T[] = [];
     private _numberOfDroppedRequests = 0;
@@ -59,7 +59,7 @@ export class MetricsSubmissionQueue<T extends MetricsEvent> implements MetricsQu
         if (response.status !== 'Ok') {
             this._numberOfDroppedRequests++;
             attempts += 1;
-            await Delay.wait(2 ** attempts * this.TIMEOUT_BETWEEN_REQUESTS);
+            await Delay.wait(2 ** attempts * this.DELAY_BETWEEN_REQUESTS);
             await this.submitMetricsToServer(events, attempts);
             return;
         }

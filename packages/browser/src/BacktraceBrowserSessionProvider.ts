@@ -10,19 +10,12 @@ export class BacktraceBrowserSessionProvider implements BacktraceSessionProvider
     private readonly SESSION_LAST_ACTIVE = 'backtrace-last-active';
     private readonly SESSION_GUID = 'backtrace-guid';
 
-    /**
-     * Session last active timestamp
-     */
     get lastActive(): number {
         return this._lastActive;
     }
-    /**
-     * Determines if the current session is new.
-     */
+
     public readonly newSession: boolean = true;
-    /**
-     * Current session Id
-     */
+
     public readonly sessionId: string = IdGenerator.uuid();
 
     private _lastActive = 0;
@@ -48,6 +41,9 @@ export class BacktraceBrowserSessionProvider implements BacktraceSessionProvider
     }
 
     public shouldSend(): boolean {
+        // if the document is hidden, we shouldn't send metrics, because the open document
+        // is the one who is being used by the user. This condition makes sure two or more web
+        // browser tabs of the same app won't report the same metrics or false positive metrics.
         return document.hidden === false;
     }
 
@@ -65,7 +61,7 @@ export class BacktraceBrowserSessionProvider implements BacktraceSessionProvider
         return lastActive;
     }
 
-    private updateLastActiveTimestamp() {
+    public updateLastActiveTimestamp() {
         this._lastActive = TimeHelper.now();
         localStorage.setItem(this.SESSION_LAST_ACTIVE, this._lastActive.toString(10));
     }

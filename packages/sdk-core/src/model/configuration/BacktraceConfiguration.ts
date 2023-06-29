@@ -3,7 +3,7 @@ import { BacktraceDatabaseConfiguration } from './BacktraceDatabaseConfiguration
 
 export interface BacktraceMetricsOptions {
     /**
-     * Metrics server hostname. By default the value is set to: https://events.backtrace.io.
+     * Metrics server hostname. By default the value is set to https://events.backtrace.io.
      */
     metricsSubmissionUrl?: string;
     /**
@@ -12,7 +12,7 @@ export interface BacktraceMetricsOptions {
     enable?: boolean;
     /**
      * Indicates how often crash free metrics are sent to Backtrace. The interval is a value in ms.
-     * By default, session events are sent on application startup/finish, and every 30 minutes while the game is running.
+     * By default, session events are sent on application startup/finish, and every 30 minutes while the application is running.
      * If the value is set to 0. The auto send mode is disabled. In this situation the application needs to maintain send
      * mode manually.
      */

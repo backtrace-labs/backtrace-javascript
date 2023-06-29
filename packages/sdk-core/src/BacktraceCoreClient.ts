@@ -23,7 +23,7 @@ export abstract class BacktraceCoreClient {
      * Current session id
      */
     public get sessionId(): string {
-        return this.sessionProvider.sessionId;
+        return this._sessionProvider.sessionId;
     }
 
     /**
@@ -74,7 +74,7 @@ export abstract class BacktraceCoreClient {
         requestHandler: BacktraceRequestHandler,
         attributeProviders: BacktraceAttributeProvider[] = [],
         stackTraceConverter: BacktraceStackTraceConverter = new V8StackTraceConverter(),
-        private sessionProvider: BacktraceSessionProvider = new SingleSessionProvider(),
+        private readonly _sessionProvider: BacktraceSessionProvider = new SingleSessionProvider(),
     ) {
         this._dataBuilder = new BacktraceDataBuilder(this._sdkOptions, stackTraceConverter);
         this._reportSubmission = new BacktraceReportSubmission(options, requestHandler);
@@ -82,13 +82,13 @@ export abstract class BacktraceCoreClient {
         this._attributeProvider = new AttributeManager([
             new ClientAttributeProvider(
                 _sdkOptions.agentVersion,
-                sessionProvider.sessionId,
+                _sessionProvider.sessionId,
                 options.userAttributes ?? {},
             ),
             ...(attributeProviders ?? []),
         ]);
         this.attachments = options.attachments ?? [];
-        const metrics = new MetricsBuilder(options, sessionProvider, this._attributeProvider, requestHandler).build();
+        const metrics = new MetricsBuilder(options, _sessionProvider, this._attributeProvider, requestHandler).build();
         if (metrics) {
             this._metrics = metrics;
             this._metrics.start();

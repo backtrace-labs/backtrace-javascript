@@ -43,10 +43,7 @@ export class BacktraceMetrics {
             return;
         }
 
-        const { attributes } = this._attributeManager.get();
-        this._summedEventsSubmissionQueue.add(
-            new SummedEvent('Application Launches', this.convertAttributes(attributes)),
-        );
+        this.addSummedEvent('Application Launches');
         this.send();
 
         if (this._updateInterval === 0) {

@@ -1,7 +1,7 @@
 export interface MetricsQueue<T> {
-    total: number;
-    submissionUrl: string;
-    maximumEvents: number;
+    readonly total: number;
+    readonly submissionUrl: string;
+    readonly maximumEvents: number;
     add(event: T): void;
     send(): Promise<void>;
 }
