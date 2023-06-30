@@ -61,7 +61,8 @@ export class SourceProcessor {
         fromLine: number,
         count: number,
     ): Promise<RawSourceMap> {
-        const consumer = (await new SourceMapConsumer(sourceMap)) as BasicSourceMapConsumer;
+        const sourceMapObj = typeof sourceMap === 'string' ? JSON.parse(sourceMap) : sourceMap;
+        const consumer = (await new SourceMapConsumer(sourceMapObj)) as BasicSourceMapConsumer;
         const newSourceMap = new SourceMapGenerator({
             file: consumer.file,
             sourceRoot: consumer.sourceRoot,
@@ -87,6 +88,7 @@ export class SourceProcessor {
             });
         });
 
-        return newSourceMap.toJSON();
+        const newSourceMapJson = newSourceMap.toJSON();
+        return { ...sourceMapObj, ...newSourceMapJson };
     }
 }
