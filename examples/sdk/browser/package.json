@@ -39,6 +39,6 @@
         "webpack-cli": "^5.1.4"
     },
     "dependencies": {
-        "@backtrace/browser": "file:../../../packages/browser"
+        "@backtrace/browser": "^0.0.1"
     }
 }
