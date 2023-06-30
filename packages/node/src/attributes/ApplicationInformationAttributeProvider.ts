@@ -50,6 +50,13 @@ export class ApplicationInformationAttributeProvider implements BacktraceAttribu
 
     private generateDefaultApplicationSearchPaths() {
         const possibleSourcePaths = [process.cwd()];
+        const potentialCommandLineStartupFile = process.argv[1];
+        if (potentialCommandLineStartupFile) {
+            const potentialCommandLineStartupFilePath = path.resolve(potentialCommandLineStartupFile);
+            if (fs.existsSync(potentialCommandLineStartupFilePath)) {
+                possibleSourcePaths.unshift(potentialCommandLineStartupFilePath);
+            }
+        }
         if (require.main?.path) {
             possibleSourcePaths.unshift(path.dirname(require.main.path));
         }
