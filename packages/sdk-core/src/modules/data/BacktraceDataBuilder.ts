@@ -24,7 +24,6 @@ export class BacktraceDataBuilder {
 
         const stackTrace = this._stackTraceConverter.convert(report.stackTrace, report.message);
 
-        this._debugIdProvider.loadDebugIds();
         for (const frame of stackTrace) {
             frame.debug_identifier = this._debugIdProvider.getDebugId(frame.library);
         }

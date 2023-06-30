@@ -4,23 +4,23 @@ import { DebugIdMapProvider } from './interfaces/DebugIdMapProvider';
 export const SOURCE_DEBUG_ID_VARIABLE = '_btDebugIds';
 
 export class DebugIdProvider {
-    private _fileDebugIds?: Record<string, string>;
+    private readonly _fileDebugIds: Record<string, string>;
 
     constructor(
         private readonly _stackTraceConverter: BacktraceStackTraceConverter,
         private readonly _debugIdMapProvider?: DebugIdMapProvider,
-    ) {}
+    ) {
+        this._fileDebugIds = this.loadDebugIds();
+    }
 
-    public loadDebugIds(debugIdMap?: Record<string, string>) {
-        if (this._fileDebugIds) {
-            return this._fileDebugIds;
-        }
+    public getDebugId(file: string): string | undefined {
+        return this._fileDebugIds[file];
+    }
 
+    private loadDebugIds() {
+        const debugIdMap = this._debugIdMapProvider?.getDebugIdMap();
         if (!debugIdMap) {
-            debugIdMap = this._debugIdMapProvider?.getDebugIdMap();
-            if (!debugIdMap) {
-                return;
-            }
+            return {};
         }
 
         const message = new Error().message;
@@ -36,10 +36,6 @@ export class DebugIdProvider {
             result[frame.library] = debugId;
         }
 
-        return (this._fileDebugIds = result);
-    }
-
-    public getDebugId(file: string): string | undefined {
-        return this._fileDebugIds?.[file];
+        return result;
     }
 }
