@@ -15,7 +15,7 @@ export class MetricsSubmissionQueue<T extends MetricsEvent> implements MetricsQu
 
     public readonly DELAY_BETWEEN_REQUESTS = TimeHelper.convertSecondsToMilliseconds(10);
 
-    private _events: T[] = [];
+    private readonly _events: T[] = [];
     private _numberOfDroppedRequests = 0;
 
     private readonly MAXIMUM_NUMBER_OF_ATTEMPTS = 3;
@@ -73,7 +73,7 @@ export class MetricsSubmissionQueue<T extends MetricsEvent> implements MetricsQu
         }
 
         // push events to the beginning of the queue
-        this._events = events.concat(this._events);
+        this._events.unshift(...events);
     }
 
     private reachedLimit() {

@@ -13,11 +13,13 @@ describe('Session provider tests', () => {
         expect(sessionProvider1.sessionId).toEqual(sessionProvider2.sessionId);
     });
 
-    it('Should generate a new sessionId if the lastActive timestamp is greater than x', () => {
+    it('Should generate a new sessionId if the lastActive timestamp is greater than persistence interval time', () => {
         const fakeId = 'test';
-        const sessionProvider = new BacktraceBrowserSessionProvider();
-        localStorage.setItem('backtrace-last-active', new Date(2010, 1, 1, 1, 1, 1, 1).getTime().toString(10));
+        const lastSessionActiveDate = new Date(Date.now() - BacktraceBrowserSessionProvider.PERSISTENCE_INTERVAL - 1);
+        localStorage.setItem('backtrace-last-active', lastSessionActiveDate.getTime().toString(10));
         localStorage.setItem('backtrace-guid', fakeId);
+
+        const sessionProvider = new BacktraceBrowserSessionProvider();
         expect(sessionProvider.sessionId).toBeDefined();
         expect(sessionProvider.sessionId).not.toEqual(fakeId);
     });

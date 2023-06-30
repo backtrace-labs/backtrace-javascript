@@ -6,7 +6,7 @@ export class BacktraceBrowserSessionProvider implements BacktraceSessionProvider
      * Session persistence interval. If no event was send in the persistence interval
      * the session is treaten as an old session.
      */
-    private readonly PERSISTENCE_INTERVAL = TimeHelper.convertSecondsToMilliseconds(30 * 60);
+    public static readonly PERSISTENCE_INTERVAL = TimeHelper.convertSecondsToMilliseconds(30 * 60);
     private readonly SESSION_LAST_ACTIVE = 'backtrace-last-active';
     private readonly SESSION_GUID = 'backtrace-guid';
 
@@ -26,7 +26,7 @@ export class BacktraceBrowserSessionProvider implements BacktraceSessionProvider
         }
 
         const lastActive = this.readLastActiveTimestamp();
-        if (!lastActive || TimeHelper.now() - lastActive > this.PERSISTENCE_INTERVAL) {
+        if (!lastActive || TimeHelper.now() - lastActive > BacktraceBrowserSessionProvider.PERSISTENCE_INTERVAL) {
             this.updateLastActiveTimestamp();
             localStorage.setItem(this.SESSION_GUID, this.sessionId);
             return;
