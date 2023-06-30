@@ -54,7 +54,7 @@ export class ApplicationInformationAttributeProvider implements BacktraceAttribu
         if (potentialCommandLineStartupFile) {
             const potentialCommandLineStartupFilePath = path.resolve(potentialCommandLineStartupFile);
             if (fs.existsSync(potentialCommandLineStartupFilePath)) {
-                possibleSourcePaths.unshift(path.resolve(potentialCommandLineStartupFilePath));
+                possibleSourcePaths.unshift(potentialCommandLineStartupFilePath);
             }
         }
         if (require.main?.path) {
