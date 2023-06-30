@@ -21,6 +21,8 @@ function parseNotExistingDomElement(): string {
 
 const sendErrorButton = document.getElementById('send-error') as HTMLElement;
 const sendMessageButton = document.getElementById('send-message') as HTMLElement;
+const generateMetricButton = document.getElementById('generate-metric') as HTMLElement;
+const sendMetricsButton = document.getElementById('send-metrics') as HTMLElement;
 
 async function sendHandledException() {
     try {
@@ -40,5 +42,25 @@ async function sendMessage() {
     ]);
 }
 
+function generateMetric() {
+    console.log('generate-metric click');
+    if (!client.metrics) {
+        console.log('metrics are unavailable');
+        return;
+    }
+    client.metrics.addSummedEvent('click');
+}
+
+function sendMetrics() {
+    console.log('send-metrics click');
+    if (!client.metrics) {
+        console.log('metrics are unavailable');
+        return;
+    }
+    client.metrics.send();
+}
+
 sendErrorButton.onclick = sendHandledException;
 sendMessageButton.onclick = sendMessage;
+generateMetricButton.onclick = generateMetric;
+sendMetricsButton.onclick = sendMetrics;

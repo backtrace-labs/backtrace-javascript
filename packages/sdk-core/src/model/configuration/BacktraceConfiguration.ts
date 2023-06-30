@@ -1,15 +1,27 @@
 import { BacktraceAttachment } from '../attachment';
 import { BacktraceDatabaseConfiguration } from './BacktraceDatabaseConfiguration';
 
-export interface BacktraceMetricsSupport {
-    metricsSubmissionUrl?: string;
-    enable: boolean;
-    ignoreSslCertificate?: boolean;
+export interface BacktraceMetricsOptions {
     /**
-     * Indicates how often crash free metrics are sent to Backtrace.
-     * By default, session events are sent on application startup/finish, and every 30 minutes while the game is running.
+     * Metrics server hostname. By default the value is set to https://events.backtrace.io.
+     */
+    metricsSubmissionUrl?: string;
+    /**
+     * Determines if the metrics support is enabled. By default the value is set to true.
+     */
+    enable?: boolean;
+    /**
+     * Indicates how often crash free metrics are sent to Backtrace. The interval is a value in ms.
+     * By default, session events are sent on application startup/finish, and every 30 minutes while the application is running.
+     * If the value is set to 0. The auto send mode is disabled. In this situation the application needs to maintain send
+     * mode manually.
      */
     autoSendInterval?: number;
+
+    /**
+     * Indicates how many events the metrics storage can store before auto submission.
+     */
+    size?: number;
 }
 
 export interface BacktraceConfiguration {
@@ -50,7 +62,7 @@ export interface BacktraceConfiguration {
     /**
      * Metrics such as crash free users and crash free sessions
      */
-    metrics?: BacktraceMetricsSupport;
+    metrics?: BacktraceMetricsOptions;
     /**
      * Offline database settings
      */

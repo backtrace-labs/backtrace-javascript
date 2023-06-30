@@ -8,22 +8,22 @@ describe('Client tests', () => {
         postError: jest.fn().mockResolvedValue(Promise.resolve()),
     };
 
+    const defaultClientOptions = {
+        url: 'https://submit.backtrace.io/foo/bar/baz',
+        metrics: {
+            enable: false,
+        },
+    };
     let client: BacktraceClient;
     it('Should create a client', () => {
-        client = BacktraceClient.builder({
-            url: 'https://submit.backtrace.io/foo/bar/baz',
-        }).build();
+        client = BacktraceClient.builder(defaultClientOptions).build();
 
         expect(client).toBeDefined();
     });
 
     describe('Send tests', () => {
         beforeEach(() => {
-            client = BacktraceClient.builder({
-                url: 'https://submit.backtrace.io/foo/bar/baz',
-            })
-                .useRequestHandler(requestHandler)
-                .build();
+            client = BacktraceClient.builder(defaultClientOptions).useRequestHandler(requestHandler).build();
         });
         it(`Should not throw an error when sending a message`, async () => {
             expect(async () => await client.send('test')).not.toThrow();
@@ -46,10 +46,7 @@ describe('Client tests', () => {
         const fileContent = fs.readFileSync(sampleFile, 'utf8');
 
         it(`Should generate an attachment list based on the client options`, async () => {
-            client = BacktraceClient.builder({
-                url: 'https://submit.backtrace.io/foo/bar/baz',
-                attachments: [sampleFile],
-            })
+            client = BacktraceClient.builder({ ...defaultClientOptions, attachments: [sampleFile] })
                 .useRequestHandler(requestHandler)
                 .build();
 
@@ -66,7 +63,7 @@ describe('Client tests', () => {
         it(`Should allow to setup bufer attachment`, async () => {
             const testedBuffer = Buffer.from('test');
             client = BacktraceClient.builder({
-                url: 'https://submit.backtrace.io/foo/bar/baz',
+                ...defaultClientOptions,
                 attachments: [new BacktraceBufferAttachment('test', testedBuffer)],
             })
                 .useRequestHandler(requestHandler)
@@ -79,12 +76,7 @@ describe('Client tests', () => {
 
         it(`Should allow to add more attachments`, async () => {
             const testedAttachment = new BacktraceFileAttachment(sampleFile);
-            client = BacktraceClient.builder({
-                url: 'https://submit.backtrace.io/foo/bar/baz',
-                attachments: [],
-            })
-                .useRequestHandler(requestHandler)
-                .build();
+            client = BacktraceClient.builder(defaultClientOptions).useRequestHandler(requestHandler).build();
 
             client.attachments.push(testedAttachment);
             expect(client.attachments).toBeDefined();

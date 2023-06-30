@@ -10,3 +10,4 @@ export * from './model/report/BacktraceErrorType';
 export * from './model/report/BacktraceReport';
 export * from './modules/attribute/BacktraceAttributeProvider';
 export * from './modules/converter';
+export * from './modules/metrics/BacktraceSessionProvider';
