@@ -13,6 +13,9 @@ const client = BacktraceClient.builder({
     url: SUBMISSION_URL,
     attachments: [path.join(path.dirname(process.cwd()), 'samplefile.txt')],
     rateLimit: 5,
+    metrics: {
+        metricsSubmissionUrl: 'https://events-test.backtrace.io',
+    },
     userAttributes: {
         'custom-attribute': 'test',
         'custom-annotation': {

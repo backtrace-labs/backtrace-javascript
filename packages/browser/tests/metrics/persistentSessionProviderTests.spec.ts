@@ -24,6 +24,17 @@ describe('Session provider tests', () => {
         expect(sessionProvider.sessionId).not.toEqual(fakeId);
     });
 
+    it('Should not generate a new sessionId if the lastActive timestamp is lower than persistence interval time', () => {
+        const fakeId = 'test';
+        const lastSessionActiveDate = new Date(Date.now() - BacktraceBrowserSessionProvider.PERSISTENCE_INTERVAL + 1);
+        localStorage.setItem('backtrace-last-active', lastSessionActiveDate.getTime().toString(10));
+        localStorage.setItem('backtrace-guid', fakeId);
+
+        const sessionProvider = new BacktraceBrowserSessionProvider();
+        expect(sessionProvider.sessionId).toBeDefined();
+        expect(sessionProvider.sessionId).toEqual(fakeId);
+    });
+
     it('Should update timestamp', () => {
         const timestamp = Date.now();
         jest.spyOn(TimeHelper, 'now').mockImplementation(() => {
