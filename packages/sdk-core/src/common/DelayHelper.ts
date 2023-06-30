@@ -8,7 +8,7 @@ export class Delay {
         return new Promise<void>((resolve, reject) => {
             function abortCallback() {
                 clearTimeout(intervalId);
-                reject();
+                reject(new Error('Operation cancelled.'));
             }
 
             const intervalId = setTimeout(() => {

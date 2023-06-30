@@ -37,34 +37,32 @@ export class MetricsSubmissionQueue<T extends MetricsEvent> implements MetricsQu
 
     public async send() {
         const eventsToProcess = this._events.splice(0);
-        return await this.submitMetricsToServer(eventsToProcess);
+        return await this.submit(eventsToProcess);
     }
 
-    private async submitMetricsToServer(events: T[], attempts = 0) {
-        if (attempts >= this.MAXIMUM_NUMBER_OF_ATTEMPTS) {
-            this.returnEventsIfPossible(events);
-            return;
-        }
+    private async submit(events: T[]) {
+        for (let attempts = 0; attempts < this.MAXIMUM_NUMBER_OF_ATTEMPTS; attempts++) {
+            const response = await this._requestHandler.post(
+                this._submissionUrl,
+                JSON.stringify({
+                    ...this._metricMetadata,
+                    [this._eventName]: events,
+                    metadata: {
+                        dropped_events: this._numberOfDroppedRequests,
+                    },
+                }),
+            );
+            if (response.status === 'Ok') {
+                this._numberOfDroppedRequests = 0;
+                return;
+            }
 
-        const response = await this._requestHandler.post(
-            this._submissionUrl,
-            JSON.stringify({
-                ...this._metricMetadata,
-                [this._eventName]: events,
-                metadata: {
-                    dropped_events: this._numberOfDroppedRequests,
-                },
-            }),
-        );
-        if (response.status !== 'Ok') {
             this._numberOfDroppedRequests++;
-            attempts += 1;
             await Delay.wait(2 ** attempts * this.DELAY_BETWEEN_REQUESTS);
-            await this.submitMetricsToServer(events, attempts);
-            return;
         }
-
-        this._numberOfDroppedRequests = 0;
+        // if the code reached this line, it means, we couldn't send data to server
+        // we need to try to return events to the queue and try to send it once again later.
+        this.returnEventsIfPossible(events);
     }
 
     private returnEventsIfPossible(events: T[]) {
