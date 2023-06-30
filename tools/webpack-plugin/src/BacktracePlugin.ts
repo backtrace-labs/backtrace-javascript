@@ -62,7 +62,6 @@ export class BacktracePlugin implements WebpackPluginInstance {
                     debugId = await this._sourceProcessor.processSourceAndSourceMapFiles(sourcePath, sourceMapPath);
                     stats.debugId = debugId;
                     stats.processSource = true;
-                    logger.timeEnd(`[${asset}] process source and sourcemap`);
                 } catch (err) {
                     logger.error(`[${asset}] process source and sourcemap failed:`, err);
                     stats.processSource = err instanceof Error ? err : new Error('Unknown error.');
