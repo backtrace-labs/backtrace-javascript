@@ -1,4 +1,4 @@
-import { SourceMapUploader, SourceProcessor } from '@backtrace/sourcemap-tools';
+import { SourceProcessor, SymbolUploader } from '@backtrace/sourcemap-tools';
 import assert from 'assert';
 import fs from 'fs';
 import path from 'path';
@@ -8,7 +8,7 @@ import { asyncWebpack, expectSuccess, getFiles, removeDir, webpackModeTest } fro
 export function createE2ETest(configBuilder: (mode: webpack.Configuration['mode']) => webpack.Configuration) {
     webpackModeTest((mode) => {
         function mockUploader() {
-            return jest.spyOn(SourceMapUploader.prototype, 'upload').mockImplementation((_, debugId) =>
+            return jest.spyOn(SymbolUploader.prototype, 'upload').mockImplementation((_, debugId) =>
                 Promise.resolve({
                     debugId: debugId ?? crypto.randomUUID(),
                     rxid: crypto.randomUUID(),

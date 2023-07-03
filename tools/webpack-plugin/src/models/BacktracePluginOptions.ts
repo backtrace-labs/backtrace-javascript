@@ -1,4 +1,4 @@
-import { SourceMapUploaderOptions } from '@backtrace/sourcemap-tools';
+import { SymbolUploaderOptions } from '@backtrace/sourcemap-tools';
 
 export interface BacktracePluginOptions {
     /**
@@ -12,5 +12,5 @@ export interface BacktracePluginOptions {
     /**
      * Additional upload options.
      */
-    uploadOptions?: SourceMapUploaderOptions;
+    uploadOptions?: SymbolUploaderOptions;
 }

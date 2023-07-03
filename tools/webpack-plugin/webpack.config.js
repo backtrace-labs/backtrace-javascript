@@ -35,5 +35,5 @@ module.exports = {
             additionalModuleDirs: ['../../node_modules'],
         }),
     ],
-    plugins: [new BacktracePlugin({})],
+    plugins: [new BacktracePlugin()],
 };
