@@ -8,6 +8,8 @@ describe('ZipArchive', () => {
     const outputFile = path.join(__dirname, './testOutput/archive.zip');
 
     beforeEach(async () => {
+        await fs.promises.mkdir(path.dirname(outputFile), { recursive: true });
+
         try {
             await fs.promises.unlink(outputFile);
         } catch {
