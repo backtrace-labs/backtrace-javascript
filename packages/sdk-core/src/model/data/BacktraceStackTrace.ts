@@ -4,6 +4,7 @@ export interface BacktraceStackFrame {
     column?: number;
     sourceCode?: string;
     library: string;
+    debug_identifier?: string;
 }
 
 /**

@@ -1,11 +1,13 @@
 import {
     BacktraceAttributeProvider,
-    BacktraceConfiguration as CoreConfiguration,
     BacktraceCoreClient,
     BacktraceRequestHandler,
+    BacktraceConfiguration as CoreConfiguration,
+    DebugIdContainer,
+    VariableDebugIdMapProvider,
 } from '@backtrace/sdk-core';
-import { AGENT } from './agentDefinition';
 import { BacktraceConfiguration } from './BacktraceConfiguration';
+import { AGENT } from './agentDefinition';
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 
 export class BacktraceClient extends BacktraceCoreClient {
@@ -14,7 +16,15 @@ export class BacktraceClient extends BacktraceCoreClient {
         handler: BacktraceRequestHandler,
         attributeProviders: BacktraceAttributeProvider[],
     ) {
-        super(options, AGENT, handler, attributeProviders);
+        super(
+            options,
+            AGENT,
+            handler,
+            attributeProviders,
+            undefined,
+            undefined,
+            new VariableDebugIdMapProvider(global as DebugIdContainer),
+        );
     }
 
     public static builder(options: BacktraceConfiguration): BacktraceClientBuilder {

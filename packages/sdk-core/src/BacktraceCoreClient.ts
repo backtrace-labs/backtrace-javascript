@@ -3,6 +3,8 @@ import {
     BacktraceAttributeProvider,
     BacktraceSessionProvider,
     BacktraceStackTraceConverter,
+    DebugIdMapProvider,
+    DebugIdProvider,
 } from '.';
 import { SdkOptions } from './builder/SdkOptions';
 import { BacktraceConfiguration } from './model/configuration/BacktraceConfiguration';
@@ -75,8 +77,14 @@ export abstract class BacktraceCoreClient {
         attributeProviders: BacktraceAttributeProvider[] = [],
         stackTraceConverter: BacktraceStackTraceConverter = new V8StackTraceConverter(),
         private readonly _sessionProvider: BacktraceSessionProvider = new SingleSessionProvider(),
+        debugIdMapProvider?: DebugIdMapProvider,
     ) {
-        this._dataBuilder = new BacktraceDataBuilder(this._sdkOptions, stackTraceConverter);
+        this._dataBuilder = new BacktraceDataBuilder(
+            this._sdkOptions,
+            stackTraceConverter,
+            new DebugIdProvider(stackTraceConverter, debugIdMapProvider),
+        );
+
         this._reportSubmission = new BacktraceReportSubmission(options, requestHandler);
         this._rateLimitWatcher = new RateLimitWatcher(options.rateLimit);
         this._attributeProvider = new AttributeManager([

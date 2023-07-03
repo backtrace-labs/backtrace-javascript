@@ -1,5 +1,6 @@
-import { BacktraceReport } from '../../src';
+import { BacktraceReport, DebugIdProvider } from '../../src';
 import { TimeHelper } from '../../src/common/TimeHelper';
+import { BacktraceStackFrame } from '../../src/model/data/BacktraceStackTrace';
 import { V8StackTraceConverter } from '../../src/modules/converter/V8StackTraceConverter';
 import { BacktraceDataBuilder } from '../../src/modules/data/BacktraceDataBuilder';
 
@@ -10,7 +11,11 @@ describe('Data generation tests', () => {
         langName: 'test',
         langVersion: 'test',
     };
-    const dataBuilder = new BacktraceDataBuilder(sdkOptions, new V8StackTraceConverter());
+    const dataBuilder = new BacktraceDataBuilder(
+        sdkOptions,
+        new V8StackTraceConverter(),
+        new DebugIdProvider(new V8StackTraceConverter()),
+    );
 
     it('Should set sdk options in the Backtrace data', () => {
         const backtraceData = dataBuilder.build(new BacktraceReport(new Error()));
@@ -65,5 +70,34 @@ describe('Data generation tests', () => {
 
         expect(backtraceData.attributes).toBeDefined();
         expect(backtraceData.attributes).toMatchObject(errorReport.attributes);
+    });
+
+    it('Should append debug_identifier to each frame', () => {
+        const stackTraceConverter = new V8StackTraceConverter();
+        const debugIdProvider = new DebugIdProvider(stackTraceConverter);
+
+        const frames: BacktraceStackFrame[] = [
+            {
+                funcName: 'x',
+                library: 'x',
+            },
+            {
+                funcName: 'y',
+                library: 'y',
+            },
+        ];
+
+        const expected = 'DEBUG_ID';
+        const expectedFrames = frames.map((m) => ({ ...m, debug_identifier: expected }));
+
+        jest.spyOn(stackTraceConverter, 'convert').mockReturnValue(frames);
+        jest.spyOn(debugIdProvider, 'getDebugId').mockReturnValue(expected);
+
+        const dataBuilder = new BacktraceDataBuilder(sdkOptions, stackTraceConverter, debugIdProvider);
+
+        const errorReport = new BacktraceReport(new Error());
+        const backtraceData = dataBuilder.build(errorReport);
+
+        expect(backtraceData.threads[backtraceData.mainThread].stack).toEqual(expectedFrames);
     });
 });
