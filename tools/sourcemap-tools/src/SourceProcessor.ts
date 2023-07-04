@@ -6,6 +6,28 @@ import { stringToUuid } from './helpers/stringToUuid';
 export class SourceProcessor {
     constructor(private readonly _debugIdGenerator: DebugIdGenerator) {}
 
+    public isSourceProcessed(source: string): boolean {
+        return !!this._debugIdGenerator.getSourceDebugId(source);
+    }
+
+    public isSourceMapProcessed(sourceMap: string | RawSourceMap): boolean {
+        if (typeof sourceMap === 'string') {
+            sourceMap = JSON.parse(sourceMap) as RawSourceMap;
+        }
+
+        return !!this._debugIdGenerator.getSourceMapDebugId(sourceMap);
+    }
+
+    public async isSourceFileProcessed(sourcePath: string): Promise<boolean> {
+        const source = await fs.promises.readFile(sourcePath, 'utf8');
+        return this.isSourceProcessed(source);
+    }
+
+    public async isSourceMapFileProcessed(sourceMapPath: string): Promise<boolean> {
+        const source = await fs.promises.readFile(sourceMapPath, 'utf8');
+        return this.isSourceMapProcessed(source);
+    }
+
     /**
      * Adds required snippets and comments to source, and modifies sourcemap to include debug ID.
      * @param source Source content.
@@ -31,7 +53,7 @@ export class SourceProcessor {
         // original code X:Y => generated code (A + sourceSnippetNewlineCount):B
         const sourceSnippetNewlineCount = sourceSnippet.match(/\n/g)?.length ?? 0;
         const offsetSourceMap = await this.offsetSourceMap(sourceMap, 0, sourceSnippetNewlineCount + 1);
-        const newSourceMap = this._debugIdGenerator.addSourceMapKey(offsetSourceMap, debugId);
+        const newSourceMap = this._debugIdGenerator.addSourceMapDebugId(offsetSourceMap, debugId);
 
         return { debugId, source: newSource, sourceMap: newSourceMap };
     }

@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import { DebugIdGenerator, SOURCEMAP_DEBUG_ID_KEY, SOURCE_DEBUG_ID_COMMENT, SOURCE_DEBUG_ID_VARIABLE } from '../src';
 
 describe('DebugIdGenerator', () => {
-    describe('source snippet', () => {
+    describe('source snippet generation', () => {
         /**
          * Makes the `global` variable `undefined` in the callback.
          * @param callback
@@ -118,7 +118,7 @@ describe('DebugIdGenerator', () => {
         });
     });
 
-    describe('source comment', () => {
+    describe('source comment generation', () => {
         it('should return a comment matching regex', () => {
             const regex = new RegExp(`^//# ${SOURCE_DEBUG_ID_COMMENT}=[a-fA-F0-9-]{36}$`);
 
@@ -145,10 +145,38 @@ describe('DebugIdGenerator', () => {
         });
     });
 
-    describe('source map', () => {
+    describe('source comment get', () => {
+        it('should return debugId from source with valid comment', () => {
+            const expected = crypto.randomUUID();
+            const source = [
+                'foo',
+                'bar',
+                `//# ${SOURCE_DEBUG_ID_COMMENT}=${expected}`,
+                `//# sourceMappingURL=baz.js`,
+            ].join('\n');
+
+            const debugIdGenerator = new DebugIdGenerator();
+            const actual = debugIdGenerator.getSourceDebugId(source);
+
+            expect(actual).toEqual(expected);
+        });
+
+        it('should return undefined from source without valid comment', () => {
+            const source = ['foo', 'bar', `//# otherStuff=${crypto.randomUUID()}`, `//# sourceMappingURL=baz.js`].join(
+                '\n',
+            );
+
+            const debugIdGenerator = new DebugIdGenerator();
+            const actual = debugIdGenerator.getSourceDebugId(source);
+
+            expect(actual).toBeUndefined();
+        });
+    });
+
+    describe('source map add', () => {
         it('should add key to object', () => {
             const debugIdGenerator = new DebugIdGenerator();
-            const actual = debugIdGenerator.addSourceMapKey({}, crypto.randomUUID());
+            const actual = debugIdGenerator.addSourceMapDebugId({}, crypto.randomUUID());
 
             expect(Object.keys(actual)).toContain(SOURCEMAP_DEBUG_ID_KEY);
         });
@@ -157,7 +185,7 @@ describe('DebugIdGenerator', () => {
             const expected = crypto.randomUUID();
 
             const debugIdGenerator = new DebugIdGenerator();
-            const actual = debugIdGenerator.addSourceMapKey({}, expected);
+            const actual = debugIdGenerator.addSourceMapDebugId({}, expected);
 
             expect(actual[SOURCEMAP_DEBUG_ID_KEY as never]).toEqual(expected);
         });
@@ -166,7 +194,7 @@ describe('DebugIdGenerator', () => {
             const expected = {};
 
             const debugIdGenerator = new DebugIdGenerator();
-            const actual = debugIdGenerator.addSourceMapKey(expected, crypto.randomUUID());
+            const actual = debugIdGenerator.addSourceMapDebugId(expected, crypto.randomUUID());
 
             expect(actual).not.toBe(expected);
         });
@@ -176,9 +204,34 @@ describe('DebugIdGenerator', () => {
             const actual = {};
 
             const debugIdGenerator = new DebugIdGenerator();
-            debugIdGenerator.addSourceMapKey(actual, crypto.randomUUID());
+            debugIdGenerator.addSourceMapDebugId(actual, crypto.randomUUID());
 
             expect(actual).toEqual(expected);
+        });
+    });
+
+    describe('source map get', () => {
+        it('should return debugId from sourcemap with key', () => {
+            const expected = crypto.randomUUID();
+            const sourcemap = {
+                [SOURCEMAP_DEBUG_ID_KEY]: expected,
+            };
+
+            const debugIdGenerator = new DebugIdGenerator();
+            const actual = debugIdGenerator.getSourceMapDebugId(sourcemap);
+
+            expect(actual).toEqual(expected);
+        });
+
+        it('should return undefined from sourcemap without key', () => {
+            const sourcemap = {
+                'some-other-key': crypto.randomUUID(),
+            };
+
+            const debugIdGenerator = new DebugIdGenerator();
+            const actual = debugIdGenerator.getSourceMapDebugId(sourcemap);
+
+            expect(actual).toBeUndefined();
         });
     });
 });

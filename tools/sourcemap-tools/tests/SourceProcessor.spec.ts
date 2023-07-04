@@ -39,7 +39,7 @@ describe('SourceProcessor', () => {
         const expected = { [SOURCEMAP_DEBUG_ID_KEY]: 'debugId' };
         const debugIdGenerator = new DebugIdGenerator();
 
-        jest.spyOn(debugIdGenerator, 'addSourceMapKey').mockReturnValue(expected);
+        jest.spyOn(debugIdGenerator, 'addSourceMapDebugId').mockReturnValue(expected);
 
         const sourceProcessor = new SourceProcessor(debugIdGenerator);
         const result = await sourceProcessor.processSourceAndSourceMap(source, sourceMap);
