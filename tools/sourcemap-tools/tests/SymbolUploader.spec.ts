@@ -53,7 +53,7 @@ describe('SymbolUploader', () => {
     });
 
     it('should upload stream as POST body', async () => {
-        const sourcemapPath = path.join(__dirname, './testFiles/sourcemap.js.map');
+        const sourcemapPath = path.join(__dirname, './testFiles/source.js.map');
         const uploadData = await fs.promises.readFile(sourcemapPath, 'utf-8');
         const stream = fs.createReadStream(sourcemapPath);
         const uploadUrl = new URL(`http://upload-test/`);
