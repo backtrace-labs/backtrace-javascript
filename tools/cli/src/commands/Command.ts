@@ -1,6 +1,7 @@
 import { Err, Ok, Result } from '@backtrace/sourcemap-tools';
 import commandLineArgs from 'command-line-args';
 import commandLineUsage, { Section } from 'command-line-usage';
+import { LoggerOptions, createLogger } from '../logger';
 import { CommandError } from '../models/CommandError';
 import { ExtendedOptionDefinition } from '../models/OptionDefinition';
 
@@ -8,7 +9,11 @@ export class Command<T extends object = any> {
     public readonly subcommands: Command[] = [];
     public readonly options: ExtendedOptionDefinition[] = [];
     public readonly helpSections: Section[] = [];
-    private _execute?: (values: Partial<T>) => Result<number, string> | Promise<Result<number, string>>;
+    private _execute?: (
+        this: this,
+        values: Partial<T>,
+        stack?: Command[],
+    ) => Result<number, string> | Promise<Result<number, string>>;
 
     constructor(public readonly definition: ExtendedOptionDefinition) {}
 
@@ -58,14 +63,22 @@ export class Command<T extends object = any> {
             }
         }
 
+        const logger = createLogger(values as LoggerOptions);
+
         if (values.help) {
-            this.displayHelp(stack);
+            logger.output(this.getHelpMessage(stack));
             return Ok(0);
         }
 
         if (this._execute) {
-            return (await this._execute(values as T)).mapErr((error) => ({ command: this, error, stack }));
+            return (await this._execute.call(this, values as T, stack)).mapErr((error) => ({
+                command: this,
+                error,
+                stack,
+            }));
         }
+
+        logger.info(this.getHelpMessage(stack));
 
         if (subCommandMode) {
             return Err({ command: this, stack, error: 'Unknown command.' });
@@ -74,7 +87,7 @@ export class Command<T extends object = any> {
         return Err({ command: this, stack, error: 'Unknown option.' });
     }
 
-    public displayHelp(stack?: Command[]) {
+    public getHelpMessage(stack?: Command[]) {
         const globalOptions = [
             ...this.options.filter((o) => o.global),
             ...(stack?.flatMap((o) => o.options.filter((o) => o.global)) ?? []),
@@ -148,6 +161,6 @@ export class Command<T extends object = any> {
             });
         }
 
-        console.error(commandLineUsage(sections));
+        return commandLineUsage(sections);
     }
 }
