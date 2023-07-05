@@ -56,7 +56,15 @@ export class BacktracePlugin implements WebpackPluginInstance {
 
                 logger.time(`[${asset}] process source and sourcemap`);
                 try {
-                    debugId = await this._sourceProcessor.processSourceAndSourceMapFiles(sourcePath, sourceMapPath);
+                    const result = await this._sourceProcessor.processSourceAndSourceMapFiles(
+                        sourcePath,
+                        sourceMapPath,
+                    );
+
+                    debugId = result.debugId;
+                    await fs.promises.writeFile(sourcePath, result.source, 'utf8');
+                    await fs.promises.writeFile(sourceMapPath, JSON.stringify(result.sourceMap), 'utf8');
+
                     processResults.set(asset, debugId);
                 } catch (err) {
                     logger.error(`[${asset}] process source and sourcemap failed:`, err);

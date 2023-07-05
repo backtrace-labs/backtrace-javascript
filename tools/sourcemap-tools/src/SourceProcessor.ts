@@ -1,4 +1,5 @@
 import fs from 'fs';
+import path from 'path';
 import { BasicSourceMapConsumer, Position, RawSourceMap, SourceMapConsumer, SourceMapGenerator } from 'source-map';
 import { DebugIdGenerator } from './DebugIdGenerator';
 import { stringToUuid } from './helpers/stringToUuid';
@@ -62,20 +63,29 @@ export class SourceProcessor {
      * Adds required snippets and comments to source, and modifies sourcemap to include debug ID.
      * Will write modified content to the files.
      * @param sourcePath Path to the source.
-     * @param sourceMapPath Path to the sourcemap.
+     * @param sourceMapPath Path to the sourcemap. If not specified, will try to resolve from sourceMapURL.
      * @param debugId Debug ID. If not provided, one will be generated from `source`.
      * @returns Used debug ID.
      */
-    public async processSourceAndSourceMapFiles(sourcePath: string, sourceMapPath: string, debugId?: string) {
+    public async processSourceAndSourceMapFiles(sourcePath: string, sourceMapPath?: string, debugId?: string) {
         const source = await fs.promises.readFile(sourcePath, 'utf8');
+        if (!sourceMapPath) {
+            const match = source.match(/^\/\/# sourceMappingURL=(.+)$/m);
+            if (!match || !match[1]) {
+                throw new Error('Could not find source map for source.');
+            }
+
+            sourceMapPath = path.resolve(path.dirname(sourcePath), match[1]);
+        }
+
         const sourceMap = await fs.promises.readFile(sourceMapPath, 'utf8');
 
         const result = await this.processSourceAndSourceMap(source, sourceMap, debugId);
-
-        await fs.promises.writeFile(sourcePath, result.source, 'utf8');
-        await fs.promises.writeFile(sourceMapPath, JSON.stringify(result.sourceMap), 'utf8');
-
-        return result.debugId;
+        return {
+            ...result,
+            sourcePath,
+            sourceMapPath,
+        };
     }
 
     private async offsetSourceMap(

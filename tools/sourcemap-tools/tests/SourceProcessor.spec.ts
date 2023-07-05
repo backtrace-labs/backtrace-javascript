@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import { SourceMapConsumer } from 'source-map';
 import { DebugIdGenerator, SOURCEMAP_DEBUG_ID_KEY, SourceProcessor } from '../src';
 
@@ -67,5 +69,47 @@ describe('SourceProcessor', () => {
         });
 
         expect(actualPosition).toEqual(expectedPosition);
+    });
+
+    it('should call process function with content from files', async () => {
+        const sourcePath = path.join(__dirname, './testFiles/source.js');
+        const sourceMapPath = path.join(__dirname, './testFiles/source.js.map');
+        const sourceContent = await fs.promises.readFile(sourcePath, 'utf-8');
+        const sourceMapContent = await fs.promises.readFile(sourceMapPath, 'utf-8');
+        const debugId = 'DEBUG_ID';
+
+        const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
+        const processFn = jest
+            .spyOn(sourceProcessor, 'processSourceAndSourceMap')
+            .mockImplementation(async (_, __, debugId) => ({
+                source: sourceContent,
+                sourceMap: JSON.parse(sourceMapContent),
+                debugId: debugId ?? 'debugId',
+            }));
+
+        await sourceProcessor.processSourceAndSourceMapFiles(sourcePath, sourceMapPath, debugId);
+
+        expect(processFn).toBeCalledWith(sourceContent, sourceMapContent, debugId);
+    });
+
+    it('should call process function with sourcemap detected from source', async () => {
+        const sourcePath = path.join(__dirname, './testFiles/source.js');
+        const sourceMapPath = path.join(__dirname, './testFiles/source.js.map');
+        const sourceContent = await fs.promises.readFile(sourcePath, 'utf-8');
+        const sourceMapContent = await fs.promises.readFile(sourceMapPath, 'utf-8');
+        const debugId = 'DEBUG_ID';
+
+        const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
+        const processFn = jest
+            .spyOn(sourceProcessor, 'processSourceAndSourceMap')
+            .mockImplementation(async (_, __, debugId) => ({
+                source: sourceContent,
+                sourceMap: JSON.parse(sourceMapContent),
+                debugId: debugId ?? 'debugId',
+            }));
+
+        await sourceProcessor.processSourceAndSourceMapFiles(sourcePath, undefined, debugId);
+
+        expect(processFn).toBeCalledWith(sourceContent, sourceMapContent, debugId);
     });
 });
