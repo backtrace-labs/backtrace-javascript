@@ -37,6 +37,7 @@
     },
     "homepage": "https://github.com/backtrace-labs/backtrace-javascript#readme",
     "dependencies": {
+        "@backtrace/sourcemap-tools": "^0.0.1",
         "command-line-args": "^5.2.1",
         "command-line-usage": "^7.0.1"
     },
