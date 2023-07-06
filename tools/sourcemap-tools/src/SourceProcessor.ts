@@ -88,6 +88,35 @@ export class SourceProcessor {
         };
     }
 
+    public async addSourcesToSourceMap(sourceMap: string | RawSourceMap, sourceMapPath: string): Promise<RawSourceMap> {
+        if (typeof sourceMap === 'string') {
+            sourceMap = JSON.parse(sourceMap) as RawSourceMap;
+        }
+
+        const sourceRoot = sourceMap.sourceRoot
+            ? path.resolve(path.dirname(sourceMapPath), sourceMap.sourceRoot)
+            : path.resolve(path.dirname(sourceMapPath));
+
+        const sourcesContent: string[] = [];
+        for (const sourcePath of sourceMap.sources) {
+            const source = await fs.promises.readFile(path.resolve(sourceRoot, sourcePath), 'utf-8');
+            sourcesContent.push(source);
+        }
+
+        return {
+            ...sourceMap,
+            sourcesContent,
+        };
+    }
+
+    public doesSourceMapHaveSources(sourceMap: string | RawSourceMap) {
+        if (typeof sourceMap === 'string') {
+            sourceMap = JSON.parse(sourceMap) as RawSourceMap;
+        }
+
+        return sourceMap.sources.length === sourceMap.sourcesContent?.length;
+    }
+
     private async offsetSourceMap(
         sourceMap: string | RawSourceMap,
         fromLine: number,
