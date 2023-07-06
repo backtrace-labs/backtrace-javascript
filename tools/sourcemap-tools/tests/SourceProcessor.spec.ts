@@ -1,7 +1,8 @@
+import assert from 'assert';
 import fs from 'fs';
 import path from 'path';
 import { RawSourceMap, SourceMapConsumer } from 'source-map';
-import { DebugIdGenerator, SOURCEMAP_DEBUG_ID_KEY, SourceProcessor } from '../src';
+import { DebugIdGenerator, Ok, SOURCEMAP_DEBUG_ID_KEY, SourceProcessor } from '../src';
 
 describe('SourceProcessor', () => {
     const source = `function foo(){console.log("Hello World!")}foo();`;
@@ -23,7 +24,8 @@ describe('SourceProcessor', () => {
             const sourceProcessor = new SourceProcessor(debugIdGenerator);
             const result = await sourceProcessor.processSourceAndSourceMap(source, sourceMap);
 
-            expect(result.source).toMatch(new RegExp(`^${expected}\n`));
+            assert(result.isOk());
+            expect(result.data.source).toMatch(new RegExp(`^${expected}\n`));
         });
 
         it('should append comment snippet to the source on the last line', async () => {
@@ -35,7 +37,8 @@ describe('SourceProcessor', () => {
             const sourceProcessor = new SourceProcessor(debugIdGenerator);
             const result = await sourceProcessor.processSourceAndSourceMap(source, sourceMap);
 
-            expect(result.source).toMatch(new RegExp(`\n${expected}$`));
+            assert(result.isOk());
+            expect(result.data.source).toMatch(new RegExp(`\n${expected}$`));
         });
 
         it('should return sourcemap from DebugIdGenerator', async () => {
@@ -47,7 +50,8 @@ describe('SourceProcessor', () => {
             const sourceProcessor = new SourceProcessor(debugIdGenerator);
             const result = await sourceProcessor.processSourceAndSourceMap(source, sourceMap);
 
-            expect(result.sourceMap).toStrictEqual(expected);
+            assert(result.isOk());
+            expect(result.data.sourceMap).toStrictEqual(expected);
         });
 
         it('should offset sourcemap lines by number of newlines in source snippet + 1', async () => {
@@ -65,8 +69,9 @@ describe('SourceProcessor', () => {
             });
 
             const result = await sourceProcessor.processSourceAndSourceMap(source, sourceMap);
+            assert(result.isOk());
 
-            const modifiedConsumer = await new SourceMapConsumer(result.sourceMap);
+            const modifiedConsumer = await new SourceMapConsumer(result.data.sourceMap);
             const actualPosition = modifiedConsumer.originalPositionFor({
                 line: 1 + expectedNewLineCount,
                 column: source.indexOf('foo();'),
@@ -85,11 +90,13 @@ describe('SourceProcessor', () => {
             const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
             const processFn = jest
                 .spyOn(sourceProcessor, 'processSourceAndSourceMap')
-                .mockImplementation(async (_, __, debugId) => ({
-                    source: sourceContent,
-                    sourceMap: JSON.parse(sourceMapContent),
-                    debugId: debugId ?? 'debugId',
-                }));
+                .mockImplementation(async (_, __, debugId) =>
+                    Ok({
+                        source: sourceContent,
+                        sourceMap: JSON.parse(sourceMapContent),
+                        debugId: debugId ?? 'debugId',
+                    }),
+                );
 
             await sourceProcessor.processSourceAndSourceMapFiles(sourcePath, sourceMapPath, debugId);
 
@@ -106,11 +113,13 @@ describe('SourceProcessor', () => {
             const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
             const processFn = jest
                 .spyOn(sourceProcessor, 'processSourceAndSourceMap')
-                .mockImplementation(async (_, __, debugId) => ({
-                    source: sourceContent,
-                    sourceMap: JSON.parse(sourceMapContent),
-                    debugId: debugId ?? 'debugId',
-                }));
+                .mockImplementation(async (_, __, debugId) =>
+                    Ok({
+                        source: sourceContent,
+                        sourceMap: JSON.parse(sourceMapContent),
+                        debugId: debugId ?? 'debugId',
+                    }),
+                );
 
             await sourceProcessor.processSourceAndSourceMapFiles(sourcePath, undefined, debugId);
 
@@ -127,9 +136,10 @@ describe('SourceProcessor', () => {
             const sourceMapContent = await fs.promises.readFile(sourceMapPath, 'utf-8');
 
             const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
-            const newSourceMap = await sourceProcessor.addSourcesToSourceMap(sourceMapContent, sourceMapPath);
+            const result = await sourceProcessor.addSourcesToSourceMap(sourceMapContent, sourceMapPath);
+            assert(result.isOk());
 
-            expect(newSourceMap.sourcesContent).toEqual([sourceContent]);
+            expect(result.data.sourcesContent).toEqual([sourceContent]);
         });
 
         it('should overwrite sources in source map', async () => {
@@ -141,9 +151,10 @@ describe('SourceProcessor', () => {
             sourceMapContent.sourcesContent = ['abc'];
 
             const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
-            const newSourceMap = await sourceProcessor.addSourcesToSourceMap(sourceMapContent, sourceMapPath);
+            const result = await sourceProcessor.addSourcesToSourceMap(sourceMapContent, sourceMapPath);
+            assert(result.isOk());
 
-            expect(newSourceMap.sourcesContent).toEqual([sourceContent]);
+            expect(result.data.sourcesContent).toEqual([sourceContent]);
         });
     });
 });

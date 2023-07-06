@@ -3,6 +3,19 @@ import path from 'path';
 import { BasicSourceMapConsumer, Position, RawSourceMap, SourceMapConsumer, SourceMapGenerator } from 'source-map';
 import { DebugIdGenerator } from './DebugIdGenerator';
 import { stringToUuid } from './helpers/stringToUuid';
+import { ResultPromise } from './models/AsyncResult';
+import { Err, Ok } from './models/Result';
+
+export interface ProcessResult {
+    readonly debugId: string;
+    readonly source: string;
+    readonly sourceMap: RawSourceMap;
+}
+
+export interface ProcessResultWithPaths extends ProcessResult {
+    readonly sourcePath: string;
+    readonly sourceMapPath: string;
+}
 
 export class SourceProcessor {
     constructor(private readonly _debugIdGenerator: DebugIdGenerator) {}
@@ -11,22 +24,33 @@ export class SourceProcessor {
         return !!this._debugIdGenerator.getSourceDebugId(source);
     }
 
-    public isSourceMapProcessed(sourceMap: string | RawSourceMap): boolean {
-        if (typeof sourceMap === 'string') {
-            sourceMap = JSON.parse(sourceMap) as RawSourceMap;
-        }
-
+    public isSourceMapProcessed(sourceMap: RawSourceMap): boolean {
         return !!this._debugIdGenerator.getSourceMapDebugId(sourceMap);
     }
 
-    public async isSourceFileProcessed(sourcePath: string): Promise<boolean> {
-        const source = await fs.promises.readFile(sourcePath, 'utf8');
-        return this.isSourceProcessed(source);
+    public async isSourceFileProcessed(sourcePath: string): ResultPromise<boolean, string> {
+        const readResult = await this.readFile(sourcePath);
+        if (readResult.isErr()) {
+            return readResult;
+        }
+
+        return Ok(this.isSourceProcessed(readResult.data));
     }
 
-    public async isSourceMapFileProcessed(sourceMapPath: string): Promise<boolean> {
-        const source = await fs.promises.readFile(sourceMapPath, 'utf8');
-        return this.isSourceMapProcessed(source);
+    public async isSourceMapFileProcessed(sourceMapPath: string): ResultPromise<boolean, string> {
+        const readResult = await this.readFile(sourceMapPath);
+        if (readResult.isErr()) {
+            return readResult;
+        }
+
+        let sourcemap: RawSourceMap;
+        try {
+            sourcemap = JSON.parse(readResult.data) as RawSourceMap;
+        } catch (err) {
+            return Err('failed to parse sourcemap JSON');
+        }
+
+        return Ok(this.isSourceMapProcessed(sourcemap));
     }
 
     /**
@@ -36,7 +60,11 @@ export class SourceProcessor {
      * @param debugId Debug ID. If not provided, one will be generated from `source`.
      * @returns Used debug ID, new source and new sourcemap.
      */
-    public async processSourceAndSourceMap(source: string, sourceMap: string | RawSourceMap, debugId?: string) {
+    public async processSourceAndSourceMap(
+        source: string,
+        sourceMap: string | RawSourceMap,
+        debugId?: string,
+    ): ResultPromise<ProcessResult, string> {
         if (!debugId) {
             debugId = stringToUuid(source);
         }
@@ -53,10 +81,13 @@ export class SourceProcessor {
         // We need to offset the mapping lines by sourceSnippetNewlineCount:
         // original code X:Y => generated code (A + sourceSnippetNewlineCount):B
         const sourceSnippetNewlineCount = sourceSnippet.match(/\n/g)?.length ?? 0;
-        const offsetSourceMap = await this.offsetSourceMap(sourceMap, 0, sourceSnippetNewlineCount + 1);
-        const newSourceMap = this._debugIdGenerator.addSourceMapDebugId(offsetSourceMap, debugId);
+        const offsetSourceMapResult = await this.offsetSourceMap(sourceMap, 0, sourceSnippetNewlineCount + 1);
+        if (offsetSourceMapResult.isErr()) {
+            return offsetSourceMapResult;
+        }
 
-        return { debugId, source: newSource, sourceMap: newSourceMap };
+        const newSourceMap = this._debugIdGenerator.addSourceMapDebugId(offsetSourceMapResult.data, debugId);
+        return Ok({ debugId, source: newSource, sourceMap: newSourceMap });
     }
 
     /**
@@ -67,28 +98,49 @@ export class SourceProcessor {
      * @param debugId Debug ID. If not provided, one will be generated from `source`.
      * @returns Used debug ID.
      */
-    public async processSourceAndSourceMapFiles(sourcePath: string, sourceMapPath?: string, debugId?: string) {
-        const source = await fs.promises.readFile(sourcePath, 'utf8');
+    public async processSourceAndSourceMapFiles(
+        sourcePath: string,
+        sourceMapPath?: string,
+        debugId?: string,
+    ): ResultPromise<ProcessResultWithPaths, string> {
+        const sourceReadResult = await this.readFile(sourcePath);
+        if (sourceReadResult.isErr()) {
+            return sourceReadResult;
+        }
+
+        const source = sourceReadResult.data;
         if (!sourceMapPath) {
             const match = source.match(/^\/\/# sourceMappingURL=(.+)$/m);
             if (!match || !match[1]) {
-                throw new Error('Could not find source map for source.');
+                return Err('Could not find source map for source.');
             }
 
             sourceMapPath = path.resolve(path.dirname(sourcePath), match[1]);
         }
 
-        const sourceMap = await fs.promises.readFile(sourceMapPath, 'utf8');
+        const sourceMapReadResult = await this.readFile(sourceMapPath);
+        if (sourceMapReadResult.isErr()) {
+            return sourceMapReadResult;
+        }
 
-        const result = await this.processSourceAndSourceMap(source, sourceMap, debugId);
-        return {
-            ...result,
+        const sourceMap = sourceMapReadResult.data;
+
+        const processResult = await this.processSourceAndSourceMap(source, sourceMap, debugId);
+        if (processResult.isErr()) {
+            return processResult;
+        }
+
+        return Ok({
+            ...processResult.data,
             sourcePath,
             sourceMapPath,
-        };
+        } as ProcessResultWithPaths);
     }
 
-    public async addSourcesToSourceMap(sourceMap: string | RawSourceMap, sourceMapPath: string): Promise<RawSourceMap> {
+    public async addSourcesToSourceMap(
+        sourceMap: string | RawSourceMap,
+        sourceMapPath: string,
+    ): ResultPromise<RawSourceMap, string> {
         if (typeof sourceMap === 'string') {
             sourceMap = JSON.parse(sourceMap) as RawSourceMap;
         }
@@ -99,21 +151,21 @@ export class SourceProcessor {
 
         const sourcesContent: string[] = [];
         for (const sourcePath of sourceMap.sources) {
-            const source = await fs.promises.readFile(path.resolve(sourceRoot, sourcePath), 'utf-8');
-            sourcesContent.push(source);
+            const readResult = await this.readFile(path.resolve(sourceRoot, sourcePath));
+            if (readResult.isErr()) {
+                return readResult;
+            }
+
+            sourcesContent.push(readResult.data);
         }
 
-        return {
+        return Ok({
             ...sourceMap,
             sourcesContent,
-        };
+        });
     }
 
-    public doesSourceMapHaveSources(sourceMap: string | RawSourceMap) {
-        if (typeof sourceMap === 'string') {
-            sourceMap = JSON.parse(sourceMap) as RawSourceMap;
-        }
-
+    public doesSourceMapHaveSources(sourceMap: RawSourceMap): boolean {
         return sourceMap.sources.length === sourceMap.sourcesContent?.length;
     }
 
@@ -121,8 +173,8 @@ export class SourceProcessor {
         sourceMap: string | RawSourceMap,
         fromLine: number,
         count: number,
-    ): Promise<RawSourceMap> {
-        const sourceMapObj = typeof sourceMap === 'string' ? JSON.parse(sourceMap) : sourceMap;
+    ): ResultPromise<RawSourceMap, string> {
+        const sourceMapObj = typeof sourceMap === 'string' ? (JSON.parse(sourceMap) as RawSourceMap) : sourceMap;
         const consumer = (await new SourceMapConsumer(sourceMapObj)) as BasicSourceMapConsumer;
         const newSourceMap = new SourceMapGenerator({
             file: consumer.file,
@@ -150,6 +202,14 @@ export class SourceProcessor {
         });
 
         const newSourceMapJson = newSourceMap.toJSON();
-        return { ...sourceMapObj, ...newSourceMapJson };
+        return Ok({ ...sourceMapObj, ...newSourceMapJson });
+    }
+
+    private async readFile(file: string): ResultPromise<string, string> {
+        try {
+            return Ok(await fs.promises.readFile(file, 'utf-8'));
+        } catch (err) {
+            return Err(`failed to read file: ${err instanceof Error ? err.message : 'unknown error'}`);
+        }
     }
 }

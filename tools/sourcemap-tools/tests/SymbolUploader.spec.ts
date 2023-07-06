@@ -1,4 +1,4 @@
-import { fail } from 'assert';
+import assert from 'assert';
 import crypto from 'crypto';
 import fs from 'fs';
 import nock from 'nock';
@@ -77,26 +77,28 @@ describe('SymbolUploader', () => {
         const scope = nock(uploadUrl.origin).post('/').query(true).reply(200, { response: 'ok', _rxid: expected });
 
         const uploader = new SymbolUploader(uploadUrl);
-        const response = await uploader.uploadSymbol(uploadData);
+        const result = await uploader.uploadSymbol(uploadData);
+        assert(result.isOk());
 
         scope.done();
 
-        expect(response.rxid).toEqual(expected);
+        expect(result.data.rxid).toEqual(expected);
     });
 
-    it('should throw on non 2xx HTTP response', async () => {
+    it('should return Err on non 2xx HTTP response', async () => {
         const uploadData = getReadable();
         const uploadUrl = new URL(`https://upload-test/`);
 
         const scope = nock(uploadUrl.origin).post('/').query(true).reply(400);
 
         const uploader = new SymbolUploader(uploadUrl);
-        await expect(() => uploader.uploadSymbol(uploadData)).rejects.toThrow();
+        const result = await uploader.uploadSymbol(uploadData);
+        expect(result.isErr()).toEqual(true);
 
         scope.done();
     });
 
-    it('should throw on non 2xx HTTP response with response data', async () => {
+    it('should return Err on non 2xx HTTP response with response data', async () => {
         const expected = 'RESPONSE FROM SERVER';
         const uploadData = getReadable();
         const uploadUrl = new URL(`https://upload-test/`);
@@ -104,40 +106,39 @@ describe('SymbolUploader', () => {
         const scope = nock(uploadUrl.origin).post('/').query(true).reply(400, expected);
 
         const uploader = new SymbolUploader(uploadUrl);
-        try {
-            await uploader.uploadSymbol(uploadData);
-            fail();
-        } catch (err) {
-            expect((err as Error).message).toContain(expected);
-        }
+        const result = await uploader.uploadSymbol(uploadData);
+
+        assert(result.isErr());
+        expect(result.data).toContain(expected);
 
         scope.done();
     });
 
-    it('should throw on response with response not equal to "ok"', async () => {
+    it('should return Err on response with response not equal to "ok"', async () => {
         const uploadData = getReadable();
         const uploadUrl = new URL(`https://upload-test/`);
 
         const scope = nock(uploadUrl.origin).post('/').query(true).reply(200, { response: 'not-ok', _rxid: 'rxid' });
         const uploader = new SymbolUploader(uploadUrl);
-        await expect(() => uploader.uploadSymbol(uploadData)).rejects.toThrow();
+        const result = await uploader.uploadSymbol(uploadData);
+
+        expect(result.isErr()).toEqual(true);
 
         scope.done();
     });
 
-    it('should throw on response with response not equal to "ok" with response data', async () => {
+    it('should return Err on response with response not equal to "ok" with response data', async () => {
         const expected = JSON.stringify({ response: 'not-ok', _rxid: 'rxid' });
         const uploadData = getReadable();
         const uploadUrl = new URL(`https://upload-test/`);
 
         const scope = nock(uploadUrl.origin).post('/').query(true).reply(200, expected);
         const uploader = new SymbolUploader(uploadUrl);
-        try {
-            await uploader.uploadSymbol(uploadData);
-            fail();
-        } catch (err) {
-            expect((err as Error).message).toContain(expected);
-        }
+
+        const result = await uploader.uploadSymbol(uploadData);
+
+        assert(result.isErr());
+        expect(result.data).toContain(expected);
 
         scope.done();
     });
