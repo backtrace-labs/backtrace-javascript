@@ -1,6 +1,7 @@
 import commandLineArgs from 'command-line-args';
 import { Command } from './commands/Command';
 import { LoggerOptions, createLogger } from './logger';
+import { addSourcesCmd } from './sourcemaps/add-sources';
 import { processCmd } from './sourcemaps/process';
 import { uploadCmd } from './sourcemaps/upload';
 
@@ -13,6 +14,7 @@ const mainCommand = new Command<GlobalOptions>({
 })
     .subcommand(processCmd)
     .subcommand(uploadCmd)
+    .subcommand(addSourcesCmd)
     .option({
         name: 'help',
         type: Boolean,
