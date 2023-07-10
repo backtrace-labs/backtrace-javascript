@@ -1,4 +1,5 @@
 import { Component, ErrorInfo, ReactElement, ReactNode, isValidElement } from 'react';
+import { BacktraceClient } from './BacktraceClient';
 
 type RenderFallback = () => ReactElement;
 
@@ -26,7 +27,7 @@ export class ErrorBoundary extends Component<Props, State> {
     }
 
     componentDidCatch(error: Error, info: ErrorInfo) {
-        const client = window.backtraceClient;
+        const client = BacktraceClient.instance;
 
         if (client) {
             client.send(error);

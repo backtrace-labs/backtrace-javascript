@@ -3,12 +3,6 @@ import { render, screen } from '@testing-library/react';
 import { ErrorBoundary } from '../src/ErrorBoundary';
 import { BacktraceClient } from '../src/BacktraceClient';
 
-declare global {
-    interface Window {
-        backtraceClient?: BacktraceClient;
-    }
-}
-
 describe('Error Boundary', () => {
     const childrenText = 'I am the children';
     const fallbackText = 'This is a fallback';
@@ -75,14 +69,14 @@ describe('Error Boundary', () => {
         expect(clientSpy).not.toHaveBeenCalled();
     });
 
-    it('Should not send to Backtrace on rendering error when the client is not on the window object', () => {
+    it('Should not send to Backtrace on rendering error when the client instance is undefined', () => {
         const client = BacktraceClient.initialize({
             url: `https://submit.backtrace.io/universe/token/json`,
             name: 'test',
             version: '1.0.0',
         });
 
-        window.backtraceClient = undefined;
+        BacktraceClient.instance = undefined as unknown as BacktraceClient;
 
         const clientSpy = jest.spyOn(client, 'send');
         render(<ErrorBoundary fallback={<Fallback />}>{<ErrorComponent />}</ErrorBoundary>);
