@@ -2,15 +2,15 @@ import { Component, ErrorInfo, ReactElement, ReactNode, isValidElement } from 'r
 
 type RenderFallback = () => ReactElement;
 
-export type Props = {
+export interface Props {
     children: ReactNode;
     fallback?: ReactElement | RenderFallback;
-};
+}
 
-export type State = {
+export interface State {
     hasError: boolean;
     error?: Error;
-};
+}
 
 export class ErrorBoundary extends Component<Props, State> {
     constructor(props: Props) {
