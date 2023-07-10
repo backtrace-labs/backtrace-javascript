@@ -1,6 +1,7 @@
 import commandLineArgs from 'command-line-args';
 import { Command } from './commands/Command';
 import { LoggerOptions, createLogger } from './logger';
+import { processCmd } from './sourcemaps/process';
 
 export interface GlobalOptions extends LoggerOptions {
     readonly help: boolean;
@@ -9,6 +10,7 @@ export interface GlobalOptions extends LoggerOptions {
 const mainCommand = new Command<GlobalOptions>({
     name: '',
 })
+    .subcommand(processCmd)
     .option({
         name: 'help',
         type: Boolean,
