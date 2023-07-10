@@ -1,7 +1,9 @@
 import { Err, Ok, Result, ResultPromise } from '@backtrace/sourcemap-tools';
 import fs from 'fs';
+import { Readable } from 'stream';
 
 export type ContentFile = readonly [content: string, path: string];
+export type StreamFile = readonly [stream: Readable, path: string];
 
 export async function readFile(file: string): ResultPromise<string, string> {
     try {
@@ -16,6 +18,23 @@ export async function writeFile(file: ContentFile) {
     try {
         await fs.promises.writeFile(path, content);
         return Ok(file);
+    } catch (err) {
+        return Err(`failed to write file: ${err instanceof Error ? err.message : 'unknown error'}`);
+    }
+}
+
+export async function writeStream(file: StreamFile) {
+    const [stream, path] = file;
+    try {
+        const output = fs.createWriteStream(path);
+        stream.pipe(output);
+        return new Promise<Result<StreamFile, string>>((resolve) => {
+            output.on('error', (err) => {
+                resolve(Err(`failed to write file: ${err.message}`));
+            });
+
+            output.on('finish', () => resolve(Ok(file)));
+        });
     } catch (err) {
         return Err(`failed to write file: ${err instanceof Error ? err.message : 'unknown error'}`);
     }

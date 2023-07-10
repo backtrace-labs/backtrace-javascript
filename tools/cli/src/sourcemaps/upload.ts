@@ -11,11 +11,12 @@ import {
     ZipArchive,
     flatMap,
 } from '@backtrace/sourcemap-tools';
+import fs from 'fs';
 import path from 'path';
 import { Readable } from 'stream';
 import { GlobalOptions } from '..';
 import { Command } from '../commands/Command';
-import { failIfEmpty, passOk } from '../helpers/common';
+import { failIfEmpty, passOk, writeStream } from '../helpers/common';
 import { find } from '../helpers/find';
 import { CliLogger, createLogger } from '../logger';
 
@@ -27,6 +28,7 @@ interface UploadOptions extends GlobalOptions {
     readonly 'dry-run': boolean;
     readonly force: boolean;
     readonly 'pass-with-no-files': boolean;
+    readonly output: string;
 }
 
 export const uploadCmd = new Command<UploadOptions>({
@@ -81,6 +83,12 @@ export const uploadCmd = new Command<UploadOptions>({
         type: Boolean,
         description: 'Exits with zero exit code if no files for uploading are found.',
     })
+    .option({
+        name: 'output',
+        alias: 'o',
+        description: 'If set, archive with sourcemaps will be outputted to this path instead of being uploaded.',
+        type: String,
+    })
     .execute(function (opts, stack) {
         const logger = createLogger(opts);
         const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
@@ -92,19 +100,28 @@ export const uploadCmd = new Command<UploadOptions>({
             return Err('path must be specified');
         }
 
+        const outputPath = opts.output;
         const uploadUrl = opts.url;
-        if (!uploadUrl) {
+        if (!outputPath && !uploadUrl) {
             logger.info(this.getHelpMessage(stack));
             return Err('upload URL is required.');
         }
 
-        const uploader = new SymbolUploader(uploadUrl, { ignoreSsl: opts.insecure ?? false });
+        const processArchive = outputPath
+            ? saveArchive(outputPath)
+            : uploadUrl
+            ? uploadArchive(new SymbolUploader(uploadUrl, { ignoreSsl: opts.insecure ?? false }))
+            : undefined;
+
+        if (!processArchive) {
+            throw new Error('processArchive function should be defined');
+        }
 
         return AsyncResult.equip(find(/\.(c|m)?jsx?\.map$/, ...searchPaths))
             .then(opts.force ? passOk : filterProcessedFiles(sourceProcessor))
             .then(opts['pass-with-no-files'] ? passOk : failIfEmpty('no files for uploading found'))
             .then(createArchiveForUpload)
-            .then((archive) => (opts['dry-run'] ? Ok(null) : uploadArchive(uploader)(archive)))
+            .then((archive) => (opts['dry-run'] ? Ok(null) : processArchive(archive)))
             .then(output(logger))
             .then(() => 0).inner;
     });
@@ -129,7 +146,8 @@ async function createArchiveForUpload(pathsToArchive: string[]): ResultPromise<Z
 
     for (const filePath of pathsToArchive) {
         const fileName = path.basename(filePath);
-        archive.append(fileName, filePath);
+        const readStream = fs.createReadStream(filePath);
+        archive.append(fileName, readStream);
     }
 
     await archive.finalize();
@@ -139,6 +157,12 @@ async function createArchiveForUpload(pathsToArchive: string[]): ResultPromise<Z
 function uploadArchive(symbolUploader: SymbolUploader) {
     return async function uploadArchive(stream: Readable): ResultPromise<UploadResult, string> {
         return await symbolUploader.uploadSymbol(stream);
+    };
+}
+
+function saveArchive(filePath: string) {
+    return async function saveArchive(stream: Readable): ResultPromise<UploadResult, string> {
+        return AsyncResult.equip(writeStream([stream, filePath])).then(([, rxid]) => ({ rxid })).inner;
     };
 }
 
