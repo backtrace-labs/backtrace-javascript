@@ -18,10 +18,7 @@ export class ZipArchive extends Transform {
         return this._archive.finalize();
     }
 
-    public override pipe<T extends NodeJS.WritableStream>(
-        destination: T,
-        options?: { end?: boolean | undefined } | undefined,
-    ): T {
+    public override pipe<T extends NodeJS.WritableStream>(destination: T, options?: { end?: boolean }): T {
         return this._archive.pipe(destination, options);
     }
 
