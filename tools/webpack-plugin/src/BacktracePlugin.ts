@@ -1,4 +1,5 @@
 import { DebugIdGenerator, SourceProcessor, SymbolUploader, ZipArchive } from '@backtrace/sourcemap-tools';
+import fs from 'fs';
 import path from 'path';
 import webpack, { WebpackPluginInstance } from 'webpack';
 import { BacktracePluginOptions } from './models/BacktracePluginOptions';
@@ -72,8 +73,9 @@ export class BacktracePlugin implements WebpackPluginInstance {
                     const archive = new ZipArchive();
                     const request = this._sourceMapUploader.uploadSymbol(archive);
 
-                    for (const [asset, , sourceMapPath] of entries) {
-                        archive.append(`${asset}.map`, sourceMapPath);
+                    for (const [asset, _, sourceMapPath] of entries) {
+                        const stream = fs.createReadStream(sourceMapPath);
+                        archive.append(`${asset}.map`, stream);
                     }
 
                     await archive.finalize();
