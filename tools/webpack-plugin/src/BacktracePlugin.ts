@@ -1,23 +1,23 @@
-import { DebugIdGenerator, SourceMapUploader, SourceProcessor } from '@backtrace/sourcemap-tools';
+import { DebugIdGenerator, SourceProcessor, SymbolUploader, ZipArchive } from '@backtrace/sourcemap-tools';
+import fs from 'fs';
 import path from 'path';
 import webpack, { WebpackPluginInstance } from 'webpack';
-import { statsPrinter } from './helpers/statsPrinter';
-import { AssetStats } from './models/AssetStats';
 import { BacktracePluginOptions } from './models/BacktracePluginOptions';
 
 export class BacktracePlugin implements WebpackPluginInstance {
     private readonly _sourceProcessor: SourceProcessor;
-    private readonly _sourceMapUploader?: SourceMapUploader;
+    private readonly _sourceMapUploader?: SymbolUploader;
 
     constructor(public readonly options?: BacktracePluginOptions) {
         this._sourceProcessor = new SourceProcessor(new DebugIdGenerator());
         this._sourceMapUploader = options?.uploadUrl
-            ? new SourceMapUploader(options.uploadUrl, options.uploadOptions)
+            ? new SymbolUploader(options.uploadUrl, options.uploadOptions)
             : undefined;
     }
 
     public apply(compiler: webpack.Compiler) {
-        const assetStats = new Map<string, AssetStats>();
+        const processResults = new Map<string, string | Error>();
+        let uploadResult: string | Error | undefined;
 
         compiler.hooks.afterEmit.tapPromise(BacktracePlugin.name, async (compilation) => {
             const logger = compilation.getLogger(BacktracePlugin.name);
@@ -52,45 +52,61 @@ export class BacktracePlugin implements WebpackPluginInstance {
             logger.log(`received ${entries.length} files for processing`);
 
             for (const [asset, sourcePath, sourceMapPath] of entries) {
-                const stats: AssetStats = {};
-                assetStats.set(asset, stats);
-
                 let debugId: string;
 
                 logger.time(`[${asset}] process source and sourcemap`);
                 try {
                     debugId = await this._sourceProcessor.processSourceAndSourceMapFiles(sourcePath, sourceMapPath);
-                    stats.debugId = debugId;
-                    stats.processSource = true;
+                    processResults.set(asset, debugId);
                 } catch (err) {
                     logger.error(`[${asset}] process source and sourcemap failed:`, err);
-                    stats.processSource = err instanceof Error ? err : new Error('Unknown error.');
+                    processResults.set(asset, err instanceof Error ? err : new Error('Unknown error.'));
                     continue;
                 } finally {
                     logger.timeEnd(`[${asset}] process source and sourcemap`);
                 }
+            }
 
-                if (!this._sourceMapUploader) {
-                    logger.log(`[${asset}] file processed`);
-                    continue;
-                }
-
-                logger.time(`[${asset}] upload sourcemap`);
+            if (this._sourceMapUploader) {
+                logger.time(`upload sourcemaps`);
                 try {
-                    const result = await this._sourceMapUploader.upload(sourceMapPath, debugId);
-                    stats.sourceMapUpload = result;
-                    logger.log(`[${asset}] file processed and sourcemap uploaded`);
+                    const archive = new ZipArchive();
+                    const request = this._sourceMapUploader.uploadSymbol(archive);
+
+                    for (const [asset, _, sourceMapPath] of entries) {
+                        const stream = fs.createReadStream(sourceMapPath);
+                        archive.append(`${asset}.map`, stream);
+                    }
+
+                    await archive.finalize();
+                    const result = await request;
+                    uploadResult = result.rxid;
                 } catch (err) {
-                    logger.error(`[${asset}] upload sourcemap failed:`, err);
-                    stats.sourceMapUpload = err instanceof Error ? err : new Error('Unknown error.');
+                    logger.error(`upload sourcemaps failed:`, err);
+                    uploadResult = err instanceof Error ? err : new Error('Unknown error.');
                 } finally {
-                    logger.timeEnd(`[${asset}] upload sourcemap`);
+                    logger.timeEnd(`upload sourcemaps`);
                 }
             }
 
-            const printer = statsPrinter(compilation.getLogger(BacktracePlugin.name));
-            for (const [key, stats] of assetStats) {
-                printer(key, stats);
+            for (const [key, result] of processResults) {
+                if (typeof result === 'string') {
+                    logger.info(`[${key}] processed file successfully`);
+                    logger.debug(`\tdebugId: ${result}`);
+                } else {
+                    logger.error(`[${key}] failed to process file: ${result.message}`);
+                    logger.debug(`Error stack trace: ${result.stack}`);
+                }
+            }
+
+            if (uploadResult) {
+                if (typeof uploadResult === 'string') {
+                    logger.info(`uploaded sourcemaps successfully`);
+                    logger.debug(`\trxid: ${uploadResult}`);
+                } else {
+                    logger.error(`failed to upload sourcemaps: ${uploadResult.message}`);
+                    logger.debug(`Error stack trace: ${uploadResult.stack}`);
+                }
             }
         });
     }
