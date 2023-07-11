@@ -9,7 +9,7 @@ import { BacktraceConfiguration } from '@backtrace/browser';
 import { BacktraceClientBuilder } from '@backtrace/browser';
 
 export class BacktraceClient extends BacktraceCoreClient {
-    public static instance: BacktraceClient;
+    private static _instance: BacktraceClient;
     constructor(
         options: BacktraceConfiguration,
         handler: BacktraceRequestHandler,
@@ -24,7 +24,14 @@ export class BacktraceClient extends BacktraceCoreClient {
     }
 
     public static initialize(options: BacktraceConfiguration): BacktraceClient {
-        this.instance = this.builder(options).build();
-        return this.instance;
+        this._instance = this.builder(options).build();
+        return this._instance;
+    }
+
+    public static get instance(): BacktraceClient {
+        if (!this._instance) {
+            throw new Error('BacktraceClient is uninitialized. Call "BacktraceClient.initialize" function first.');
+        }
+        return this._instance;
     }
 }

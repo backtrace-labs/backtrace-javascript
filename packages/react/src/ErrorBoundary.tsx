@@ -14,12 +14,15 @@ export interface State {
 }
 
 export class ErrorBoundary extends Component<Props, State> {
+    private _client: BacktraceClient;
     constructor(props: Props) {
         super(props);
         this.state = {
             hasError: false,
             error: undefined,
         };
+        // grabbing here so it will fail fast if BacktraceClient is uninitialized
+        this._client = BacktraceClient.instance;
     }
 
     static getDerivedStateFromError(error: Error) {
@@ -27,11 +30,7 @@ export class ErrorBoundary extends Component<Props, State> {
     }
 
     componentDidCatch(error: Error, info: ErrorInfo) {
-        const client = BacktraceClient.instance;
-
-        if (client) {
-            client.send(error);
-        }
+        this._client.send(error);
     }
 
     render() {
