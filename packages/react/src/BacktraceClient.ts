@@ -9,7 +9,7 @@ import { BacktraceConfiguration } from '@backtrace/browser';
 import { BacktraceClientBuilder } from '@backtrace/browser';
 
 export class BacktraceClient extends BacktraceCoreClient {
-    private static _instance: BacktraceClient;
+    private static _instance?: BacktraceClient;
     constructor(
         options: BacktraceConfiguration,
         handler: BacktraceRequestHandler,
