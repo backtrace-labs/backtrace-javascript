@@ -119,6 +119,7 @@ export const uploadCmd = new Command<UploadOptions>({
 
         return AsyncResult.equip(find(/\.(c|m)?jsx?\.map$/, ...searchPaths))
             .then(opts.force ? passOk : filterProcessedFiles(sourceProcessor))
+            .then(readDebugIds(sourceProcessor))
             .then(opts['pass-with-no-files'] ? passOk : failIfEmpty('no files for uploading found'))
             .then(createArchiveForUpload)
             .then((archive) => (opts['dry-run'] ? Ok(null) : processArchive(archive)))
@@ -141,13 +142,30 @@ function filterProcessedFiles(sourceProcessor: SourceProcessor) {
     };
 }
 
-async function createArchiveForUpload(pathsToArchive: string[]): ResultPromise<ZipArchive, string> {
+function readDebugIds(sourceProcessor: SourceProcessor) {
+    return async function readDebugIds(files: string[]): Promise<Result<(readonly [string, string])[], string>> {
+        return flatMap(
+            await Promise.all(
+                files.map(
+                    (file) =>
+                        AsyncResult.equip(sourceProcessor.getSourceMapFileDebugId(file)).then(
+                            (result) => [file, result] as const,
+                        ).inner,
+                ),
+            ),
+        );
+    };
+}
+
+async function createArchiveForUpload(
+    pathsToArchive: (readonly [string, string])[],
+): ResultPromise<ZipArchive, string> {
     const archive = new ZipArchive();
 
-    for (const filePath of pathsToArchive) {
+    for (const [filePath, debugId] of pathsToArchive) {
         const fileName = path.basename(filePath);
         const readStream = fs.createReadStream(filePath);
-        archive.append(fileName, readStream);
+        archive.append(`${debugId}-${fileName}`, readStream);
     }
 
     await archive.finalize();
