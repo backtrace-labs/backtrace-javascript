@@ -97,12 +97,9 @@ export function createLogger(options?: LoggerOptions) {
     } else if (options?.verbose) {
         switch (options.verbose.length) {
             case 1:
-                level = 'info';
-                break;
-            case 2:
                 level = 'debug';
                 break;
-            case 3:
+            case 2:
                 level = 'trace';
                 break;
         }

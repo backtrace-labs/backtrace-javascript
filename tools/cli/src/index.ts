@@ -28,7 +28,7 @@ const mainCommand = new Command<GlobalOptions>({
         alias: 'v',
         global: true,
         multiple: true,
-        description: 'Verbosity level. -v prints info logs, -vv prints debug logs, -vvv prints ALL logs.',
+        description: 'Verbosity level. -v prints debug logs, -vv prints ALL logs.',
     })
     .option({
         name: 'quiet',
@@ -41,7 +41,7 @@ const mainCommand = new Command<GlobalOptions>({
         name: 'log-level',
         type: String,
         global: true,
-        description: 'Sets the logging level. Can be one of: quiet, error, warn, info, debug, verbose',
+        description: 'Sets the logging level. Can be one of: quiet, error, warn, info, debug, verbose. Default: info',
     });
 
 (async () => {
