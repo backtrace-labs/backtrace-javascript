@@ -1,8 +1,16 @@
 import React, { useState } from 'react';
 import './App.css';
+import { BacktraceClient } from '@backtrace/react';
 
 function App() {
     const [clicked, setClicked] = useState(false);
+    function sendError() {
+        const client = BacktraceClient.instance;
+        if (client) {
+            client.send(new Error('Manual Test Error'));
+            alert('Error sent! Check your Backtrace console to see the error.');
+        }
+    }
     if (clicked) {
         throw new Error('Test throw to demonstrate the Backtrace Error Boundary');
     }
@@ -18,9 +26,14 @@ function App() {
                 <p className="card-header extra-padding-bottom">
                     Click the button below to throw an error and demo the Error Boundary
                 </p>
-                <button className="action-button" onClick={() => setClicked(true)}>
-                    <span className="action-button-text">Cause Error</span>
-                </button>
+                <div className="column">
+                    <button className="action-button" onClick={() => setClicked(true)}>
+                        <span className="action-button-text">Trigger Error Boundary</span>
+                    </button>
+                    <button className="action-button" onClick={() => sendError()}>
+                        <span className="action-button-text">Manually Send Report</span>
+                    </button>
+                </div>
             </div>
             <div className="footer center">
                 <div className="center">

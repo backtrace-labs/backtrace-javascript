@@ -9,7 +9,7 @@ const token = 'your-token';
 
 BacktraceClient.initialize({
     url: `https://submit.backtrace.io/${universe}/${token}/json`,
-    name: '@backtrace/browser-example',
+    name: '@backtrace/react-example',
     version: '0.0.1',
     userAttributes: {
         'custom-attribute': 'test',

@@ -18,6 +18,12 @@
     width: 50%;
 }
 
+.column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
 .action-button {
     cursor: pointer;
     background-color: #3ddc91;
@@ -43,6 +49,15 @@
 .card-header {
     font-family: 'DM Sans', Arial, sans-serif;
     font-size: 22px;
+    color: #2d2d2d;
+    text-align: center;
+    line-height: 120%;
+    margin-bottom: 24px;
+}
+
+.card-text {
+    font-family: 'DM Sans', Arial, sans-serif;
+    font-size: 18px;
     color: #2d2d2d;
     text-align: center;
     line-height: 120%;

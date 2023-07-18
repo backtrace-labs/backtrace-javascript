@@ -12,6 +12,7 @@ export function Fallback() {
                 <h1 className="card-header">
                     This is the fallback component that gets rendered after a rendering error!
                 </h1>
+                <p className="card-text">Check your Backtrace console to see the Error and Component stacks!</p>
             </div>
         </div>
     );
