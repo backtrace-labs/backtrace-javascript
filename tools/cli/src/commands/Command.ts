@@ -7,7 +7,7 @@ import { ExtendedOptionDefinition } from '../models/OptionDefinition';
 
 const CLI_COMMAND = 'backtrace';
 
-export class Command<T extends object = any> {
+export class Command<T extends object = object> {
     public readonly subcommands: Command[] = [];
     public readonly options: ExtendedOptionDefinition[] = [];
     public readonly helpSections: Section[] = [];
