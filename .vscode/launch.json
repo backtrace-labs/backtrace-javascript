@@ -2,7 +2,7 @@
     "version": "0.1.0",
     "configurations": [
         {
-            "name": "Launch",
+            "name": "Launch nodejs example",
             "program": "${workspaceFolder}/examples/sdk/node/lib/index.js",
             "request": "launch",
             "localRoot": "${workspaceFolder}",
