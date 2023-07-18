@@ -11,10 +11,29 @@ export class DebugIdGenerator {
         return `//# ${SOURCE_DEBUG_ID_COMMENT}=${uuid}`;
     }
 
-    public addSourceMapKey<T extends object>(sourceMap: T, uuid: string): T & { [SOURCEMAP_DEBUG_ID_KEY]: string } {
+    public getSourceDebugId(source: string): string | undefined {
+        const regex = new RegExp(`^//# ${SOURCE_DEBUG_ID_COMMENT}=(.+)$`, 'm');
+        const match = source.match(regex);
+        if (!match) {
+            return undefined;
+        }
+
+        return match[1];
+    }
+
+    public addSourceMapDebugId<T extends object>(sourceMap: T, uuid: string): T & { [SOURCEMAP_DEBUG_ID_KEY]: string } {
         return {
             ...sourceMap,
             [SOURCEMAP_DEBUG_ID_KEY]: uuid,
         };
+    }
+
+    public getSourceMapDebugId(sourcemap: object): string | undefined {
+        const debugId = (sourcemap as Record<string, unknown>)[SOURCEMAP_DEBUG_ID_KEY];
+        if (typeof debugId !== 'string') {
+            return undefined;
+        }
+
+        return debugId;
     }
 }

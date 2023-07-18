@@ -1,6 +1,8 @@
 import http from 'http';
 import https from 'https';
 import { Readable } from 'stream';
+import { ResultPromise } from './models/AsyncResult';
+import { Err, Ok, Result } from './models/Result';
 
 interface CoronerUploadResponse {
     response: 'ok' | string;
@@ -32,10 +34,10 @@ export class SymbolUploader {
      * Uploads the symbol to Backtrace.
      * @param content Symbol stream.
      */
-    public async uploadSymbol(readable: Readable): Promise<UploadResult> {
+    public async uploadSymbol(readable: Readable): ResultPromise<UploadResult, string> {
         const protocol = this._url.protocol === 'https:' ? https : http;
 
-        return new Promise<UploadResult>((resolve, reject) => {
+        return new Promise<Result<UploadResult, string>>((resolve, reject) => {
             const request = protocol.request(
                 this._url,
                 {
@@ -45,7 +47,7 @@ export class SymbolUploader {
                 },
                 (response) => {
                     if (!response.statusCode) {
-                        return reject(new Error('Failed to upload symbol: failed to make the request.'));
+                        return resolve(Err('Failed to upload symbol: failed to make the request.'));
                     }
 
                     const data: Buffer[] = [];
@@ -53,27 +55,29 @@ export class SymbolUploader {
                         data.push(chunk);
                     });
 
+                    response.on('error', reject);
+
                     response.on('end', () => {
                         const rawResponse = Buffer.concat(data).toString('utf-8');
                         if (!response.statusCode || response.statusCode < 200 || response.statusCode >= 300) {
-                            return reject(
-                                new Error(
-                                    `Failed to upload symbol: ${response.statusCode}. Response data: ${rawResponse}`,
-                                ),
+                            return resolve(
+                                Err(`Failed to upload symbol: ${response.statusCode}. Response data: ${rawResponse}`),
                             );
                         }
 
                         try {
                             const responseData = JSON.parse(rawResponse) as CoronerUploadResponse;
                             if (responseData.response === 'ok') {
-                                return resolve({
-                                    rxid: responseData._rxid,
-                                });
+                                return resolve(
+                                    Ok({
+                                        rxid: responseData._rxid,
+                                    }),
+                                );
                             } else {
-                                return reject(new Error(`Non-OK response received from Coroner: ${rawResponse}`));
+                                return resolve(Err(`Non-OK response received from Coroner: ${rawResponse}`));
                             }
                         } catch (err) {
-                            return reject(new Error(`Cannot parse response from Coroner: ${rawResponse}`));
+                            return resolve(Err(`Cannot parse response from Coroner: ${rawResponse}`));
                         }
                     });
                 },
