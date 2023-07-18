@@ -2,6 +2,12 @@ import { Err, FileFinder, Ok, ResultPromise } from '@backtrace/sourcemap-tools';
 import fs from 'fs';
 import path from 'path';
 
+/**
+ * Returns files found in directories matching `regex`. If path is a file, it is returned if it matches `regex`.
+ * @param regex Regular expression pattern to match.
+ * @param paths Paths to search in.
+ * @returns Result with file paths.
+ */
 export async function find(regex: RegExp, ...paths: string[]): ResultPromise<string[], string> {
     const finder = new FileFinder();
     const results = new Map<string, string>();
