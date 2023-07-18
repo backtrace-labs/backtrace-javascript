@@ -2,6 +2,13 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+## Running the Example
+
+1. Add your universe and token to src/index.tsx
+2. `npm install`
+3. `npm run serve` (this will create and serve a production build as you can't see the fallback component in
+   development)
+
 ## Available Scripts
 
 In the project directory, you can run:
