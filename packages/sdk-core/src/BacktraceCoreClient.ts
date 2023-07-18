@@ -59,6 +59,14 @@ export abstract class BacktraceCoreClient {
         return this._metrics;
     }
 
+    public get dataBuilder(): BacktraceDataBuilder {
+        return this._dataBuilder;
+    }
+
+    public get stackTraceConverter(): BacktraceStackTraceConverter {
+        return this._stackTraceConverter;
+    }
+
     /**
      * Client cached attachments
      */
@@ -75,14 +83,14 @@ export abstract class BacktraceCoreClient {
         private readonly _sdkOptions: SdkOptions,
         requestHandler: BacktraceRequestHandler,
         attributeProviders: BacktraceAttributeProvider[] = [],
-        stackTraceConverter: BacktraceStackTraceConverter = new V8StackTraceConverter(),
+        private _stackTraceConverter: BacktraceStackTraceConverter = new V8StackTraceConverter(),
         private readonly _sessionProvider: BacktraceSessionProvider = new SingleSessionProvider(),
         debugIdMapProvider?: DebugIdMapProvider,
     ) {
         this._dataBuilder = new BacktraceDataBuilder(
             this._sdkOptions,
-            stackTraceConverter,
-            new DebugIdProvider(stackTraceConverter, debugIdMapProvider),
+            this._stackTraceConverter,
+            new DebugIdProvider(this._stackTraceConverter, debugIdMapProvider),
         );
 
         this._reportSubmission = new BacktraceReportSubmission(options, requestHandler);
@@ -139,12 +147,24 @@ export abstract class BacktraceCoreClient {
      * @param report Backtrace Report
      */
     public async send(report: BacktraceReport): Promise<void>;
+
+    /**
+     * Asynchronously sends Backtrace data to backtrace
+     *
+     * @param backtraceData Backtrace data
+     */
+    public async send(backtraceData: BacktraceData): Promise<void>;
     public async send(
-        data: BacktraceReport | Error | string,
+        data: BacktraceReport | Error | string | BacktraceData,
         reportAttributes: Record<string, unknown> = {},
         reportAttachments: BacktraceAttachment[] = [],
     ): Promise<void> {
         if (this._rateLimitWatcher.skipReport()) {
+            return;
+        }
+
+        if (this.isBacktraceData(data)) {
+            await this._reportSubmission.send(data, [...this.attachments, ...(reportAttachments ?? [])]);
             return;
         }
 
@@ -187,5 +207,22 @@ export abstract class BacktraceCoreClient {
 
     private isReport(data: BacktraceReport | Error | string): data is BacktraceReport {
         return data instanceof BacktraceReport;
+    }
+
+    private isBacktraceData(data: BacktraceData | Error | string | BacktraceReport): data is BacktraceData {
+        const btData = data as BacktraceData;
+        return (
+            'uuid' in btData &&
+            'timestamp' in btData &&
+            'lang' in btData &&
+            'langVersion' in btData &&
+            'agent' in btData &&
+            'agentVersion' in btData &&
+            'mainThread' in btData &&
+            'classifiers' in btData &&
+            'attributes' in btData &&
+            'annotations' in btData &&
+            'threads' in btData
+        );
     }
 }
