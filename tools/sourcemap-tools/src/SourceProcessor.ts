@@ -4,7 +4,7 @@ import { BasicSourceMapConsumer, Position, RawSourceMap, SourceMapConsumer, Sour
 import { DebugIdGenerator } from './DebugIdGenerator';
 import { stringToUuid } from './helpers/stringToUuid';
 import { ResultPromise } from './models/AsyncResult';
-import { Err, Ok } from './models/Result';
+import { Err, Ok, Result } from './models/Result';
 
 export interface ProcessResult {
     readonly debugId: string;
@@ -51,6 +51,36 @@ export class SourceProcessor {
         }
 
         return Ok(this.isSourceMapProcessed(sourcemap));
+    }
+
+    public getSourceMapDebugId(sourceMap: RawSourceMap): Result<string, string> {
+        const debugId = this._debugIdGenerator.getSourceMapDebugId(sourceMap);
+        if (!debugId) {
+            return Err('sourcemap does not have a debug ID');
+        }
+
+        return Ok(debugId);
+    }
+
+    public async getSourceMapFileDebugId(sourceMapPath: string): ResultPromise<string, string> {
+        const readResult = await this.readFile(sourceMapPath);
+        if (readResult.isErr()) {
+            return readResult;
+        }
+
+        let sourcemap: RawSourceMap;
+        try {
+            sourcemap = JSON.parse(readResult.data) as RawSourceMap;
+        } catch (err) {
+            return Err('failed to parse sourcemap JSON');
+        }
+
+        const debugId = this._debugIdGenerator.getSourceMapDebugId(sourcemap);
+        if (!debugId) {
+            return Err('sourcemap does not have a debug ID');
+        }
+
+        return Ok(debugId);
     }
 
     /**
