@@ -5,6 +5,8 @@ import { LoggerOptions, createLogger } from '../logger';
 import { CommandError } from '../models/CommandError';
 import { ExtendedOptionDefinition } from '../models/OptionDefinition';
 
+const CLI_COMMAND = 'backtrace';
+
 export class Command<T extends object = any> {
     public readonly subcommands: Command[] = [];
     public readonly options: ExtendedOptionDefinition[] = [];
@@ -95,7 +97,7 @@ export class Command<T extends object = any> {
 
         const nonGlobalOptions = this.options.filter((o) => !o.global);
 
-        let cmd = 'backtrace';
+        let cmd = CLI_COMMAND;
         const stackCmd = `${
             [...(stack ?? []), this]
                 .map((s) => s.definition.name)
