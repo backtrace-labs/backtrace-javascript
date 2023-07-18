@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { BasicSourceMapConsumer, Position, RawSourceMap, SourceMapConsumer, SourceMapGenerator } from 'source-map';
 import { DebugIdGenerator } from './DebugIdGenerator';
+import { appendBeforeWhitespaces } from './helpers/stringHelpers';
 import { stringToUuid } from './helpers/stringToUuid';
 import { ResultPromise } from './models/AsyncResult';
 import { Err, Ok, Result } from './models/Result';
@@ -100,16 +101,14 @@ export class SourceProcessor {
         }
 
         const sourceSnippet = this._debugIdGenerator.generateSourceSnippet(debugId);
-        const sourceComment = this._debugIdGenerator.generateSourceComment(debugId);
 
         const shebang = source.match(/^(#!.+\n)/)?.[1];
+        const sourceWithSnippet = shebang
+            ? shebang + sourceSnippet + '\n' + source.substring(shebang.length)
+            : sourceSnippet + '\n' + source;
 
-        const newSource =
-            (shebang
-                ? shebang + sourceSnippet + '\n' + source.substring(shebang.length)
-                : sourceSnippet + '\n' + source) +
-            '\n' +
-            sourceComment;
+        const sourceComment = this._debugIdGenerator.generateSourceComment(debugId);
+        const newSource = appendBeforeWhitespaces(sourceWithSnippet, '\n' + sourceComment);
 
         // We need to offset the source map by amount of lines that we're inserting to the source code
         // Sourcemaps map code like this:

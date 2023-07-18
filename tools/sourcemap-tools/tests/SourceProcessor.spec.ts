@@ -90,6 +90,59 @@ function foo(){console.log("Hello World!")}foo();`;
             expect(result.data.source).toMatch(new RegExp(`\n${expected}$`));
         });
 
+        it('should not add any whitespaces at end if there were none before when appending comment snippet', async () => {
+            const source = `abc`;
+            const expected = 'APPENDED_COMMENT';
+            const debugIdGenerator = new DebugIdGenerator();
+
+            jest.spyOn(debugIdGenerator, 'generateSourceComment').mockReturnValue(expected);
+
+            const sourceProcessor = new SourceProcessor(debugIdGenerator);
+            const result = await sourceProcessor.processSourceAndSourceMap(source, sourceMap);
+
+            assert(result.isOk());
+            expect(result.data.source).not.toMatch(/\s+$/);
+        });
+
+        it('should leave end whitespaces as they are when appending comment snippet', async () => {
+            const whitespaces = `\n\n\n    \n\t    \n\r`;
+            const source = `abc${whitespaces}`;
+            const expected = 'APPENDED_COMMENT';
+            const debugIdGenerator = new DebugIdGenerator();
+
+            jest.spyOn(debugIdGenerator, 'generateSourceComment').mockReturnValue(expected);
+
+            const sourceProcessor = new SourceProcessor(debugIdGenerator);
+            const result = await sourceProcessor.processSourceAndSourceMap(source, sourceMap);
+
+            assert(result.isOk());
+            expect(result.data.source).toMatch(new RegExp(`${whitespaces}$`));
+        });
+
+        it('should not touch the original source', async () => {
+            const debugIdGenerator = new DebugIdGenerator();
+
+            jest.spyOn(debugIdGenerator, 'generateSourceSnippet').mockReturnValue('APPENDED_SOURCE');
+
+            const sourceProcessor = new SourceProcessor(debugIdGenerator);
+            const result = await sourceProcessor.processSourceAndSourceMap(source, sourceMap);
+
+            assert(result.isOk());
+            expect(result.data.source).toContain(source);
+        });
+
+        it('should not touch the original sourcemap keys apart from mappings', async () => {
+            const debugIdGenerator = new DebugIdGenerator();
+
+            jest.spyOn(debugIdGenerator, 'generateSourceSnippet').mockReturnValue('APPENDED_SOURCE');
+
+            const sourceProcessor = new SourceProcessor(debugIdGenerator);
+            const result = await sourceProcessor.processSourceAndSourceMap(source, sourceMap);
+
+            assert(result.isOk());
+            expect(result.data.sourceMap).toMatchObject({ ...sourceMap, mappings: result.data.sourceMap.mappings });
+        });
+
         it('should return sourcemap from DebugIdGenerator', async () => {
             const expected = { [SOURCEMAP_DEBUG_ID_KEY]: 'debugId' };
             const debugIdGenerator = new DebugIdGenerator();
