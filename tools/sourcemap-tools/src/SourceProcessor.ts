@@ -102,7 +102,14 @@ export class SourceProcessor {
         const sourceSnippet = this._debugIdGenerator.generateSourceSnippet(debugId);
         const sourceComment = this._debugIdGenerator.generateSourceComment(debugId);
 
-        const newSource = sourceSnippet + '\n' + source + '\n' + sourceComment;
+        const shebang = source.match(/^(#!.+\n)/)?.[1];
+
+        const newSource =
+            (shebang
+                ? shebang + sourceSnippet + '\n' + source.substring(shebang.length)
+                : sourceSnippet + '\n' + source) +
+            '\n' +
+            sourceComment;
 
         // We need to offset the source map by amount of lines that we're inserting to the source code
         // Sourcemaps map code like this:
@@ -110,7 +117,7 @@ export class SourceProcessor {
         // So if we add any code to generated code, mappings after that code will become invalid
         // We need to offset the mapping lines by sourceSnippetNewlineCount:
         // original code X:Y => generated code (A + sourceSnippetNewlineCount):B
-        const sourceSnippetNewlineCount = sourceSnippet.match(/\n/g)?.length ?? 0;
+        const sourceSnippetNewlineCount = (sourceSnippet.match(/\n/g)?.length ?? 0) + (shebang ? 1 : 0);
         const offsetSourceMapResult = await this.offsetSourceMap(sourceMap, 0, sourceSnippetNewlineCount + 1);
         if (offsetSourceMapResult.isErr()) {
             return offsetSourceMapResult;

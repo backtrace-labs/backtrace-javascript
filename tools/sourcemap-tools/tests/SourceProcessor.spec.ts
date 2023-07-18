@@ -14,6 +14,26 @@ describe('SourceProcessor', () => {
         mappings: 'AAAA,SAASA,MACLC,QAAQC,IAAI,cAAc,CAC9B,CAEAF,IAAI',
     };
 
+    const sourceWithShebang = `#!shebang
+function foo(){console.log("Hello World!")}foo();`;
+    const sourceWithShebangMap = {
+        version: 3,
+        file: 'source.js',
+        sources: ['source.js'],
+        names: ['foo', 'console', 'log'],
+        mappings: ';AACA,SAASA,MACLC,QAAQC,IAAI,cAAc,CAC9B,CACAF,IAAI',
+    };
+
+    const sourceWithShebangElsewhere = `function foo(){console.log("Hello World!")}foo();
+#!shebang`;
+    const sourceWithShebangElsewhereMap = {
+        version: 3,
+        file: 'source.js',
+        sources: ['source.js'],
+        names: ['foo', 'console', 'log'],
+        mappings: 'AACA,SAASA,MACLC,QAAQC,IAAI,cAAc,CAC9B,CACAF,IAAI',
+    };
+
     describe('processSourceAndSourceMap', () => {
         it('should append source snippet to the source on the first line', async () => {
             const expected = 'APPENDED_SOURCE';
@@ -26,6 +46,35 @@ describe('SourceProcessor', () => {
 
             assert(result.isOk());
             expect(result.data.source).toMatch(new RegExp(`^${expected}\n`));
+        });
+
+        it('should append source snippet to the source on the first line with source having shebang not on the first line', async () => {
+            const expected = 'APPENDED_SOURCE';
+            const debugIdGenerator = new DebugIdGenerator();
+
+            jest.spyOn(debugIdGenerator, 'generateSourceSnippet').mockReturnValue(expected);
+
+            const sourceProcessor = new SourceProcessor(debugIdGenerator);
+            const result = await sourceProcessor.processSourceAndSourceMap(
+                sourceWithShebangElsewhere,
+                sourceWithShebangElsewhereMap,
+            );
+
+            assert(result.isOk());
+            expect(result.data.source).toMatch(new RegExp(`^${expected}\n`));
+        });
+
+        it('should append source snippet to the source after shebang', async () => {
+            const expected = 'APPENDED_SOURCE';
+            const debugIdGenerator = new DebugIdGenerator();
+
+            jest.spyOn(debugIdGenerator, 'generateSourceSnippet').mockReturnValue(expected);
+
+            const sourceProcessor = new SourceProcessor(debugIdGenerator);
+            const result = await sourceProcessor.processSourceAndSourceMap(sourceWithShebang, sourceWithShebangMap);
+
+            assert(result.isOk());
+            expect(result.data.source).toMatch(new RegExp(`^(#!.+\n)${expected}\n`));
         });
 
         it('should append comment snippet to the source on the last line', async () => {
@@ -69,6 +118,61 @@ describe('SourceProcessor', () => {
             });
 
             const result = await sourceProcessor.processSourceAndSourceMap(source, sourceMap);
+            assert(result.isOk());
+
+            const modifiedConsumer = await new SourceMapConsumer(result.data.sourceMap);
+            const actualPosition = modifiedConsumer.originalPositionFor({
+                line: 1 + expectedNewLineCount,
+                column: source.indexOf('foo();'),
+            });
+
+            expect(actualPosition).toEqual(expectedPosition);
+        });
+
+        it('should offset sourcemap lines by number of newlines in source snippet + 1 with source having shebang not on the first line', async () => {
+            const debugIdGenerator = new DebugIdGenerator();
+            const sourceProcessor = new SourceProcessor(debugIdGenerator);
+            const snippet = 'a\nb\nc\nd';
+            const expectedNewLineCount = (snippet.match(/\n/g)?.length ?? 0) + 1;
+
+            jest.spyOn(debugIdGenerator, 'generateSourceSnippet').mockReturnValue(snippet);
+
+            const unmodifiedConsumer = await new SourceMapConsumer(sourceMap);
+            const expectedPosition = unmodifiedConsumer.originalPositionFor({
+                line: 1,
+                column: source.indexOf('foo();'),
+            });
+
+            const result = await sourceProcessor.processSourceAndSourceMap(
+                sourceWithShebangElsewhere,
+                sourceWithShebangElsewhereMap,
+            );
+            assert(result.isOk());
+
+            const modifiedConsumer = await new SourceMapConsumer(result.data.sourceMap);
+            const actualPosition = modifiedConsumer.originalPositionFor({
+                line: 1 + expectedNewLineCount,
+                column: source.indexOf('foo();'),
+            });
+
+            expect(actualPosition).toEqual(expectedPosition);
+        });
+
+        it('should offset sourcemap lines by number of newlines in source with shebang with snippet + 3', async () => {
+            const debugIdGenerator = new DebugIdGenerator();
+            const sourceProcessor = new SourceProcessor(debugIdGenerator);
+            const snippet = 'a\nb\nc\nd';
+            const expectedNewLineCount = (snippet.match(/\n/g)?.length ?? 0) + 3;
+
+            jest.spyOn(debugIdGenerator, 'generateSourceSnippet').mockReturnValue(snippet);
+
+            const unmodifiedConsumer = await new SourceMapConsumer(sourceMap);
+            const expectedPosition = unmodifiedConsumer.originalPositionFor({
+                line: 1,
+                column: source.indexOf('foo();'),
+            });
+
+            const result = await sourceProcessor.processSourceAndSourceMap(sourceWithShebang, sourceWithShebangMap);
             assert(result.isOk());
 
             const modifiedConsumer = await new SourceMapConsumer(result.data.sourceMap);
