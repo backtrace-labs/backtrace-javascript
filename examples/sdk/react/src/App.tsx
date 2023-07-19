@@ -1,21 +1,27 @@
 import React, { useState } from 'react';
 import './App.css';
 import { BacktraceClient } from '@backtrace/react';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { SUBMISSION_URL } from './consts';
 
 function App() {
     const [clicked, setClicked] = useState(false);
-    function sendError() {
+    async function sendError() {
         const client = BacktraceClient.instance;
-        if (client) {
-            client.send(new Error('Manual Test Error'));
-            alert('Error sent! Check your Backtrace console to see the error.');
-        }
+        await client.send(new Error('Manual Test Error'));
+        toast('Error sent! Check your Backtrace console to see the error.');
     }
     if (clicked) {
         throw new Error('Test throw to demonstrate the Backtrace Error Boundary');
     }
+    if (SUBMISSION_URL.includes('your-universe')) {
+        toast.error('Don\'t forget to update your submission url in "./src/consts.ts" with your universe and token!');
+    }
+
     return (
         <div className="App">
+            <ToastContainer />
             <div className="App-header center">
                 <img
                     src="https://info.saucelabs.com/rs/468-XBT-687/images/SL%20logo%20horizontal%20color%2Bdark%402x.png"

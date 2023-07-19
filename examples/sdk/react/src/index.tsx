@@ -3,12 +3,10 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import { ErrorBoundary, BacktraceClient } from '@backtrace/react';
 import { Fallback } from './Fallback';
-
-const universe = 'your-universe';
-const token = 'your-token';
+import { SUBMISSION_URL } from './consts';
 
 BacktraceClient.initialize({
-    url: `https://submit.backtrace.io/${universe}/${token}/json`,
+    url: SUBMISSION_URL,
     name: '@backtrace/react-example',
     version: '0.0.1',
     userAttributes: {
