@@ -15,8 +15,6 @@
     "scripts": {
         "start": "react-scripts start",
         "build": "react-scripts build",
-        "test": "react-scripts test",
-        "eject": "react-scripts eject",
         "format": "prettier --write '**/*.ts'",
         "lint": "eslint . --ext .ts",
         "serve": "npm run build && serve -s build"
