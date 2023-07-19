@@ -7,11 +7,18 @@ import { SUBMISSION_URL } from './consts';
 
 function App() {
     const [clicked, setClicked] = useState(false);
+    const client = BacktraceClient.instance;
+
     async function sendError() {
-        const client = BacktraceClient.instance;
         await client.send(new Error('Manual Test Error'));
         toast('Error sent! Check your Backtrace console to see the error.');
     }
+
+    async function sendMessage() {
+        await client.send('Manual Test Message');
+        toast('Message sent! Check your Backtrace console to see the message.');
+    }
+
     if (clicked) {
         throw new Error('Test throw to demonstrate the Backtrace Error Boundary');
     }
@@ -34,10 +41,13 @@ function App() {
                 </p>
                 <div className="column">
                     <button className="action-button" onClick={() => setClicked(true)}>
-                        <span className="action-button-text">Trigger Error Boundary</span>
+                        <span className="action-button-text">Trigger ErrorBoundary</span>
                     </button>
                     <button className="action-button" onClick={() => sendError()}>
-                        <span className="action-button-text">Manually Send Report</span>
+                        <span className="action-button-text">Send an error</span>
+                    </button>
+                    <button className="action-button" onClick={() => sendMessage()}>
+                        <span className="action-button-text">Send a message</span>
                     </button>
                 </div>
             </div>
