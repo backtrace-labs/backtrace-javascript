@@ -1,0 +1,84 @@
+.App {
+    text-align: center;
+    background-color: #d8f8e9;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.App-header {
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(10px + 2vmin);
+    color: black;
+    padding: 40px;
+    background-color: white;
+    width: 50%;
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.action-button {
+    cursor: pointer;
+    background-color: #3ddc91;
+    padding: 12px 35px;
+    border-radius: 50px;
+    margin-bottom: 5px;
+    margin-top: 5px;
+    width: 40%;
+    text-align: center;
+}
+
+.action-button-text {
+    color: #132322;
+    font-family: 'DM Sans', Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    font-style: normal;
+    line-height: 20px;
+    text-decoration: none;
+    display: block;
+}
+
+.card-header {
+    font-family: 'DM Sans', Arial, sans-serif;
+    font-size: 22px;
+    color: #2d2d2d;
+    text-align: center;
+    line-height: 120%;
+    margin-bottom: 24px;
+}
+
+.card-text {
+    font-family: 'DM Sans', Arial, sans-serif;
+    font-size: 18px;
+    color: #2d2d2d;
+    text-align: center;
+    line-height: 120%;
+    margin-bottom: 24px;
+}
+
+.footer {
+    width: 30%;
+    padding: 40px;
+    text-align: center;
+}
+
+.center {
+    display: block;
+    margin: 0 auto;
+}
+
+.extra-padding-bottom {
+    padding-bottom: 50px;
+}
+
+.extra-padding {
+    padding: 12px;
+}
