@@ -19,6 +19,15 @@ function App() {
         toast('Message sent! Check your Backtrace console to see the message.');
     }
 
+    async function sendMetrics() {
+        if (!client.metrics) {
+            toast.error('Metrics are unavailable');
+            return;
+        }
+        client.metrics.send();
+        toast('Metrics sent! Check your Backtrace console to see the metrics.');
+    }
+
     if (clicked) {
         throw new Error('Test throw to demonstrate the Backtrace Error Boundary');
     }
@@ -48,6 +57,9 @@ function App() {
                     </button>
                     <button className="action-button" onClick={() => sendMessage()}>
                         <span className="action-button-text">Send a message</span>
+                    </button>
+                    <button className="action-button" onClick={() => sendMetrics()}>
+                        <span className="action-button-text">Send metrics</span>
                     </button>
                 </div>
             </div>
