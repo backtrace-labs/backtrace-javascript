@@ -13,5 +13,5 @@ export function appendBeforeWhitespaces(str: string, value: string) {
         return str + value;
     }
 
-    return str.substring(0, whitespaces.length) + value + whitespaces;
+    return str.substring(0, str.length - whitespaces.length) + value + whitespaces;
 }
