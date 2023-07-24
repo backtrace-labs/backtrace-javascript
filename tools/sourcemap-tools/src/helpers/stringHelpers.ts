@@ -5,7 +5,7 @@
  * @example
  * const str = 'abc\n\n';
  * const value = 'def';
- * const appended = appendBeforeWhitespaces(str, value);
+ * const appended = appendBeforeWhitespaces(str, value); // 'abcdef\n\n'
  */
 export function appendBeforeWhitespaces(str: string, value: string) {
     const whitespaces = str.match(/\s*$/)?.[0];
