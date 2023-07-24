@@ -7,7 +7,6 @@
             "request": "launch",
             "localRoot": "${workspaceFolder}",
             "remoteRoot": "${workspaceFolder}",
-            "runtimeArgs": ["--unhandled-rejections=throw"],
             "skipFiles": ["<node_internals>/**", "${workspaceFolder}/node_modules/tslib/**/*.js"],
             "outFiles": ["${workspaceFolder}/examples/sdk/node/lib/**/*.js"],
             "sourceMaps": true,
