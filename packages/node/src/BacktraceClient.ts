@@ -10,7 +10,7 @@ import {
 import { AGENT } from './agentDefinition';
 import { BacktraceConfiguration } from './BacktraceConfiguration';
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
-import { StrictModeDetector } from './common/StrictModeDetector';
+import { NodeOptionReader } from './common/NodeOptionReader';
 
 export class BacktraceClient extends BacktraceCoreClient {
     constructor(
@@ -35,12 +35,13 @@ export class BacktraceClient extends BacktraceCoreClient {
     }
 
     private captureUnhandledErrors() {
-        const isStrictModeEnabled = StrictModeDetector.enabled();
+        const unhandledRejectionMode = NodeOptionReader.read('unhandled-rejections');
+        const shouldContinueExecution = unhandledRejectionMode === 'warn' || unhandledRejectionMode === 'none';
 
         process.prependListener(
             'uncaughtExceptionMonitor',
             async (error: Error, origin?: 'uncaughtException' | 'unhandledRejection') => {
-                // all rejected promises will be captured via different handler
+                // all rejected promises will be captured via unhandledRejection handler
                 if (origin === 'unhandledRejection') {
                     return;
                 }
@@ -61,10 +62,13 @@ export class BacktraceClient extends BacktraceCoreClient {
                 }),
             );
 
-            if (isStrictModeEnabled) {
+            if (unhandledRejectionMode !== 'none') {
                 console.error(reason);
-                process.exit(1);
             }
+            if (shouldContinueExecution) {
+                return;
+            }
+            process.exit(1);
         });
     }
 }
