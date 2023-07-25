@@ -7,7 +7,7 @@ export class NodeOptionReader {
      */
     public static read(
         optionName: string,
-        argv: string[] = process.argv,
+        argv: string[] = process.execArgv,
         nodeOptions: string | undefined = process.env['NODE_OPTIONS'],
     ): string | undefined {
         /**

@@ -38,6 +38,12 @@ export interface BacktraceConfiguration {
     url: string;
 
     /**
+     * Determines if unhandled errors and unhandled promise rejections should be captured by the library.
+     * By default true.
+     */
+    captureUnhandledErrors?: boolean;
+
+    /**
      * Submission token - the token is required only if the user uses direct submission URL to Backtrace.
      */
     token?: string;
