@@ -7,6 +7,9 @@
     "engines": {
         "node": ">=14"
     },
+    "bin": {
+        "backtrace-js": "./lib/index.js"
+    },
     "scripts": {
         "build": "tsc",
         "clean": "tsc -b --clean && rimraf \"lib\"",

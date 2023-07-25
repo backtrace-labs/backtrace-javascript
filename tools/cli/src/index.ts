@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import commandLineArgs from 'command-line-args';
 import { Command } from './commands/Command';
 import { LoggerOptions, createLogger } from './logger';
