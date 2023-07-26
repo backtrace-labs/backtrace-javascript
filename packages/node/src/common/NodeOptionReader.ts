@@ -9,7 +9,7 @@ export class NodeOptionReader {
         optionName: string,
         argv: string[] = process.execArgv,
         nodeOptions: string | undefined = process.env['NODE_OPTIONS'],
-    ): string | undefined {
+    ): string | boolean | undefined {
         /**
          * exec argv overrides NODE_OPTIONS.
          * for example:
@@ -23,19 +23,33 @@ export class NodeOptionReader {
             optionName = '--' + optionName;
         }
 
-        const fullCommandOption = optionName + '=';
+        const commandOption = argv.find((n) => n.startsWith(optionName));
 
-        const commandOption = argv.find((n) => n.startsWith(fullCommandOption));
+        function readOptionValue(optionName: string, commandOption: string): string | boolean | undefined {
+            let result = commandOption.substring(optionName.length);
+            if (!result) {
+                return true;
+            }
+            if (result.startsWith('=')) {
+                result = result.substring(1);
+            }
+
+            return result;
+        }
+
         if (commandOption) {
-            return commandOption.substring(fullCommandOption.length);
+            return readOptionValue(optionName, commandOption);
         }
 
         if (!nodeOptions) {
             return undefined;
         }
 
-        const nodeOption = nodeOptions.split(' ').find((n) => n.startsWith(fullCommandOption));
+        const nodeOption = nodeOptions.split(' ').find((n) => n.startsWith(optionName));
 
-        return nodeOption?.substring(fullCommandOption.length);
+        if (!nodeOption) {
+            return undefined;
+        }
+        return readOptionValue(optionName, nodeOption);
     }
 }

@@ -11,6 +11,21 @@ describe('Node options reader', () => {
             expect(value).toEqual(expectedValue);
         });
 
+        it('should read boolean value option if the option is defined', () => {
+            const option = 'trace-warnings';
+            const optionWithValue = `--${option}`;
+
+            const value = NodeOptionReader.read(option, [optionWithValue]);
+
+            expect(value).toBeTruthy();
+        });
+
+        it('should read undefined if the option is not available', () => {
+            const value = NodeOptionReader.read('', ['']);
+
+            expect(value).toBeUndefined();
+        });
+
         it('should read --unhandled-rejections option with option passed with --', () => {
             const option = '--unhandled-rejections';
             const expectedValue = 'warn';

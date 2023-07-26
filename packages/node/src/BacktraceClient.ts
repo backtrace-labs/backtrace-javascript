@@ -27,30 +27,44 @@ export class BacktraceClient extends BacktraceCoreClient {
             undefined,
             new VariableDebugIdMapProvider(global as DebugIdContainer),
         );
-        if (options.captureUnhandledErrors !== false) {
-            this.captureUnhandledErrors();
-        }
+
+        this.captureUnhandledErrors(options.captureUnhandledErrors, options.captureUnhandledPromiseRejections);
     }
 
     public static builder(options: BacktraceConfiguration): BacktraceClientBuilder {
         return new BacktraceClientBuilder(options);
     }
 
-    private captureUnhandledErrors() {
+    private captureUnhandledErrors(captureUnhandledExceptions = true, captureUnhandledRejections = true) {
+        if (!captureUnhandledExceptions && !captureUnhandledRejections) {
+            return;
+        }
+
         process.prependListener(
             'uncaughtExceptionMonitor',
             async (error: Error, origin?: 'uncaughtException' | 'unhandledRejection') => {
+                if (origin === 'unhandledRejection' && !captureUnhandledRejections) {
+                    return;
+                }
+                if (origin === 'uncaughtException' && !captureUnhandledExceptions) {
+                    return;
+                }
                 await this.send(
                     new BacktraceReport(error, { 'error.type': 'Unhandled exception', errorOrigin: origin }),
                 );
             },
         );
 
+        if (!captureUnhandledRejections) {
+            return;
+        }
+
         // Node 15+ has changed the default unhandled promise rejection behavior.
         // In node 14 - the default behavior is to warn about unhandled promise rejections. In newer version
         // the default mode is throw.
         const nodeMajorVersion = process.version.split('.')[0];
         const unhandledRejectionMode = NodeOptionReader.read('unhandled-rejections');
+        const traceWarnings = NodeOptionReader.read('trace-warnings');
 
         /**
          * Node JS allows to use only uncaughtExceptionMonitor only when:
@@ -68,12 +82,8 @@ export class BacktraceClient extends BacktraceCoreClient {
             return;
         }
         process.prependListener('unhandledRejection', async (reason) => {
-            const error =
-                reason instanceof Error
-                    ? reason
-                    : typeof reason === 'string'
-                    ? new Error(reason)
-                    : new Error('Unhandled rejection');
+            const isErrorTypeReason = reason instanceof Error;
+            const error = isErrorTypeReason ? reason : new Error(reason?.toString() ?? 'Unhandled rejection');
             await this.send(
                 new BacktraceReport(error, {
                     'error.type': 'Unhandled exception',
@@ -86,23 +96,36 @@ export class BacktraceClient extends BacktraceCoreClient {
                 return;
             }
 
-            if (unhandledRejectionMode === 'none') {
+            // everything else will be handled by node
+            if (unhandledRejectionMode === 'none' || unhandledRejectionMode === 'warn') {
                 return;
             }
 
-            if (unhandledRejectionMode === 'warn-with-error-code') {
-                process.exitCode = 1;
-            }
+            // handle last status: warn-with-error-code
+            process.exitCode = 1;
+            const unhandledRejectionErrName = 'UnhandledPromiseRejectionWarning';
+
             process.emitWarning(
-                `UnhandledPromiseRejectionWarning: ${error.message} \n ${error.stack ?? ''}` +
-                    '\n' +
-                    `Unhandled promise rejection. This error originated either by ` +
+                (isErrorTypeReason ? error.stack : reason?.toString()) ?? '',
+                unhandledRejectionErrName,
+            );
+
+            const warning = new Error(
+                `Unhandled promise rejection. This error originated either by ` +
                     `throwing inside of an async function without a catch block, ` +
-                    `or by rejecting a promise which was not handled with .catch().` +
+                    `or by rejecting a promise which was not handled with .catch(). ` +
                     `To terminate the node process on unhandled promise ` +
                     'rejection, use the CLI flag `--unhandled-rejections=strict` (see ' +
                     'https://nodejs.org/api/cli.html#cli_unhandled_rejections_mode). ',
             );
+            Object.defineProperty(warning, 'name', {
+                value: 'UnhandledPromiseRejectionWarning',
+                enumerable: false,
+                writable: true,
+                configurable: true,
+            });
+            warning.stack = traceWarnings && isErrorTypeReason ? error.stack ?? '' : '';
+            process.emitWarning(warning);
         });
     }
 }
