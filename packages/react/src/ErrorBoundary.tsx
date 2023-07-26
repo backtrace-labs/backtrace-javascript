@@ -28,11 +28,11 @@ export class ErrorBoundary extends Component<Props, State> {
         this._client = BacktraceClient.instance;
     }
 
-    static getDerivedStateFromError(error: Error) {
+    public static getDerivedStateFromError(error: Error) {
         return { hasError: true, error };
     }
 
-    componentDidCatch(error: Error, info: ErrorInfo) {
+    public async componentDidCatch(error: Error, info: ErrorInfo) {
         const dataBuilder = this._client.dataBuilder;
         const report = new BacktraceReport(error);
         const backtraceData = dataBuilder.build(report);
@@ -48,7 +48,7 @@ export class ErrorBoundary extends Component<Props, State> {
             stack: frames,
         };
 
-        this._client.send(backtraceData);
+        await this._client.send(backtraceData);
     }
 
     render() {

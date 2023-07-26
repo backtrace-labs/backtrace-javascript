@@ -5,13 +5,6 @@
 3. `npm run serve` (this will create and serve a production build as you can't see the fallback component in
    development)
 
-## Running the Example
-
-1. Add your universe and token to the SUBMISSION_URL in src/consts.ts
-2. `npm install`
-3. `npm run serve` (this will create and serve a production build as you can't see the fallback component in
-   development)
-
 ## Available Scripts
 
 In the project directory, you can run:
