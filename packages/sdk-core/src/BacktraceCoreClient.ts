@@ -212,6 +212,7 @@ export abstract class BacktraceCoreClient {
     private isBacktraceData(data: BacktraceData | Error | string | BacktraceReport): data is BacktraceData {
         const btData = data as BacktraceData;
         return (
+            typeof data === 'object' &&
             'uuid' in btData &&
             'timestamp' in btData &&
             'lang' in btData &&
