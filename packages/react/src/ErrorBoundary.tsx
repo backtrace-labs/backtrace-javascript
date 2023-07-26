@@ -1,6 +1,7 @@
 import { Component, ErrorInfo, ReactElement, ReactNode, isValidElement } from 'react';
 import { BacktraceClient } from './BacktraceClient';
 import { BacktraceReport } from '.';
+import { isReact16ComponentStack, parseReact16ComponentStack } from './helpers/componentStackHelpers';
 
 type RenderFallback = () => ReactElement;
 
@@ -16,6 +17,7 @@ export interface State {
 
 export class ErrorBoundary extends Component<Props, State> {
     private _client: BacktraceClient;
+    private COMPONENT_THREAD_NAME = 'component-stack';
     constructor(props: Props) {
         super(props);
         this.state = {
@@ -34,13 +36,15 @@ export class ErrorBoundary extends Component<Props, State> {
         const dataBuilder = this._client.dataBuilder;
         const report = new BacktraceReport(error);
         const backtraceData = dataBuilder.build(report);
-        const COMPONENT_THREAD_NAME = 'component-stack';
-        // TODO: Add a separate parser for React v16
-        const stacktraceConverter = this._client.stackTraceConverter;
-        const frames = stacktraceConverter.convert(info.componentStack, COMPONENT_THREAD_NAME);
-        backtraceData.threads[COMPONENT_THREAD_NAME] = {
+
+        const { componentStack } = info;
+        const frames = isReact16ComponentStack(componentStack)
+            ? parseReact16ComponentStack(componentStack)
+            : this._client.stackTraceConverter.convert(componentStack, this.COMPONENT_THREAD_NAME);
+
+        backtraceData.threads[this.COMPONENT_THREAD_NAME] = {
             fault: false,
-            name: COMPONENT_THREAD_NAME,
+            name: this.COMPONENT_THREAD_NAME,
             stack: frames,
         };
 
