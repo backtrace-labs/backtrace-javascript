@@ -24,11 +24,18 @@ export class BacktraceDataBuilder {
 
         const stackTrace = this._stackTraceConverter.convert(report.stackTrace, report.message);
 
+        let detectedDebugIdentifier = false;
+
         for (const frame of stackTrace) {
-            frame.debug_identifier = this._debugIdProvider.getDebugId(frame.library);
+            const debugIdentifier = this._debugIdProvider.getDebugId(frame.library);
+            if (!debugIdentifier) {
+                continue;
+            }
+            detectedDebugIdentifier = true;
+            frame.debug_identifier = debugIdentifier;
         }
 
-        return {
+        const result: BacktraceData = {
             uuid: IdGenerator.uuid(),
             timestamp: TimeHelper.toTimestampInSec(report.timestamp),
             agent: this._sdkOptions.agent,
@@ -54,5 +61,11 @@ export class BacktraceDataBuilder {
                 ...reportData.attributes,
             },
         };
+
+        if (detectedDebugIdentifier) {
+            result.symbolication = 'sourcemap';
+        }
+
+        return result;
     }
 }
