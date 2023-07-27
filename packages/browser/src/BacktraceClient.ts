@@ -29,28 +29,32 @@ export class BacktraceClient extends BacktraceCoreClient {
             new VariableDebugIdMapProvider(window as DebugIdContainer),
         );
 
-        this.captureUnhandledErrors();
+        this.captureUnhandledErrors(options.captureUnhandledErrors, options.captureUnhandledPromiseRejections);
     }
 
     public static builder(options: BacktraceConfiguration): BacktraceClientBuilder {
         return new BacktraceClientBuilder(options);
     }
 
-    private captureUnhandledErrors() {
-        window.addEventListener('error', async (errorEvent: ErrorEvent) => {
-            await this.send(
-                new BacktraceReport(errorEvent.error, {
-                    'error.type': 'Unhandled exception',
-                }),
-            );
-        });
+    private captureUnhandledErrors(captureUnhandledExceptions = true, captureUnhandledRejections = true) {
+        if (captureUnhandledExceptions) {
+            window.addEventListener('error', async (errorEvent: ErrorEvent) => {
+                await this.send(
+                    new BacktraceReport(errorEvent.error, {
+                        'error.type': 'Unhandled exception',
+                    }),
+                );
+            });
+        }
 
-        window.addEventListener('unhandledrejection', async (errorEvent: PromiseRejectionEvent) => {
-            await this.send(
-                new BacktraceReport(errorEvent.reason, {
-                    'error.type': 'Unhandled exception',
-                }),
-            );
-        });
+        if (captureUnhandledRejections) {
+            window.addEventListener('unhandledrejection', async (errorEvent: PromiseRejectionEvent) => {
+                await this.send(
+                    new BacktraceReport(errorEvent.reason, {
+                        'error.type': 'Unhandled exception',
+                    }),
+                );
+            });
+        }
     }
 }
