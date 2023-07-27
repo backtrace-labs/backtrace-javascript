@@ -12,6 +12,7 @@
         "clean": "rimraf \"lib\"",
         "format": "prettier --write '**/*.ts'",
         "lint": "eslint . --ext .ts",
+        "start": "NODE_ENV=production node ./lib/index.js",
         "watch": "tsc -w"
     },
     "repository": {
