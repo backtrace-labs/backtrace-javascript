@@ -39,7 +39,8 @@
     "dependencies": {
         "@backtrace/sourcemap-tools": "^0.0.1",
         "command-line-args": "^5.2.1",
-        "command-line-usage": "^7.0.1"
+        "command-line-usage": "^7.0.1",
+        "glob": "^10.3.3"
     },
     "devDependencies": {
         "@types/command-line-args": "^5.2.0",
