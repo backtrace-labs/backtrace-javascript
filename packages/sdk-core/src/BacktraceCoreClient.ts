@@ -8,7 +8,7 @@ import {
 } from '.';
 import { SdkOptions } from './builder/SdkOptions';
 import { BacktraceConfiguration } from './model/configuration/BacktraceConfiguration';
-import { AttributeType } from './model/data/BacktraceData';
+import { AttributeType, BacktraceData } from './model/data/BacktraceData';
 import { BacktraceReportSubmission } from './model/http/BacktraceReportSubmission';
 import { BacktraceRequestHandler } from './model/http/BacktraceRequestHandler';
 import { BacktraceReport } from './model/report/BacktraceReport';
@@ -154,9 +154,21 @@ export abstract class BacktraceCoreClient {
                   skipFrames: this.skipFrameOnMessage(data),
               });
 
+        const backtraceData = this.generateSubmissionData(report);
+        if (!backtraceData) {
+            return;
+        }
+
+        await this._reportSubmission.send(backtraceData, this.generateSubmissionAttachments(report, reportAttachments));
+    }
+
+    private generateSubmissionData(report: BacktraceReport): BacktraceData | undefined {
         const { annotations, attributes } = this._attributeProvider.get();
         const backtraceData = this._dataBuilder.build(report, attributes, annotations);
-        await this._reportSubmission.send(backtraceData, this.generateSubmissionAttachments(report, reportAttachments));
+        if (!this.options.beforeSend) {
+            return backtraceData;
+        }
+        return this.options.beforeSend(backtraceData);
     }
 
     private generateSubmissionAttachments(

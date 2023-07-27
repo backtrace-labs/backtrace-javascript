@@ -47,7 +47,7 @@ describe('Attributes tests', () => {
             const scopedAttributeGetFunction = jest
                 .fn()
                 .mockReturnValue({ [providerAttributeKey]: providerAttributeValue });
-            const fakeClient = BacktraceTestClient.buildFakeClient([
+            const fakeClient = BacktraceTestClient.buildFakeClient({}, [
                 {
                     type: 'scoped',
                     get: scopedAttributeGetFunction,
@@ -66,7 +66,7 @@ describe('Attributes tests', () => {
             const scopedAttributeGetFunction = jest
                 .fn()
                 .mockReturnValue({ [providerAttributeKey]: providerAttributeValue });
-            const fakeClient = BacktraceTestClient.buildFakeClient([
+            const fakeClient = BacktraceTestClient.buildFakeClient({}, [
                 {
                     type: 'dynamic',
                     get: scopedAttributeGetFunction,

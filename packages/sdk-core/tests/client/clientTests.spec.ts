@@ -43,7 +43,7 @@ describe('Client tests', () => {
                 },
             };
 
-            const client = BacktraceTestClient.buildFakeClient([], [inMemoryAttachment]);
+            const client = BacktraceTestClient.buildFakeClient({}, [], [inMemoryAttachment]);
 
             expect(client.attachments).toBeDefined();
             expect(client.attachments.length).toEqual(1);
@@ -90,7 +90,7 @@ describe('Client tests', () => {
                     return new Uint8Array(0);
                 },
             };
-            const client = BacktraceTestClient.buildFakeClient([], [clientAttachment]);
+            const client = BacktraceTestClient.buildFakeClient({}, [], [clientAttachment]);
 
             await client.send(new Error(''), {}, [reportAttachment]);
 
