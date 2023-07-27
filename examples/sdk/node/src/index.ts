@@ -38,6 +38,13 @@ async function sendMessage(message: string, attributes: Record<string, number>) 
     await client.send(message, attributes);
 }
 
+async function rejectPromise(message: string) {
+    return new Promise(() => {
+        console.log('Rejecting promise without .catch and finally.');
+        throw new Error(message);
+    });
+}
+
 function addEvent(name: string, attributes: Record<string, number>) {
     if (!client.metrics) {
         console.log('metrics are unavailable');
@@ -57,8 +64,9 @@ function showMenu() {
         `Please pick one of available options:\n` +
         `1. Send an exception\n` +
         `2. Send a message\n` +
-        `3. Add a new summed event\n` +
-        `4. Send all metrics\n` +
+        `3. Throw rejected promise\n` +
+        `4. Add a new summed event\n` +
+        `5. Send all metrics\n` +
         `0. Exit\n` +
         `Type the option number:`;
     reader.question(menu, async function executeUserOption(optionString: string) {
@@ -76,10 +84,14 @@ function showMenu() {
                 break;
             }
             case 3: {
-                addEvent('Option clicked', attributes);
+                rejectPromise('Rejected promise');
                 break;
             }
             case 4: {
+                addEvent('Option clicked', attributes);
+                break;
+            }
+            case 5: {
                 sendMetrics();
                 break;
             }

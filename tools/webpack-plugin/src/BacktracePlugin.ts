@@ -56,7 +56,21 @@ export class BacktracePlugin implements WebpackPluginInstance {
 
                 logger.time(`[${asset}] process source and sourcemap`);
                 try {
-                    debugId = await this._sourceProcessor.processSourceAndSourceMapFiles(sourcePath, sourceMapPath);
+                    const result = await this._sourceProcessor.processSourceAndSourceMapFiles(
+                        sourcePath,
+                        sourceMapPath,
+                    );
+
+                    if (result.isErr()) {
+                        logger.error(`[${asset}] process source and sourcemap failed:`, result.data);
+                        processResults.set(asset, new Error(result.data));
+                        continue;
+                    }
+
+                    debugId = result.data.debugId;
+                    await fs.promises.writeFile(sourcePath, result.data.source, 'utf8');
+                    await fs.promises.writeFile(sourceMapPath, JSON.stringify(result.data.sourceMap), 'utf8');
+
                     processResults.set(asset, debugId);
                 } catch (err) {
                     logger.error(`[${asset}] process source and sourcemap failed:`, err);
@@ -80,7 +94,12 @@ export class BacktracePlugin implements WebpackPluginInstance {
 
                     await archive.finalize();
                     const result = await request;
-                    uploadResult = result.rxid;
+                    if (result.isErr()) {
+                        logger.error(`upload sourcemaps failed:`, result.data);
+                        uploadResult = new Error(result.data);
+                    } else {
+                        uploadResult = result.data.rxid;
+                    }
                 } catch (err) {
                     logger.error(`upload sourcemaps failed:`, err);
                     uploadResult = err instanceof Error ? err : new Error('Unknown error.');

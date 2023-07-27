@@ -89,6 +89,7 @@ export abstract class BacktraceCoreClient {
         this._rateLimitWatcher = new RateLimitWatcher(options.rateLimit);
         this._attributeProvider = new AttributeManager([
             new ClientAttributeProvider(
+                _sdkOptions.agent,
                 _sdkOptions.agentVersion,
                 _sessionProvider.sessionId,
                 options.userAttributes ?? {},

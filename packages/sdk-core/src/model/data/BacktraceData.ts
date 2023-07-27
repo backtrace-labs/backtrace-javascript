@@ -14,4 +14,5 @@ export interface BacktraceData {
     attributes: Record<string, AttributeType>;
     annotations: Record<string, unknown>;
     threads: Record<string, BacktraceStackTrace>;
+    symbolication?: 'sourcemap';
 }
