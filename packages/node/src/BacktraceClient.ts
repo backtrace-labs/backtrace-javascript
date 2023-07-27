@@ -40,20 +40,17 @@ export class BacktraceClient extends BacktraceCoreClient {
             return;
         }
 
-        process.prependListener(
-            'uncaughtExceptionMonitor',
-            async (error: Error, origin?: 'uncaughtException' | 'unhandledRejection') => {
-                if (origin === 'unhandledRejection' && !captureUnhandledRejections) {
-                    return;
-                }
-                if (origin === 'uncaughtException' && !captureUnhandledExceptions) {
-                    return;
-                }
-                await this.send(
-                    new BacktraceReport(error, { 'error.type': 'Unhandled exception', errorOrigin: origin }),
-                );
-            },
-        );
+        const captureUncaughtException = async (error: Error, origin?: 'uncaughtException' | 'unhandledRejection') => {
+            if (origin === 'unhandledRejection' && !captureUnhandledRejections) {
+                return;
+            }
+            if (origin === 'uncaughtException' && !captureUnhandledExceptions) {
+                return;
+            }
+            await this.send(new BacktraceReport(error, { 'error.type': 'Unhandled exception', errorOrigin: origin }));
+        };
+
+        process.prependListener('uncaughtExceptionMonitor', captureUncaughtException);
 
         if (!captureUnhandledRejections) {
             return;
@@ -81,7 +78,8 @@ export class BacktraceClient extends BacktraceCoreClient {
         if (ignoreUnhandledRejectionHandler) {
             return;
         }
-        process.prependListener('unhandledRejection', async (reason) => {
+
+        const captureUnhandledRejectionsCallback = async (reason: unknown) => {
             const isErrorTypeReason = reason instanceof Error;
             const error = isErrorTypeReason ? reason : new Error(reason?.toString() ?? 'Unhandled rejection');
             await this.send(
@@ -126,6 +124,7 @@ export class BacktraceClient extends BacktraceCoreClient {
             });
             warning.stack = traceWarnings && isErrorTypeReason ? error.stack ?? '' : '';
             process.emitWarning(warning);
-        });
+        };
+        process.prependListener('unhandledRejection', captureUnhandledRejectionsCallback);
     }
 }
