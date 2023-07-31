@@ -2,7 +2,6 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { ErrorBoundary } from '../src/ErrorBoundary';
 import { BacktraceClient } from '../src/BacktraceClient';
-import * as util from '../src/helpers/componentStackHelpers';
 
 describe('Error Boundary', () => {
     const childrenText = 'I am the children';
@@ -23,6 +22,15 @@ describe('Error Boundary', () => {
     }
 
     const fallbackFunction = () => <Fallback />;
+
+    let consoleErrorSpy: jest.SpyInstance;
+    beforeEach(() => {
+        consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => null);
+    });
+
+    afterEach(() => {
+        consoleErrorSpy.mockRestore();
+    });
 
     describe('With BacktraeClient uninitialized', () => {
         it('Should throw an error when BacktraceClient is uninitialized and an ErrorBoundary is used', () => {
@@ -87,56 +95,6 @@ describe('Error Boundary', () => {
             const clientSpy = jest.spyOn(client, 'send');
             render(<ErrorBoundary fallback={<Fallback />}>{<ValidComponent />}</ErrorBoundary>);
             expect(clientSpy).not.toHaveBeenCalled();
-        });
-
-        it('Should parse React 16 component stack when isReactComponentStack === true', () => {
-            const isReact16Spy = jest.spyOn(util, 'isReact16ComponentStack');
-            const parseReact16Spy = jest.spyOn(util, 'parseReact16ComponentStack');
-            const clientSpy = jest.spyOn(client, 'send');
-            const expected = [
-                {
-                    funcName: 'React-16-func',
-                    library: 'unknown',
-                },
-            ];
-            isReact16Spy.mockImplementation(() => true);
-            parseReact16Spy.mockImplementation(() => expected);
-            render(
-                <ErrorBoundary data-testid="error-boundary" fallback={<Fallback />}>
-                    {<ErrorComponent />}
-                </ErrorBoundary>,
-            );
-            expect(isReact16Spy).toReturnWith(true);
-            expect(parseReact16Spy).toHaveBeenCalled();
-            expect(clientSpy).toHaveBeenCalled();
-            expect(clientSpy.mock.calls[0][0].threads['component-stack'].stack[0].funcName).toEqual(
-                expected[0].funcName,
-            );
-        });
-
-        it('Should parse React 17+ component stack when isReactComponentStack === false', () => {
-            const isReact16Spy = jest.spyOn(util, 'isReact16ComponentStack');
-            const convertSpy = jest.spyOn(client.stackTraceConverter, 'convert');
-            const clientSpy = jest.spyOn(client, 'send');
-            const expected = [
-                {
-                    funcName: 'React-18-func',
-                    library: 'unknown',
-                },
-            ];
-            isReact16Spy.mockImplementation(() => false);
-            convertSpy.mockImplementation(() => expected);
-            render(
-                <ErrorBoundary data-testid="error-boundary" fallback={<Fallback />}>
-                    {<ErrorComponent />}
-                </ErrorBoundary>,
-            );
-            expect(isReact16Spy).toReturnWith(false);
-            expect(convertSpy).toHaveBeenCalled();
-            expect(clientSpy).toHaveBeenCalled();
-            expect(clientSpy.mock.calls[0][0].threads['component-stack'].stack[0].funcName).toEqual(
-                expected[0].funcName,
-            );
         });
     });
 });

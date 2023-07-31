@@ -1,26 +1,11 @@
-import {
-    BacktraceAttributeProvider,
-    BacktraceCoreClient,
-    BacktraceRequestHandler,
-    BacktraceStackTraceConverter,
-} from '@backtrace/sdk-core';
-import { AGENT } from '@backtrace/browser';
-import { BacktraceConfiguration } from '@backtrace/browser';
-import { BacktraceClientBuilder } from '@backtrace/browser';
+import { BacktraceConfiguration, BacktraceClient as BrowserClient } from '@backtrace/browser';
+import { BacktraceReactClientBuilder } from './builder/BacktraceReactClientBuilder';
 
-export class BacktraceClient extends BacktraceCoreClient {
+export class BacktraceClient extends BrowserClient {
     private static _instance?: BacktraceClient;
-    constructor(
-        options: BacktraceConfiguration,
-        handler: BacktraceRequestHandler,
-        attributeProviders: BacktraceAttributeProvider[],
-        stackTraceConverter: BacktraceStackTraceConverter,
-    ) {
-        super(options, AGENT, handler, attributeProviders, stackTraceConverter);
-    }
 
-    public static builder(options: BacktraceConfiguration): BacktraceClientBuilder {
-        return new BacktraceClientBuilder(options);
+    public static builder(options: BacktraceConfiguration): BacktraceReactClientBuilder {
+        return new BacktraceReactClientBuilder(options);
     }
 
     public static initialize(options: BacktraceConfiguration): BacktraceClient {

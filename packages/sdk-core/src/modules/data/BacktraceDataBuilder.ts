@@ -3,6 +3,7 @@ import { SdkOptions } from '../../builder/SdkOptions';
 import { IdGenerator } from '../../common/IdGenerator';
 import { TimeHelper } from '../../common/TimeHelper';
 import { AttributeType, BacktraceData } from '../../model/data/BacktraceData';
+import { BacktraceStackTrace } from '../../model/data/BacktraceStackTrace';
 import { BacktraceReport } from '../../model/report/BacktraceReport';
 import { ReportDataBuilder } from '../attribute/ReportDataBuilder';
 
@@ -21,19 +22,7 @@ export class BacktraceDataBuilder {
         clientAnnotations: Record<string, unknown> = {},
     ): BacktraceData {
         const reportData = ReportDataBuilder.build(report.attributes);
-
-        const stackTrace = this._stackTraceConverter.convert(report.stackTrace, report.message);
-
-        let detectedDebugIdentifier = false;
-
-        for (const frame of stackTrace) {
-            const debugIdentifier = this._debugIdProvider.getDebugId(frame.library);
-            if (!debugIdentifier) {
-                continue;
-            }
-            detectedDebugIdentifier = true;
-            frame.debug_identifier = debugIdentifier;
-        }
+        const { threads, detectedDebugIdentifier } = this.getThreads(report);
 
         const result: BacktraceData = {
             uuid: IdGenerator.uuid(),
@@ -44,13 +33,7 @@ export class BacktraceDataBuilder {
             langVersion: this._sdkOptions.langVersion,
             classifiers: report.classifiers,
             mainThread: this.MAIN_THREAD_NAME,
-            threads: {
-                [this.MAIN_THREAD_NAME]: {
-                    fault: true,
-                    name: this.MAIN_THREAD_NAME,
-                    stack: stackTrace,
-                },
-            },
+            threads,
             annotations: {
                 ...clientAnnotations,
                 ...reportData.annotations,
@@ -67,5 +50,33 @@ export class BacktraceDataBuilder {
         }
 
         return result;
+    }
+
+    private getThreads(report: BacktraceReport) {
+        const threads: Record<string, BacktraceStackTrace> = {};
+        let detectedDebugIdentifier = false;
+
+        for (const [name, traceInfo] of Object.entries(report.stackTrace)) {
+            const { message, stack } = traceInfo;
+            const stackFrames = this._stackTraceConverter.convert(stack, message);
+            threads[name] = {
+                fault: name === this.MAIN_THREAD_NAME,
+                name,
+                stack: stackFrames,
+            };
+
+            for (const frame of stackFrames) {
+                const debugIdentifier = this._debugIdProvider.getDebugId(frame.library);
+                if (!debugIdentifier) {
+                    continue;
+                }
+                detectedDebugIdentifier = true;
+                frame.debug_identifier = debugIdentifier;
+            }
+        }
+        return {
+            threads,
+            detectedDebugIdentifier,
+        };
     }
 }

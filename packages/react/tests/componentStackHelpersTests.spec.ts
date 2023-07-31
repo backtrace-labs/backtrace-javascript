@@ -13,24 +13,24 @@ describe('isReact16ComponentStack', () => {
 
     it('should return false for a component stack greater than React v16 (a JS error stack - Chrome)', () => {
         const stack = `
-            at App (http://localhost:3000/static/js/bundle.js:38:80)
-            at ErrorBoundary (http://localhost:3000/static/js/bundle.js:41102:15)
+            at App (http://localhost:3000/static/js/main.js:38:80)
+            at ErrorBoundary (http://localhost:3000/static/js/main.js:41102:15)
         `;
         expect(isReact16ComponentStack(stack)).toBeFalsy();
     });
 
     it('should return false for a component stack greater than React v16 (a JS error stack - Firefox)', () => {
         const stack = `
-            App@http://localhost:3000/static/js/bundle.js:38:80
-            ErrorBoundary@http://localhost:3000/static/js/bundle.js:41102:15
+            App@http://localhost:3000/static/js/main.js:38:80
+            ErrorBoundary@http://localhost:3000/static/js/main.js:41102:15
         `;
         expect(isReact16ComponentStack(stack)).toBeFalsy();
     });
 
     it('should return false for a component stack greater than React v16 (a JS error stack - Safari)', () => {
         const stack = `
-            App@http://localhost:3000/static/js/bundle.js:38:80
-            ErrorBoundary@http://localhost:3000/static/js/bundle.js:41102:20
+            App@http://localhost:3000/static/js/main.js:38:80
+            ErrorBoundary@http://localhost:3000/static/js/main.js:41102:20
         `;
         expect(isReact16ComponentStack(stack)).toBeFalsy();
     });
@@ -64,8 +64,8 @@ describe('parseReactv16ComponentStack', () => {
 
     it('should return unknown frames for a component stack greater than React v16 (a JS error stack - Chrome)', () => {
         const stack = `
-            at App (http://localhost:3000/static/js/bundle.js:38:80)
-            at ErrorBoundary (http://localhost:3000/static/js/bundle.js:41102:15)
+            at App (http://localhost:3000/static/js/main.js:38:80)
+            at ErrorBoundary (http://localhost:3000/static/js/main.js:41102:15)
         `;
         const expected = [
             {
@@ -82,8 +82,8 @@ describe('parseReactv16ComponentStack', () => {
 
     it('should return unknown frames for a component stack greater than React v16 (a JS error stack - Firefox)', () => {
         const stack = `
-            App@http://localhost:3000/static/js/bundle.js:38:80
-            ErrorBoundary@http://localhost:3000/static/js/bundle.js:41102:15
+            App@http://localhost:3000/static/js/main.js:38:80
+            ErrorBoundary@http://localhost:3000/static/js/main.js:41102:15
         `;
         const expected = [
             {
@@ -100,8 +100,8 @@ describe('parseReactv16ComponentStack', () => {
 
     it('should return unknown frames for a component stack greater than React v16 (a JS error stack - Safari)', () => {
         const stack = `
-            App@http://localhost:3000/static/js/bundle.js:38:80
-            ErrorBoundary@http://localhost:3000/static/js/bundle.js:41102:20
+            App@http://localhost:3000/static/js/main.js:38:80
+            ErrorBoundary@http://localhost:3000/static/js/main.js:41102:20
         `;
         const expected = [
             {

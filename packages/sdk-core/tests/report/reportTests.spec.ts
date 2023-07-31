@@ -5,11 +5,11 @@ describe('Backtrace report generation tests', () => {
         const testMessage = 'test';
         const report = new BacktraceReport(testMessage);
         it('Report message should be set', () => {
-            expect(report.message).toBe(testMessage);
+            expect(report.stackTrace.main.message).toBe(testMessage);
         });
 
         it('Stack trace should be defined', () => {
-            expect(!!report.stackTrace.length).toBeTruthy();
+            expect(!!report.stackTrace.main).toBeTruthy();
         });
 
         it('Error.type attribute should be set to Message', () => {
@@ -21,11 +21,11 @@ describe('Backtrace report generation tests', () => {
         const testError = new Error('foo');
         const report = new BacktraceReport(testError);
         it('Report message should be set', () => {
-            expect(report.message).toBe(testError.message);
+            expect(report.stackTrace.main.message).toBe(testError.message);
         });
 
         it('Stack trace should be defined', () => {
-            expect(!!report.stackTrace.length).toBeTruthy();
+            expect(!!report.stackTrace.main).toBeTruthy();
         });
 
         it('Error.type attribute should be set to Message', () => {

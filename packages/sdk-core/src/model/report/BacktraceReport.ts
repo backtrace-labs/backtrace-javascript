@@ -1,6 +1,7 @@
 import { TimeHelper } from '../../common/TimeHelper';
 import { BacktraceAttachment } from '../attachment';
 import { BacktraceErrorType } from './BacktraceErrorType';
+import { BacktraceReportStackTraceInfo } from './BacktraceReportStackTraceInfo';
 
 export class BacktraceReport {
     /**
@@ -14,12 +15,7 @@ export class BacktraceReport {
     /**
      * Report stack trace
      */
-    public readonly stackTrace: string;
-
-    /**
-     * Report message
-     */
-    public readonly message: string;
+    public readonly stackTrace: Record<string, BacktraceReportStackTraceInfo> = {};
 
     /**
      * Report inner errors
@@ -36,6 +32,20 @@ export class BacktraceReport {
      */
     public skipFrames = 0;
 
+    /**
+     * Add additional stack trace to the report.
+     * If the thread name already exists it will be overwritten
+     * @param name thread name
+     * @param stack stack trace
+     * @param message error message
+     */
+    public addStackTrace(name: string, stack: string, message: string) {
+        this.stackTrace[name] = {
+            stack,
+            message,
+        };
+    }
+
     constructor(
         public readonly data: Error | string,
         public readonly attributes: Record<string, unknown> = {},
@@ -47,16 +57,22 @@ export class BacktraceReport {
         if (data instanceof Error) {
             this.annotations['error'] = data;
             this.classifiers = [data.name];
-            this.message = data.message;
-            this.stackTrace = data.stack ?? '';
+            const stackInfo = {
+                stack: data.stack ?? '',
+                message: data.message,
+            };
+            this.stackTrace['main'] = stackInfo;
 
             // Supported in ES2022
             if ((data as { cause?: unknown }).cause) {
                 this.innerReport.push((data as { cause?: unknown }).cause);
             }
         } else {
-            this.message = data;
-            this.stackTrace = new Error().stack ?? '';
+            const stackInfo = {
+                stack: new Error().stack ?? '',
+                message: data,
+            };
+            this.stackTrace['main'] = stackInfo;
             errorType = 'Message';
             this.skipFrames += 1;
         }
@@ -64,6 +80,6 @@ export class BacktraceReport {
         if (!this.attributes['error.type']) {
             this.attributes['error.type'] = errorType;
         }
-        this.attributes['error.message'] = this.message;
+        this.attributes['error.message'] = this.stackTrace['main']?.message ?? '';
     }
 }

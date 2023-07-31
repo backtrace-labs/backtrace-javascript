@@ -5,7 +5,7 @@ export function isReact16ComponentStack(stack: string): boolean {
     if (!stack) return false;
     const frames = stack.split('\n').filter((line) => !!line);
     for (const frame of frames) {
-        if (!frame.includes('in')) {
+        if (!frame.includes('in ')) {
             return false;
         }
     }
@@ -18,7 +18,7 @@ export function parseReact16ComponentStack(stack: string): BacktraceStackFrame[]
     const frames = stack.split('\n');
     for (const frame of frames) {
         if (!frame.trim()) continue;
-        const component = frame.split('in')?.[1]?.trim();
+        const component = frame.split('in ')?.[1]?.trim();
         const btFrame: BacktraceStackFrame = {
             funcName: component ?? 'unknown',
             library: 'unknown',

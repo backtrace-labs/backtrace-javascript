@@ -13,7 +13,7 @@ import { SpiderMonkeyStackTraceConverter } from '../converters/SpiderMonkeyStack
 import { getEngine } from '../engineDetector';
 
 export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<BacktraceClient> {
-    constructor(private readonly _options: BacktraceConfiguration) {
+    constructor(protected readonly _options: BacktraceConfiguration) {
         super(new BacktraceBrowserRequestHandler(_options), [
             new UserAgentAttributeProvider(),
             new WebsiteAttributeProvider(),
@@ -31,7 +31,7 @@ export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<Backtrace
         );
     }
 
-    private generateStackTraceConverter(): BacktraceStackTraceConverter {
+    protected generateStackTraceConverter(): BacktraceStackTraceConverter {
         switch (getEngine()) {
             case 'JavaScriptCore': {
                 return new JavaScriptCoreStackTraceConverter();
