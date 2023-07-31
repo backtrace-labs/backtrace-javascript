@@ -21,6 +21,8 @@ function parseNotExistingDomElement(): string {
 
 const sendErrorButton = document.getElementById('send-error') as HTMLElement;
 const sendMessageButton = document.getElementById('send-message') as HTMLElement;
+const sendUnhandledExceptionButton = document.getElementById('send-unhandled-exception') as HTMLElement;
+const sendPromiseRejectionButton = document.getElementById('send-promise-rejection') as HTMLElement;
 const generateMetricButton = document.getElementById('generate-metric') as HTMLElement;
 const sendMetricsButton = document.getElementById('send-metrics') as HTMLElement;
 
@@ -60,7 +62,20 @@ function sendMetrics() {
     client.metrics.send();
 }
 
+function unhandledPromiseRejection() {
+    console.log('unhandled promise rejection');
+    return new Promise(() => {
+        throw new Error('Promise rejection');
+    });
+}
+
+function unhandledException() {
+    console.log('unhandled exception');
+    throw new Error('unhandled exception');
+}
 sendErrorButton.onclick = sendHandledException;
 sendMessageButton.onclick = sendMessage;
 generateMetricButton.onclick = generateMetric;
 sendMetricsButton.onclick = sendMetrics;
+sendUnhandledExceptionButton.onclick = unhandledException;
+sendPromiseRejectionButton.onclick = unhandledPromiseRejection;
