@@ -67,7 +67,7 @@ describe('Client callbacks tests', () => {
             expect(client.requestHandler.postError).toHaveBeenCalled();
         });
 
-        it('Should send a report if the filter returns true ', async () => {
+        it('Should not send a report if the filter returns true ', async () => {
             const client = BacktraceTestClient.buildFakeClient({
                 skipReport: () => {
                     return true;
