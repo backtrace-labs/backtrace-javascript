@@ -8,7 +8,7 @@ import {
 } from '.';
 import { SdkOptions } from './builder/SdkOptions';
 import { BacktraceConfiguration } from './model/configuration/BacktraceConfiguration';
-import { AttributeType } from './model/data/BacktraceData';
+import { AttributeType, BacktraceData } from './model/data/BacktraceData';
 import { BacktraceReportSubmission } from './model/http/BacktraceReportSubmission';
 import { BacktraceRequestHandler } from './model/http/BacktraceRequestHandler';
 import { BacktraceReport } from './model/report/BacktraceReport';
