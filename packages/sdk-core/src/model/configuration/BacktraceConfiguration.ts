@@ -1,5 +1,6 @@
 import { BacktraceAttachment } from '../attachment';
 import { BacktraceData } from '../data/BacktraceData';
+import { BacktraceReport } from '../report/BacktraceReport';
 import { BacktraceDatabaseConfiguration } from './BacktraceDatabaseConfiguration';
 
 export interface BacktraceMetricsOptions {
@@ -64,6 +65,12 @@ export interface BacktraceConfiguration {
      */
     beforeSend?: (data: BacktraceData) => BacktraceData | undefined;
 
+    /**
+     * If you want to ignore specific types of error reports, we recommend that you use the skipReport callback.
+     * By using it, based on the data generated in the report, you can decide to filter the report, or send it to
+     * Backtrace.
+     */
+    skipReport?: (report: BacktraceReport) => boolean;
     /**
      * Limits the number of reports the client will send per minute. If set to '0', there is no limit.
      * If set to a value greater than '0' and the value is reached, the client will not send any reports until the next minute.

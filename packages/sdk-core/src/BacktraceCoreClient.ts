@@ -153,6 +153,9 @@ export abstract class BacktraceCoreClient {
             : new BacktraceReport(data, reportAttributes, [], {
                   skipFrames: this.skipFrameOnMessage(data),
               });
+        if (this.options.skipReport && this.options.skipReport(report)) {
+            return;
+        }
 
         const backtraceData = this.generateSubmissionData(report);
         if (!backtraceData) {

@@ -47,4 +47,35 @@ describe('Client callbacks tests', () => {
             expect(client.requestHandler.postError).not.toHaveBeenCalled();
         });
     });
+
+    describe('Report filtering tests', () => {
+        it('Should send a report if the filter is not set', async () => {
+            const client = BacktraceTestClient.buildFakeClient();
+
+            await client.send(new Error());
+            expect(client.requestHandler.postError).toHaveBeenCalled();
+        });
+
+        it('Should send a report if the filter returns false ', async () => {
+            const client = BacktraceTestClient.buildFakeClient({
+                skipReport: () => {
+                    return false;
+                },
+            });
+
+            await client.send(new Error());
+            expect(client.requestHandler.postError).toHaveBeenCalled();
+        });
+
+        it('Should not send a report if the filter returns true ', async () => {
+            const client = BacktraceTestClient.buildFakeClient({
+                skipReport: () => {
+                    return true;
+                },
+            });
+
+            await client.send(new Error());
+            expect(client.requestHandler.postError).not.toHaveBeenCalled();
+        });
+    });
 });
