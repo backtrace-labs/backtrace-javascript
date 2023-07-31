@@ -1,4 +1,5 @@
 import { BacktraceAttachment } from '../attachment';
+import { BacktraceData } from '../data/BacktraceData';
 import { BacktraceDatabaseConfiguration } from './BacktraceDatabaseConfiguration';
 
 export interface BacktraceMetricsOptions {
@@ -55,6 +56,13 @@ export interface BacktraceConfiguration {
     token?: string;
     timeout?: number;
     ignoreSslCertificate?: boolean;
+
+    /**
+     * Triggers an event every time an exception in the managed environment occurs, which allows you to skip the report (by returning a null value)
+     * or to modify data that library collected before sending the report. You can use the BeforeSend event to extend attributes or JSON object
+     * data based on data the application has at the time of exception.
+     */
+    beforeSend?: (data: BacktraceData) => BacktraceData | undefined;
 
     /**
      * Limits the number of reports the client will send per minute. If set to '0', there is no limit.

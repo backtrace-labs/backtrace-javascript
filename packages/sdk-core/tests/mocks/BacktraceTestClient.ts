@@ -1,6 +1,7 @@
 import {
     BacktraceAttachment,
     BacktraceAttributeProvider,
+    BacktraceConfiguration,
     BacktraceCoreClient,
     BacktraceReportSubmissionResult,
     BacktraceRequestHandler,
@@ -13,18 +14,22 @@ export const APPLICATION_VERSION = '5.4.3';
 export class BacktraceTestClient extends BacktraceCoreClient {
     public readonly requestHandler: BacktraceRequestHandler;
     constructor(
+        options: Partial<BacktraceConfiguration>,
         handler: BacktraceRequestHandler,
         attributeProviders: BacktraceAttributeProvider[] = [],
         attachments: BacktraceAttachment[] = [],
     ) {
         super(
             {
-                url: TEST_SUBMISSION_URL,
-                token: TOKEN,
-                attachments,
-                metrics: {
-                    enable: false,
+                ...{
+                    url: TEST_SUBMISSION_URL,
+                    token: TOKEN,
+                    attachments,
+                    metrics: {
+                        enable: false,
+                    },
                 },
+                ...(options ?? {}),
             },
             {
                 agent: 'test',
@@ -39,6 +44,7 @@ export class BacktraceTestClient extends BacktraceCoreClient {
     }
 
     public static buildFakeClient(
+        options: Partial<BacktraceConfiguration> = {},
         attributeProviders: BacktraceAttributeProvider[] = [],
         attachments: BacktraceAttachment[] = [],
     ) {
@@ -52,6 +58,7 @@ export class BacktraceTestClient extends BacktraceCoreClient {
             },
         });
         return new BacktraceTestClient(
+            options,
             {
                 post: jest.fn().mockResolvedValue(Promise.resolve(BacktraceReportSubmissionResult.Ok('Ok'))),
                 postError: jest.fn().mockResolvedValue(Promise.resolve()),
