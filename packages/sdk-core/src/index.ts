@@ -9,6 +9,7 @@ export * from './model/http';
 export * from './model/report/BacktraceErrorType';
 export * from './model/report/BacktraceReport';
 export * from './modules/attribute/BacktraceAttributeProvider';
+export * from './modules/breadcrumbs';
 export * from './modules/converter';
 export * from './modules/metrics/BacktraceSessionProvider';
 export * from './sourcemaps/index';

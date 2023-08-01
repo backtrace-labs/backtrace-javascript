@@ -14,6 +14,8 @@ import { BacktraceRequestHandler } from './model/http/BacktraceRequestHandler';
 import { BacktraceReport } from './model/report/BacktraceReport';
 import { AttributeManager } from './modules/attribute/AttributeManager';
 import { ClientAttributeProvider } from './modules/attribute/ClientAttributeProvider';
+import { BacktraceBreadcrumbs, BreadcrumbSetup } from './modules/breadcrumbs';
+import { BreadcrumbManager } from './modules/breadcrumbs/BreadcrumbManager';
 import { V8StackTraceConverter } from './modules/converter/V8StackTraceConverter';
 import { BacktraceDataBuilder } from './modules/data/BacktraceDataBuilder';
 import { BacktraceMetrics } from './modules/metrics/BacktraceMetrics';
@@ -59,11 +61,16 @@ export abstract class BacktraceCoreClient {
         return this._metrics;
     }
 
+    public get breadcrumbs(): BacktraceBreadcrumbs | undefined {
+        return this.breadcrumbManager;
+    }
+
     /**
      * Client cached attachments
      */
     public readonly attachments: BacktraceAttachment[];
 
+    protected readonly breadcrumbManager?: BreadcrumbManager;
     private readonly _dataBuilder: BacktraceDataBuilder;
     private readonly _reportSubmission: BacktraceReportSubmission;
     private readonly _rateLimitWatcher: RateLimitWatcher;
@@ -78,6 +85,7 @@ export abstract class BacktraceCoreClient {
         stackTraceConverter: BacktraceStackTraceConverter = new V8StackTraceConverter(),
         private readonly _sessionProvider: BacktraceSessionProvider = new SingleSessionProvider(),
         debugIdMapProvider?: DebugIdMapProvider,
+        breadcrumbsSetup?: BreadcrumbSetup,
     ) {
         this._dataBuilder = new BacktraceDataBuilder(
             this._sdkOptions,
@@ -101,6 +109,13 @@ export abstract class BacktraceCoreClient {
         if (metrics) {
             this._metrics = metrics;
             this._metrics.start();
+        }
+
+        if (options?.breadcrumbs?.enable !== false) {
+            this.breadcrumbManager = new BreadcrumbManager(options?.breadcrumbs, breadcrumbsSetup);
+            this._attributeProvider.addProvider(this.breadcrumbManager);
+            this.attachments.push(this.breadcrumbManager.breadcrumbStorage);
+            this.breadcrumbManager.start();
         }
     }
 
@@ -153,6 +168,8 @@ export abstract class BacktraceCoreClient {
             : new BacktraceReport(data, reportAttributes, [], {
                   skipFrames: this.skipFrameOnMessage(data),
               });
+
+        this.breadcrumbManager?.fromReport(report);
         if (this.options.skipReport && this.options.skipReport(report)) {
             return;
         }

@@ -21,7 +21,7 @@ describe('Node options reader', () => {
         });
 
         it('should read undefined if the option is not available', () => {
-            const value = NodeOptionReader.read('', ['']);
+            const value = NodeOptionReader.read('', [''], '');
 
             expect(value).toBeUndefined();
         });
