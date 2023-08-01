@@ -139,12 +139,6 @@ export abstract class BacktraceCoreClient {
      * @param report Backtrace Report
      */
     public async send(report: BacktraceReport): Promise<void>;
-
-    /**
-     * Asynchronously sends Backtrace data to backtrace
-     *
-     * @param backtraceData Backtrace data
-     */
     public async send(
         data: BacktraceReport | Error | string,
         reportAttributes: Record<string, unknown> = {},

@@ -33,7 +33,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
     public async componentDidCatch(error: Error, info: ErrorInfo) {
         const report = new BacktraceReport(error);
-        report.addStackTrace(this.COMPONENT_THREAD_NAME, info.componentStack, '');
+        report.addStackTrace(this.COMPONENT_THREAD_NAME, info.componentStack);
         await this._client.send(report);
     }
 

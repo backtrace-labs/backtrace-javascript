@@ -18,6 +18,11 @@ export class BacktraceReport {
     public readonly stackTrace: Record<string, BacktraceReportStackTraceInfo> = {};
 
     /**
+     * Report message
+     */
+    public readonly message: string;
+
+    /**
      * Report inner errors
      */
     public readonly innerReport: unknown[] = [];
@@ -39,7 +44,7 @@ export class BacktraceReport {
      * @param stack stack trace
      * @param message error message
      */
-    public addStackTrace(name: string, stack: string, message: string) {
+    public addStackTrace(name: string, stack: string, message = '') {
         this.stackTrace[name] = {
             stack,
             message,
@@ -57,22 +62,22 @@ export class BacktraceReport {
         if (data instanceof Error) {
             this.annotations['error'] = data;
             this.classifiers = [data.name];
-            const stackInfo = {
+            this.message = data.message;
+            this.stackTrace['main'] = {
                 stack: data.stack ?? '',
                 message: data.message,
             };
-            this.stackTrace['main'] = stackInfo;
 
             // Supported in ES2022
             if ((data as { cause?: unknown }).cause) {
                 this.innerReport.push((data as { cause?: unknown }).cause);
             }
         } else {
-            const stackInfo = {
+            this.message = data;
+            this.stackTrace['main'] = {
                 stack: new Error().stack ?? '',
                 message: data,
             };
-            this.stackTrace['main'] = stackInfo;
             errorType = 'Message';
             this.skipFrames += 1;
         }
@@ -80,6 +85,6 @@ export class BacktraceReport {
         if (!this.attributes['error.type']) {
             this.attributes['error.type'] = errorType;
         }
-        this.attributes['error.message'] = this.stackTrace['main']?.message ?? '';
+        this.attributes['error.message'] = this.message;
     }
 }

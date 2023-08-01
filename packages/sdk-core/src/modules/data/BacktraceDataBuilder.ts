@@ -59,11 +59,6 @@ export class BacktraceDataBuilder {
         for (const [name, traceInfo] of Object.entries(report.stackTrace)) {
             const { message, stack } = traceInfo;
             const stackFrames = this._stackTraceConverter.convert(stack, message);
-            threads[name] = {
-                fault: name === this.MAIN_THREAD_NAME,
-                name,
-                stack: stackFrames,
-            };
 
             for (const frame of stackFrames) {
                 const debugIdentifier = this._debugIdProvider.getDebugId(frame.library);
@@ -73,6 +68,12 @@ export class BacktraceDataBuilder {
                 detectedDebugIdentifier = true;
                 frame.debug_identifier = debugIdentifier;
             }
+
+            threads[name] = {
+                fault: name === this.MAIN_THREAD_NAME,
+                name,
+                stack: stackFrames,
+            };
         }
         return {
             threads,
