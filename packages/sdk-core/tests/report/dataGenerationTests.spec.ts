@@ -100,4 +100,21 @@ describe('Data generation tests', () => {
 
         expect(backtraceData.threads[backtraceData.mainThread].stack).toEqual(expectedFrames);
     });
+
+    it('Should generate threads from BacktraceReport.stackTrace', () => {
+        const errorReport = new BacktraceReport(new Error());
+        const secondName = 'second-stack-name';
+        const secondStack = 'second-stack';
+        const main = 'main';
+
+        errorReport.addStackTrace(secondName, secondStack);
+        const backtraceData = dataBuilder.build(errorReport);
+
+        expect(backtraceData.threads[main]).toBeDefined();
+        expect(backtraceData.threads[main].fault).toBeTruthy();
+        expect(backtraceData.threads[main].stack.length).toBeDefined();
+        expect(backtraceData.threads[secondName]).toBeDefined();
+        expect(backtraceData.threads[secondName].fault).toBeFalsy();
+        expect(backtraceData.threads[secondName].stack.length).toBeDefined();
+    });
 });
