@@ -9,6 +9,7 @@
     },
     "scripts": {
         "build": "tsc -b ./tsconfig.build.json",
+        "build:rollup": "rollup --config rollup.config.js",
         "clean": "tsc -b ./tsconfig.build.json --clean && rimraf \"lib\"",
         "format": "prettier --write '**/*.ts'",
         "lint": "eslint . --ext .ts",
@@ -37,6 +38,7 @@
     },
     "homepage": "https://github.com/backtrace-labs/backtrace-javascript#readme",
     "devDependencies": {
+        "@rollup/plugin-typescript": "^11.1.2",
         "@types/jest": "^29.5.1",
         "jest": "^29.5.0",
         "ts-jest": "^29.1.0",
@@ -45,5 +47,7 @@
     "dependencies": {
         "@backtrace/sourcemap-tools": "^0.0.1"
     },
-    "peerDependencies": {}
+    "peerDependencies": {
+        "rollup": "^3.26.3"
+    }
 }
