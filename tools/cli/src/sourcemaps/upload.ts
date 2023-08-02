@@ -1,25 +1,28 @@
 import {
+    Asset,
     AsyncResult,
     DebugIdGenerator,
     Err,
     Ok,
-    Result,
     ResultPromise,
     SourceProcessor,
     SymbolUploader,
     UploadResult,
     ZipArchive,
+    archiveSourceMaps,
     failIfEmpty,
-    flatMap,
-    passOk,
+    filter,
+    log,
+    map,
+    matchSourceMapExtension,
+    uploadArchive,
     writeStream,
 } from '@backtrace/sourcemap-tools';
-import fs from 'fs';
-import path from 'path';
 import { Readable } from 'stream';
 import { GlobalOptions } from '..';
 import { Command } from '../commands/Command';
 import { find } from '../helpers/find';
+import { logAsset } from '../helpers/logs';
 import { CliLogger, createLogger } from '../logger';
 
 interface UploadOptions extends GlobalOptions {
@@ -31,6 +34,10 @@ interface UploadOptions extends GlobalOptions {
     readonly force: boolean;
     readonly 'pass-with-no-files': boolean;
     readonly output: string;
+}
+
+interface AssetWithDebugId extends Asset {
+    readonly debugId: string;
 }
 
 export const uploadCmd = new Command<UploadOptions>({
@@ -109,74 +116,95 @@ export const uploadCmd = new Command<UploadOptions>({
             return Err('upload URL is required.');
         }
 
-        const processArchive = outputPath
-            ? saveArchive(outputPath)
+        const logDebug = log(logger, 'debug');
+        const logTrace = log(logger, 'trace');
+        const logTraceAsset = logAsset(logger, 'trace');
+        const logDebugAsset = logAsset(logger, 'debug');
+
+        const isAssetProcessedCommand = (asset: Asset) =>
+            AsyncResult.fromValue<Asset, string>(asset)
+                .then(logTraceAsset('checking if asset is processed'))
+                .then(isAssetProcessed(sourceProcessor))
+                .then(
+                    logDebug(
+                        ({ asset, result }) =>
+                            `${asset.name}: ` + (result ? 'asset is processed' : 'asset is not processed'),
+                    ),
+                )
+                .thenErr((error) => `${asset.name}: ${error}`).inner;
+
+        const filterProcessedAssetsCommand = (assets: Asset[]) =>
+            AsyncResult.fromValue<Asset[], string>(assets)
+                .then(map(isAssetProcessedCommand))
+                .then(filter((f) => f.result))
+                .then(map((f) => f.asset)).inner;
+
+        const readDebugIdCommand = (asset: Asset) =>
+            AsyncResult.fromValue<Asset, string>(asset)
+                .then(logTraceAsset('reading debug ID'))
+                .then(readDebugId(sourceProcessor))
+                .then(logDebugAsset((res) => `read debug ID: ${res.debugId}`))
+                .thenErr((error) => `${asset.name}: ${error}`).inner;
+
+        const createArchiveCommand = (assets: Asset[]) =>
+            AsyncResult.fromValue<Asset[], string>(assets)
+                .then(logTrace('creating archive'))
+                .then((assets) => archiveSourceMaps(sourceProcessor)(assets.map((a) => a.path)))
+                .then(logDebug('archive created')).inner;
+
+        const saveArchiveCommand = outputPath
+            ? (archive: ZipArchive) =>
+                  AsyncResult.fromValue<ZipArchive, string>(archive)
+                      .then(logTrace(`saving archive to ${outputPath}`))
+                      .then(saveArchive(outputPath))
+                      .then(logDebug(`saved archive to ${outputPath}`)).inner
             : uploadUrl
-            ? uploadArchive(new SymbolUploader(uploadUrl, { ignoreSsl: opts.insecure ?? false }))
+            ? (archive: ZipArchive) =>
+                  AsyncResult.fromValue<ZipArchive, string>(archive)
+                      .then(logTrace(`uploading archive to ${uploadUrl}`))
+                      .then(uploadArchive(new SymbolUploader(uploadUrl, { ignoreSsl: opts.insecure ?? false })))
+                      .then(logDebug(`archive uploaded to ${uploadUrl}`)).inner
             : undefined;
 
-        if (!processArchive) {
+        if (!saveArchiveCommand) {
             throw new Error('processArchive function should be defined');
         }
 
-        return AsyncResult.equip(find(/\.(c|m)?jsx?\.map$/, ...searchPaths))
-            .then(opts.force ? passOk : filterProcessedFiles(sourceProcessor))
-            .then(readDebugIds(sourceProcessor))
-            .then(opts['pass-with-no-files'] ? passOk : failIfEmpty('no files for uploading found'))
-            .then(createArchiveForUpload)
-            .then((archive) => (opts['dry-run'] ? Ok(null) : processArchive(archive)))
+        return AsyncResult.equip(find(...searchPaths))
+            .then(logDebug((r) => `found ${r.length} files`))
+            .then(map(logTrace((path) => `found file: ${path}`)))
+            .then(filter(matchSourceMapExtension))
+            .then(logDebug((r) => `found ${r.length} files matching sourcemap extension`))
+            .then(map(logTrace((path) => `file matching extension: ${path}`)))
+            .then(map(toAsset))
+            .then(opts.force ? Ok : filterProcessedAssetsCommand)
+            .then(map(readDebugIdCommand))
+            .then(logDebug((r) => `uploading ${r.length} files`))
+            .then(map(logTrace(({ path }) => `file to upload: ${path}`)))
+            .then(opts['pass-with-no-files'] ? Ok : failIfEmpty('no files for uploading found'))
+            .then(createArchiveCommand)
+            .then((archive) => (opts['dry-run'] ? Ok(null) : saveArchiveCommand(archive)))
             .then(output(logger))
             .then(() => 0).inner;
     });
 
-function filterProcessedFiles(sourceProcessor: SourceProcessor) {
-    return async function filterProcessedFiles(files: string[]): Promise<Result<string[], string>> {
-        return flatMap(
-            await Promise.all(
-                files.map(
-                    (file) =>
-                        AsyncResult.equip(sourceProcessor.isSourceMapFileProcessed(file)).then(
-                            (result) => [file, result] as const,
-                        ).inner,
-                ),
-            ),
-        ).map((results) => results.filter(([, result]) => result).map(([file]) => file));
+function toAsset(file: string): Asset {
+    return { name: file, path: file };
+}
+
+function isAssetProcessed(sourceProcessor: SourceProcessor) {
+    return function isAssetProcessed(asset: Asset) {
+        return AsyncResult.equip(sourceProcessor.isSourceMapFileProcessed(asset.path)).then(
+            (result) => ({ asset, result } as const),
+        ).inner;
     };
 }
 
-function readDebugIds(sourceProcessor: SourceProcessor) {
-    return async function readDebugIds(files: string[]): Promise<Result<(readonly [string, string])[], string>> {
-        return flatMap(
-            await Promise.all(
-                files.map(
-                    (file) =>
-                        AsyncResult.equip(sourceProcessor.getSourceMapFileDebugId(file)).then(
-                            (result) => [file, result] as const,
-                        ).inner,
-                ),
-            ),
-        );
-    };
-}
-
-async function createArchiveForUpload(
-    pathsToArchive: (readonly [string, string])[],
-): ResultPromise<ZipArchive, string> {
-    const archive = new ZipArchive();
-
-    for (const [filePath, debugId] of pathsToArchive) {
-        const fileName = path.basename(filePath);
-        const readStream = fs.createReadStream(filePath);
-        archive.append(`${debugId}-${fileName}`, readStream);
-    }
-
-    await archive.finalize();
-    return Ok(archive);
-}
-
-function uploadArchive(symbolUploader: SymbolUploader) {
-    return async function uploadArchive(stream: Readable): ResultPromise<UploadResult, string> {
-        return await symbolUploader.uploadSymbol(stream);
+function readDebugId(sourceProcessor: SourceProcessor) {
+    return async function readDebugId(asset: Asset): ResultPromise<AssetWithDebugId, string> {
+        return AsyncResult.equip(sourceProcessor.getSourceMapFileDebugId(asset.path)).then<AssetWithDebugId>(
+            (debugId) => ({ ...asset, debugId }),
+        ).inner;
     };
 }
 
