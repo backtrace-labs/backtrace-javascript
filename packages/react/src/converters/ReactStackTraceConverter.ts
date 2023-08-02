@@ -17,7 +17,9 @@ export class ReactStackTraceConverter implements BacktraceStackTraceConverter {
         return this.stackTraceConverter.convert(stackTrace, message);
     }
 
-    /** React 16 component stacks need to be parsed separately. React 17+ component stacks can be parsed like Error stacks */
+    /**
+     * React 16 component stacks need to be parsed separately. React 17+ component stacks can be parsed like Error stacks
+     */
     private isReact16ComponentStack(stack: string): boolean {
         if (!stack) {
             return false;
