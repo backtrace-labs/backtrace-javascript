@@ -54,10 +54,6 @@ export function pass<T>(t: T): T {
     return t;
 }
 
-export function passOk<T>(t: T): Result<T, never> {
-    return Ok(t);
-}
-
 export function failIfEmpty<E>(error: E) {
     return function failIfEmpty<T>(t: T[]): Result<T[], E> {
         return t.length ? Ok(t) : Err(error);
@@ -70,11 +66,21 @@ export function map<T, B>(fn: (t: T) => B) {
     };
 }
 
+export function filter<T>(fn: (t: T) => boolean) {
+    return function filter(t: T[]) {
+        return t.filter(fn);
+    };
+}
+
 export function log(logger: Logger, level: LogLevel) {
     return function log<T>(message: string | ((t: T) => string)) {
-        return function log(t: T): T {
-            logger[level](typeof message === 'function' ? message(t) : message);
-            return t;
-        };
+        return inspect<T>((t) => logger[level](typeof message === 'function' ? message(t) : message));
+    };
+}
+
+export function inspect<T>(fn: (t: T) => unknown) {
+    return function inspect(t: T): T {
+        fn(t);
+        return t;
     };
 }
