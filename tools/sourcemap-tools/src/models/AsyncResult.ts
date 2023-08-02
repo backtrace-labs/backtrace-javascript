@@ -1,4 +1,4 @@
-import { Result, ResultErr, ResultOk, flatMap, wrapErr, wrapOk } from './Result';
+import { Ok, Result, ResultErr, ResultOk, flatMap, wrapErr, wrapOk } from './Result';
 
 export type ResultPromise<T, E> = Promise<Result<T, E>>;
 
@@ -24,8 +24,19 @@ export class AsyncResult<T, E> {
         return new AsyncResult(new Promise((resolve) => resolve(fnResult)));
     }
 
+    public static fromValue<T, E = never>(value: T) {
+        return new AsyncResult<T, E>(new Promise((resolve) => resolve(Ok(value))));
+    }
+
     public then<N>(
-        transform: (data: T) => Result<N, E>[] | Promise<Result<N, E>[]> | Promise<Result<N, E>>[],
+        transform: (
+            data: T,
+        ) =>
+            | Result<N[], E>
+            | Result<N, E>[]
+            | Promise<Result<N[], E>>
+            | Promise<Result<N, E>[]>
+            | Promise<Result<N, E>>[],
     ): AsyncResult<N[], E>;
     public then<N>(transform: (data: T) => Result<N, E> | Promise<Result<N, E>>): AsyncResult<N, E>;
     public then<N>(transform: (data: T) => N | Promise<N>): AsyncResult<N, E>;
@@ -33,11 +44,11 @@ export class AsyncResult<T, E> {
         transform: (
             data: T,
         ) =>
-            | Result<N, E>
-            | Promise<Result<N, E>>
-            | Promise<Result<N, E>>[]
-            | Result<N, E>[]
-            | Promise<Result<N, E>[]>
+            | Result<N, never>
+            | Promise<Result<N, never>[]>
+            | Promise<Result<N, never>>[]
+            | Result<N, never>[]
+            | Promise<Result<N, never>>
             | N
             | Promise<N>,
     ): AsyncResult<N | N[], E> {
@@ -72,7 +83,7 @@ export class AsyncResult<T, E> {
     public thenErr<N>(transform: (data: E) => Promise<N>): AsyncResult<T, N>;
     public thenErr<N>(transform: (data: E) => N): AsyncResult<T, N>;
     public thenErr<N>(transform: (data: E) => Result<T, N> | N | Promise<N | Result<T, N>>): AsyncResult<T, N>;
-    public thenErr<N>(transform: (data: E) => Result<T, N> | N | Promise<N | Result<T, N>>): AsyncResult<T, N> {
+    public thenErr<N>(transform: (data: E) => Result<never, N> | N | Promise<N | Result<never, N>>): AsyncResult<T, N> {
         return new AsyncResult<T, N>(
             this._promise.then((result) => {
                 if (!result.isErr()) {
