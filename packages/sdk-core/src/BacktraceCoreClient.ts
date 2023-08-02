@@ -14,8 +14,8 @@ import { BacktraceRequestHandler } from './model/http/BacktraceRequestHandler';
 import { BacktraceReport } from './model/report/BacktraceReport';
 import { AttributeManager } from './modules/attribute/AttributeManager';
 import { ClientAttributeProvider } from './modules/attribute/ClientAttributeProvider';
-import { BacktraceBreadcrumbs, BreadcrumbSetup } from './modules/breadcrumbs';
-import { BreadcrumbManager } from './modules/breadcrumbs/BreadcrumbManager';
+import { BacktraceBreadcrumbs, BreadcrumbsSetup } from './modules/breadcrumbs';
+import { BreadcrumbsManager } from './modules/breadcrumbs/BreadcrumbsManager';
 import { V8StackTraceConverter } from './modules/converter/V8StackTraceConverter';
 import { BacktraceDataBuilder } from './modules/data/BacktraceDataBuilder';
 import { BacktraceMetrics } from './modules/metrics/BacktraceMetrics';
@@ -62,7 +62,7 @@ export abstract class BacktraceCoreClient {
     }
 
     public get breadcrumbs(): BacktraceBreadcrumbs | undefined {
-        return this.breadcrumbManager;
+        return this.breadcrumbsManager;
     }
 
     /**
@@ -70,7 +70,7 @@ export abstract class BacktraceCoreClient {
      */
     public readonly attachments: BacktraceAttachment[];
 
-    protected readonly breadcrumbManager?: BreadcrumbManager;
+    protected readonly breadcrumbsManager?: BreadcrumbsManager;
     private readonly _dataBuilder: BacktraceDataBuilder;
     private readonly _reportSubmission: BacktraceReportSubmission;
     private readonly _rateLimitWatcher: RateLimitWatcher;
@@ -85,7 +85,7 @@ export abstract class BacktraceCoreClient {
         stackTraceConverter: BacktraceStackTraceConverter = new V8StackTraceConverter(),
         private readonly _sessionProvider: BacktraceSessionProvider = new SingleSessionProvider(),
         debugIdMapProvider?: DebugIdMapProvider,
-        breadcrumbsSetup?: BreadcrumbSetup,
+        breadcrumbsSetup?: BreadcrumbsSetup,
     ) {
         this._dataBuilder = new BacktraceDataBuilder(
             this._sdkOptions,
@@ -111,11 +111,11 @@ export abstract class BacktraceCoreClient {
             this._metrics.start();
         }
 
-        if (options?.breadcrumbs?.enable !== false) {
-            this.breadcrumbManager = new BreadcrumbManager(options?.breadcrumbs, breadcrumbsSetup);
-            this._attributeProvider.addProvider(this.breadcrumbManager);
-            this.attachments.push(this.breadcrumbManager.breadcrumbStorage);
-            this.breadcrumbManager.start();
+        if (options.breadcrumbs?.enable !== false) {
+            this.breadcrumbsManager = new BreadcrumbsManager(options?.breadcrumbs, breadcrumbsSetup);
+            this._attributeProvider.addProvider(this.breadcrumbsManager);
+            this.attachments.push(this.breadcrumbsManager.breadcrumbsStorage);
+            this.breadcrumbsManager.start();
         }
     }
 
@@ -169,7 +169,7 @@ export abstract class BacktraceCoreClient {
                   skipFrames: this.skipFrameOnMessage(data),
               });
 
-        this.breadcrumbManager?.fromReport(report);
+        this.breadcrumbsManager?.logReport(report);
         if (this.options.skipReport && this.options.skipReport(report)) {
             return;
         }

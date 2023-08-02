@@ -27,7 +27,7 @@ export interface BacktraceMetricsOptions {
     size?: number;
 }
 
-export interface BacktraceBreadcrumbsSettigs {
+export interface BacktraceBreadcrumbsSettings {
     /**
      * Determines if the breadcrumbs support is enabled. By default the value is set to true.
      */
@@ -118,7 +118,7 @@ export interface BacktraceConfiguration {
     /**
      * Breadcrumbs settings
      */
-    breadcrumbs?: BacktraceBreadcrumbsSettigs;
+    breadcrumbs?: BacktraceBreadcrumbsSettings;
     /**
      * Offline database settings
      */

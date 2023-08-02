@@ -3,7 +3,7 @@ import { AttributeType } from '../../../model/data/BacktraceData';
 import { BreadcrumbLogLevel } from '../model/BreadcrumbLogLevel';
 import { BreadcrumbType } from '../model/BreadcrumbType';
 
-export interface BreadcrumbStorage extends BacktraceAttachment {
+export interface BreadcrumbsStorage extends BacktraceAttachment {
     /**
      * Id of the last breadcrumb added to the SDK
      */

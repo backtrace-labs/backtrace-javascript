@@ -1,5 +1,5 @@
 import { format } from 'util';
-import { BreadcrumbManager } from '../BreadcrumbManager';
+import { BreadcrumbsManager } from '../BreadcrumbsManager';
 import { BreadcrumbLogLevel } from '../model/BreadcrumbLogLevel';
 import { BreadcrumbType } from '../model/BreadcrumbType';
 import { BreadcrumbsEventSubscriber } from './BreadcrurmbsEventSubscriber';
@@ -11,7 +11,7 @@ export class ConsoleEventSubscriber implements BreadcrumbsEventSubscriber {
      */
     private readonly _events: Record<string, ConsoleMethod> = {};
 
-    public start(breadcrumbsManager: BreadcrumbManager): void {
+    public start(breadcrumbsManager: BreadcrumbsManager): void {
         this.bindToConsoleMethod('log', BreadcrumbLogLevel.Info, breadcrumbsManager);
         this.bindToConsoleMethod('warn', BreadcrumbLogLevel.Warning, breadcrumbsManager);
         this.bindToConsoleMethod('error', BreadcrumbLogLevel.Error, breadcrumbsManager);
@@ -26,7 +26,11 @@ export class ConsoleEventSubscriber implements BreadcrumbsEventSubscriber {
         }
     }
 
-    private bindToConsoleMethod(name: keyof Console, level: BreadcrumbLogLevel, breadcrumbsManager: BreadcrumbManager) {
+    private bindToConsoleMethod(
+        name: keyof Console,
+        level: BreadcrumbLogLevel,
+        breadcrumbsManager: BreadcrumbsManager,
+    ) {
         const originalMethod = console[name] as ConsoleMethod;
         const defaultImplementation = originalMethod.bind(console);
 

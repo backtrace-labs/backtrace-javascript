@@ -3,9 +3,9 @@ import { AttributeType } from '../../../model/data/BacktraceData';
 import { Breadcrumb } from '../model/Breadcrumb';
 import { BreadcrumbLogLevel } from '../model/BreadcrumbLogLevel';
 import { BreadcrumbType } from '../model/BreadcrumbType';
-import { BreadcrumbStorage } from './BreadcrumbStorage';
+import { BreadcrumbsStorage } from './BreadcrumbsStorage';
 
-export class InMemoryBreadcrumbsStorage implements BreadcrumbStorage {
+export class InMemoryBreadcrumbsStorage implements BreadcrumbsStorage {
     public get lastBreadcrumbId(): number {
         return this._lastBreadcrumbId;
     }
