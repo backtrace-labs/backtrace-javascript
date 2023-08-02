@@ -12,6 +12,14 @@
             "sourceMaps": true,
             "type": "pwa-node",
             "console": "integratedTerminal"
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Launch React Example App",
+            "url": "http://localhost:3000",
+            "webRoot": "${workspaceFolder}/examples/sdk/react/",
+            "sourceMaps": true
         }
     ]
 }

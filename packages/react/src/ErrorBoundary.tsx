@@ -1,5 +1,6 @@
 import { Component, ErrorInfo, ReactElement, ReactNode, isValidElement } from 'react';
 import { BacktraceClient } from './BacktraceClient';
+import { BacktraceReport } from '.';
 
 type RenderFallback = () => ReactElement;
 
@@ -15,6 +16,7 @@ export interface State {
 
 export class ErrorBoundary extends Component<Props, State> {
     private _client: BacktraceClient;
+    private COMPONENT_THREAD_NAME = 'component-stack';
     constructor(props: Props) {
         super(props);
         this.state = {
@@ -25,12 +27,14 @@ export class ErrorBoundary extends Component<Props, State> {
         this._client = BacktraceClient.instance;
     }
 
-    static getDerivedStateFromError(error: Error) {
+    public static getDerivedStateFromError(error: Error) {
         return { hasError: true, error };
     }
 
-    componentDidCatch(error: Error, info: ErrorInfo) {
-        this._client.send(error);
+    public async componentDidCatch(error: Error, info: ErrorInfo) {
+        const report = new BacktraceReport(error);
+        report.addStackTrace(this.COMPONENT_THREAD_NAME, info.componentStack);
+        await this._client.send(report);
     }
 
     render() {

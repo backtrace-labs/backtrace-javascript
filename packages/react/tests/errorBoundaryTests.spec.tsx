@@ -23,6 +23,15 @@ describe('Error Boundary', () => {
 
     const fallbackFunction = () => <Fallback />;
 
+    let consoleErrorSpy: jest.SpyInstance;
+    beforeEach(() => {
+        consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => null);
+    });
+
+    afterEach(() => {
+        consoleErrorSpy.mockRestore();
+    });
+
     describe('With BacktraeClient uninitialized', () => {
         it('Should throw an error when BacktraceClient is uninitialized and an ErrorBoundary is used', () => {
             expect(() =>
@@ -39,6 +48,11 @@ describe('Error Boundary', () => {
                 name: 'test',
                 version: '1.0.0',
             });
+        });
+
+        afterEach(() => {
+            client = undefined as unknown as BacktraceClient;
+            jest.restoreAllMocks();
         });
 
         it('Should not throw an error when BacktraceClient is initialized and an ErrorBoundary is used', () => {
