@@ -5,11 +5,13 @@ import {
     ProcessResultWithPaths,
     Result,
     SourceProcessor,
+    failIfEmpty,
     flatMap,
+    passOk,
+    writeFile,
 } from '@backtrace/sourcemap-tools';
 import { GlobalOptions } from '..';
 import { Command } from '../commands/Command';
-import { failIfEmpty, passOk, writeFile } from '../helpers/common';
 import { find } from '../helpers/find';
 import { CliLogger, createLogger } from '../logger';
 

@@ -1,7 +1,20 @@
-import { AsyncResult, DebugIdGenerator, Err, SourceProcessor, flatMap } from '@backtrace/sourcemap-tools';
+import {
+    AsyncResult,
+    ContentFile,
+    DebugIdGenerator,
+    Err,
+    SourceProcessor,
+    failIfEmpty,
+    flatMap,
+    map,
+    parseJSON,
+    pass,
+    passOk,
+    readFile,
+    writeFile,
+} from '@backtrace/sourcemap-tools';
 import { GlobalOptions } from '..';
 import { Command } from '../commands/Command';
-import { ContentFile, failIfEmpty, map, parseJSON, pass, passOk, readFile, writeFile } from '../helpers/common';
 import { find } from '../helpers/find';
 import { CliLogger, createLogger } from '../logger';
 

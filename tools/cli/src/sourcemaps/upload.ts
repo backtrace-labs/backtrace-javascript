@@ -9,14 +9,16 @@ import {
     SymbolUploader,
     UploadResult,
     ZipArchive,
+    failIfEmpty,
     flatMap,
+    passOk,
+    writeStream,
 } from '@backtrace/sourcemap-tools';
 import fs from 'fs';
 import path from 'path';
 import { Readable } from 'stream';
 import { GlobalOptions } from '..';
 import { Command } from '../commands/Command';
-import { failIfEmpty, passOk, writeStream } from '../helpers/common';
 import { find } from '../helpers/find';
 import { CliLogger, createLogger } from '../logger';
 
