@@ -153,19 +153,19 @@ The following options are available for the BacktraceClientOptions passed when i
 
 | Option Name | Type | Description | Default | Required? |
 |-|-|-|-|-|
-| `url` | String | Submission URL to send errors to | | <ul><li>[x]</li></ul> |
-| `name` | String | Application name | | <ul><li>[x]</li></ul> |
-| `version` | String | Application version | | <ul><li>[x]</li></ul> |
-| `captureUnhandledErrors` | Boolean | Enable unhandled errors | `true` | <ul><li>[ ]</li></ul> |
-| `captureUnhandledPromiseRejections` | Boolean | Enable unhandled promise rejection | `true` | <ul><li>[ ]</li></ul> |
-| `token` | String | The submission token for error injestion.  This is required only if submitting directly to a Backtrace URL.| | <ul><li>[ ]</li></ul> |
-| `timeout` | Integer | How long to wait in ms before timing out the connection | `15000` | <ul><li>[ ]</li></ul> |
-| `ignoreSslCertificate` | Boolean | Ignore SSL Certificate errors | `false` | <ul><li>[ ]</li></ul> |
-| `rateLimit` | Integer | Limits the number of reports the client will send per minute. If set to '0', there is no limit. If set to a value greater than '0' and the value is reached, the client will not send any reports until the next minute. |  | <ul><li>[ ]</li></ul> |
-| `userAttributes` | Dictionary | Additional data that can be filtered and aggregated against in the Backtrace UI  | | <ul><li>[ ]</li></ul> |
-| `attachments` | BacktraceAttachment[] | Additional files that can be sent with error to Backtrace.  See [Attaching Files](#attaching-files) | | <ul><li>[ ]</li></ul> |
-| `metrics` | BacktraceMetricsOptions | See [Backtrace Metrics](#backtrace-metrics) | | <ul><li>[ ]</li></ul> |
-| `database` | BacktraceDatabaseOptions | See [Backtrace Database](#backtrace-database) | |<ul><li>[ ]</li></ul> |
+| `url` | String | Submission URL to send errors to | | <ul><li>- [x]</li></ul> |
+| `name` | String | Application name | | <ul><li>- [x]</li></ul> |
+| `version` | String | Application version | | <ul><li>- [x]</li></ul> |
+| `captureUnhandledErrors` | Boolean | Enable unhandled errors | `true` | <ul><li>- [ ]</li></ul> |
+| `captureUnhandledPromiseRejections` | Boolean | Enable unhandled promise rejection | `true` | <ul><li>- [ ]</li></ul> |
+| `token` | String | The submission token for error injestion.  This is required only if submitting directly to a Backtrace URL.| | <ul><li>- [ ]</li></ul> |
+| `timeout` | Integer | How long to wait in ms before timing out the connection | `15000` | <ul><li>- [ ]</li></ul> |
+| `ignoreSslCertificate` | Boolean | Ignore SSL Certificate errors | `false` | <ul><li>- [ ]</li></ul> |
+| `rateLimit` | Integer | Limits the number of reports the client will send per minute. If set to '0', there is no limit. If set to a value greater than '0' and the value is reached, the client will not send any reports until the next minute. |  | <ul><li>- [ ]</li></ul> |
+| `userAttributes` | Dictionary | Additional data that can be filtered and aggregated against in the Backtrace UI  | | <ul><li>- [ ]</li></ul> |
+| `attachments` | BacktraceAttachment[] | Additional files that can be sent with error to Backtrace.  See [Attaching Files](#attaching-files) | | <ul><li>- [ ]</li></ul> |
+| `metrics` | BacktraceMetricsOptions | See [Backtrace Metrics](#backtrace-metrics) | | <ul><li>- [ ]</li></ul> |
+| `database` | BacktraceDatabaseOptions | See [Backtrace Database](#backtrace-database) | |<ul><li>- [ ]</li></ul> |
 
 ##
 
