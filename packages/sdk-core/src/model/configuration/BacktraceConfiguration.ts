@@ -1,3 +1,4 @@
+import { BreadcrumbLogLevel, BreadcrumbType } from '../../modules/breadcrumbs';
 import { BacktraceAttachment } from '../attachment';
 import { BacktraceData } from '../data/BacktraceData';
 import { BacktraceReport } from '../report/BacktraceReport';
@@ -24,6 +25,29 @@ export interface BacktraceMetricsOptions {
      * Indicates how many events the metrics storage can store before auto submission.
      */
     size?: number;
+}
+
+export interface BacktraceBreadcrumbsSettings {
+    /**
+     * Determines if the breadcrumbs support is enabled. By default the value is set to true.
+     */
+    enable?: boolean;
+
+    /**
+     * Specifies which log level severity to include. By default all logs are included.
+     */
+    logLevel?: BreadcrumbLogLevel;
+
+    /**
+     * Specifies which breadcrumb type to include. By default all types are included.
+     */
+    eventType?: BreadcrumbType;
+
+    /**
+     * Specifies maximum number of breadcrumbs stored by the library. By default, only 100 breacrumbs
+     * wil be stored.
+     */
+    maximumBreadcrumbs?: number;
 }
 
 export interface BacktraceConfiguration {
@@ -90,6 +114,11 @@ export interface BacktraceConfiguration {
      * Metrics such as crash free users and crash free sessions
      */
     metrics?: BacktraceMetricsOptions;
+
+    /**
+     * Breadcrumbs settings
+     */
+    breadcrumbs?: BacktraceBreadcrumbsSettings;
     /**
      * Offline database settings
      */

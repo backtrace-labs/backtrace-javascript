@@ -13,6 +13,9 @@ describe('Client tests', () => {
         metrics: {
             enable: false,
         },
+        breadcrumbs: {
+            enable: false,
+        },
     };
     let client: BacktraceClient;
     it('Should create a client', () => {

@@ -28,8 +28,11 @@ describe('Client tests', () => {
     });
 
     describe('Attachment tests', () => {
+        const disabledBreadcrumbsConfiguration = {
+            breadcrumbs: { enable: false },
+        };
         it(`Should generate an empty attachment list`, async () => {
-            const client = BacktraceTestClient.buildFakeClient();
+            const client = BacktraceTestClient.buildFakeClient(disabledBreadcrumbsConfiguration);
 
             expect(client.attachments).toBeDefined();
             expect(client.attachments.length).toEqual(0);
@@ -43,7 +46,11 @@ describe('Client tests', () => {
                 },
             };
 
-            const client = BacktraceTestClient.buildFakeClient({}, [], [inMemoryAttachment]);
+            const client = BacktraceTestClient.buildFakeClient(
+                disabledBreadcrumbsConfiguration,
+                [],
+                [inMemoryAttachment],
+            );
 
             expect(client.attachments).toBeDefined();
             expect(client.attachments.length).toEqual(1);
@@ -51,7 +58,7 @@ describe('Client tests', () => {
         });
 
         it(`Should allow to add more attachments`, async () => {
-            const client = BacktraceTestClient.buildFakeClient();
+            const client = BacktraceTestClient.buildFakeClient(disabledBreadcrumbsConfiguration);
             const inMemoryAttachment = {
                 name: 'client-in-memory-test',
                 get() {
@@ -69,7 +76,7 @@ describe('Client tests', () => {
         it(`Should allow to use string attachment`, async () => {
             const expectedAttachmentContent = 'test';
             const testedAttachment = new BacktraceStringAttachment('client-add-test', expectedAttachmentContent);
-            const client = BacktraceTestClient.buildFakeClient();
+            const client = BacktraceTestClient.buildFakeClient(disabledBreadcrumbsConfiguration);
             client.attachments.push(testedAttachment);
 
             expect(client.attachments).toBeDefined();
@@ -90,7 +97,11 @@ describe('Client tests', () => {
                     return new Uint8Array(0);
                 },
             };
-            const client = BacktraceTestClient.buildFakeClient({}, [], [clientAttachment]);
+            const client = BacktraceTestClient.buildFakeClient(
+                disabledBreadcrumbsConfiguration,
+                [],
+                [clientAttachment],
+            );
 
             await client.send(new Error(''), {}, [reportAttachment]);
 
