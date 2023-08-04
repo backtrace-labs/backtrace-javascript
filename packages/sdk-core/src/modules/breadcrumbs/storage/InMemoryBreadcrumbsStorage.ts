@@ -1,4 +1,5 @@
 import { TimeHelper } from '../../../common/TimeHelper';
+import { OverwritingArray } from '../../../dataStructures/OverwritingArray';
 import { AttributeType } from '../../../model/data/BacktraceData';
 import { Breadcrumb } from '../model/Breadcrumb';
 import { BreadcrumbLogLevel } from '../model/BreadcrumbLogLevel';
@@ -15,16 +16,18 @@ export class InMemoryBreadcrumbsStorage implements BreadcrumbsStorage {
     public readonly name: string = 'bt-breadcrumbs-0';
 
     private _lastBreadcrumbId: number = TimeHelper.toTimestampInSec(TimeHelper.now());
-    private _breadcrumbs: Breadcrumb[] = [];
+    private _breadcrumbs: OverwritingArray<Breadcrumb>;
 
-    constructor(private readonly _maximumBreadcrumbs: number = 100) {}
+    constructor(maximumBreadcrumbs = 100) {
+        this._breadcrumbs = new OverwritingArray<Breadcrumb>(maximumBreadcrumbs);
+    }
 
     /**
      * Returns breadcrumbs in the JSON format
      * @returns Breadcrumbs JSON
      */
     public get(): string {
-        return JSON.stringify(this._breadcrumbs);
+        return JSON.stringify([...this._breadcrumbs.values()]);
     }
 
     public add(
@@ -47,11 +50,7 @@ export class InMemoryBreadcrumbsStorage implements BreadcrumbsStorage {
             breadcrumb.attributes = attributes;
         }
 
-        this._breadcrumbs.push(breadcrumb);
-
-        if (this._maximumBreadcrumbs < this._breadcrumbs.length) {
-            this._breadcrumbs = this._breadcrumbs.slice(this._breadcrumbs.length - this._maximumBreadcrumbs);
-        }
+        this._breadcrumbs.add(breadcrumb);
 
         return id;
     }
