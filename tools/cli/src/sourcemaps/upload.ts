@@ -201,14 +201,6 @@ function isAssetProcessed(sourceProcessor: SourceProcessor) {
     };
 }
 
-// function readDebugId(sourceProcessor: SourceProcessor) {
-//     return async function readDebugId(asset: Asset): ResultPromise<AssetWithDebugId, string> {
-//         return AsyncResult.equip(sourceProcessor.getSourceMapFileDebugId(asset.path)).then<AssetWithDebugId>(
-//             (debugId) => ({ ...asset, debugId }),
-//         ).inner;
-//     };
-// }
-
 function saveArchive(filePath: string) {
     return async function saveArchive(stream: Readable): ResultPromise<UploadResult, string> {
         return AsyncResult.equip(writeStream([stream, filePath])).then(([, rxid]) => ({ rxid })).inner;
