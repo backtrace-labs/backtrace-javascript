@@ -7,6 +7,12 @@ export class OverwritingArrayIterator<T> implements IterableIterator<T> {
         return new OverwritingArrayIterator(this._source, this._offset, this._size);
     }
     next(): IteratorResult<T> {
+        if (this._size === 0) {
+            return {
+                done: true,
+                value: undefined,
+            };
+        }
         if (this._index === undefined) {
             this._index = 0;
         } else if (this._index === this._size - 1) {
