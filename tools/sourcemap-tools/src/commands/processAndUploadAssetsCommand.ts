@@ -1,16 +1,26 @@
+import { RawSourceMap } from 'source-map';
 import { DebugIdGenerator } from '../DebugIdGenerator';
 import { SourceProcessor } from '../SourceProcessor';
 import { SymbolUploader, SymbolUploaderOptions, UploadResult } from '../SymbolUploader';
 import { ZipArchive } from '../ZipArchive';
-import { inspect, pass } from '../helpers/common';
-import { Asset } from '../models/Asset';
+import { inspect, map, pass } from '../helpers/common';
+import { Asset, AssetWithContent } from '../models/Asset';
 import { AsyncResult } from '../models/AsyncResult';
 import { ProcessAssetError, ProcessAssetResult } from '../models/ProcessAssetResult';
 import { Result, flatMap, isErr } from '../models/Result';
 import { archiveSourceMaps } from './archiveSourceMaps';
+import { loadSourceMap, stripSourcesContent } from './loadSourceMaps';
 import { processAsset } from './processAsset';
 import { uploadArchive } from './uploadArchive';
 import { writeAsset } from './writeAsset';
+
+interface BacktracePluginUploadOptions {
+    /**
+     * By default, `sourcesContent` in sourcemaps will not be uploaded to Backtrace, even if available in the sourcemap.
+     * Set this to `true` to upload sourcemaps with `sourcesContent` if available.
+     */
+    readonly includeSources: boolean;
+}
 
 export interface BacktracePluginOptions {
     /**
@@ -24,7 +34,7 @@ export interface BacktracePluginOptions {
     /**
      * Additional upload options.
      */
-    readonly uploadOptions?: SymbolUploaderOptions;
+    readonly uploadOptions?: SymbolUploaderOptions & BacktracePluginUploadOptions;
 }
 
 interface ProcessResult {
@@ -40,12 +50,14 @@ export interface ProcessAndUploadAssetsCommandOptions {
     beforeWrite?(asset: ProcessAssetResult): unknown;
     afterWrite?(asset: ProcessAssetResult): unknown;
     assetFinished?(asset: ProcessAssetResult): unknown;
-    beforeArchive?(paths: string[]): void;
-    afterArchive?(archive: ZipArchive): void;
-    beforeUpload?(archive: ZipArchive): void;
-    afterUpload?(result: UploadResult): void;
-    assetError?(error: ProcessAssetError): void;
-    uploadError?(error: string): void;
+    beforeLoad?(asset: Asset): unknown;
+    afterLoad?(asset: AssetWithContent<RawSourceMap>): unknown;
+    beforeArchive?(assets: AssetWithContent<RawSourceMap>[]): unknown;
+    afterArchive?(archive: ZipArchive): unknown;
+    beforeUpload?(archive: ZipArchive): unknown;
+    afterUpload?(result: UploadResult): unknown;
+    assetError?(error: ProcessAssetError): unknown;
+    uploadError?(error: string): unknown;
 }
 
 export function processAndUploadAssetsCommand(
@@ -92,8 +104,24 @@ export function processAndUploadAssetsCommand(
             return result;
         }
 
-        const sourceMapPaths = assetsResult.data.map((r) => r.result.sourceMapPath);
-        const uploadResult = await AsyncResult.fromValue<string[], string>(sourceMapPaths)
+        const sourceMapAssets = assetsResult.data.map<Asset>((r) => ({
+            name: r.asset.name,
+            path: r.result.sourceMapPath,
+        }));
+
+        const includeSources = pluginOptions?.uploadOptions?.includeSources;
+
+        const uploadResult = await AsyncResult.fromValue<Asset[], string>(sourceMapAssets)
+            .then(
+                map(
+                    (asset) =>
+                        AsyncResult.fromValue<Asset, string>(asset)
+                            .then(options?.beforeLoad ? inspect(options?.beforeLoad) : pass)
+                            .then(loadSourceMap)
+                            .then(options?.afterLoad ? inspect(options?.afterLoad) : pass)
+                            .then(includeSources ? pass : stripSourcesContent).inner,
+                ),
+            )
             .then(options?.beforeArchive ? inspect(options.beforeArchive) : pass)
             .then(archiveCommand)
             .then(options?.afterArchive ? inspect(options.afterArchive) : pass)
