@@ -202,7 +202,7 @@ export class SourceProcessor {
     }
 
     public doesSourceMapHaveSources(sourceMap: RawSourceMap): boolean {
-        return sourceMap.sources.length === sourceMap.sourcesContent?.length;
+        return sourceMap.sources?.length === sourceMap.sourcesContent?.length;
     }
 
     private async offsetSourceMap(
