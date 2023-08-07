@@ -1,3 +1,4 @@
+import path from 'path';
 import { RawSourceMap } from 'source-map';
 import { DebugIdGenerator } from '../DebugIdGenerator';
 import { SourceProcessor } from '../SourceProcessor';
@@ -105,7 +106,7 @@ export function processAndUploadAssetsCommand(
         }
 
         const sourceMapAssets = assetsResult.data.map<Asset>((r) => ({
-            name: r.asset.name,
+            name: path.basename(r.result.sourceMapPath),
             path: r.result.sourceMapPath,
         }));
 
