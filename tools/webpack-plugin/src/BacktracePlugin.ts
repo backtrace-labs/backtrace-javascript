@@ -1,7 +1,11 @@
-import { Asset, matchSourceExtension, processAndUploadAssetsCommand } from '@backtrace/sourcemap-tools';
+import {
+    Asset,
+    BacktracePluginOptions,
+    matchSourceExtension,
+    processAndUploadAssetsCommand,
+} from '@backtrace/sourcemap-tools';
 import path from 'path';
 import webpack, { WebpackPluginInstance } from 'webpack';
-import { BacktracePluginOptions } from './models/BacktracePluginOptions';
 
 export class BacktracePlugin implements WebpackPluginInstance {
     constructor(public readonly options?: BacktracePluginOptions) {}
