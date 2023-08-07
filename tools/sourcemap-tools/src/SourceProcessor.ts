@@ -1,10 +1,10 @@
-import fs from 'fs';
 import path from 'path';
 import { BasicSourceMapConsumer, Position, RawSourceMap, SourceMapConsumer, SourceMapGenerator } from 'source-map';
 import { DebugIdGenerator } from './DebugIdGenerator';
+import { parseJSON, readFile } from './helpers/common';
 import { appendBeforeWhitespaces } from './helpers/stringHelpers';
 import { stringToUuid } from './helpers/stringToUuid';
-import { ResultPromise } from './models/AsyncResult';
+import { AsyncResult, ResultPromise } from './models/AsyncResult';
 import { Err, Ok, Result } from './models/Result';
 
 export interface ProcessResult {
@@ -30,28 +30,13 @@ export class SourceProcessor {
     }
 
     public async isSourceFileProcessed(sourcePath: string): ResultPromise<boolean, string> {
-        const readResult = await this.readFile(sourcePath);
-        if (readResult.isErr()) {
-            return readResult;
-        }
-
-        return Ok(this.isSourceProcessed(readResult.data));
+        return AsyncResult.equip(readFile(sourcePath)).then((v) => this.isSourceProcessed(v)).inner;
     }
 
     public async isSourceMapFileProcessed(sourceMapPath: string): ResultPromise<boolean, string> {
-        const readResult = await this.readFile(sourceMapPath);
-        if (readResult.isErr()) {
-            return readResult;
-        }
-
-        let sourcemap: RawSourceMap;
-        try {
-            sourcemap = JSON.parse(readResult.data) as RawSourceMap;
-        } catch (err) {
-            return Err('failed to parse sourcemap JSON');
-        }
-
-        return Ok(this.isSourceMapProcessed(sourcemap));
+        return AsyncResult.equip(readFile(sourceMapPath))
+            .then(parseJSON<RawSourceMap>)
+            .then((v) => this.isSourceMapProcessed(v)).inner;
     }
 
     public getSourceMapDebugId(sourceMap: RawSourceMap): Result<string, string> {
@@ -64,24 +49,9 @@ export class SourceProcessor {
     }
 
     public async getSourceMapFileDebugId(sourceMapPath: string): ResultPromise<string, string> {
-        const readResult = await this.readFile(sourceMapPath);
-        if (readResult.isErr()) {
-            return readResult;
-        }
-
-        let sourcemap: RawSourceMap;
-        try {
-            sourcemap = JSON.parse(readResult.data) as RawSourceMap;
-        } catch (err) {
-            return Err('failed to parse sourcemap JSON');
-        }
-
-        const debugId = this._debugIdGenerator.getSourceMapDebugId(sourcemap);
-        if (!debugId) {
-            return Err('sourcemap does not have a debug ID');
-        }
-
-        return Ok(debugId);
+        return AsyncResult.equip(readFile(sourceMapPath))
+            .then(parseJSON<RawSourceMap>)
+            .then((sourceMap) => this.getSourceMapDebugId(sourceMap)).inner;
     }
 
     /**
@@ -139,7 +109,7 @@ export class SourceProcessor {
         sourceMapPath?: string,
         debugId?: string,
     ): ResultPromise<ProcessResultWithPaths, string> {
-        const sourceReadResult = await this.readFile(sourcePath);
+        const sourceReadResult = await readFile(sourcePath);
         if (sourceReadResult.isErr()) {
             return sourceReadResult;
         }
@@ -154,7 +124,7 @@ export class SourceProcessor {
             sourceMapPath = path.resolve(path.dirname(sourcePath), match[1]);
         }
 
-        const sourceMapReadResult = await this.readFile(sourceMapPath);
+        const sourceMapReadResult = await readFile(sourceMapPath);
         if (sourceMapReadResult.isErr()) {
             return sourceMapReadResult;
         }
@@ -178,7 +148,11 @@ export class SourceProcessor {
         sourceMapPath: string,
     ): ResultPromise<RawSourceMap, string> {
         if (typeof sourceMap === 'string') {
-            sourceMap = JSON.parse(sourceMap) as RawSourceMap;
+            const parseResult = parseJSON<RawSourceMap>(sourceMap);
+            if (parseResult.isErr()) {
+                return parseResult;
+            }
+            sourceMap = parseResult.data;
         }
 
         const sourceRoot = sourceMap.sourceRoot
@@ -187,7 +161,7 @@ export class SourceProcessor {
 
         const sourcesContent: string[] = [];
         for (const sourcePath of sourceMap.sources) {
-            const readResult = await this.readFile(path.resolve(sourceRoot, sourcePath));
+            const readResult = await readFile(path.resolve(sourceRoot, sourcePath));
             if (readResult.isErr()) {
                 return readResult;
             }
@@ -210,8 +184,15 @@ export class SourceProcessor {
         fromLine: number,
         count: number,
     ): ResultPromise<RawSourceMap, string> {
-        const sourceMapObj = typeof sourceMap === 'string' ? (JSON.parse(sourceMap) as RawSourceMap) : sourceMap;
-        const consumer = (await new SourceMapConsumer(sourceMapObj)) as BasicSourceMapConsumer;
+        if (typeof sourceMap === 'string') {
+            const parseResult = parseJSON<RawSourceMap>(sourceMap);
+            if (parseResult.isErr()) {
+                return parseResult;
+            }
+            sourceMap = parseResult.data;
+        }
+
+        const consumer = (await new SourceMapConsumer(sourceMap)) as BasicSourceMapConsumer;
         const newSourceMap = new SourceMapGenerator({
             file: consumer.file,
             sourceRoot: consumer.sourceRoot,
@@ -238,14 +219,6 @@ export class SourceProcessor {
         });
 
         const newSourceMapJson = newSourceMap.toJSON();
-        return Ok({ ...sourceMapObj, ...newSourceMapJson });
-    }
-
-    private async readFile(file: string): ResultPromise<string, string> {
-        try {
-            return Ok(await fs.promises.readFile(file, 'utf-8'));
-        } catch (err) {
-            return Err(`failed to read file: ${err instanceof Error ? err.message : 'unknown error'}`);
-        }
+        return Ok({ ...sourceMap, ...newSourceMapJson });
     }
 }
