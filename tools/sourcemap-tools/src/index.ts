@@ -1,3 +1,4 @@
+export { RawSourceMap } from 'source-map';
 export * from './DebugIdGenerator';
 export * from './FileFinder';
 export * from './Logger';

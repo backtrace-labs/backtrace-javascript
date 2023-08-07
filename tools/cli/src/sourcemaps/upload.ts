@@ -149,7 +149,7 @@ export const uploadCmd = new Command<UploadOptions>({
         const createArchiveCommand = (assets: Asset[]) =>
             AsyncResult.fromValue<Asset[], string>(assets)
                 .then(logTrace('creating archive'))
-                .then((assets) => archiveSourceMaps(sourceProcessor)(assets.map((a) => a.path)))
+                .then((assets) => archiveSourceMaps(sourceProcessor)(assets as never)) // TODO: Fix this
                 .then(logDebug('archive created')).inner;
 
         const saveArchiveCommand = outputPath

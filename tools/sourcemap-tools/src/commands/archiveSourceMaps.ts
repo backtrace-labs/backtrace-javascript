@@ -1,40 +1,34 @@
-import fs from 'fs';
 import path from 'path';
+import { RawSourceMap } from 'source-map';
 import { SourceProcessor } from '../SourceProcessor';
 import { ZipArchive } from '../ZipArchive';
+import { map } from '../helpers/common';
+import { AssetWithContent, AssetWithDebugId } from '../models/Asset';
 import { AsyncResult, ResultPromise } from '../models/AsyncResult';
-import { Ok, Result, flatMap } from '../models/Result';
+import { Ok, Result } from '../models/Result';
+
+type AssetWithDebugIdAndSourceMap = AssetWithContent<RawSourceMap> & AssetWithDebugId;
 
 export function archiveSourceMaps(sourceProcessor: SourceProcessor) {
-    return function archiveSourceMaps(sourceMaps: string[]) {
-        return AsyncResult.fromValue<string[], string>(sourceMaps)
-            .then(readDebugIds(sourceProcessor))
+    return function archiveSourceMaps(sourceMaps: AssetWithContent<RawSourceMap>[]) {
+        return AsyncResult.fromValue<AssetWithContent<RawSourceMap>[], string>(sourceMaps)
+            .then(map(readDebugId(sourceProcessor)))
             .then(createArchive).inner;
     };
 }
 
-function readDebugIds(sourceProcessor: SourceProcessor) {
-    return async function readDebugIds(files: string[]): Promise<Result<(readonly [string, string])[], string>> {
-        return flatMap(
-            await Promise.all(
-                files.map(
-                    (file) =>
-                        AsyncResult.equip(sourceProcessor.getSourceMapFileDebugId(file)).then(
-                            (result) => [file, result] as const,
-                        ).inner,
-                ),
-            ),
-        );
+export function readDebugId(sourceProcessor: SourceProcessor) {
+    return function readDebugId(asset: AssetWithContent<RawSourceMap>): Result<AssetWithDebugIdAndSourceMap, string> {
+        return sourceProcessor.getSourceMapDebugId(asset.content).map((debugId) => ({ ...asset, debugId }));
     };
 }
 
-async function createArchive(pathsToArchive: (readonly [string, string])[]): ResultPromise<ZipArchive, string> {
+export async function createArchive(assets: AssetWithDebugIdAndSourceMap[]): ResultPromise<ZipArchive, string> {
     const archive = new ZipArchive();
 
-    for (const [filePath, debugId] of pathsToArchive) {
-        const fileName = path.basename(filePath);
-        const readStream = fs.createReadStream(filePath);
-        archive.append(`${debugId}-${fileName}`, readStream);
+    for (const asset of assets) {
+        const fileName = path.basename(asset.name);
+        archive.append(`${asset.debugId}-${fileName}`, JSON.stringify(asset.content));
     }
 
     await archive.finalize();
