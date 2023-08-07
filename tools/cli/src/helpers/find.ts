@@ -1,4 +1,4 @@
-import { Err, FileFinder, Ok, ResultPromise } from '@backtrace/sourcemap-tools';
+import { FileFinder, Ok, ResultPromise } from '@backtrace/sourcemap-tools';
 import fs from 'fs';
 import { glob } from 'glob';
 import path from 'path';
@@ -9,7 +9,7 @@ import path from 'path';
  * @param paths Paths to search in.
  * @returns Result with file paths.
  */
-export async function find(regex: RegExp, ...paths: string[]): ResultPromise<string[], string> {
+export async function find(...paths: string[]): ResultPromise<string[], string> {
     const finder = new FileFinder();
     const results = new Map<string, string>();
 
@@ -18,9 +18,6 @@ export async function find(regex: RegExp, ...paths: string[]): ResultPromise<str
         for (const findPath of globResults) {
             const stat = await fs.promises.stat(findPath);
             if (!stat.isDirectory()) {
-                if (!findPath.match(regex)) {
-                    return Err(`${findPath} does not match regex: ${regex}`);
-                }
                 const fullPath = path.resolve(findPath);
                 if (!results.has(fullPath)) {
                     results.set(fullPath, findPath);
@@ -28,7 +25,7 @@ export async function find(regex: RegExp, ...paths: string[]): ResultPromise<str
                 continue;
             }
 
-            const findResult = await finder.find(findPath, { match: regex, recursive: true });
+            const findResult = await finder.find(findPath, { recursive: true });
             if (findResult.isErr()) {
                 return findResult;
             }

@@ -1,16 +1,24 @@
 import {
+    Asset,
     AsyncResult,
     DebugIdGenerator,
     Err,
-    ProcessResultWithPaths,
-    Result,
+    Ok,
+    ProcessAssetError,
+    ProcessAssetResult,
     SourceProcessor,
-    flatMap,
+    failIfEmpty,
+    filter,
+    log,
+    map,
+    matchSourceExtension,
+    processAsset,
+    writeAsset,
 } from '@backtrace/sourcemap-tools';
 import { GlobalOptions } from '..';
 import { Command } from '../commands/Command';
-import { failIfEmpty, passOk, writeFile } from '../helpers/common';
 import { find } from '../helpers/find';
+import { logAsset } from '../helpers/logs';
 import { CliLogger, createLogger } from '../logger';
 
 interface ProcessOptions extends GlobalOptions {
@@ -62,54 +70,75 @@ export const processCmd = new Command<ProcessOptions>({
             return Err('path must be specified');
         }
 
-        return AsyncResult.equip(find(/\.(c|m)?jsx?$/, ...searchPaths))
-            .then(opts.force ? passOk : filterUnprocessedFiles(sourceProcessor))
-            .then(opts['pass-with-no-files'] ? passOk : failIfEmpty('no files for processing found'))
-            .then(processFiles(sourceProcessor))
-            .then(opts['dry-run'] ? passOk : writeResults)
-            .then(output(logger))
+        const logDebug = log(logger, 'debug');
+        const logTrace = log(logger, 'trace');
+        const logDebugAsset = logAsset(logger, 'debug');
+        const logTraceAsset = logAsset(logger, 'trace');
+
+        const isAssetProcessedCommand = (asset: Asset) =>
+            AsyncResult.fromValue<Asset, string>(asset)
+                .then(logTraceAsset('checking if asset is processed'))
+                .then(isAssetProcessed(sourceProcessor))
+                .then(
+                    logDebug(
+                        ({ asset, result }) =>
+                            `${asset.name}: ` + (result ? 'asset is processed' : 'asset is not processed'),
+                    ),
+                )
+                .thenErr((error) => `${asset.name}: ${error}`).inner;
+
+        const filterUnprocessedAssetsCommand = (assets: Asset[]) =>
+            AsyncResult.fromValue<Asset[], string>(assets)
+                .then(map(isAssetProcessedCommand))
+                .then(filter((f) => !f.result))
+                .then(map((f) => f.asset)).inner;
+
+        const processCommand = (asset: Asset) =>
+            AsyncResult.fromValue<Asset, ProcessAssetError>(asset)
+                .then(logTraceAsset('processing file'))
+                .then(processAsset(sourceProcessor))
+                .then(logDebugAsset('file processed'))
+                .thenErr(({ asset, error }) => `${asset.name}: ${error}`).inner;
+
+        const writeCommand = (result: ProcessAssetResult) =>
+            AsyncResult.fromValue<ProcessAssetResult, ProcessAssetError>(result)
+                .then(logTraceAsset('writing file'))
+                .then(writeAsset)
+                .then(logDebugAsset('file written'))
+                .thenErr(({ asset, error }) => `${asset.name}: ${error}`).inner;
+
+        return AsyncResult.equip(find(...searchPaths))
+            .then(logDebug((r) => `found ${r.length} files`))
+            .then(map(logTrace((path) => `found file: ${path}`)))
+            .then(filter(matchSourceExtension))
+            .then(logDebug((r) => `found ${r.length} files matching source extension`))
+            .then(map(logTrace((path) => `file matching extension: ${path}`)))
+            .then(map(toAsset))
+            .then(opts.force ? Ok : filterUnprocessedAssetsCommand)
+            .then(logDebug((r) => `processing ${r.length} files`))
+            .then(map(logTrace(({ path }) => `file to process: ${path}`)))
+            .then(opts['pass-with-no-files'] ? Ok : failIfEmpty('no files for processing found'))
+            .then(map(processCommand))
+            .then(opts['dry-run'] ? Ok : map(writeCommand))
+            .then(map(output(logger)))
             .then(() => 0).inner;
     });
 
-function filterUnprocessedFiles(sourceProcessor: SourceProcessor) {
-    return async function filterUnprocessedFiles(files: string[]): Promise<Result<string[], string>> {
-        return flatMap(
-            await Promise.all(
-                files.map(
-                    (file) =>
-                        AsyncResult.equip(sourceProcessor.isSourceFileProcessed(file)).then(
-                            (result) => [file, result] as const,
-                        ).inner,
-                ),
-            ),
-        ).map((results) => results.filter(([, result]) => !result).map(([file]) => file));
+function toAsset(file: string): Asset {
+    return { name: file, path: file };
+}
+
+function isAssetProcessed(sourceProcessor: SourceProcessor) {
+    return function isAssetProcessed(asset: Asset) {
+        return AsyncResult.equip(sourceProcessor.isSourceFileProcessed(asset.path)).then(
+            (result) => ({ asset, result } as const),
+        ).inner;
     };
-}
-
-function processFiles(sourceProcessor: SourceProcessor) {
-    return async function processFiles(pathsToProcess: string[]) {
-        return flatMap(
-            await Promise.all(pathsToProcess.map((file) => sourceProcessor.processSourceAndSourceMapFiles(file))),
-        );
-    };
-}
-
-async function writeResults(results: ProcessResultWithPaths[]) {
-    return flatMap(await Promise.all(results.map(writeResult)));
-}
-
-function writeResult(result: ProcessResultWithPaths) {
-    return AsyncResult.equip(writeFile([result.source, result.sourcePath]))
-        .then(() => writeFile([JSON.stringify(result.sourceMap), result.sourceMapPath]))
-        .then(() => result).inner;
 }
 
 function output(logger: CliLogger) {
-    return function output(files: ProcessResultWithPaths[]) {
-        for (const { sourcePath } of files) {
-            logger.output(sourcePath);
-        }
-
-        return files;
+    return function output(result: ProcessAssetResult) {
+        logger.output(result.result.sourcePath);
+        return result;
     };
 }
