@@ -10,7 +10,7 @@ import { BacktraceDatabaseFileRecord } from './BacktraceDatabaseFileRecord';
 export class BacktraceDatabaseFileStorageProvider implements BacktraceDatabaseStorageProvider {
     private _enabled = true;
 
-    private readonly RECORD_SUFFIX = '-recod.json';
+    private readonly RECORD_SUFFIX = '-record.json';
     private constructor(private readonly _path: string, private readonly _createDatabaseDirectory: boolean = false) {}
 
     /**
@@ -24,10 +24,15 @@ export class BacktraceDatabaseFileStorageProvider implements BacktraceDatabaseSt
         if (!options) {
             return undefined;
         }
-        if (!options.enabled || !options.path) {
+        if (!options.enabled) {
             return undefined;
         }
 
+        if (options.enabled && !options.path) {
+            throw new Error(
+                'Missing mandatory path to the database. Please define the database.path option in the configuration.',
+            );
+        }
         return new BacktraceDatabaseFileStorageProvider(options.path, options.createDatabaseDirectory);
     }
 
@@ -37,13 +42,15 @@ export class BacktraceDatabaseFileStorageProvider implements BacktraceDatabaseSt
             return false;
         }
 
-        let databaseDirectoryExists = fs.existsSync(this._path);
-        if (this._createDatabaseDirectory !== false && !databaseDirectoryExists) {
-            fs.mkdirSync(this._path, { recursive: true });
-            databaseDirectoryExists = true;
+        const databaseDirectoryExists = fs.existsSync(this._path);
+        if (this._createDatabaseDirectory === false) {
+            return databaseDirectoryExists;
         }
-
-        return databaseDirectoryExists;
+        if (databaseDirectoryExists) {
+            return true;
+        }
+        fs.mkdirSync(this._path, { recursive: true });
+        return true;
     }
 
     public async delete(record: BacktraceDatabaseRecord): Promise<boolean> {

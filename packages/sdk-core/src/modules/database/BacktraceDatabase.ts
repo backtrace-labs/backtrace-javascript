@@ -156,11 +156,7 @@ export class BacktraceDatabase {
     }
 
     private async sendRecords() {
-        let submissionFailure = false;
         for (let bucketIndex = 0; bucketIndex < this._databaseRecordContext.bucketCount; bucketIndex++) {
-            if (submissionFailure) {
-                break;
-            }
             for (const record of this._databaseRecordContext.getBucket(bucketIndex)) {
                 if (record.locked) {
                     continue;
@@ -172,9 +168,8 @@ export class BacktraceDatabase {
                         this.remove(record);
                         continue;
                     }
-                    submissionFailure = true;
                     this._databaseRecordContext.increaseBucket(bucketIndex);
-                    break;
+                    return;
                 } finally {
                     record.locked = false;
                 }
