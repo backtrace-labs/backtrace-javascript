@@ -64,13 +64,18 @@ function sendMetrics() {
     client.metrics.send();
 }
 function showMenu() {
+    const options = [
+        ['Send an exception', (attributes: Record<string, number>) => sendHandledException(attributes)],
+        ['Send a message', (attributes: Record<string, number>) => sendMessage('test message', attributes)],
+        ['Throw rejected promise', () => rejectPromise('Rejected promise')],
+        ['Add a new summed event', (attributes: Record<string, number>) => addEvent('Option clicked', attributes)],
+        ['Send all metrics', sendMetrics],
+    ] as const;
+
     const menu =
         `Please pick one of available options:\n` +
-        `1. Send an exception\n` +
-        `2. Send a message\n` +
-        `3. Throw rejected promise\n` +
-        `4. Add a new summed event\n` +
-        `5. Send all metrics\n` +
+        options.map(([name], i) => `${i + 1}. ${name}`).join('\n') +
+        '\n' +
         `0. Exit\n` +
         `Type the option number:`;
     reader.question(menu, async function executeUserOption(optionString: string) {
@@ -79,32 +84,17 @@ function showMenu() {
         const attributes = { selectedOption: option };
 
         switch (option) {
-            case 1: {
-                await sendHandledException(attributes);
-                break;
-            }
-            case 2: {
-                await sendMessage('test message', attributes);
-                break;
-            }
-            case 3: {
-                rejectPromise('Rejected promise');
-                break;
-            }
-            case 4: {
-                addEvent('Option clicked', attributes);
-                break;
-            }
-            case 5: {
-                sendMetrics();
-                break;
-            }
             case 0: {
                 reader.close();
                 return exit(0);
             }
             default: {
-                console.log('Selected invalid option. Please try again.');
+                const selected = options[option - 1];
+                if (selected) {
+                    await selected[1](attributes);
+                } else {
+                    console.log('Selected invalid option. Please try again.');
+                }
             }
         }
         return showMenu();
