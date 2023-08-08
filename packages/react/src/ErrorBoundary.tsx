@@ -7,7 +7,7 @@ type RenderFallback = () => ReactElement;
 export interface Props {
     children: ReactNode;
     fallback?: ReactElement | RenderFallback;
-    name: string;
+    name?: string;
 }
 
 export interface State {
@@ -34,7 +34,10 @@ export class ErrorBoundary extends Component<Props, State> {
 
     public async componentDidCatch(error: Error, info: ErrorInfo) {
         const { name } = this.props;
-        const report = new BacktraceReport(error, { 'errorboundary.name': name, 'error.type': 'Rendering error' });
+        const report = new BacktraceReport(error, {
+            'errorboundary.name': name ?? 'main',
+            'error.type': 'Rendering error',
+        });
         report.addStackTrace(this.COMPONENT_THREAD_NAME, info.componentStack);
         await this._client.send(report);
     }
