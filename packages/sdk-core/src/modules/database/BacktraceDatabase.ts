@@ -1,14 +1,10 @@
 import { IdGenerator } from '../../common/IdGenerator';
 import { BacktraceAttachment } from '../../model/attachment';
-import {
-    BacktraceDatabaseConfiguration,
-    DeduplicationStrategy,
-} from '../../model/configuration/BacktraceDatabaseConfiguration';
+import { BacktraceDatabaseConfiguration } from '../../model/configuration/BacktraceDatabaseConfiguration';
 import { BacktraceData } from '../../model/data/BacktraceData';
 import { BacktraceReportSubmission } from '../../model/http/BacktraceReportSubmission';
 import { BacktraceDatabaseContext } from './BacktraceDatabaseContext';
 import { BacktraceDatabaseStorageProvider } from './BacktraceDatabaseStorageProvider';
-import { DeduplicationModel } from './DeduplicationModel';
 import { BacktraceDatabaseRecord } from './model/BacktraceDatabaseRecord';
 export class BacktraceDatabase {
     /**
@@ -19,7 +15,6 @@ export class BacktraceDatabase {
     }
 
     private readonly _databaseRecordContext: BacktraceDatabaseContext;
-    private readonly _deduplicationModel: DeduplicationModel;
 
     private readonly _maximumRecords: number;
     private readonly _retryInterval: number;
@@ -33,9 +28,6 @@ export class BacktraceDatabase {
         private readonly _requestHandler: BacktraceReportSubmission,
     ) {
         this._databaseRecordContext = new BacktraceDatabaseContext(this._options?.maximumRetries);
-        this._deduplicationModel = new DeduplicationModel(
-            this._options?.deduplicationStrategy ?? DeduplicationStrategy.None,
-        );
         this._maximumRecords = this._options?.maximumNumberOfRecords ?? 8;
         this._retryInterval = this._options?.retryInterval ?? 60_000;
     }
@@ -79,21 +71,12 @@ export class BacktraceDatabase {
             return undefined;
         }
 
-        const dataHash = this._deduplicationModel.getSha(backtraceData);
-        if (dataHash) {
-            const existingRecord = this._databaseRecordContext.find((record) => record.hash === dataHash);
-            if (existingRecord) {
-                existingRecord.count++;
-                return existingRecord;
-            }
-        }
-
         this.prepareDatabase();
 
         const record = {
             count: 1,
             data: backtraceData,
-            hash: dataHash,
+            hash: '',
             id: IdGenerator.uuid(),
             locked: false,
             attachments: attachments,
