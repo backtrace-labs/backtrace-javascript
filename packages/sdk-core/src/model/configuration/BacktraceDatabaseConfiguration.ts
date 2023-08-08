@@ -18,7 +18,7 @@ export enum DeduplicationStrategy {
     /**
      * Aggregates by faulting callstack, exception type, and exception message
      */
-    All = ~(~0 << 4),
+    All = ~(~0 << 4) - 1,
 }
 export interface EnabledBacktraceDatabaseConfiguration {
     /**
@@ -55,16 +55,11 @@ export interface EnabledBacktraceDatabaseConfiguration {
     maximumNumberOfRecords?: number;
 
     /**
-     * The maximum database size in MB. When the limit is reached, the oldest reports are removed.
-     * If the value is equal to '0', then no limit is set.
-     * The default value is 0 (unlimited)
-     */
-    maximumDatabaseSizeInMb?: number;
-    /**
      * The amount of time (in ms) to wait between retries if the database is unable to send a report.
      * The default value is 60 000
      */
     retryInterval?: number;
+
     /**
      * The maximum number of retries to attempt if the database is unable to send a report.
      * The default value is 3

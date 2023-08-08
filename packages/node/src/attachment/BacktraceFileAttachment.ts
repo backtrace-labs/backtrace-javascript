@@ -5,14 +5,14 @@ import { Readable } from 'stream';
 
 export class BacktraceFileAttachment implements BacktraceAttachment<Readable> {
     public readonly name: string;
-    constructor(private readonly _filePath: string) {
-        this.name = path.basename(this._filePath);
+    constructor(public readonly filePath: string) {
+        this.name = path.basename(this.filePath);
     }
 
     public get(): fs.ReadStream | undefined {
-        if (!fs.existsSync(this._filePath)) {
+        if (!fs.existsSync(this.filePath)) {
             return undefined;
         }
-        return fs.createReadStream(this._filePath);
+        return fs.createReadStream(this.filePath);
     }
 }

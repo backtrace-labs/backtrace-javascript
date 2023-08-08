@@ -11,7 +11,7 @@ const reader = readline.createInterface({
 
 const client = BacktraceClient.builder({
     url: SUBMISSION_URL,
-    attachments: [path.join(path.dirname(process.cwd()), 'samplefile.txt')],
+    attachments: [path.join(process.cwd(), 'samplefile.txt')],
     rateLimit: 5,
     userAttributes: {
         'custom-attribute': 'test',
@@ -19,6 +19,10 @@ const client = BacktraceClient.builder({
             prop1: true,
             prop2: 123,
         },
+    },
+    database: {
+        enabled: true,
+        path: path.join(process.cwd(), 'database'),
     },
 }).build();
 
