@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import './App.css';
-import { BacktraceClient } from '@backtrace/react';
+import { BacktraceClient, ErrorBoundary } from '@backtrace/react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { SUBMISSION_URL } from './consts';
+import InnerFallback from './components/InnerFallback';
+import ButtonWithError from './components/ButtonWithError';
 
 function App() {
     const [clicked, setClicked] = useState(false);
@@ -50,8 +52,11 @@ function App() {
                 </p>
                 <div className="column">
                     <button className="action-button" onClick={() => setClicked(true)}>
-                        <span className="action-button-text">Trigger ErrorBoundary</span>
+                        <span className="action-button-text">Trigger Main ErrorBoundary</span>
                     </button>
+                    <ErrorBoundary name="inner-boundary" fallback={<InnerFallback />}>
+                        <ButtonWithError />
+                    </ErrorBoundary>
                     <button className="action-button" onClick={() => sendError()}>
                         <span className="action-button-text">Send an error</span>
                     </button>

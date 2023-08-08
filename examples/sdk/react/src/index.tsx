@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { ErrorBoundary, BacktraceClient } from '@backtrace/react';
-import { Fallback } from './Fallback';
+import Fallback from './components/Fallback';
 import { SUBMISSION_URL } from './consts';
 
 BacktraceClient.initialize({
@@ -21,7 +21,7 @@ BacktraceClient.initialize({
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 root.render(
     <React.StrictMode>
-        <ErrorBoundary fallback={<Fallback />}>
+        <ErrorBoundary name="main-boundary" fallback={<Fallback />}>
             <App />
         </ErrorBoundary>
     </React.StrictMode>,
