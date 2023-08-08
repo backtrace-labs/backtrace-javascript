@@ -63,6 +63,34 @@ function sendMetrics() {
     }
     client.metrics.send();
 }
+
+function oom() {
+    function allocateMemory(size: number) {
+        const numbers = size / 8;
+        const arr = [];
+        arr.length = numbers;
+        for (let i = 0; i < numbers; i++) {
+            arr[i] = i;
+        }
+        return arr;
+    }
+
+    const TIME_INTERVAL_IN_MSEC = 40;
+    const memoryLeakAllocations = [];
+
+    console.log('This may take a while dependning on Node memory limits.');
+    console.log('For best results, start with --max-old-space-size set to a low value, like 100.');
+    console.log('e.g. node --max-old-space-size=100 lib/index.js');
+    setInterval(() => {
+        const allocation = allocateMemory(10 * 1024 * 1024);
+        memoryLeakAllocations.push(allocation);
+    }, TIME_INTERVAL_IN_MSEC);
+
+    return new Promise(() => {
+        // Never resolve
+    });
+}
+
 function showMenu() {
     const options = [
         ['Send an exception', (attributes: Record<string, number>) => sendHandledException(attributes)],
@@ -70,6 +98,7 @@ function showMenu() {
         ['Throw rejected promise', () => rejectPromise('Rejected promise')],
         ['Add a new summed event', (attributes: Record<string, number>) => addEvent('Option clicked', attributes)],
         ['Send all metrics', sendMetrics],
+        ['OOM', oom],
     ] as const;
 
     const menu =
@@ -78,6 +107,7 @@ function showMenu() {
         '\n' +
         `0. Exit\n` +
         `Type the option number:`;
+
     reader.question(menu, async function executeUserOption(optionString: string) {
         const option = parseInt(optionString);
 
