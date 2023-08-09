@@ -26,6 +26,7 @@ export class DocumentEventSubscriber implements BreadcrumbsEventSubscriber {
                         id: target.id,
                         class: target.className,
                         name: target.tagName,
+                        text: (target as { text?: string })?.text,
                     },
                 );
             },
@@ -50,6 +51,7 @@ export class DocumentEventSubscriber implements BreadcrumbsEventSubscriber {
                         id: target.id,
                         class: target.className,
                         name: target.tagName,
+                        text: (target as { text?: string })?.text,
                     },
                 );
             },
