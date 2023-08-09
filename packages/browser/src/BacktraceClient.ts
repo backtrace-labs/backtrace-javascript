@@ -4,6 +4,7 @@ import {
     BacktraceReport,
     BacktraceRequestHandler,
     BacktraceStackTraceConverter,
+    BreadcrumbsEventSubscriber,
     DebugIdContainer,
     VariableDebugIdMapProvider,
 } from '@backtrace/sdk-core';
@@ -18,6 +19,7 @@ export class BacktraceClient extends BacktraceCoreClient {
         handler: BacktraceRequestHandler,
         attributeProviders: BacktraceAttributeProvider[],
         stackTraceConverter: BacktraceStackTraceConverter,
+        breadcrumbsEventSubscriber: BreadcrumbsEventSubscriber[],
     ) {
         super(
             options,
@@ -27,6 +29,9 @@ export class BacktraceClient extends BacktraceCoreClient {
             stackTraceConverter,
             new BacktraceBrowserSessionProvider(),
             new VariableDebugIdMapProvider(window as DebugIdContainer),
+            {
+                subscribers: breadcrumbsEventSubscriber,
+            },
         );
 
         this.captureUnhandledErrors(options.captureUnhandledErrors, options.captureUnhandledPromiseRejections);

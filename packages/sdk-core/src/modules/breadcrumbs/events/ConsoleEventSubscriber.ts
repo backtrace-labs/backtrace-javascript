@@ -12,6 +12,10 @@ export class ConsoleEventSubscriber implements BreadcrumbsEventSubscriber {
     private readonly _events: Record<string, ConsoleMethod> = {};
 
     public start(breadcrumbsManager: BreadcrumbsManager): void {
+        if ((breadcrumbsManager.breadcrumbsType & BreadcrumbType.Log) !== BreadcrumbType.Log) {
+            return;
+        }
+
         this.bindToConsoleMethod('log', BreadcrumbLogLevel.Info, breadcrumbsManager);
         this.bindToConsoleMethod('warn', BreadcrumbLogLevel.Warning, breadcrumbsManager);
         this.bindToConsoleMethod('error', BreadcrumbLogLevel.Error, breadcrumbsManager);
@@ -37,7 +41,7 @@ export class ConsoleEventSubscriber implements BreadcrumbsEventSubscriber {
         (console[name] as ConsoleMethod) = (...args: unknown[]) => {
             defaultImplementation.apply(console, args);
             const message = format(...args);
-            breadcrumbsManager.addBreadcrumb(message, level, BreadcrumbType.System);
+            breadcrumbsManager.addBreadcrumb(message, level, BreadcrumbType.Log);
         };
         this._events[name] = originalMethod;
     }
