@@ -123,7 +123,6 @@ export abstract class BacktraceCoreClient {
                 databaseStorageProvider,
                 this._reportSubmission,
             );
-            this._database.start();
         }
 
         this._rateLimitWatcher = new RateLimitWatcher(options.rateLimit);
@@ -131,15 +130,20 @@ export abstract class BacktraceCoreClient {
         const metrics = new MetricsBuilder(options, _sessionProvider, this._attributeProvider, requestHandler).build();
         if (metrics) {
             this._metrics = metrics;
-            this._metrics.start();
         }
 
         if (options.breadcrumbs?.enable !== false) {
             this.breadcrumbsManager = new BreadcrumbsManager(options?.breadcrumbs, breadcrumbsSetup);
             this._attributeProvider.addProvider(this.breadcrumbsManager);
             this.attachments.push(this.breadcrumbsManager.breadcrumbsStorage);
-            this.breadcrumbsManager.start();
         }
+    }
+
+    public initialize() {
+        this._database?.start();
+        this._metrics?.start();
+        this.breadcrumbsManager?.start();
+        return this;
     }
 
     /**

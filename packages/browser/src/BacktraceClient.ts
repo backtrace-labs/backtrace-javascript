@@ -8,9 +8,9 @@ import {
     DebugIdContainer,
     VariableDebugIdMapProvider,
 } from '@backtrace/sdk-core';
-import { AGENT } from './agentDefinition';
 import { BacktraceBrowserSessionProvider } from './BacktraceBrowserSessionProvider';
 import { BacktraceConfiguration } from './BacktraceConfiguration';
+import { AGENT } from './agentDefinition';
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 
 export class BacktraceClient extends BacktraceCoreClient {
@@ -39,6 +39,12 @@ export class BacktraceClient extends BacktraceCoreClient {
 
     public static builder(options: BacktraceConfiguration): BacktraceClientBuilder {
         return new BacktraceClientBuilder(options);
+    }
+
+    public static initialize(options: BacktraceConfiguration, build?: (builder: BacktraceClientBuilder) => void) {
+        const builder = this.builder(options);
+        build && build(builder);
+        return builder.build().initialize();
     }
 
     private captureUnhandledErrors(captureUnhandledExceptions = true, captureUnhandledRejections = true) {

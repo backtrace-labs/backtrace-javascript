@@ -1,7 +1,7 @@
 import { BacktraceClient, BacktraceStringAttachment } from '@backtrace/browser';
 import { SUBMISSION_URL } from './consts';
 
-const client = BacktraceClient.builder({
+const client = BacktraceClient.initialize({
     url: SUBMISSION_URL,
     name: '@backtrace/browser-example',
     version: '0.0.1',
@@ -12,7 +12,7 @@ const client = BacktraceClient.builder({
             prop2: 123,
         },
     },
-}).build();
+});
 
 function parseNotExistingDomElement(): string {
     const element = document.getElementById('not-existing-id') as HTMLElement;

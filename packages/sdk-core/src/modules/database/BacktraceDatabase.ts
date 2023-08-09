@@ -15,6 +15,7 @@ export class BacktraceDatabase {
     }
 
     private readonly _databaseRecordContext: BacktraceDatabaseContext;
+    private readonly _storageProviders: BacktraceDatabaseStorageProvider[] = [];
 
     private readonly _maximumRecords: number;
     private readonly _retryInterval: number;
@@ -126,6 +127,14 @@ export class BacktraceDatabase {
         }
         this._databaseRecordContext.remove(record);
         this._storageProvider.delete(record);
+    }
+
+    public addStorageProvider(storageProvider: BacktraceDatabaseStorageProvider) {
+        if (this._enabled) {
+            throw new Error('Cannot add storage provider after the database has been enabled.');
+        }
+
+        this._storageProviders.push(storageProvider);
     }
 
     /**

@@ -9,7 +9,7 @@ const reader = readline.createInterface({
     output: process.stdout,
 });
 
-const client = BacktraceClient.builder({
+const client = BacktraceClient.initialize({
     url: SUBMISSION_URL,
     attachments: [path.join(process.cwd(), 'samplefile.txt')],
     rateLimit: 5,
@@ -24,7 +24,7 @@ const client = BacktraceClient.builder({
         enabled: true,
         path: path.join(process.cwd(), 'database'),
     },
-}).build();
+});
 
 console.log('Welcome to the @Backtrace/node demo');
 
