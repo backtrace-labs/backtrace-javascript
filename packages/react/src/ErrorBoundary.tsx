@@ -36,7 +36,7 @@ export class ErrorBoundary extends Component<Props, State> {
         const { name } = this.props;
         const report = new BacktraceReport(error, {
             'errorboundary.name': name ?? 'main',
-            'error.type': 'Rendering error',
+            'error.type': 'Unhandled exception',
         });
         report.addStackTrace(this.COMPONENT_THREAD_NAME, info.componentStack);
         await this._client.send(report);
