@@ -1,5 +1,6 @@
 import { TimeHelper } from '../../common/TimeHelper';
 import { BacktraceAttachment } from '../attachment';
+import { BacktraceStackFrame } from '../data/BacktraceStackTrace';
 import { BacktraceErrorType } from './BacktraceErrorType';
 import { BacktraceReportStackTraceInfo } from './BacktraceReportStackTraceInfo';
 
@@ -15,7 +16,7 @@ export class BacktraceReport {
     /**
      * Report stack trace
      */
-    public readonly stackTrace: Record<string, BacktraceReportStackTraceInfo> = {};
+    public readonly stackTrace: Record<string, BacktraceReportStackTraceInfo | BacktraceStackFrame[]> = {};
 
     /**
      * Report message
@@ -44,11 +45,19 @@ export class BacktraceReport {
      * @param stack stack trace
      * @param message error message
      */
-    public addStackTrace(name: string, stack: string, message = '') {
-        this.stackTrace[name] = {
-            stack,
-            message,
-        };
+    public addStackTrace(name: string, stack: string, message?: string): this;
+    public addStackTrace(name: string, stackFrames: BacktraceStackFrame[]): this;
+    public addStackTrace(name: string, stack: string | BacktraceStackFrame[], message = ''): this {
+        if (typeof stack === 'string') {
+            this.stackTrace[name] = {
+                stack,
+                message,
+            };
+        } else {
+            this.stackTrace[name] = stack;
+        }
+
+        return this;
     }
 
     constructor(
