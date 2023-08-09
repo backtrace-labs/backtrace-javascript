@@ -1,6 +1,6 @@
-import './App.css';
+import '../App.css';
 
-export function Fallback() {
+export default function Fallback() {
     return (
         <div className="App">
             <div className="App-header center">
@@ -10,7 +10,8 @@ export function Fallback() {
                     alt="Sauce Labs"
                 />
                 <h1 className="card-header">
-                    This is the fallback component that gets rendered after a rendering error!
+                    This is the fallback component that gets rendered after a rendering error within the main
+                    ErrorBoundary!
                 </h1>
                 <p className="card-text">Check your Backtrace console to see the Error and Component stacks!</p>
             </div>
