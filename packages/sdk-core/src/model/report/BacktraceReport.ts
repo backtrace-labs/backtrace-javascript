@@ -95,5 +95,15 @@ export class BacktraceReport {
             this.attributes['error.type'] = errorType;
         }
         this.attributes['error.message'] = this.message;
+
+        if (typeof this.attributes['timestamp'] === 'number') {
+            this.timestamp = this.attributes['timestamp'];
+            delete this.attributes['timestamp'];
+        }
+
+        if (Array.isArray(this.attributes['classifiers'])) {
+            this.classifiers = this.attributes['classifiers'];
+            delete this.attributes['classifiers'];
+        }
     }
 }
