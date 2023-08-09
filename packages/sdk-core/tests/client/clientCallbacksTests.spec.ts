@@ -3,6 +3,9 @@ import { BacktraceData } from '../../src/model/data/BacktraceData';
 import { BacktraceTestClient } from '../mocks/BacktraceTestClient';
 
 describe('Client callbacks tests', () => {
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
     describe('Submission data modification tests', () => {
         it('Should invoke the before send event', async () => {
             let triggered = false;

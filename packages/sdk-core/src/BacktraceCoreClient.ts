@@ -1,6 +1,8 @@
 import {
     BacktraceAttachment,
     BacktraceAttributeProvider,
+    BacktraceDatabaseRecord,
+    BacktraceDatabaseStorageProvider,
     BacktraceSessionProvider,
     BacktraceStackTraceConverter,
     DebugIdMapProvider,
@@ -18,6 +20,7 @@ import { BacktraceBreadcrumbs, BreadcrumbsSetup } from './modules/breadcrumbs';
 import { BreadcrumbsManager } from './modules/breadcrumbs/BreadcrumbsManager';
 import { V8StackTraceConverter } from './modules/converter/V8StackTraceConverter';
 import { BacktraceDataBuilder } from './modules/data/BacktraceDataBuilder';
+import { BacktraceDatabase } from './modules/database/BacktraceDatabase';
 import { BacktraceMetrics } from './modules/metrics/BacktraceMetrics';
 import { MetricsBuilder } from './modules/metrics/MetricsBuilder';
 import { SingleSessionProvider } from './modules/metrics/SingleSessionProvider';
@@ -66,6 +69,13 @@ export abstract class BacktraceCoreClient {
     }
 
     /**
+     * Report database used by the client
+     */
+    public get database(): BacktraceDatabase | undefined {
+        return this._database;
+    }
+
+    /**
      * Client cached attachments
      */
     public readonly attachments: BacktraceAttachment[];
@@ -76,6 +86,7 @@ export abstract class BacktraceCoreClient {
     private readonly _rateLimitWatcher: RateLimitWatcher;
     private readonly _attributeProvider: AttributeManager;
     private readonly _metrics?: BacktraceMetrics;
+    private readonly _database?: BacktraceDatabase;
 
     protected constructor(
         protected readonly options: BacktraceConfiguration,
@@ -86,6 +97,7 @@ export abstract class BacktraceCoreClient {
         private readonly _sessionProvider: BacktraceSessionProvider = new SingleSessionProvider(),
         debugIdMapProvider?: DebugIdMapProvider,
         breadcrumbsSetup?: BreadcrumbsSetup,
+        databaseStorageProvider?: BacktraceDatabaseStorageProvider,
     ) {
         this._dataBuilder = new BacktraceDataBuilder(
             this._sdkOptions,
@@ -94,7 +106,6 @@ export abstract class BacktraceCoreClient {
         );
 
         this._reportSubmission = new BacktraceReportSubmission(options, requestHandler);
-        this._rateLimitWatcher = new RateLimitWatcher(options.rateLimit);
         this._attributeProvider = new AttributeManager([
             new ClientAttributeProvider(
                 _sdkOptions.agent,
@@ -105,6 +116,18 @@ export abstract class BacktraceCoreClient {
             ...(attributeProviders ?? []),
         ]);
         this.attachments = options.attachments ?? [];
+
+        if (databaseStorageProvider && options?.database?.enabled === true) {
+            this._database = new BacktraceDatabase(
+                this.options.database,
+                databaseStorageProvider,
+                this._reportSubmission,
+            );
+            this._database.start();
+        }
+
+        this._rateLimitWatcher = new RateLimitWatcher(options.rateLimit);
+
         const metrics = new MetricsBuilder(options, _sessionProvider, this._attributeProvider, requestHandler).build();
         if (metrics) {
             this._metrics = metrics;
@@ -179,7 +202,35 @@ export abstract class BacktraceCoreClient {
             return;
         }
 
-        await this._reportSubmission.send(backtraceData, this.generateSubmissionAttachments(report, reportAttachments));
+        const submissionAttachments = this.generateSubmissionAttachments(report, reportAttachments);
+        const record = this.addToDatabase(backtraceData, submissionAttachments);
+
+        const submissionResult = await this._reportSubmission.send(backtraceData, submissionAttachments);
+        if (!record) {
+            return;
+        }
+        record.locked = false;
+        if (submissionResult.status === 'Ok') {
+            this._database?.remove(record);
+        }
+    }
+
+    private addToDatabase(
+        data: BacktraceData,
+        attachments: BacktraceAttachment[],
+    ): BacktraceDatabaseRecord | undefined {
+        if (!this._database) {
+            return undefined;
+        }
+
+        const record = this._database.add(data, attachments);
+
+        if (!record || record.locked || record.count !== 1) {
+            return undefined;
+        }
+
+        record.locked = true;
+        return record;
     }
 
     private generateSubmissionData(report: BacktraceReport): BacktraceData | undefined {
