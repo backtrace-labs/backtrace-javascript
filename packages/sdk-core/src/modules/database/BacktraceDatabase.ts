@@ -81,7 +81,12 @@ export class BacktraceDatabase {
             locked: false,
             attachments: attachments,
         };
-        this._storageProvider.add(record);
+
+        const saveResult = this._storageProvider.add(record);
+        if (!saveResult) {
+            return undefined;
+        }
+
         this._databaseRecordContext.add(record);
 
         return record;
@@ -115,12 +120,12 @@ export class BacktraceDatabase {
      * Removes the database record
      * @param record database records
      */
-    public async remove(record: BacktraceDatabaseRecord) {
+    public remove(record: BacktraceDatabaseRecord) {
         if (!this._enabled) {
             return;
         }
         this._databaseRecordContext.remove(record);
-        await this._storageProvider.delete(record);
+        this._storageProvider.delete(record);
     }
 
     /**
@@ -129,8 +134,12 @@ export class BacktraceDatabase {
      */
     private prepareDatabase(totalNumberOfRecords = 1) {
         const numberOfRecords = this.count();
-        if (numberOfRecords + totalNumberOfRecords > this._maximumRecords) {
-            this._databaseRecordContext.dropOverflow(totalNumberOfRecords);
+        if (numberOfRecords + totalNumberOfRecords <= this._maximumRecords) {
+            return;
+        }
+        const recordsToDelete = this._databaseRecordContext.dropOverflow(totalNumberOfRecords);
+        for (const record of recordsToDelete) {
+            this._storageProvider.delete(record);
         }
     }
 

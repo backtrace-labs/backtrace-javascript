@@ -211,7 +211,7 @@ export abstract class BacktraceCoreClient {
         }
         record.locked = false;
         if (submissionResult.status === 'Ok') {
-            await this._database?.remove(record);
+            this._database?.remove(record);
         }
     }
 

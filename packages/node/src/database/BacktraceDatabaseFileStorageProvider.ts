@@ -53,21 +53,21 @@ export class BacktraceDatabaseFileStorageProvider implements BacktraceDatabaseSt
         return true;
     }
 
-    public async delete(record: BacktraceDatabaseRecord): Promise<boolean> {
+    public delete(record: BacktraceDatabaseRecord): boolean {
         const recordPath = this.getRecordPath(record.id);
-        if (!fs.existsSync(recordPath)) {
-            return false;
-        }
-
-        await fsPromise.unlink(recordPath);
-        return true;
+        return this.unlinkRecord(recordPath);
     }
 
-    public add(record: BacktraceDatabaseRecord): void {
+    public add(record: BacktraceDatabaseRecord): boolean {
         const recordPath = this.getRecordPath(record.id);
-        fs.writeFileSync(recordPath, JSON.stringify(BacktraceDatabaseFileRecord.fromRecord(record)), {
-            encoding: 'utf8',
-        });
+        try {
+            fs.writeFileSync(recordPath, JSON.stringify(BacktraceDatabaseFileRecord.fromRecord(record)), {
+                encoding: 'utf8',
+            });
+            return true;
+        } catch {
+            return false;
+        }
     }
 
     public async get(): Promise<BacktraceDatabaseRecord[]> {
@@ -91,12 +91,25 @@ export class BacktraceDatabaseFileStorageProvider implements BacktraceDatabaseSt
                     continue;
                 }
                 records.push(record);
-            } catch (err) {
-                await fsPromise.unlink(recordPath);
+            } catch {
+                this.unlinkRecord(recordPath);
             }
         }
 
         return records;
+    }
+
+    private unlinkRecord(recordPath: string): boolean {
+        if (!fs.existsSync(recordPath)) {
+            return false;
+        }
+
+        try {
+            fs.unlinkSync(recordPath);
+            return true;
+        } catch {
+            return false;
+        }
     }
 
     private getRecordPath(id: string): string {

@@ -73,15 +73,18 @@ export class BacktraceDatabaseContext {
     }
 
     public dropOverflow(overflow: number) {
+        const result: BacktraceDatabaseRecord[] = [];
         for (let bucketIndex = this.bucketCount - 1; bucketIndex >= 0; bucketIndex--) {
             const bucket = this.recordBucket[bucketIndex];
             const removedRecords = bucket.splice(0, overflow);
-            overflow = overflow - removedRecords.length;
+            result.push(...removedRecords);
 
-            if (overflow === 0) {
-                return;
+            if (result.length === overflow) {
+                break;
             }
         }
+
+        return result;
     }
 
     private setupRecordBucket(retries: number): BacktraceDatabaseRecord[][] {
