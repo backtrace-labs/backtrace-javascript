@@ -8,11 +8,19 @@ import { WindowAttributeProvider } from '../attributes/WindowAttributeProvider';
 import { BacktraceBrowserRequestHandler } from '../BacktraceBrowserRequestHandler';
 import { BacktraceClient } from '../BacktraceClient';
 import { BacktraceConfiguration } from '../BacktraceConfiguration';
+import { DocumentEventSubscriber } from '../breadcrumbs/DocumentEventSubscriber';
+import { HistoryEventSubscriber } from '../breadcrumbs/HistoryEventSubscriber';
+import { WebRequestEventSubscriber } from '../breadcrumbs/WebRequestEventSubscriber';
 import { JavaScriptCoreStackTraceConverter } from '../converters/JavaScriptCoreStackTraceConverter';
 import { SpiderMonkeyStackTraceConverter } from '../converters/SpiderMonkeyStackTraceConverter';
 import { getEngine } from '../engineDetector';
 
 export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<BacktraceClient> {
+    protected readonly breadcrumbsEventSubscribers = [
+        new WebRequestEventSubscriber(),
+        new DocumentEventSubscriber(),
+        new HistoryEventSubscriber(),
+    ];
     constructor(protected readonly options: BacktraceConfiguration) {
         super(new BacktraceBrowserRequestHandler(options), [
             new UserAgentAttributeProvider(),
@@ -22,12 +30,14 @@ export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<Backtrace
             new ApplicationInformationAttributeProvider(options),
         ]);
     }
+
     public build(): BacktraceClient {
         return new BacktraceClient(
             this.options,
             this.handler,
             this.attributeProviders,
             this.generateStackTraceConverter(),
+            this.breadcrumbsEventSubscribers,
         );
     }
 

@@ -41,7 +41,7 @@ export class InMemoryBreadcrumbsStorage implements BreadcrumbsStorage {
         const breadcrumb: Breadcrumb = {
             id,
             message,
-            timestamp: TimeHelper.toTimestampInSec(TimeHelper.now()),
+            timestamp: TimeHelper.now(),
             type: BreadcrumbType[type].toLowerCase(),
             level: BreadcrumbLogLevel[level].toLowerCase(),
         };
