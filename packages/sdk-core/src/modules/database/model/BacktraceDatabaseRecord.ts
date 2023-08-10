@@ -5,6 +5,7 @@ export interface BacktraceDatabaseRecord {
     readonly data: BacktraceData;
     readonly id: string;
     readonly hash: string;
+    readonly timestamp: number;
     attachments: BacktraceAttachment[];
     count: number;
     /**

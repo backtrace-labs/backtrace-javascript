@@ -6,6 +6,7 @@ export class BacktraceDatabaseFileRecord implements BacktraceDatabaseRecord {
     public readonly id: string;
     public readonly count: number;
     public readonly hash: string;
+    public readonly timestamp: number;
     public locked: boolean;
 
     private constructor(record: BacktraceDatabaseRecord, public readonly attachments: BacktraceFileAttachment[]) {
@@ -13,6 +14,7 @@ export class BacktraceDatabaseFileRecord implements BacktraceDatabaseRecord {
         this.id = record.id;
         this.count = record.count;
         this.hash = record.hash;
+        this.timestamp = record.timestamp;
         // make sure the database record stored in the database directory
         // is never locked. By doing this, we want to be sure once we load
         // the record once again, the record will be available for future usage

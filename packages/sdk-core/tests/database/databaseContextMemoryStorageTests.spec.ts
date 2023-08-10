@@ -1,5 +1,6 @@
 import path from 'path';
 import { BacktraceData, BacktraceDatabaseRecord, BacktraceReportSubmissionResult } from '../../src';
+import { TimeHelper } from '../../src/common/TimeHelper';
 import { BacktraceDatabase } from '../../src/modules/database/BacktraceDatabase';
 import { BacktraceTestClient } from '../mocks/BacktraceTestClient';
 import { testStorageProvider } from '../mocks/testStorageProvider';
@@ -94,6 +95,7 @@ describe('Database context memory storage tests', () => {
         it('Should load records from the storage provider to context', async () => {
             const record: BacktraceDatabaseRecord = {
                 attachments: [],
+                timestamp: TimeHelper.now(),
                 count: 1,
                 data: {} as BacktraceData,
                 hash: '',
