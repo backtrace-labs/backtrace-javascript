@@ -1,10 +1,17 @@
+import assert from 'assert';
 import { BacktraceReport } from '../../src';
+import { BacktraceReportStackTraceInfo } from '../../src/model/report/BacktraceReportStackTraceInfo';
+
+function isStackTraceInfo(obj: unknown): obj is BacktraceReportStackTraceInfo {
+    return typeof obj === 'object' && !!obj && 'stack' in obj && 'message' in obj;
+}
 
 describe('Backtrace report generation tests', () => {
     describe('Message report', () => {
         const testMessage = 'test';
         const report = new BacktraceReport(testMessage);
         it('Report message should be set', () => {
+            assert(isStackTraceInfo(report.stackTrace.main));
             expect(report.stackTrace.main.message).toBe(testMessage);
         });
 
@@ -21,6 +28,7 @@ describe('Backtrace report generation tests', () => {
         const testError = new Error('foo');
         const report = new BacktraceReport(testError);
         it('Report message should be set', () => {
+            assert(isStackTraceInfo(report.stackTrace.main));
             expect(report.stackTrace.main.message).toBe(testError.message);
         });
 
@@ -65,7 +73,10 @@ describe('Backtrace report generation tests', () => {
             errorReport.addStackTrace(name, stack);
             messageReport.addStackTrace(name, stack);
 
+            assert(isStackTraceInfo(errorReport.stackTrace[name]));
             expect(errorReport.stackTrace[name].message).toEqual('');
+
+            assert(isStackTraceInfo(messageReport.stackTrace[name]));
             expect(messageReport.stackTrace[name].message).toEqual('');
         });
 
