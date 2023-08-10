@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 
+import { AsyncResult, Err } from '@backtrace/sourcemap-tools';
 import commandLineArgs from 'command-line-args';
 import { Command } from './commands/Command';
+import { loadVersion } from './helpers/version';
 import { LoggerOptions, createLogger } from './logger';
 import { addSourcesCmd } from './sourcemaps/add-sources';
 import { processCmd } from './sourcemaps/process';
@@ -11,7 +13,11 @@ export interface GlobalOptions extends LoggerOptions {
     readonly help: boolean;
 }
 
-const mainCommand = new Command<GlobalOptions>({
+export interface MainOptions {
+    readonly version: boolean;
+}
+
+const mainCommand = new Command<GlobalOptions & MainOptions>({
     name: '',
 })
     .subcommand(processCmd)
@@ -44,6 +50,32 @@ const mainCommand = new Command<GlobalOptions>({
         type: String,
         global: true,
         description: 'Sets the logging level. Can be one of: quiet, error, warn, info, debug, verbose. Default: info',
+    })
+    .option({
+        name: 'version',
+        type: Boolean,
+        description: 'Displays the version of backtrace-js',
+    })
+    .execute(function (opts, stack, unknown) {
+        const logger = createLogger(opts);
+        if (opts.version) {
+            return AsyncResult.equip(loadVersion())
+                .then((version) => logger.output(version))
+                .then(() => 0).inner;
+        } else {
+            logger.info(this.getHelpMessage(stack));
+
+            const unknownOption = unknown?.[0];
+            if (!unknownOption) {
+                return Err(`Unknown command.`);
+            }
+
+            if (unknownOption.startsWith('-')) {
+                return Err(`Unknown option: ${unknownOption}`);
+            }
+
+            return Err(`Unknown command: ${unknownOption}`);
+        }
     });
 
 (async () => {
