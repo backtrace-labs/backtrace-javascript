@@ -126,9 +126,14 @@ try {
 ```
 
 ### Breadcrumbs
-Feature in developement
+Breadcrumbs data is added to the Backtrace reports by default.  This data shows events that have occured in chronological order and can contain additional data within them.
+
+Manual breadcrumbs can also be set.
 
 ### Application Stability Metrics
+The Backtrace Browser SDK has the ability to send usage Metrics to be viewable in the Backtrace UI.  See the Backtrace UI documentation, [here](https://docs.saucelabs.com/error-reporting/project-setup/stability-metrics/), for more information regarding this.
+
+Additional metrics data can also be tracked.
 
 ## Advanced SDK Features
 
@@ -171,8 +176,11 @@ The following options are available for the BacktraceClientOptions passed when i
 
 ### BacktraceMetrics
 
+### BacktraceReport
+
 ### Callbacks
 
 #### BeforeSend
+Method that when implemented will be the last possible point in which the BacktraceReport can be modified (attributes added or deleted, additonal attachments added).  If a BacktraceReport is returned from the function that will be the report sent, if a null is returned the report is skipped.
 
 #### FilterReport
