@@ -11,7 +11,7 @@
         "backtrace-js": "./lib/index.js"
     },
     "scripts": {
-        "build": "tsc",
+        "build": "tsc && chmod +x ./lib/index.js",
         "clean": "tsc -b --clean && rimraf \"lib\"",
         "format": "prettier --write '**/*.ts'",
         "lint": "eslint . --ext .ts",
