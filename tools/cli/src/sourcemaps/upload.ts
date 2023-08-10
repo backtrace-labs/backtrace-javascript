@@ -177,12 +177,17 @@ export const uploadCmd = new Command<UploadOptions>({
             .then(filter(matchSourceMapExtension))
             .then(logDebug((r) => `found ${r.length} files matching sourcemap extension`))
             .then(map(logTrace((path) => `file matching extension: ${path}`)))
+            .then(opts['pass-with-no-files'] ? Ok : failIfEmpty('no sourcemaps found'))
             .then(map(toAsset))
             .then(opts.force ? Ok : filterProcessedAssetsCommand)
             .then(map(loadSourceMapCommand))
             .then(logDebug((r) => `uploading ${r.length} files`))
             .then(map(logTrace(({ path }) => `file to upload: ${path}`)))
-            .then(opts['pass-with-no-files'] ? Ok : failIfEmpty('no files for uploading found'))
+            .then(
+                opts['pass-with-no-files']
+                    ? Ok
+                    : failIfEmpty('no processed sourcemaps found, make sure to run process first'),
+            )
             .then(createArchiveCommand)
             .then((archive) => (opts['dry-run'] ? Ok(null) : saveArchiveCommand(archive)))
             .then(output(logger))

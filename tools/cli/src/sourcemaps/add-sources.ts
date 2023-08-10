@@ -133,13 +133,18 @@ export const addSourcesCmd = new Command<AddSourcesOptions>({
             .then(filter(matchSourceMapExtension))
             .then(logDebug((r) => `found ${r.length} files matching sourcemap extension`))
             .then(map(logTrace((path) => `file matching extension: ${path}`)))
+            .then(opts['pass-with-no-files'] ? Ok : failIfEmpty('no sourcemaps found'))
             .then(map(toAsset))
             .then(map(readAssetCommand))
             .then(map(loadAssetCommand))
             .then(opts.force ? Ok : filterAssetsCommand)
             .then(logDebug((r) => `adding sources to ${r.length} files`))
             .then(map(logTrace(({ path }) => `file to add sources to: ${path}`)))
-            .then(opts['pass-with-no-files'] ? Ok : failIfEmpty('no valid sourcemaps found'))
+            .then(
+                opts['pass-with-no-files']
+                    ? Ok
+                    : failIfEmpty('no sourcemaps without sources found, use --force to overwrite sources'),
+            )
             .then(map(addSourceCommand))
             .then(opts['dry-run'] ? Ok : map(writeSourceMapCommand))
             .then(map(output(logger)))

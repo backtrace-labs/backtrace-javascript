@@ -113,11 +113,16 @@ export const processCmd = new Command<ProcessOptions>({
             .then(filter(matchSourceExtension))
             .then(logDebug((r) => `found ${r.length} files matching source extension`))
             .then(map(logTrace((path) => `file matching extension: ${path}`)))
+            .then(opts['pass-with-no-files'] ? Ok : failIfEmpty('no source files found'))
             .then(map(toAsset))
             .then(opts.force ? Ok : filterUnprocessedAssetsCommand)
             .then(logDebug((r) => `processing ${r.length} files`))
             .then(map(logTrace(({ path }) => `file to process: ${path}`)))
-            .then(opts['pass-with-no-files'] ? Ok : failIfEmpty('no files for processing found'))
+            .then(
+                opts['pass-with-no-files']
+                    ? Ok
+                    : failIfEmpty('no files for processing found, they may be already processed'),
+            )
             .then(map(processCommand))
             .then(opts['dry-run'] ? Ok : map(writeCommand))
             .then(map(output(logger)))
