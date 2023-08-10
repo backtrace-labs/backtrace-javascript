@@ -7,10 +7,13 @@ import {
     DebugIdContainer,
     VariableDebugIdMapProvider,
 } from '@backtrace/sdk-core';
+import fs from 'fs';
+import path from 'path';
 import { BacktraceConfiguration } from './BacktraceConfiguration';
 import { AGENT } from './agentDefinition';
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 import { NodeOptionReader } from './common/NodeOptionReader';
+import { NodeDiagnosticReportConverter } from './converter/NodeDiagnosticReportConverter';
 import { BacktraceDatabaseFileStorageProvider } from './database/BacktraceDatabaseFileStorageProvider';
 
 export class BacktraceClient extends BacktraceCoreClient {
@@ -35,10 +38,14 @@ export class BacktraceClient extends BacktraceCoreClient {
     public initialize() {
         super.initialize();
 
+        this.loadNodeCrashes();
+
         this.captureUnhandledErrors(
             this.options.captureUnhandledErrors,
             this.options.captureUnhandledPromiseRejections,
         );
+
+        this.captureNodeCrashes();
 
         return this;
     }
@@ -144,5 +151,58 @@ export class BacktraceClient extends BacktraceCoreClient {
             process.emitWarning(warning);
         };
         process.prependListener('unhandledRejection', captureUnhandledRejectionsCallback);
+    }
+
+    private captureNodeCrashes() {
+        if (!process.report) {
+            return;
+        }
+
+        if (!this.options.database?.enabled) {
+            return;
+        }
+
+        process.report.reportOnFatalError = true;
+        process.report.directory = this.options.database.path;
+    }
+
+    private async loadNodeCrashes() {
+        if (!this.options.database?.enabled) {
+            return;
+        }
+
+        const reportName = process.report?.filename;
+        const databasePath = this.options.database.path;
+
+        const databaseFiles = fs.readdirSync(databasePath, {
+            encoding: 'utf8',
+            withFileTypes: true,
+        });
+
+        const converter = new NodeDiagnosticReportConverter();
+
+        const recordNames = databaseFiles
+            .filter(
+                (file) =>
+                    file.isFile() &&
+                    // If the user specifies a preset name for reports, we should compare it directly
+                    (reportName
+                        ? file.name === reportName
+                        : file.name.startsWith('report.') && file.name.endsWith('.json')),
+            )
+            .map((n) => n.name);
+
+        for (const recordName of recordNames) {
+            const recordPath = path.join(databasePath, recordName);
+            try {
+                const recordJson = fs.readFileSync(recordPath, 'utf8');
+                const data = converter.convert(JSON.parse(recordJson));
+                await this.send(data);
+            } catch {
+                // Do nothing, skip the report
+            } finally {
+                fs.unlinkSync(recordPath);
+            }
+        }
     }
 }
