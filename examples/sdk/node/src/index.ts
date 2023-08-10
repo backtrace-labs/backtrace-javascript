@@ -96,9 +96,9 @@ function showMenu() {
         ['Send an exception', (attributes: Record<string, number>) => sendHandledException(attributes)],
         ['Send a message', (attributes: Record<string, number>) => sendMessage('test message', attributes)],
         ['Throw rejected promise', () => rejectPromise('Rejected promise')],
+        ['OOM', oom],
         ['Add a new summed event', (attributes: Record<string, number>) => addEvent('Option clicked', attributes)],
         ['Send all metrics', sendMetrics],
-        ['OOM', oom],
     ] as const;
 
     const menu =
