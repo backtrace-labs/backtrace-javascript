@@ -6,6 +6,7 @@ import {
     Err,
     Ok,
     RawSourceMap,
+    Result,
     ResultPromise,
     SourceProcessor,
     SymbolUploader,
@@ -34,6 +35,8 @@ import { loadAndJoinOptions } from '../options/loadOptions';
 
 export interface UploadOptions extends GlobalOptions {
     readonly url: string;
+    readonly subdomain: string;
+    readonly token: string;
     readonly path: string[];
     readonly 'include-sources': string;
     readonly insecure: boolean;
@@ -48,18 +51,30 @@ export const uploadCmd = new Command<UploadOptions>({
     description: 'Uploading of sourcemaps to Backtrace',
 })
     .option({
-        name: 'url',
-        type: String,
-        description: 'URL to upload to. You can use also BACKTRACE_JS_UPLOAD_URL env variable.',
-        alias: 'u',
-    })
-    .option({
         name: 'path',
         type: String,
         description: 'Path to sourcemap files or directories containing sourcemaps to upload.',
         defaultOption: true,
         multiple: true,
         alias: 'p',
+    })
+    .option({
+        name: 'url',
+        type: String,
+        description: 'URL to upload to. You can use also BACKTRACE_JS_UPLOAD_URL env variable.',
+        alias: 'u',
+    })
+    .option({
+        name: 'subdomain',
+        type: String,
+        description: 'Subdomain to upload to.',
+        alias: 's',
+    })
+    .option({
+        name: 'token',
+        type: String,
+        description: 'Symbol submission token. Required when subdomain is provided.',
+        alias: 't',
     })
     .option({
         name: 'include-sources',
@@ -117,18 +132,22 @@ export const uploadCmd = new Command<UploadOptions>({
             return Err('path must be specified');
         }
 
+        const uploadUrlResult = getUploadUrl(opts);
+        if (uploadUrlResult.isErr()) {
+            logger.info(this.getHelpMessage(stack));
+            return uploadUrlResult;
+        }
+
         const outputPath = opts.output;
-        const uploadUrl = opts.url;
+        const uploadUrl = uploadUrlResult.data;
         if (!outputPath && !uploadUrl) {
             logger.info(this.getHelpMessage(stack));
             return Err('upload URL is required.');
         }
 
-        if (uploadUrl) {
-            const result = validateUrl(uploadUrl);
-            if (result.isErr()) {
-                return result;
-            }
+        if (outputPath && uploadUrl) {
+            logger.info(this.getHelpMessage(stack));
+            return Err('outputting archive and uploading are exclusive');
         }
 
         const logDebug = log(logger, 'debug');
@@ -210,10 +229,31 @@ export const uploadCmd = new Command<UploadOptions>({
 
 function validateUrl(url: string) {
     try {
-        return Ok(new URL(url));
+        new URL(url);
+        return Ok(url);
     } catch {
         return Err(`invalid URL: ${url}`);
     }
+}
+
+function getUploadUrl(opts: Partial<UploadOptions>): Result<string | undefined, string> {
+    if (opts.url && opts.subdomain) {
+        return Err('--url and --subdomain are exclusive');
+    }
+
+    if (opts.url) {
+        return validateUrl(opts.url);
+    }
+
+    if (opts.subdomain) {
+        if (!opts.token) {
+            return Err('token is required with subdomain');
+        }
+
+        return Ok(`https://submit.backtrace.io/${opts.subdomain}/${opts.token}/sourcemap`);
+    }
+
+    return Ok(undefined);
 }
 
 function toAsset(file: string): Asset {
