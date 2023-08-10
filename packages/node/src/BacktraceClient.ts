@@ -11,7 +11,7 @@ import { AGENT } from './agentDefinition';
 import { BacktraceConfiguration } from './BacktraceConfiguration';
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 import { NodeOptionReader } from './common/NodeOptionReader';
-import { BacktraceDatabaseFileStorageProvider } from './database/BacktraceDatabaseFileStorageProvider';
+import { BacktraceDatabaseProvider } from './database/BacktraceDatabaseProvider';
 
 export class BacktraceClient extends BacktraceCoreClient {
     constructor(
@@ -28,7 +28,7 @@ export class BacktraceClient extends BacktraceCoreClient {
             undefined,
             new VariableDebugIdMapProvider(global as DebugIdContainer),
             undefined,
-            BacktraceDatabaseFileStorageProvider.createIfValid(options.database),
+            BacktraceDatabaseProvider.createIfValid(options.database),
         );
 
         this.captureUnhandledErrors(options.captureUnhandledErrors, options.captureUnhandledPromiseRejections);

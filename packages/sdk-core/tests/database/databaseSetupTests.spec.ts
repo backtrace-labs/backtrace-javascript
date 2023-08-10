@@ -3,13 +3,13 @@ import { BacktraceReportSubmission } from '../../src/model/http/BacktraceReportS
 import { BacktraceDatabase } from '../../src/modules/database/BacktraceDatabase';
 import { TEST_SUBMISSION_URL } from '../mocks/BacktraceTestClient';
 import { testHttpClient } from '../mocks/testHttpClient';
-import { testStorageProvider } from '../mocks/testStorageProvider';
+import { testDatabaseSetup } from '../mocks/testStorageProvider';
 
 describe('Database setup tests', () => {
     it('The database should be disabled by default', () => {
         const database = new BacktraceDatabase(
             undefined,
-            testStorageProvider,
+            testDatabaseSetup,
             new BacktraceReportSubmission(
                 {
                     url: TEST_SUBMISSION_URL,
@@ -26,7 +26,7 @@ describe('Database setup tests', () => {
             {
                 autoSend: false,
             },
-            testStorageProvider,
+            testDatabaseSetup,
             new BacktraceReportSubmission(
                 {
                     url: TEST_SUBMISSION_URL,
@@ -44,7 +44,7 @@ describe('Database setup tests', () => {
     it('Should not enable the database if the enable option is set to false', () => {
         const database = new BacktraceDatabase(
             { enabled: false },
-            testStorageProvider,
+            testDatabaseSetup,
             new BacktraceReportSubmission(
                 {
                     url: TEST_SUBMISSION_URL,
@@ -65,7 +65,7 @@ describe('Database setup tests', () => {
                 enabled: true,
                 path: '/path/to/fake/dir',
             },
-            testStorageProvider,
+            testDatabaseSetup,
             new BacktraceReportSubmission(
                 {
                     url: TEST_SUBMISSION_URL,
@@ -73,7 +73,7 @@ describe('Database setup tests', () => {
                 testHttpClient,
             ),
         );
-        jest.spyOn(testStorageProvider, 'start').mockReturnValue(false);
+        jest.spyOn(testDatabaseSetup.storageProvider, 'start').mockReturnValue(false);
 
         const databaseStartResult = database.start();
 
@@ -84,7 +84,7 @@ describe('Database setup tests', () => {
     it('Should be disabled after disposing database', () => {
         const database = new BacktraceDatabase(
             undefined,
-            testStorageProvider,
+            testDatabaseSetup,
             new BacktraceReportSubmission(
                 {
                     url: TEST_SUBMISSION_URL,
@@ -102,7 +102,7 @@ describe('Database setup tests', () => {
     it('Should not add a record to disabled database', () => {
         const database = new BacktraceDatabase(
             undefined,
-            testStorageProvider,
+            testDatabaseSetup,
             new BacktraceReportSubmission(
                 {
                     url: TEST_SUBMISSION_URL,

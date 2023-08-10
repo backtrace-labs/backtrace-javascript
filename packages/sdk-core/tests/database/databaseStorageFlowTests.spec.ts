@@ -2,7 +2,7 @@ import path from 'path';
 import { BacktraceReportSubmissionResult } from '../../src';
 import { BacktraceDatabase } from '../../src/modules/database/BacktraceDatabase';
 import { BacktraceTestClient } from '../mocks/BacktraceTestClient';
-import { testStorageProvider } from '../mocks/testStorageProvider';
+import { testDatabaseSetup } from '../mocks/testStorageProvider';
 
 describe('Database storage provider flow tests', () => {
     const testDatabaseSettings = {
@@ -27,33 +27,33 @@ describe('Database storage provider flow tests', () => {
                 },
                 [],
                 [],
-                testStorageProvider,
+                testDatabaseSetup,
             );
             const database = client.database as BacktraceDatabase;
             if (!database) {
                 throw new Error('Invalid database setup. Database must be defined!');
             }
 
-            expect(testStorageProvider.start).toHaveBeenCalled();
+            expect(testDatabaseSetup.storageProvider.start).toHaveBeenCalled();
             expect(database.enabled).toBeTruthy();
         });
 
         it('Should not initialize if storage is not setup correctly', () => {
-            jest.spyOn(testStorageProvider, 'start').mockReturnValueOnce(false);
+            jest.spyOn(testDatabaseSetup.storageProvider, 'start').mockReturnValueOnce(false);
             const client = BacktraceTestClient.buildFakeClient(
                 {
                     database: testDatabaseSettings,
                 },
                 [],
                 [],
-                testStorageProvider,
+                testDatabaseSetup,
             );
             const database = client.database as BacktraceDatabase;
             if (!database) {
                 throw new Error('Invalid database setup. Database must be defined!');
             }
 
-            expect(testStorageProvider.start).toHaveBeenCalled();
+            expect(testDatabaseSetup.storageProvider.start).toHaveBeenCalled();
             expect(database.enabled).toBeFalsy();
         });
     });
@@ -67,7 +67,7 @@ describe('Database storage provider flow tests', () => {
                 },
                 [],
                 [],
-                testStorageProvider,
+                testDatabaseSetup,
             );
             const database = client.database as BacktraceDatabase;
             if (!database) {
@@ -80,8 +80,8 @@ describe('Database storage provider flow tests', () => {
 
             await client.send(new Error(testingErrorMessage));
 
-            expect(testStorageProvider.add).toHaveBeenCalled();
-            expect(testStorageProvider.delete).not.toHaveBeenCalled();
+            expect(testDatabaseSetup.storageProvider.add).toHaveBeenCalled();
+            expect(testDatabaseSetup.storageProvider.delete).not.toHaveBeenCalled();
         });
 
         it('Should call delete after successful client.send', async () => {
@@ -92,7 +92,7 @@ describe('Database storage provider flow tests', () => {
                 },
                 [],
                 [],
-                testStorageProvider,
+                testDatabaseSetup,
             );
             const database = client.database as BacktraceDatabase;
             if (!database) {
@@ -105,8 +105,8 @@ describe('Database storage provider flow tests', () => {
 
             await client.send(new Error(testingErrorMessage));
 
-            expect(testStorageProvider.add).toHaveBeenCalled();
-            expect(testStorageProvider.delete).toHaveBeenCalled();
+            expect(testDatabaseSetup.storageProvider.add).toHaveBeenCalled();
+            expect(testDatabaseSetup.storageProvider.delete).toHaveBeenCalled();
         });
     });
 });

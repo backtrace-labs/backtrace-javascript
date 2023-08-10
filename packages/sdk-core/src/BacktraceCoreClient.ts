@@ -2,7 +2,7 @@ import {
     BacktraceAttachment,
     BacktraceAttributeProvider,
     BacktraceDatabaseRecord,
-    BacktraceDatabaseStorageProvider,
+    BacktraceDatabaseSetup,
     BacktraceSessionProvider,
     BacktraceStackTraceConverter,
     DebugIdMapProvider,
@@ -97,7 +97,7 @@ export abstract class BacktraceCoreClient {
         private readonly _sessionProvider: BacktraceSessionProvider = new SingleSessionProvider(),
         debugIdMapProvider?: DebugIdMapProvider,
         breadcrumbsSetup?: BreadcrumbsSetup,
-        databaseStorageProvider?: BacktraceDatabaseStorageProvider,
+        databaseSetup?: BacktraceDatabaseSetup,
     ) {
         this._dataBuilder = new BacktraceDataBuilder(
             this._sdkOptions,
@@ -117,12 +117,8 @@ export abstract class BacktraceCoreClient {
         ]);
         this.attachments = options.attachments ?? [];
 
-        if (databaseStorageProvider && options?.database?.enabled === true) {
-            this._database = new BacktraceDatabase(
-                this.options.database,
-                databaseStorageProvider,
-                this._reportSubmission,
-            );
+        if (databaseSetup && options?.database?.enabled === true) {
+            this._database = new BacktraceDatabase(this.options.database, databaseSetup, this._reportSubmission);
             this._database.start();
         }
 

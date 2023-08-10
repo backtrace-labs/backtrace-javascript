@@ -3,7 +3,7 @@ import {
     BacktraceAttributeProvider,
     BacktraceConfiguration,
     BacktraceCoreClient,
-    BacktraceDatabaseStorageProvider,
+    BacktraceDatabaseSetup,
     BacktraceRequestHandler,
 } from '../../src';
 import { testHttpClient } from '../mocks/testHttpClient';
@@ -14,13 +14,13 @@ export const APPLICATION = 'test-app';
 export const APPLICATION_VERSION = '5.4.3';
 export class BacktraceTestClient extends BacktraceCoreClient {
     public readonly requestHandler: BacktraceRequestHandler;
-    public readonly storageProvider?: BacktraceDatabaseStorageProvider;
+    public readonly databaseSetup?: BacktraceDatabaseSetup;
     constructor(
         options: Partial<BacktraceConfiguration>,
         handler: BacktraceRequestHandler,
         attributeProviders: BacktraceAttributeProvider[] = [],
         attachments: BacktraceAttachment[] = [],
-        storageProvider?: BacktraceDatabaseStorageProvider,
+        databaseSetup?: BacktraceDatabaseSetup,
     ) {
         super(
             {
@@ -46,17 +46,17 @@ export class BacktraceTestClient extends BacktraceCoreClient {
             undefined,
             undefined,
             undefined,
-            storageProvider,
+            databaseSetup,
         );
         this.requestHandler = handler;
-        this.storageProvider = storageProvider;
+        this.databaseSetup = databaseSetup;
     }
 
     public static buildFakeClient(
         options: Partial<BacktraceConfiguration> = {},
         attributeProviders: BacktraceAttributeProvider[] = [],
         attachments: BacktraceAttachment[] = [],
-        storageProvider?: BacktraceDatabaseStorageProvider,
+        databaseSetup?: BacktraceDatabaseSetup,
     ) {
         attributeProviders.push({
             type: 'scoped',
@@ -67,6 +67,6 @@ export class BacktraceTestClient extends BacktraceCoreClient {
                 };
             },
         });
-        return new BacktraceTestClient(options, testHttpClient, attributeProviders, attachments, storageProvider);
+        return new BacktraceTestClient(options, testHttpClient, attributeProviders, attachments, databaseSetup);
     }
 }

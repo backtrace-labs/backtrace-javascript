@@ -2,7 +2,7 @@ import path from 'path';
 import { BacktraceReportSubmissionResult } from '../../src';
 import { BacktraceTestClient } from '../mocks/BacktraceTestClient';
 import { testHttpClient } from '../mocks/testHttpClient';
-import { testStorageProvider } from '../mocks/testStorageProvider';
+import { testDatabaseSetup } from '../mocks/testStorageProvider';
 
 jest.useFakeTimers();
 
@@ -32,7 +32,7 @@ describe('Database record batch tests', () => {
             },
             [],
             [],
-            testStorageProvider,
+            testDatabaseSetup,
         );
         const database = client.database;
         if (!database) {
@@ -65,7 +65,7 @@ describe('Database record batch tests', () => {
             },
             [],
             [],
-            testStorageProvider,
+            testDatabaseSetup,
         );
         const database = client.database;
         if (!database) {

@@ -1,8 +1,4 @@
-import {
-    BacktraceDatabaseConfiguration,
-    BacktraceDatabaseRecord,
-    BacktraceDatabaseStorageProvider,
-} from '@backtrace/sdk-core';
+import { BacktraceDatabaseRecord, BacktraceDatabaseStorageProvider } from '@backtrace/sdk-core';
 import fs from 'fs';
 import * as fsPromise from 'fs/promises';
 import path from 'path';
@@ -11,30 +7,7 @@ export class BacktraceDatabaseFileStorageProvider implements BacktraceDatabaseSt
     private _enabled = true;
 
     private readonly RECORD_SUFFIX = '-record.json';
-    private constructor(private readonly _path: string, private readonly _createDatabaseDirectory: boolean = false) {}
-
-    /**
-     * Create a provider if provided options are valid
-     * @param options database configuration
-     * @returns database file storage provider
-     */
-    public static createIfValid(
-        options?: BacktraceDatabaseConfiguration,
-    ): BacktraceDatabaseFileStorageProvider | undefined {
-        if (!options) {
-            return undefined;
-        }
-        if (!options.enabled) {
-            return undefined;
-        }
-
-        if (options.enabled && !options.path) {
-            throw new Error(
-                'Missing mandatory path to the database. Please define the database.path option in the configuration.',
-            );
-        }
-        return new BacktraceDatabaseFileStorageProvider(options.path, options.createDatabaseDirectory);
-    }
+    constructor(private readonly _path: string, private readonly _createDatabaseDirectory: boolean = false) {}
 
     public start(): boolean {
         // make sure by mistake we don't create anything or start any operation

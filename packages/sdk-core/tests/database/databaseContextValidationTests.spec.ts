@@ -2,7 +2,7 @@ import path from 'path';
 import { BacktraceDatabaseConfiguration, BacktraceReportSubmissionResult } from '../../src';
 import { BacktraceDatabase } from '../../src/modules/database/BacktraceDatabase';
 import { BacktraceTestClient } from '../mocks/BacktraceTestClient';
-import { testStorageProvider } from '../mocks/testStorageProvider';
+import { testDatabaseSetup } from '../mocks/testStorageProvider';
 
 describe('Database context validation tests', () => {
     describe('Record overflow tests', () => {
@@ -38,7 +38,7 @@ describe('Database context validation tests', () => {
                     },
                     [],
                     [],
-                    testStorageProvider,
+                    testDatabaseSetup,
                 );
                 jest.spyOn(client.requestHandler, 'postError').mockResolvedValue(
                     Promise.resolve(BacktraceReportSubmissionResult.OnInternalServerError('test')),

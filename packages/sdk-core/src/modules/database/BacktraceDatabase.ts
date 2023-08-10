@@ -1,10 +1,15 @@
 import { IdGenerator } from '../../common/IdGenerator';
 import { BacktraceAttachment } from '../../model/attachment';
-import { BacktraceDatabaseConfiguration } from '../../model/configuration/BacktraceDatabaseConfiguration';
+import {
+    BacktraceDatabaseConfiguration,
+    DeduplicationStrategy,
+} from '../../model/configuration/BacktraceDatabaseConfiguration';
 import { BacktraceData } from '../../model/data/BacktraceData';
 import { BacktraceReportSubmission } from '../../model/http/BacktraceReportSubmission';
 import { BacktraceDatabaseContext } from './BacktraceDatabaseContext';
+import { BacktraceDatabaseSetup } from './BacktraceDatabaseSetup';
 import { BacktraceDatabaseStorageProvider } from './BacktraceDatabaseStorageProvider';
+import { DeduplicationModel } from './DeduplicationModel';
 import { BacktraceDatabaseRecord } from './model/BacktraceDatabaseRecord';
 export class BacktraceDatabase {
     /**
@@ -15,18 +20,24 @@ export class BacktraceDatabase {
     }
 
     private readonly _databaseRecordContext: BacktraceDatabaseContext;
+    private readonly _storageProvider: BacktraceDatabaseStorageProvider;
+    private readonly _deduplicationModel: DeduplicationModel;
 
     private readonly _maximumRecords: number;
     private readonly _retryInterval: number;
     private _intervalId?: ReturnType<typeof setInterval>;
-
     private _enabled = false;
 
     constructor(
         private readonly _options: BacktraceDatabaseConfiguration | undefined,
-        private readonly _storageProvider: BacktraceDatabaseStorageProvider,
+        databaseSetup: BacktraceDatabaseSetup,
         private readonly _requestHandler: BacktraceReportSubmission,
     ) {
+        this._storageProvider = databaseSetup.storageProvider;
+        this._deduplicationModel = new DeduplicationModel(
+            databaseSetup.hashProvider,
+            this._options?.deduplicationStrategy ?? DeduplicationStrategy.None,
+        );
         this._databaseRecordContext = new BacktraceDatabaseContext(this._options?.maximumRetries);
         this._maximumRecords = this._options?.maximumNumberOfRecords ?? 8;
         this._retryInterval = this._options?.retryInterval ?? 60_000;
@@ -73,10 +84,19 @@ export class BacktraceDatabase {
 
         this.prepareDatabase();
 
+        const dataHash = this._deduplicationModel.getSha(backtraceData);
+        if (dataHash) {
+            const existingRecord = this._databaseRecordContext.find((record) => record.hash === dataHash);
+            if (existingRecord) {
+                existingRecord.count++;
+                return existingRecord;
+            }
+        }
+
         const record = {
             count: 1,
             data: backtraceData,
-            hash: '',
+            hash: dataHash,
             id: IdGenerator.uuid(),
             locked: false,
             attachments: attachments,
