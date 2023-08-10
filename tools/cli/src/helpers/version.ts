@@ -6,7 +6,11 @@ interface PackageJson {
 }
 
 export function loadVersion() {
-    return AsyncResult.equip(readFile(path.join(__dirname, '../../package.json')))
+    const packageJsonPath = require.main?.path
+        ? path.join(require.main?.path, '..', 'package.json')
+        : path.join(__dirname, '../../package.json');
+
+    return AsyncResult.equip(readFile(packageJsonPath))
         .then(parseJSON<PackageJson>)
         .then((p) => p.version).inner;
 }
