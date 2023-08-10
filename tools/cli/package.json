@@ -43,7 +43,8 @@
         "@backtrace/sourcemap-tools": "^0.0.1",
         "command-line-args": "^5.2.1",
         "command-line-usage": "^7.0.1",
-        "glob": "^10.3.3"
+        "glob": "^10.3.3",
+        "jsonc": "^2.0.0"
     },
     "devDependencies": {
         "@types/command-line-args": "^5.2.0",

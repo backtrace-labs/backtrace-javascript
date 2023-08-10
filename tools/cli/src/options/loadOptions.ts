@@ -1,4 +1,5 @@
 import { AsyncResult, Ok, ResultPromise, parseJSON, readFile } from '@backtrace/sourcemap-tools';
+import { parseJSONC } from '../helpers/jsonc';
 import { CliOptions, CommandCliOptions } from './models/CliOptions';
 
 export const DEFAULT_OPTIONS_PATH = '.backtracejsrc';
@@ -15,7 +16,7 @@ export function loadAndJoinOptions(path?: string) {
         }
 
         return AsyncResult.equip(readResult)
-            .then(parseJSON<CliOptions>)
+            .then(parseJSONC<CliOptions>)
             .then(joinOptions(key, options, defaults)).inner;
     };
 }
