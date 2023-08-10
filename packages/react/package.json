@@ -8,6 +8,7 @@
         "clean": "rimraf \"lib\"",
         "format": "prettier --write '**/*.ts'",
         "lint": "eslint . --ext .ts",
+        "prepublishOnly": "NODE_ENV=production npm run build",
         "watch": "webpack -w",
         "test": "NODE_ENV=test jest"
     },
@@ -31,6 +32,9 @@
         "url": "https://github.com/backtrace-labs/backtrace-javascript/issues"
     },
     "homepage": "https://github.com/backtrace-labs/backtrace-javascript#readme",
+    "files": [
+        "/lib"
+    ],
     "devDependencies": {
         "@testing-library/react": "^14.0.0",
         "@types/react": "^18.2.14",

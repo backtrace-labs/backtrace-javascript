@@ -12,6 +12,7 @@
         "build:rollup": "rollup --config rollup.config.js",
         "clean": "tsc -b ./tsconfig.build.json --clean && rimraf \"lib\"",
         "format": "prettier --write '**/*.ts'",
+        "prepublishOnly": "NODE_ENV=production npm run build",
         "lint": "eslint . --ext .ts",
         "watch": "tsc -b ./tsconfig.build.json -w"
     },
@@ -37,6 +38,9 @@
         "url": "https://github.com/backtrace-labs/backtrace-javascript/issues"
     },
     "homepage": "https://github.com/backtrace-labs/backtrace-javascript#readme",
+    "files": [
+        "/lib"
+    ],
     "devDependencies": {
         "@rollup/plugin-typescript": "^11.1.2",
         "@types/jest": "^29.5.1",

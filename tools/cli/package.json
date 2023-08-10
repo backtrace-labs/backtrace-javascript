@@ -15,6 +15,7 @@
         "clean": "tsc -b --clean && rimraf \"lib\"",
         "format": "prettier --write '**/*.ts'",
         "lint": "eslint . --ext .ts",
+        "prepublishOnly": "NODE_ENV=production npm run build",
         "watch": "tsc -w",
         "start": "node lib/index.js"
     },
@@ -39,6 +40,9 @@
         "url": "https://github.com/backtrace-labs/backtrace-javascript/issues"
     },
     "homepage": "https://github.com/backtrace-labs/backtrace-javascript#readme",
+    "files": [
+        "/lib"
+    ],
     "dependencies": {
         "@backtrace/sourcemap-tools": "^0.0.1",
         "command-line-args": "^5.2.1",
