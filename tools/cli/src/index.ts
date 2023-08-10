@@ -5,12 +5,14 @@ import commandLineArgs from 'command-line-args';
 import { Command } from './commands/Command';
 import { loadVersion } from './helpers/version';
 import { LoggerOptions, createLogger } from './logger';
+import { DEFAULT_OPTIONS_PATH } from './options/loadOptions';
 import { addSourcesCmd } from './sourcemaps/add-sources';
 import { processCmd } from './sourcemaps/process';
 import { uploadCmd } from './sourcemaps/upload';
 
 export interface GlobalOptions extends LoggerOptions {
     readonly help: boolean;
+    readonly config: string;
 }
 
 export interface MainOptions {
@@ -50,6 +52,12 @@ const mainCommand = new Command<GlobalOptions & MainOptions>({
         type: String,
         global: true,
         description: 'Sets the logging level. Can be one of: quiet, error, warn, info, debug, verbose. Default: info',
+    })
+    .option({
+        name: 'config',
+        type: String,
+        global: true,
+        description: `Path to the config file. Default: ${DEFAULT_OPTIONS_PATH}`,
     })
     .option({
         name: 'version',

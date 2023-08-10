@@ -28,9 +28,11 @@ import { GlobalOptions } from '..';
 import { Command } from '../commands/Command';
 import { find } from '../helpers/find';
 import { logAsset } from '../helpers/logs';
+import { normalizePaths } from '../helpers/normalizePaths';
 import { CliLogger, createLogger } from '../logger';
+import { loadAndJoinOptions } from '../options/loadOptions';
 
-interface UploadOptions extends GlobalOptions {
+export interface UploadOptions extends GlobalOptions {
     readonly url: string;
     readonly path: string[];
     readonly 'include-sources': string;
@@ -50,14 +52,12 @@ export const uploadCmd = new Command<UploadOptions>({
         type: String,
         description: 'URL to upload to. You can use also BACKTRACE_JS_UPLOAD_URL env variable.',
         alias: 'u',
-        defaultValue: process.env.BACKTRACE_JS_UPLOAD_URL,
     })
     .option({
         name: 'path',
         type: String,
         description: 'Path to sourcemap files or directories containing sourcemaps to upload.',
         defaultOption: true,
-        defaultValue: process.cwd(),
         multiple: true,
         alias: 'p',
     })
@@ -65,28 +65,24 @@ export const uploadCmd = new Command<UploadOptions>({
         name: 'include-sources',
         type: Boolean,
         description: 'Uploads the sourcemaps with "sourcesContent" key.',
-        defaultValue: false,
     })
     .option({
         name: 'insecure',
         alias: 'k',
         type: Boolean,
         description: 'Disables HTTPS certificate checking.',
-        defaultValue: false,
     })
     .option({
         name: 'dry-run',
         alias: 'n',
         type: Boolean,
         description: 'Does not upload the files at the end.',
-        defaultValue: false,
     })
     .option({
         name: 'force',
         alias: 'f',
         type: Boolean,
         description: 'Upload files even if not processed.',
-        defaultValue: false,
     })
     .option({
         name: 'pass-with-no-files',
@@ -99,12 +95,23 @@ export const uploadCmd = new Command<UploadOptions>({
         description: 'If set, archive with sourcemaps will be outputted to this path instead of being uploaded.',
         type: String,
     })
-    .execute(function (opts, stack) {
+    .execute(async function (opts, stack) {
         const logger = createLogger(opts);
         const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
+
+        const optsResult = await loadAndJoinOptions(opts.config)('upload', opts, {
+            url: process.env.BACKTRACE_JS_UPLOAD_URL,
+        });
+
+        if (optsResult.isErr()) {
+            return optsResult;
+        }
+
+        opts = optsResult.data;
+
         logger.trace(`resolved options: \n${JSON.stringify(opts, null, '  ')}`);
 
-        const searchPaths = opts.path;
+        const searchPaths = normalizePaths(opts.path, process.cwd());
         if (!searchPaths) {
             logger.info(this.getHelpMessage(stack));
             return Err('path must be specified');
@@ -115,6 +122,13 @@ export const uploadCmd = new Command<UploadOptions>({
         if (!outputPath && !uploadUrl) {
             logger.info(this.getHelpMessage(stack));
             return Err('upload URL is required.');
+        }
+
+        if (uploadUrl) {
+            const result = validateUrl(uploadUrl);
+            if (result.isErr()) {
+                return result;
+            }
         }
 
         const logDebug = log(logger, 'debug');
@@ -193,6 +207,14 @@ export const uploadCmd = new Command<UploadOptions>({
             .then(output(logger))
             .then(() => 0).inner;
     });
+
+function validateUrl(url: string) {
+    try {
+        return Ok(new URL(url));
+    } catch {
+        return Err(`invalid URL: ${url}`);
+    }
+}
 
 function toAsset(file: string): Asset {
     return { name: file, path: file };
