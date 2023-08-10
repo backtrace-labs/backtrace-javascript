@@ -1,4 +1,5 @@
 import { IdGenerator } from '../../common/IdGenerator';
+import { TimeHelper } from '../../common/TimeHelper';
 import { BacktraceAttachment } from '../../model/attachment';
 import { BacktraceDatabaseConfiguration } from '../../model/configuration/BacktraceDatabaseConfiguration';
 import { BacktraceData } from '../../model/data/BacktraceData';
@@ -74,9 +75,10 @@ export class BacktraceDatabase {
 
         this.prepareDatabase();
 
-        const record = {
+        const record: BacktraceDatabaseRecord = {
             count: 1,
             data: backtraceData,
+            timestamp: TimeHelper.now(),
             hash: '',
             id: IdGenerator.uuid(),
             locked: false,
@@ -138,6 +140,43 @@ export class BacktraceDatabase {
     }
 
     /**
+     * Sends all records available in the database to Backtrace and removes them
+     * no matter if the submission process was successful or not.
+     */
+    public async flush() {
+        const start = TimeHelper.now();
+        await this.send();
+        const records = this.get().filter((n) => n.timestamp <= start);
+        for (const record of records) {
+            this.remove(record);
+        }
+    }
+    /**
+     * Sends all records available in the database to Backtrace.
+     */
+    public async send() {
+        for (let bucketIndex = 0; bucketIndex < this._databaseRecordContext.bucketCount; bucketIndex++) {
+            for (const record of this._databaseRecordContext.getBucket(bucketIndex)) {
+                if (record.locked) {
+                    continue;
+                }
+                try {
+                    record.locked = true;
+                    const result = await this._requestHandler.send(record.data, record.attachments);
+                    if (result.status === 'Ok') {
+                        this.remove(record);
+                        continue;
+                    }
+                    this._databaseRecordContext.increaseBucket(bucketIndex);
+                    return;
+                } finally {
+                    record.locked = false;
+                }
+            }
+        }
+    }
+
+    /**
      * Prepare database to insert records
      * @param totalNumberOfRecords number of records to insert
      */
@@ -167,31 +206,9 @@ export class BacktraceDatabase {
         }
 
         const sendDatabaseReports = async () => {
-            await this.sendRecords();
+            await this.send();
         };
         this._intervalId = setInterval(sendDatabaseReports, this._retryInterval);
-        await this.sendRecords();
-    }
-
-    private async sendRecords() {
-        for (let bucketIndex = 0; bucketIndex < this._databaseRecordContext.bucketCount; bucketIndex++) {
-            for (const record of this._databaseRecordContext.getBucket(bucketIndex)) {
-                if (record.locked) {
-                    continue;
-                }
-                try {
-                    record.locked = true;
-                    const result = await this._requestHandler.send(record.data, record.attachments);
-                    if (result.status === 'Ok') {
-                        this.remove(record);
-                        continue;
-                    }
-                    this._databaseRecordContext.increaseBucket(bucketIndex);
-                    return;
-                } finally {
-                    record.locked = false;
-                }
-            }
-        }
+        await this.send();
     }
 }
