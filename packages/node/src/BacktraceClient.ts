@@ -1,16 +1,20 @@
 import {
     BacktraceAttributeProvider,
-    BacktraceConfiguration as CoreConfiguration,
     BacktraceCoreClient,
     BacktraceReport,
     BacktraceRequestHandler,
+    BacktraceConfiguration as CoreConfiguration,
     DebugIdContainer,
     VariableDebugIdMapProvider,
 } from '@backtrace/sdk-core';
-import { AGENT } from './agentDefinition';
+import fs from 'fs';
+import * as fsPromise from 'fs/promises';
+import path from 'path';
 import { BacktraceConfiguration } from './BacktraceConfiguration';
+import { AGENT } from './agentDefinition';
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 import { NodeOptionReader } from './common/NodeOptionReader';
+import { NodeDiagnosticReportConverter } from './converter/NodeDiagnosticReportConverter';
 import { BacktraceDatabaseFileStorageProvider } from './database/BacktraceDatabaseFileStorageProvider';
 
 export class BacktraceClient extends BacktraceCoreClient {
@@ -30,12 +34,31 @@ export class BacktraceClient extends BacktraceCoreClient {
             undefined,
             BacktraceDatabaseFileStorageProvider.createIfValid(options.database),
         );
+    }
 
-        this.captureUnhandledErrors(options.captureUnhandledErrors, options.captureUnhandledPromiseRejections);
+    public initialize() {
+        super.initialize();
+
+        this.loadNodeCrashes();
+
+        this.captureUnhandledErrors(
+            this.options.captureUnhandledErrors,
+            this.options.captureUnhandledPromiseRejections,
+        );
+
+        this.captureNodeCrashes();
+
+        return this;
     }
 
     public static builder(options: BacktraceConfiguration): BacktraceClientBuilder {
         return new BacktraceClientBuilder(options);
+    }
+
+    public static initialize(options: BacktraceConfiguration, build?: (builder: BacktraceClientBuilder) => void) {
+        const builder = this.builder(options);
+        build && build(builder);
+        return builder.build().initialize();
     }
 
     private captureUnhandledErrors(captureUnhandledExceptions = true, captureUnhandledRejections = true) {
@@ -129,5 +152,67 @@ export class BacktraceClient extends BacktraceCoreClient {
             process.emitWarning(warning);
         };
         process.prependListener('unhandledRejection', captureUnhandledRejectionsCallback);
+    }
+
+    private captureNodeCrashes() {
+        if (!process.report) {
+            return;
+        }
+
+        if (!this.options.database?.enabled) {
+            return;
+        }
+
+        if (!this.options.database?.captureNativeCrashes) {
+            return;
+        }
+
+        process.report.reportOnFatalError = true;
+        if (!process.report.directory) {
+            process.report.directory = this.options.database.path;
+        }
+    }
+
+    private async loadNodeCrashes() {
+        if (!this.options.database?.captureNativeCrashes) {
+            return;
+        }
+
+        const reportName = process.report?.filename;
+        const databasePath = process.report?.directory
+            ? process.report.directory
+            : this.options.database?.path ?? process.cwd();
+
+        const databaseFiles = fs.readdirSync(databasePath, {
+            encoding: 'utf8',
+            withFileTypes: true,
+        });
+
+        const converter = new NodeDiagnosticReportConverter();
+
+        const recordNames = databaseFiles
+            .filter(
+                (file) =>
+                    file.isFile() &&
+                    // If the user specifies a preset name for reports, we should compare it directly
+                    // Otherwise, match the default name
+                    (reportName
+                        ? file.name === reportName
+                        : file.name.startsWith('report.') && file.name.endsWith('.json')),
+            )
+            .map((n) => n.name);
+
+        for (const recordName of recordNames) {
+            const recordPath = path.join(databasePath, recordName);
+            try {
+                const recordJson = await fsPromise.readFile(recordPath, 'utf8');
+                const data = converter.convert(JSON.parse(recordJson));
+                await this.send(data);
+            } catch {
+                // Do nothing, skip the report
+            } finally {
+                await fsPromise.unlink(recordPath);
+            }
+        }
     }
 }

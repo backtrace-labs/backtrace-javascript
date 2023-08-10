@@ -8,8 +8,10 @@ export class BacktraceClient extends BrowserClient {
         return new BacktraceReactClientBuilder(options);
     }
 
-    public static initialize(options: BacktraceConfiguration): BacktraceClient {
-        this._instance = this.builder(options).build();
+    public static initialize(options: BacktraceConfiguration, build?: (builder: BacktraceReactClientBuilder) => void) {
+        const builder = this.builder(options);
+        build && build(builder);
+        this._instance = this.builder(options).build().initialize();
         return this._instance;
     }
 

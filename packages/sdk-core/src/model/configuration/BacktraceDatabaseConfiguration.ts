@@ -37,6 +37,12 @@ export interface EnabledBacktraceDatabaseConfiguration {
      * The default value is 3
      */
     maximumRetries?: number;
+
+    /**
+     * Captures and symbolicates stack traces for native crashes if the runtime supports this.
+     * A crash report is generated, stored locally, and uploaded upon next start.
+     */
+    captureNativeCrashes?: boolean;
 }
 
 export interface DisabledBacktraceDatabaseConfiguration

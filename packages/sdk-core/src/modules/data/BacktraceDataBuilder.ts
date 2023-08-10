@@ -3,7 +3,7 @@ import { SdkOptions } from '../../builder/SdkOptions';
 import { IdGenerator } from '../../common/IdGenerator';
 import { TimeHelper } from '../../common/TimeHelper';
 import { AttributeType, BacktraceData } from '../../model/data/BacktraceData';
-import { BacktraceStackTrace } from '../../model/data/BacktraceStackTrace';
+import { BacktraceStackFrame, BacktraceStackTrace } from '../../model/data/BacktraceStackTrace';
 import { BacktraceReport } from '../../model/report/BacktraceReport';
 import { ReportDataBuilder } from '../attribute/ReportDataBuilder';
 
@@ -57,8 +57,13 @@ export class BacktraceDataBuilder {
         let detectedDebugIdentifier = false;
 
         for (const [name, traceInfo] of Object.entries(report.stackTrace)) {
-            const { message, stack } = traceInfo;
-            const stackFrames = this._stackTraceConverter.convert(stack, message);
+            let stackFrames: BacktraceStackFrame[];
+            if (Array.isArray(traceInfo)) {
+                stackFrames = traceInfo;
+            } else {
+                const { message, stack } = traceInfo;
+                stackFrames = this._stackTraceConverter.convert(stack, message);
+            }
 
             for (const frame of stackFrames) {
                 const debugIdentifier = this._debugIdProvider.getDebugId(frame.library);
