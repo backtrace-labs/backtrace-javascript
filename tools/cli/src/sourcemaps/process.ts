@@ -19,10 +19,12 @@ import { GlobalOptions } from '..';
 import { Command } from '../commands/Command';
 import { find } from '../helpers/find';
 import { logAsset } from '../helpers/logs';
+import { normalizePaths } from '../helpers/normalizePaths';
 import { CliLogger, createLogger } from '../logger';
+import { loadAndJoinOptions } from '../options/loadOptions';
 
-interface ProcessOptions extends GlobalOptions {
-    readonly path: string[];
+export interface ProcessOptions extends GlobalOptions {
+    readonly path: string | string[];
     readonly 'dry-run': boolean;
     readonly force: boolean;
     readonly 'pass-with-no-files': boolean;
@@ -36,7 +38,6 @@ export const processCmd = new Command<ProcessOptions>({
         name: 'path',
         description: 'Path to sourcemap files or directories containing sourcemaps to upload.',
         defaultOption: true,
-        defaultValue: process.cwd(),
         multiple: true,
         alias: 'p',
     })
@@ -45,26 +46,35 @@ export const processCmd = new Command<ProcessOptions>({
         alias: 'n',
         type: Boolean,
         description: 'Does not modify the files at the end.',
-        defaultValue: false,
     })
     .option({
         name: 'force',
         alias: 'f',
         type: Boolean,
         description: 'Processes files even if already processed.',
-        defaultValue: false,
     })
     .option({
         name: 'pass-with-no-files',
         type: Boolean,
         description: 'Exits with zero exit code if no files for processing are found.',
     })
-    .execute(function (opts, stack) {
+    .execute(async function (opts, stack) {
         const logger = createLogger(opts);
         const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
+
+        const optsResult = await loadAndJoinOptions(opts.config)('process', opts, {
+            path: process.cwd(),
+        });
+
+        if (optsResult.isErr()) {
+            return optsResult;
+        }
+
+        opts = optsResult.data;
+
         logger.trace(`resolved options: \n${JSON.stringify(opts, null, '  ')}`);
 
-        const searchPaths = opts.path;
+        const searchPaths = normalizePaths(opts.path, process.cwd());
         if (!searchPaths) {
             logger.info(this.getHelpMessage(stack));
             return Err('path must be specified');
@@ -113,11 +123,16 @@ export const processCmd = new Command<ProcessOptions>({
             .then(filter(matchSourceExtension))
             .then(logDebug((r) => `found ${r.length} files matching source extension`))
             .then(map(logTrace((path) => `file matching extension: ${path}`)))
+            .then(opts['pass-with-no-files'] ? Ok : failIfEmpty('no source files found'))
             .then(map(toAsset))
             .then(opts.force ? Ok : filterUnprocessedAssetsCommand)
             .then(logDebug((r) => `processing ${r.length} files`))
             .then(map(logTrace(({ path }) => `file to process: ${path}`)))
-            .then(opts['pass-with-no-files'] ? Ok : failIfEmpty('no files for processing found'))
+            .then(
+                opts['pass-with-no-files']
+                    ? Ok
+                    : failIfEmpty('no files for processing found, they may be already processed'),
+            )
             .then(map(processCommand))
             .then(opts['dry-run'] ? Ok : map(writeCommand))
             .then(map(output(logger)))

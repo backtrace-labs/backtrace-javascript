@@ -5,7 +5,7 @@ import { LoggerOptions, createLogger } from '../logger';
 import { CommandError } from '../models/CommandError';
 import { ExtendedOptionDefinition } from '../models/OptionDefinition';
 
-const CLI_COMMAND = 'backtrace';
+const CLI_COMMAND = 'backtrace-js';
 
 export class Command<T extends object = object> {
     public readonly subcommands: Command[] = [];
@@ -15,6 +15,7 @@ export class Command<T extends object = object> {
         this: this,
         values: Partial<T>,
         stack?: Command[],
+        unknown?: string[],
     ) => Result<number, string> | Promise<Result<number, string>>;
 
     constructor(public readonly definition: ExtendedOptionDefinition) {}
@@ -52,10 +53,18 @@ export class Command<T extends object = object> {
             localOptions.push(subcommandOption);
         }
 
-        const values = commandLineArgs(localOptions, {
+        const valuesResult = this.safeCommandLineArgs(localOptions, {
             argv,
             stopAtFirstUnknown: subCommandMode,
         });
+
+        if (valuesResult.isErr()) {
+            const logger = createLogger();
+            logger.info(this.getHelpMessage(stack));
+            return valuesResult.mapErr((error) => ({ command: this, error, stack }));
+        }
+
+        const values = valuesResult.data;
 
         if (subCommandMode && values._subcommand) {
             const subcommand = this.subcommands.find((s) => s.definition.name === values._subcommand);
@@ -73,7 +82,9 @@ export class Command<T extends object = object> {
         }
 
         if (this._execute) {
-            return (await this._execute.call(this, values as T, stack)).mapErr((error) => ({
+            return (
+                await this._execute.call(this, values as T, stack, [...(values._unknown ?? []), values._subcommand])
+            ).mapErr((error) => ({
                 command: this,
                 error,
                 stack,
@@ -164,5 +175,19 @@ export class Command<T extends object = object> {
         }
 
         return commandLineUsage(sections);
+    }
+
+    private safeCommandLineArgs(...args: Parameters<typeof commandLineArgs>) {
+        try {
+            return Ok(commandLineArgs(...args));
+        } catch (err) {
+            if (err instanceof Error) {
+                if (err.name === 'UNKNOWN_OPTION') {
+                    return Err(err.message);
+                }
+            }
+
+            throw err;
+        }
     }
 }

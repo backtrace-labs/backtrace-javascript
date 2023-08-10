@@ -18,10 +18,12 @@ import { GlobalOptions } from '..';
 import { Command } from '../commands/Command';
 import { find } from '../helpers/find';
 import { logAsset } from '../helpers/logs';
+import { normalizePaths } from '../helpers/normalizePaths';
 import { CliLogger, createLogger } from '../logger';
+import { loadAndJoinOptions } from '../options/loadOptions';
 
-interface AddSourcesOptions extends GlobalOptions {
-    readonly path: string[];
+export interface AddSourcesOptions extends GlobalOptions {
+    readonly path: string | string[];
     readonly 'dry-run': boolean;
     readonly force: boolean;
     readonly skipFailing: boolean;
@@ -44,7 +46,6 @@ export const addSourcesCmd = new Command<AddSourcesOptions>({
         name: 'path',
         description: 'Path to sourcemap files to append sources to.',
         defaultOption: true,
-        defaultValue: process.cwd(),
         multiple: true,
         alias: 'p',
     })
@@ -53,27 +54,35 @@ export const addSourcesCmd = new Command<AddSourcesOptions>({
         alias: 'n',
         type: Boolean,
         description: 'Does not modify the files at the end.',
-        defaultValue: false,
     })
     .option({
         name: 'force',
         alias: 'f',
         type: Boolean,
         description: 'Processes files even if sourcesContent is not empty. Will overwrite existing sources.',
-        defaultValue: false,
     })
     .option({
         name: 'pass-with-no-files',
         type: Boolean,
         description: 'Exits with zero exit code if no sourcemaps are found.',
     })
-    .execute(function (opts, stack) {
+    .execute(async function (opts, stack) {
         const logger = createLogger(opts);
         const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
+
+        const optsResult = await loadAndJoinOptions(opts.config)('add-sources', opts, {
+            path: process.cwd(),
+        });
+        if (optsResult.isErr()) {
+            return optsResult;
+        }
+
+        opts = optsResult.data;
+
         logger.trace(`resolved options: \n${JSON.stringify(opts, null, '  ')}`);
 
-        const searchPaths = opts.path;
-        if (!searchPaths) {
+        const searchPaths = normalizePaths(opts.path, process.cwd());
+        if (!searchPaths.length) {
             logger.info(this.getHelpMessage(stack));
             return Err('path must be specified');
         }
@@ -133,13 +142,18 @@ export const addSourcesCmd = new Command<AddSourcesOptions>({
             .then(filter(matchSourceMapExtension))
             .then(logDebug((r) => `found ${r.length} files matching sourcemap extension`))
             .then(map(logTrace((path) => `file matching extension: ${path}`)))
+            .then(opts['pass-with-no-files'] ? Ok : failIfEmpty('no sourcemaps found'))
             .then(map(toAsset))
             .then(map(readAssetCommand))
             .then(map(loadAssetCommand))
             .then(opts.force ? Ok : filterAssetsCommand)
             .then(logDebug((r) => `adding sources to ${r.length} files`))
             .then(map(logTrace(({ path }) => `file to add sources to: ${path}`)))
-            .then(opts['pass-with-no-files'] ? Ok : failIfEmpty('no valid sourcemaps found'))
+            .then(
+                opts['pass-with-no-files']
+                    ? Ok
+                    : failIfEmpty('no sourcemaps without sources found, use --force to overwrite sources'),
+            )
             .then(map(addSourceCommand))
             .then(opts['dry-run'] ? Ok : map(writeSourceMapCommand))
             .then(map(output(logger)))
