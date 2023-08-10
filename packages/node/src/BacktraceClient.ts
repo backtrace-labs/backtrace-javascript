@@ -8,6 +8,7 @@ import {
     VariableDebugIdMapProvider,
 } from '@backtrace/sdk-core';
 import fs from 'fs';
+import * as fsPromise from 'fs/promises';
 import path from 'path';
 import { BacktraceConfiguration } from './BacktraceConfiguration';
 import { AGENT } from './agentDefinition';
@@ -163,16 +164,16 @@ export class BacktraceClient extends BacktraceCoreClient {
         }
 
         process.report.reportOnFatalError = true;
-        process.report.directory = this.options.database.path;
+        if (!process.report.directory) {
+            process.report.directory = this.options.database.path;
+        }
     }
 
     private async loadNodeCrashes() {
-        if (!this.options.database?.enabled) {
-            return;
-        }
-
         const reportName = process.report?.filename;
-        const databasePath = this.options.database.path;
+        const databasePath = process.report?.directory
+            ? process.report.directory
+            : this.options.database?.path ?? process.cwd();
 
         const databaseFiles = fs.readdirSync(databasePath, {
             encoding: 'utf8',
@@ -186,6 +187,7 @@ export class BacktraceClient extends BacktraceCoreClient {
                 (file) =>
                     file.isFile() &&
                     // If the user specifies a preset name for reports, we should compare it directly
+                    // Otherwise, match the default name
                     (reportName
                         ? file.name === reportName
                         : file.name.startsWith('report.') && file.name.endsWith('.json')),
@@ -195,13 +197,13 @@ export class BacktraceClient extends BacktraceCoreClient {
         for (const recordName of recordNames) {
             const recordPath = path.join(databasePath, recordName);
             try {
-                const recordJson = fs.readFileSync(recordPath, 'utf8');
+                const recordJson = await fsPromise.readFile(recordPath, 'utf8');
                 const data = converter.convert(JSON.parse(recordJson));
                 await this.send(data);
             } catch {
                 // Do nothing, skip the report
             } finally {
-                fs.unlinkSync(recordPath);
+                await fsPromise.unlink(recordPath);
             }
         }
     }
