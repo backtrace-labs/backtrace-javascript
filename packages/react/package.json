@@ -8,7 +8,7 @@
         "clean": "rimraf \"lib\"",
         "format": "prettier --write '**/*.ts'",
         "lint": "eslint . --ext .ts",
-        "prepare": "NODE_ENV=production npm run build",
+        "prepublishOnly": "NODE_ENV=production npm run build",
         "watch": "webpack -w",
         "test": "NODE_ENV=test jest"
     },
