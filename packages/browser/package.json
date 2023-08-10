@@ -33,6 +33,9 @@
         "url": "https://github.com/backtrace-labs/backtrace-javascript/issues"
     },
     "homepage": "https://github.com/backtrace-labs/backtrace-javascript#readme",
+    "files": [
+        "/lib"
+    ],
     "devDependencies": {
         "@types/jest": "^29.5.1",
         "@types/ua-parser-js": "^0.7.36",
