@@ -163,6 +163,10 @@ export class BacktraceClient extends BacktraceCoreClient {
             return;
         }
 
+        if (!this.options.database?.captureNativeCrashes) {
+            return;
+        }
+
         process.report.reportOnFatalError = true;
         if (!process.report.directory) {
             process.report.directory = this.options.database.path;
@@ -170,6 +174,10 @@ export class BacktraceClient extends BacktraceCoreClient {
     }
 
     private async loadNodeCrashes() {
+        if (!this.options.database?.captureNativeCrashes) {
+            return;
+        }
+
         const reportName = process.report?.filename;
         const databasePath = process.report?.directory
             ? process.report.directory
