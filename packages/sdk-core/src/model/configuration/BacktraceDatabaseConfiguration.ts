@@ -1,25 +1,3 @@
-export enum DeduplicationStrategy {
-    /**
-     * Duplicated reports are not aggregated
-     */
-    None = 0,
-    /**
-     * Aggregates based on the current stack trace
-     */
-    Callstack = 1 << 0,
-    /**
-     * Aggregates by stack trace and exception type
-     */
-    Classifier = 1 << 1,
-    /**
-     * Aggregates by stack trace and exception message
-     */
-    Message = 1 << 2,
-    /**
-     * Aggregates by faulting callstack, exception type, and exception message
-     */
-    All = ~(~0 << 4) - 1,
-}
 export interface EnabledBacktraceDatabaseConfiguration {
     /**
      * Determine if the Database is enabled
@@ -34,12 +12,6 @@ export interface EnabledBacktraceDatabaseConfiguration {
      * By default true.
      */
     createDatabaseDirectory?: boolean;
-
-    /**
-     * Duplicated reports aggregration settings. If defined, the same reports can be combined
-     * together.
-     */
-    deduplicationStrategy?: DeduplicationStrategy;
 
     /**
      * Sends reports to the server based on the retry settings.
