@@ -1,6 +1,4 @@
-import { BacktraceStackTraceConverter } from '@backtrace/sdk-core';
-import { JavaScriptEngine } from '@backtrace/sdk-core/src/model/data/JavaScriptEngine';
-import { BacktraceStackFrame } from '@backtrace/sdk-core/lib/model/data/BacktraceStackTrace';
+import { BacktraceStackTraceConverter, JavaScriptEngine, BacktraceStackFrame } from '@backtrace/browser';
 
 export class ReactStackTraceConverter implements BacktraceStackTraceConverter {
     constructor(private readonly stackTraceConverter: BacktraceStackTraceConverter) {}
