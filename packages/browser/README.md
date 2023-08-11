@@ -1,8 +1,10 @@
-# Backtrace Browser
-Backtrace error reporting tool for browser side JavaScript
+# **Backtrace Browser**
+[Backtrace](https://backtrace.io) captures and reports handled and unhandled exceptions in your production software so you can manage application quality through the complete product lifecycle.
+
+The [@backtrace/browser](#) SDK connects your JavaScript application to Backtrace. The basic integration is quick and easy, after which you can explore the rich set of Backtrace features.
 
 ## Table of Contents
-1. [Basic Integration - Getting Your First Errors](#basic-integration)
+1. [Basic Integration - Reporting your first errors](#basic-integration)
 1. [Error Reporting Features](#error-reporting-features)
     - [Attributes](#attributes)
     - [File Attachments](#file-attachments)
@@ -15,6 +17,7 @@ Backtrace error reporting tool for browser side JavaScript
     - [Callbacks](#callbacks)
         - [BeforeSend](#beforesend)
         - [FilterReport](#filterreport)
+
 ## Basic Integration
 All code examples are given in TypeScript.
 ```ts
@@ -28,37 +31,40 @@ const options: BacktraceConfiguration = {
     // Version of the website
     version: "1.2.3",  
     // Submission url
+    // <universe> is the subdomain of your Backtrace instance (<universe>.backtrace.io)
+    // <token> can be found in Project Settings/Submission tokens
     url: "https://submit.backtrace.io/<universe>/<token>/json",
 }
 
 // Initialize the client
 const client = BacktraceClient.builder(options).build();
 
-// When an error occurs
+// Send an error
 client.send(new Error("Something broke!"));
 ```
 
 ## Error Reporting Features
 ### Attributes
-Error reports have the ability to contain additional contextual data in them, called attributes.  These are passed as key/value pairs and can be parsed by the Backtrace server to allow for aggrigation or filtering.  For information on setting up the attributes for indexing on the Backtrace server [see here](https://docs.saucelabs.com/error-reporting/project-setup/attributes/).
 
-There are several places that attributes can be modified, deleted, or added.
+Custom attributes are key-value pairs that can be added to your error reports. They are used in report aggregation, sorting and filtering, can provide better contextual data for an error, and much more. They are foundational to many of the advanced Backtrace features detailed in [Error Reporting documentation](https://docs.saucelabs.com/error-reporting/getting-started/).
 
-#### During BacktraceClient Initialization
-It is possible to set attributes during the [BacktraceClient](#backtraceclient) initialization with the `userAttributes` configuration option.  Doing so will send that list attributes along with every report, refered to as global attributes.
+There are several places where attributes can be added, modified or deleted.
+
+#### Attach attributes object to BacktraceClient
+It is possible to include an attributes object during [BacktraceClient](#backtraceclient) initialization. This list of attributes will be included with every error report, referred to as global attributes.
 ```ts
+// Create an attributes object that can be modified throughout runtime
 const attributes: Record<string, unknown> = {
     "release": "PROD",
 }
 
 // BacktraceClientOptions
 const options: BacktraceConfiguration = {
-    // Name of the website/application
     name: "MyWebPage",
-    // Version of the website
     version: "1.2.3",  
-    // Submission url
     url: "https://submit.backtrace.io/<universe>/<token>/json",
+
+    // Attach the attributes object
     userAttributes: attributes,
 }
 
@@ -66,31 +72,34 @@ const options: BacktraceConfiguration = {
 const client = BacktraceClient.builder(options).build();
 ```
 
-#### During Runtime
-Global attributes can also be set during the runtime once specific data has be loaded (e.g. a user has logged in).
+#### Add attributes during application runtime
+Global attributes can be set during the runtime once specific data has be loaded (e.g. a user has logged in).
 ```ts
+const client = BacktraceClient.builder(options).build();
+...
+
 client.addAttribute({
     "clientID": "de6faf4d-d5b5-486c-9789-318f58a14476"
 })
 ```
 
-#### Situationally in the BacktraceData or BacktraceReport
-When a BacktraceReport object is provided the attributes list can be directly modified.
+#### Add attributes to an error report
+The attributes list of a BacktraceReport object can be directly modified.
 
 ```ts
 const report: BacktraceReport = new BacktraceReport("My error message");
 report.attributes["myKey"] = "myValue";
 ```
-
-### File Attachments
 ***
-Backtrace has several ways in which files can be attached: when initalizing the BacktraceClient, updating the BacktraceClient, or  dynamically for specific reports.  When specifing attachments to the BacktraceClient, all files will be uploaded with each report.
+### File Attachments
 
-```js
-// Import the attachment types from @backtrace/browser with your favoriate package manager.
-import { BacktraceUint8ArrayAttachment, BacktraceStringAttachment  } from "@backtrace/browser";
+Files can be attached to error reports. This can be done when initalizing the BacktraceClient, updating the BacktraceClient, or  dynamically for specific reports.  When including attachments in BacktraceClient, all files will be uploaded with each report.
 
-// BacktraceStringAttachment should be used for text object like a log file for instance
+```ts
+// Import attachment types from @backtrace/browser
+import { BacktraceStringAttachment, BacktraceUint8ArrayAttachment  } from "@backtrace/browser";
+
+// BacktraceStringAttachment should be used for text object like a log file, for example
 const attachment1 = new BacktraceStringAttachment("logfile.txt", "This is the start of my log")
 
 // BacktraceUint8ArrayAttachment should be used for binary files
@@ -101,14 +110,12 @@ const attachments = [attachment1];
 
 // BacktraceClientOptions
 const options = {
-    // Name of the website/application
     name: "MyWebPage",
-    // Version of the website
     version: "1.2.3",  
-    // Submission url
     url: "https://submit.backtrace.io/<universe>/<token>/json",
+    
     // Attach the files to all reports
-    attachments: attachments
+    attachments,
 }
 
 // Later decide to add an attachment to all reports
@@ -124,26 +131,43 @@ try {
     client.send(report);
 }
 ```
+***
 
 ### Breadcrumbs
-Breadcrumbs data is added to the Backtrace reports by default.  This data shows events that have occured in chronological order and can contain additional data within them.
+Breadcrumbs are snippets of chronological data tracing runtime events. This SDK records a number of events by default, and manual breadcrumbs can also be added.
 
-Manual breadcrumbs can also be set.
+[(Breadcrumbs feature documentation)](https://docs.saucelabs.com/error-reporting/web-console/debug/#breadcrumbs)
+***
 
 ### Application Stability Metrics
-The Backtrace Browser SDK has the ability to send usage Metrics to be viewable in the Backtrace UI.  See the Backtrace UI documentation, [here](https://docs.saucelabs.com/error-reporting/project-setup/stability-metrics/), for more information regarding this.
+The Backtrace Browser SDK has the ability to send usage Metrics to be viewable in the Backtrace UI. See [BacktraceMetrics](#backtracemetrics) below to configure a metrics object during initialization to track additional metrics data.
 
-Additional metrics data can also be tracked.
+[(Stability Metrics feature documentation)](https://docs.saucelabs.com/error-reporting/project-setup/stability-metrics/)
 
 ## Advanced SDK Features
 
 ### BacktraceClient
-The BacktraceClient class will take care of automatically sending unhandled errors and unhandled promise rejections.  It can also be used to send trapped exceptions & rejections.
+BacktraceClient is the main SDK class. Error monitoring starts when this object is instantiated, and it will compose and send reports for unhandled errors and unhandled promise rejections. It can also be used to manually send reports from exceptions and rejection handlers.
 
-#### Properties
-| Name | Type | Description |
-| - | - | - |
-| `agent` | string | Backtrace SDK name |
+#### BacktraceClientOptions
+
+The following options are available for the BacktraceClientOptions passed when initializing the BacktraceClient. 
+
+| Option Name | Type | Description | Default | Required? |
+|-|-|-|-|-|
+| `url` | String | Submission URL to send errors to | | <ul><li>- [x] </li></ul> |
+| `name` | String | Your application name | | <ul><li>- [x] </li></ul> |
+| `version` | String | Your application version | | <ul><li>- [x] </li></ul> |
+| `token` | String | The submission token for error injestion.  This is required only if submitting directly to a Backtrace URL. (uncommon)| | <ul><li>- [ ] </li></ul> |
+| `captureUnhandledErrors` | Boolean | Enable unhandled errors | `true` | <ul><li>- [ ] </li></ul> |
+| `captureUnhandledPromiseRejections` | Boolean | Enable unhandled promise rejection | `true` | <ul><li>- [ ] </li></ul> |
+| `timeout` | Integer | How long to wait in ms before timing out the connection | `15000` | <ul><li>- [ ] </li></ul> |
+| `ignoreSslCertificate` | Boolean | Ignore SSL Certificate errors | `false` | <ul><li>- [ ] </li></ul> |
+| `rateLimit` | Integer | Limits the number of reports the client will send per minute. If set to '0', there is no limit. If set to a value greater than '0' and the value is reached, the client will not send any reports until the next minute. | `0` | <ul><li>- [ ] </li></ul> |
+| `userAttributes` | Dictionary | Additional attributes that can be filtered and aggregated against in the Backtrace UI.  | | <ul><li>- [ ] </li></ul> |
+| `attachments` | BacktraceAttachment[] | Additional files to be sent with error reports.  See [File Attachments](#file-attachments) | | <ul><li>- [ ] </li></ul> |
+| `metrics` | BacktraceMetricsOptions | See [Backtrace Metrics](#backtrace-metrics) | | <ul><li>- [ ] </li></ul> |
+| `database` | BacktraceDatabaseOptions | See [Backtrace Database](#backtrace-database) | |<ul><li>- [ ] </li></ul> |
 
 #### Methods
 
@@ -151,26 +175,6 @@ The BacktraceClient class will take care of automatically sending unhandled erro
 | - | - | - |
 | `addAttribute(attributes: Record<string, unknown>)` | void | Add attributes to the BacktraceClient reports |
 | `builder(options: BacktraceClientOptions).build()` | BacktraceClient | Sets up a new BacktraceClient for reporting|
-
-##### BacktraceClientOptions
-
-The following options are available for the BacktraceClientOptions passed when initializing the BacktraceClient. 
-
-| Option Name | Type | Description | Default | Required? |
-|-|-|-|-|-|
-| `url` | String | Submission URL to send errors to | | <ul><li>- [x] </li></ul> |
-| `name` | String | Application name | | <ul><li>- [x] </li></ul> |
-| `version` | String | Application version | | <ul><li>- [x] </li></ul> |
-| `captureUnhandledErrors` | Boolean | Enable unhandled errors | `true` | <ul><li>- [ ] </li></ul> |
-| `captureUnhandledPromiseRejections` | Boolean | Enable unhandled promise rejection | `true` | <ul><li>- [ ] </li></ul> |
-| `token` | String | The submission token for error injestion.  This is required only if submitting directly to a Backtrace URL.| | <ul><li>- [ ] </li></ul> |
-| `timeout` | Integer | How long to wait in ms before timing out the connection | `15000` | <ul><li>- [ ] </li></ul> |
-| `ignoreSslCertificate` | Boolean | Ignore SSL Certificate errors | `false` | <ul><li>- [ ] </li></ul> |
-| `rateLimit` | Integer | Limits the number of reports the client will send per minute. If set to '0', there is no limit. If set to a value greater than '0' and the value is reached, the client will not send any reports until the next minute. |  | <ul><li>- [ ] </li></ul> |
-| `userAttributes` | Dictionary | Additional data that can be filtered and aggregated against in the Backtrace UI  | | <ul><li>- [ ] </li></ul> |
-| `attachments` | BacktraceAttachment[] | Additional files that can be sent with error to Backtrace.  See [Attaching Files](#attaching-files) | | <ul><li>- [ ] </li></ul> |
-| `metrics` | BacktraceMetricsOptions | See [Backtrace Metrics](#backtrace-metrics) | | <ul><li>- [ ] </li></ul> |
-| `database` | BacktraceDatabaseOptions | See [Backtrace Database](#backtrace-database) | |<ul><li>- [ ] </li></ul> |
 
 ### BacktraceDatabase
 
@@ -181,6 +185,6 @@ The following options are available for the BacktraceClientOptions passed when i
 ### Callbacks
 
 #### BeforeSend
-Method that when implemented will be the last possible point in which the BacktraceReport can be modified (attributes added or deleted, additonal attachments added).  If a BacktraceReport is returned from the function that will be the report sent, if a null is returned the report is skipped.
+Use BeforeSend to modify an error report. BeforeSend will be called at the last possible point in which the BacktraceReport can be modified (attributes added or deleted, additonal attachments added).  The BacktraceReport returned from this function will be the error report sent. If a null is returned the report will be skipped.
 
 #### FilterReport
