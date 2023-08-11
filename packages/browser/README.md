@@ -142,6 +142,10 @@ The Backtrace Browser SDK has the ability to send usage Metrics to be viewable i
 
 [(Stability Metrics feature documentation)](https://docs.saucelabs.com/error-reporting/project-setup/stability-metrics/)
 
+***
+### Soure Map Support
+
+
 ## Advanced SDK Features
 
 ### BacktraceClient
@@ -157,13 +161,15 @@ The following options are available for the BacktraceClientOptions passed when i
 | `name` | String | Your application name | | <ul><li>- [x] </li></ul> |
 | `version` | String | Your application version | | <ul><li>- [x] </li></ul> |
 | `token` | String | The submission token for error injestion.  This is required only if submitting directly to a Backtrace URL. (uncommon)| | <ul><li>- [ ] </li></ul> |
+| `userAttributes` | Dictionary | Additional attributes that can be filtered and aggregated against in the Backtrace UI.  | | <ul><li>- [ ] </li></ul> |
+| `attachments` | BacktraceAttachment[] | Additional files to be sent with error reports.  See [File Attachments](#file-attachments) | | <ul><li>- [ ] </li></ul> |
+| `beforeSend` | Callback | Allows for modification of the report before sending it.  See [BeforeSend](#beforesend) | | <ul><li>- [ ] </li></ul> |
+| `filterReport` | Callback | Allows for filtering of reports.  See [FilterReport](#filterreport) | <ul><li>- [ ] </li></ul> |
 | `captureUnhandledErrors` | Boolean | Enable unhandled errors | `true` | <ul><li>- [ ] </li></ul> |
 | `captureUnhandledPromiseRejections` | Boolean | Enable unhandled promise rejection | `true` | <ul><li>- [ ] </li></ul> |
 | `timeout` | Integer | How long to wait in ms before timing out the connection | `15000` | <ul><li>- [ ] </li></ul> |
 | `ignoreSslCertificate` | Boolean | Ignore SSL Certificate errors | `false` | <ul><li>- [ ] </li></ul> |
 | `rateLimit` | Integer | Limits the number of reports the client will send per minute. If set to '0', there is no limit. If set to a value greater than '0' and the value is reached, the client will not send any reports until the next minute. | `0` | <ul><li>- [ ] </li></ul> |
-| `userAttributes` | Dictionary | Additional attributes that can be filtered and aggregated against in the Backtrace UI.  | | <ul><li>- [ ] </li></ul> |
-| `attachments` | BacktraceAttachment[] | Additional files to be sent with error reports.  See [File Attachments](#file-attachments) | | <ul><li>- [ ] </li></ul> |
 | `metrics` | BacktraceMetricsOptions | See [Backtrace Metrics](#backtrace-metrics) | | <ul><li>- [ ] </li></ul> |
 | `database` | BacktraceDatabaseOptions | See [Backtrace Database](#backtrace-database) | |<ul><li>- [ ] </li></ul> |
 
