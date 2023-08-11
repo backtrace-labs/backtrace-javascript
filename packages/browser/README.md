@@ -87,8 +87,8 @@ client.addAttribute({
 The attributes list of a BacktraceReport object can be directly modified.
 
 ```ts
-const report: BacktraceReport = new BacktraceReport("My error message");
-report.attributes["myKey"] = "myValue";
+const report: BacktraceReport = new BacktraceReport("My error message", { "myReportKey": "myValue" });
+report.attributes["myReportKey"] = "New value";
 ```
 ***
 ### File Attachments
@@ -103,7 +103,7 @@ import { BacktraceStringAttachment, BacktraceUint8ArrayAttachment  } from "@back
 const attachment1 = new BacktraceStringAttachment("logfile.txt", "This is the start of my log")
 
 // BacktraceUint8ArrayAttachment should be used for binary files
-const attachment2 = new BacktraceUint8ArrayAttachment("output.dmp", new Uint8Array(2));
+const attachment2 = new BacktraceUint8ArrayAttachment("connection_buffer", new Uint8Array(2));
 
 // Setup array of files to attach
 const attachments = [attachment1];
@@ -125,9 +125,7 @@ client.attachments.push(attachment2)
 try {
     throw new Error("Caught exception!")
 } catch (error) {
-    const report = new BacktraceReport(error);
-    const attachment3 = new BacktraceStringAttachment("CaughtErrorLog", "some error logging data here");
-    report.attachments.push(attachment3);
+    const report = const report = new BacktraceReport(error, {}, [new BacktraceStringAttachment("CaughtErrorLog", "some error logging data here")])
     client.send(report);
 }
 ```
