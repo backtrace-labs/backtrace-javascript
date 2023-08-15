@@ -1,5 +1,4 @@
 import { BacktraceAttachment } from '../attachment';
-import { BacktraceData } from '../data/BacktraceData';
 import { BacktraceSubmissionResponse } from './model/BacktraceSubmissionResponse';
 import { BacktraceReportSubmissionResult } from './model/BacktraceSubmissionResult';
 export const DEFAULT_TIMEOUT = 15_000;
@@ -7,13 +6,13 @@ export interface BacktraceRequestHandler {
     /**
      * Submits error to Backtrace submission API
      * @param submissionUrl error submission URL
-     * @param data Backtrace Data
+     * @param dataJson Backtrace data JSON
      * @param attachments Report attachments
      * @returns Submission result
      */
     postError(
         submissionUrl: string,
-        data: BacktraceData,
+        dataJson: string,
         attachments: BacktraceAttachment[],
     ): Promise<BacktraceReportSubmissionResult<BacktraceSubmissionResponse>>;
 

@@ -1,5 +1,4 @@
-import { BacktraceReportSubmissionResult } from '../../src';
-import { BacktraceData } from '../../src/model/data/BacktraceData';
+import { BacktraceData, BacktraceReportSubmissionResult } from '../../src';
 import { BacktraceTestClient } from '../mocks/BacktraceTestClient';
 
 describe('Client callbacks tests', () => {
@@ -29,7 +28,8 @@ describe('Client callbacks tests', () => {
                     return data;
                 },
             });
-            jest.spyOn(client.requestHandler, 'postError').mockImplementationOnce((_: string, data: BacktraceData) => {
+            jest.spyOn(client.requestHandler, 'postError').mockImplementationOnce((_: string, json: string) => {
+                const data = JSON.parse(json) as BacktraceData;
                 expect(data.attributes[attributeName]).toEqual(expectedAttributeVaue);
                 return Promise.resolve(BacktraceReportSubmissionResult.Ok({}));
             });

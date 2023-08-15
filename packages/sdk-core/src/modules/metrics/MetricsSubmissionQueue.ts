@@ -1,4 +1,5 @@
 import { Delay } from '../../common/DelayHelper';
+import { jsonEscaper } from '../../common/jsonEscaper';
 import { TimeHelper } from '../../common/TimeHelper';
 import { BacktraceRequestHandler } from '../../model/http';
 import { MetricsQueue } from './MetricsQueue';
@@ -44,13 +45,16 @@ export class MetricsSubmissionQueue<T extends MetricsEvent> implements MetricsQu
         for (let attempts = 0; attempts < this.MAXIMUM_NUMBER_OF_ATTEMPTS; attempts++) {
             const response = await this._requestHandler.post(
                 this._submissionUrl,
-                JSON.stringify({
-                    ...this._metricMetadata,
-                    [this._eventName]: events,
-                    metadata: {
-                        dropped_events: this._numberOfDroppedRequests,
+                JSON.stringify(
+                    {
+                        ...this._metricMetadata,
+                        [this._eventName]: events,
+                        metadata: {
+                            dropped_events: this._numberOfDroppedRequests,
+                        },
                     },
-                }),
+                    jsonEscaper(),
+                ),
             );
             if (response.status === 'Ok') {
                 this._numberOfDroppedRequests = 0;

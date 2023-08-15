@@ -1,3 +1,4 @@
+import { jsonEscaper } from '../../common/jsonEscaper';
 import { BacktraceAttachment } from '../attachment';
 import { BacktraceConfiguration } from '../configuration/BacktraceConfiguration';
 import { BacktraceData } from '../data/BacktraceData';
@@ -11,6 +12,6 @@ export class BacktraceReportSubmission {
     }
 
     public send(data: BacktraceData, attachments: BacktraceAttachment[]) {
-        return this._requestHandler.postError(this._submissionUrl, data, attachments);
+        return this._requestHandler.postError(this._submissionUrl, JSON.stringify(data, jsonEscaper()), attachments);
     }
 }

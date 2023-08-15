@@ -105,7 +105,7 @@ describe('Client tests', () => {
 
             await client.send(new Error(''), {}, [reportAttachment]);
 
-            expect(client.requestHandler.postError).toHaveBeenCalledWith(expect.any(String), expect.any(Object), [
+            expect(client.requestHandler.postError).toHaveBeenCalledWith(expect.any(String), expect.any(String), [
                 clientAttachment,
                 reportAttachment,
             ]);

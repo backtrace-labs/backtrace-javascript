@@ -1,3 +1,4 @@
+import { jsonEscaper } from '../../../common/jsonEscaper';
 import { TimeHelper } from '../../../common/TimeHelper';
 import { OverwritingArray } from '../../../dataStructures/OverwritingArray';
 import { AttributeType } from '../../../model/data/BacktraceData';
@@ -27,7 +28,7 @@ export class InMemoryBreadcrumbsStorage implements BreadcrumbsStorage {
      * @returns Breadcrumbs JSON
      */
     public get(): string {
-        return JSON.stringify([...this._breadcrumbs.values()]);
+        return JSON.stringify([...this._breadcrumbs.values()], jsonEscaper());
     }
 
     public add(

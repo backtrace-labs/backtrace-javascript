@@ -5,7 +5,6 @@ import {
     ConnectionError,
     DEFAULT_TIMEOUT,
 } from '@backtrace/sdk-core';
-import { BacktraceData } from '@backtrace/sdk-core/lib/model/data/BacktraceData';
 
 export class BacktraceBrowserRequestHandler implements BacktraceRequestHandler {
     private readonly UPLOAD_FILE_NAME = 'upload_file';
@@ -25,10 +24,10 @@ export class BacktraceBrowserRequestHandler implements BacktraceRequestHandler {
     }
     public async postError<T>(
         submissionUrl: string,
-        data: BacktraceData,
+        dataJson: string,
         attachments: BacktraceAttachment<Blob | string>[],
     ): Promise<BacktraceReportSubmissionResult<T>> {
-        const formData = this.createFormData(JSON.stringify(data), attachments);
+        const formData = this.createFormData(dataJson, attachments);
         return this.post(submissionUrl, formData);
     }
 
