@@ -106,7 +106,7 @@ export class BacktraceReport {
             this.timestamp = options.timestamp;
         }
         if (options?.classifiers) {
-            this.classifiers = options.classifiers;
+            this.classifiers.unshift(...options.classifiers);
         }
     }
 }

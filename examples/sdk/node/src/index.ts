@@ -44,10 +44,9 @@ async function sendMessage(message: string, attributes: Record<string, number>) 
 }
 
 async function rejectPromise(message: string) {
-    return new Promise((_, rej) => {
+    return new Promise(() => {
         console.log('Rejecting promise without .catch and finally.');
-        rej(message);
-        // throw new Error(message);
+        throw new Error(message);
     });
 }
 
