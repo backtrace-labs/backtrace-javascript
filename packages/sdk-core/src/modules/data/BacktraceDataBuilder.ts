@@ -64,6 +64,9 @@ export class BacktraceDataBuilder {
                 const { message, stack } = traceInfo;
                 stackFrames = this._stackTraceConverter.convert(stack, message);
             }
+            if (name === this.MAIN_THREAD_NAME && report.skipFrames > 0) {
+                stackFrames.splice(0, report.skipFrames);
+            }
 
             for (const frame of stackFrames) {
                 const debugIdentifier = this._debugIdProvider.getDebugId(frame.library);

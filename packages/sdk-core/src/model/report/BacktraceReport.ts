@@ -69,7 +69,12 @@ export class BacktraceReport {
         this.skipFrames = options?.skipFrames ?? 0;
         let errorType: BacktraceErrorType = 'Exception';
         if (data instanceof Error) {
-            this.annotations['error'] = data;
+            this.annotations['error'] = {
+                ...data,
+                message: data.message,
+                name: data.name,
+                stack: data.stack,
+            };
             this.classifiers = [data.name];
             this.message = data.message;
             this.stackTrace['main'] = {
