@@ -64,7 +64,7 @@ export class BacktraceReport {
         public readonly data: Error | string,
         public readonly attributes: Record<string, unknown> = {},
         public readonly attachments: BacktraceAttachment[] = [],
-        options: { skipFrames?: number } = {},
+        options: { skipFrames?: number; classifiers?: string[]; timestamp?: number } = {},
     ) {
         this.skipFrames = options?.skipFrames ?? 0;
         let errorType: BacktraceErrorType = 'Exception';
@@ -92,6 +92,7 @@ export class BacktraceReport {
                 stack: new Error().stack ?? '',
                 message: data,
             };
+            this.classifiers = ['Message'];
             errorType = 'Message';
             this.skipFrames += 1;
         }
@@ -101,14 +102,11 @@ export class BacktraceReport {
         }
         this.attributes['error.message'] = this.message;
 
-        if (typeof this.attributes['timestamp'] === 'number') {
-            this.timestamp = this.attributes['timestamp'];
-            delete this.attributes['timestamp'];
+        if (options?.timestamp) {
+            this.timestamp = options.timestamp;
         }
-
-        if (Array.isArray(this.attributes['classifiers'])) {
-            this.classifiers = this.attributes['classifiers'];
-            delete this.attributes['classifiers'];
+        if (options?.classifiers) {
+            this.classifiers.unshift(...options.classifiers);
         }
     }
 }

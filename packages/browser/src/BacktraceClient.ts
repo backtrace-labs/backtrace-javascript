@@ -8,9 +8,9 @@ import {
     DebugIdContainer,
     VariableDebugIdMapProvider,
 } from '@backtrace/sdk-core';
+import { AGENT } from './agentDefinition';
 import { BacktraceBrowserSessionProvider } from './BacktraceBrowserSessionProvider';
 import { BacktraceConfiguration } from './BacktraceConfiguration';
-import { AGENT } from './agentDefinition';
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 
 export class BacktraceClient extends BacktraceCoreClient {
@@ -61,9 +61,16 @@ export class BacktraceClient extends BacktraceCoreClient {
         if (captureUnhandledRejections) {
             window.addEventListener('unhandledrejection', async (errorEvent: PromiseRejectionEvent) => {
                 await this.send(
-                    new BacktraceReport(errorEvent.reason, {
-                        'error.type': 'Unhandled exception',
-                    }),
+                    new BacktraceReport(
+                        errorEvent.reason,
+                        {
+                            'error.type': 'Unhandled exception',
+                        },
+                        [],
+                        {
+                            classifiers: ['UnhandledPromiseRejection'],
+                        },
+                    ),
                 );
             });
         }

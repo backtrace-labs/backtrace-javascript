@@ -8,19 +8,25 @@ export class NodeDiagnosticReportConverter {
         const validJsStack = jsStack && jsStack[0] !== 'Unavailable.';
 
         const message = validJsStack ? report.javascriptStack.message : report.header.event;
-        const btReport = new BacktraceReport(message, {
-            timestamp: parseInt(report.header.dumpEventTimeStamp),
-            hostname: report.header.host,
-            classifiers: [report.header.trigger],
-            ...this.getUnameData(report),
-            ...this.getCpuData(report),
-            ...this.getMemoryData(report),
+        const btReport = new BacktraceReport(
+            message,
+            {
+                hostname: report.header.host,
+                ...this.getUnameData(report),
+                ...this.getCpuData(report),
+                ...this.getMemoryData(report),
 
-            // Annotations
-            'Environment Variables': report.environmentVariables,
-            'Exec Arguments': report.header.commandLine,
-            Error: report,
-        });
+                // Annotations
+                'Environment Variables': report.environmentVariables,
+                'Exec Arguments': report.header.commandLine,
+                Error: report,
+            },
+            [],
+            {
+                timestamp: parseInt(report.header.dumpEventTimeStamp),
+                classifiers: [report.header.trigger],
+            },
+        );
 
         if (validJsStack) {
             btReport.addStackTrace('main', jsStack.join('\n'));
