@@ -18,7 +18,7 @@ describe('Data serialization tests', () => {
 
     it('Should serialize basic BacktraceData object', () => {
         const data = dataBuilder.build(new BacktraceReport(new Error()));
-        expect(() => JSON.stringify(data)).not.toThrow();
+        expect(() => JSON.stringify(data, jsonEscaper())).not.toThrow();
     });
 
     it('Should serialize correctly annotations with circular reference', () => {
@@ -27,8 +27,6 @@ describe('Data serialization tests', () => {
         };
         annotation['circular-reference'] = annotation;
         const data = dataBuilder.build(new BacktraceReport(new Error(), annotation));
-        const result = JSON.stringify(data, jsonEscaper());
-        expect(result).toBeDefined();
-        // expect(() => ).not.toThrow();
+        expect(() => JSON.stringify(data, jsonEscaper())).not.toThrow();
     });
 });
