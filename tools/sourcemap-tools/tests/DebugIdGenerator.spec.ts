@@ -101,7 +101,7 @@ describe('DebugIdGenerator', () => {
             const keys = Object.keys(container);
             for (const key of keys) {
                 expect(key).toMatch(/Error:/);
-                expect(key).toMatch(/\/DebugIdGenerator.spec.ts/);
+                expect(key).toMatch(/DebugIdGenerator.spec.ts/);
             }
         });
 

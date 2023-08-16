@@ -2,6 +2,7 @@ import {
     BacktraceDatabaseConfiguration,
     BacktraceDatabaseRecord,
     BacktraceDatabaseStorageProvider,
+    jsonEscaper,
 } from '@backtrace/sdk-core';
 import fs from 'fs';
 import * as fsPromise from 'fs/promises';
@@ -61,9 +62,13 @@ export class BacktraceDatabaseFileStorageProvider implements BacktraceDatabaseSt
     public add(record: BacktraceDatabaseRecord): boolean {
         const recordPath = this.getRecordPath(record.id);
         try {
-            fs.writeFileSync(recordPath, JSON.stringify(BacktraceDatabaseFileRecord.fromRecord(record)), {
-                encoding: 'utf8',
-            });
+            fs.writeFileSync(
+                recordPath,
+                JSON.stringify(BacktraceDatabaseFileRecord.fromRecord(record), jsonEscaper()),
+                {
+                    encoding: 'utf8',
+                },
+            );
             return true;
         } catch {
             return false;
