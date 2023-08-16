@@ -1,17 +1,17 @@
 import {
     BacktraceAttributeProvider,
+    BacktraceConfiguration as CoreConfiguration,
     BacktraceCoreClient,
     BacktraceReport,
     BacktraceRequestHandler,
-    BacktraceConfiguration as CoreConfiguration,
     DebugIdContainer,
     VariableDebugIdMapProvider,
 } from '@backtrace/sdk-core';
 import fs from 'fs';
 import * as fsPromise from 'fs/promises';
 import path from 'path';
-import { BacktraceConfiguration } from './BacktraceConfiguration';
 import { AGENT } from './agentDefinition';
+import { BacktraceConfiguration } from './BacktraceConfiguration';
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 import { NodeOptionReader } from './common/NodeOptionReader';
 import { NodeDiagnosticReportConverter } from './converter/NodeDiagnosticReportConverter';
@@ -73,7 +73,11 @@ export class BacktraceClient extends BacktraceCoreClient {
             if (origin === 'uncaughtException' && !captureUnhandledExceptions) {
                 return;
             }
-            await this.send(new BacktraceReport(error, { 'error.type': 'Unhandled exception', errorOrigin: origin }));
+            await this.send(
+                new BacktraceReport(error, { 'error.type': 'Unhandled exception', errorOrigin: origin }, [], {
+                    classifiers: origin === 'unhandledRejection' ? ['UnhandledPromiseRejection'] : undefined,
+                }),
+            );
         };
 
         process.prependListener('uncaughtExceptionMonitor', captureUncaughtException);
@@ -107,12 +111,20 @@ export class BacktraceClient extends BacktraceCoreClient {
 
         const captureUnhandledRejectionsCallback = async (reason: unknown) => {
             const isErrorTypeReason = reason instanceof Error;
-            const error = isErrorTypeReason ? reason : new Error(reason?.toString() ?? 'Unhandled rejection');
             await this.send(
-                new BacktraceReport(error, {
-                    'error.type': 'Unhandled exception',
-                }),
+                new BacktraceReport(
+                    isErrorTypeReason ? reason : reason?.toString() ?? 'Unhandled rejection',
+                    {
+                        'error.type': 'Unhandled exception',
+                    },
+                    [],
+                    {
+                        classifiers: ['UnhandledPromiseRejection'],
+                        skipFrames: isErrorTypeReason ? 0 : 1,
+                    },
+                ),
             );
+            const error = isErrorTypeReason ? reason : new Error(reason?.toString() ?? 'Unhandled rejection');
 
             // if there is any other unhandled rejection handler, reproduce default node behavior
             // and let other handlers to capture the event
