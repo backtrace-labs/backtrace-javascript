@@ -23,6 +23,7 @@ const client = BacktraceClient.initialize({
     database: {
         enabled: true,
         path: path.join(process.cwd(), 'database'),
+        captureNativeCrashes: true,
     },
 });
 
