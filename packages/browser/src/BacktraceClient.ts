@@ -14,6 +14,7 @@ import { BacktraceConfiguration } from './BacktraceConfiguration';
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 
 export class BacktraceClient extends BacktraceCoreClient {
+    protected static _instance?: BacktraceClient;
     constructor(
         options: BacktraceConfiguration,
         handler: BacktraceRequestHandler,
@@ -41,10 +42,32 @@ export class BacktraceClient extends BacktraceCoreClient {
         return new BacktraceClientBuilder(options);
     }
 
-    public static initialize(options: BacktraceConfiguration, build?: (builder: BacktraceClientBuilder) => void) {
+    /**
+     * Initializes the client. If the client already exists, the available instance
+     * will be returned and all other options will be ignored.
+     * @param options client configuration
+     * @param build builder
+     * @returns backtrace client
+     */
+    public static initialize(
+        options: BacktraceConfiguration,
+        build?: (builder: BacktraceClientBuilder) => void,
+    ): BacktraceClient {
+        if (this._instance) {
+            return this._instance;
+        }
         const builder = this.builder(options);
         build && build(builder);
-        return builder.build().initialize();
+        this._instance = builder.build().initialize();
+        return this._instance;
+    }
+
+    /**
+     * Returns created BacktraceClient instance if the instance exists.
+     * Otherwise undefined.
+     */
+    public static get instance(): BacktraceClient | undefined {
+        return this._instance;
     }
 
     private captureUnhandledErrors(captureUnhandledExceptions = true, captureUnhandledRejections = true) {

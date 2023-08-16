@@ -18,6 +18,7 @@ import { NodeDiagnosticReportConverter } from './converter/NodeDiagnosticReportC
 import { BacktraceDatabaseFileStorageProvider } from './database/BacktraceDatabaseFileStorageProvider';
 
 export class BacktraceClient extends BacktraceCoreClient {
+    private static _instance?: BacktraceClient;
     constructor(
         options: CoreConfiguration,
         handler: BacktraceRequestHandler,
@@ -36,7 +37,36 @@ export class BacktraceClient extends BacktraceCoreClient {
         );
     }
 
-    public initialize() {
+    public static builder(options: BacktraceConfiguration): BacktraceClientBuilder {
+        return new BacktraceClientBuilder(options);
+    }
+
+    /**
+     * Initializes the client. If the client already exists, the available instance
+     * will be returned and all other options will be ignored.
+     * @param options client configuration
+     * @param build builder
+     * @returns backtrace client
+     */
+    public static initialize(options: BacktraceConfiguration, build?: (builder: BacktraceClientBuilder) => void) {
+        if (this._instance) {
+            return this._instance;
+        }
+        const builder = this.builder(options);
+        build && build(builder);
+        this._instance = builder.build().initialize();
+        return this._instance;
+    }
+
+    /**
+     * Returns created BacktraceClient instance if the instance exists.
+     * Otherwise undefined.
+     */
+    public static get instance(): BacktraceClient | undefined {
+        return this._instance;
+    }
+
+    protected initialize() {
         super.initialize();
 
         this.loadNodeCrashes();
@@ -49,16 +79,6 @@ export class BacktraceClient extends BacktraceCoreClient {
         this.captureNodeCrashes();
 
         return this;
-    }
-
-    public static builder(options: BacktraceConfiguration): BacktraceClientBuilder {
-        return new BacktraceClientBuilder(options);
-    }
-
-    public static initialize(options: BacktraceConfiguration, build?: (builder: BacktraceClientBuilder) => void) {
-        const builder = this.builder(options);
-        build && build(builder);
-        return builder.build().initialize();
     }
 
     private captureUnhandledErrors(captureUnhandledExceptions = true, captureUnhandledRejections = true) {

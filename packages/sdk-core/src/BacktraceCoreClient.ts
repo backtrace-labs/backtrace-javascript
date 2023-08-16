@@ -139,7 +139,7 @@ export abstract class BacktraceCoreClient {
         }
     }
 
-    public initialize() {
+    protected initialize() {
         this._database?.start();
         this._metrics?.start();
         this.breadcrumbsManager?.start();
