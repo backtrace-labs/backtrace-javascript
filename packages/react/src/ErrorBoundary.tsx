@@ -1,6 +1,6 @@
-import { Component, ErrorInfo, ReactElement, ReactNode, isValidElement } from 'react';
-import { BacktraceClient } from './BacktraceClient';
+import { Component, ErrorInfo, isValidElement, ReactElement, ReactNode } from 'react';
 import { BacktraceReport } from '.';
+import { BacktraceClient } from './BacktraceClient';
 
 type RenderFallback = () => ReactElement;
 
@@ -25,7 +25,11 @@ export class ErrorBoundary extends Component<Props, State> {
             error: undefined,
         };
         // grabbing here so it will fail fast if BacktraceClient is uninitialized
-        this._client = BacktraceClient.instance;
+        const client = BacktraceClient.instance;
+        if (!client) {
+            throw new Error('BacktraceClient is uninitialized. Call "BacktraceClient.initialize" function first.');
+        }
+        this._client = client;
     }
 
     public static getDerivedStateFromError(error: Error) {

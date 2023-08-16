@@ -8,12 +8,13 @@ import {
     DebugIdContainer,
     VariableDebugIdMapProvider,
 } from '@backtrace/sdk-core';
+import { AGENT } from './agentDefinition';
 import { BacktraceBrowserSessionProvider } from './BacktraceBrowserSessionProvider';
 import { BacktraceConfiguration } from './BacktraceConfiguration';
-import { AGENT } from './agentDefinition';
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 
 export class BacktraceClient extends BacktraceCoreClient {
+    protected static _instance?: BacktraceClient;
     constructor(
         options: BacktraceConfiguration,
         handler: BacktraceRequestHandler,
@@ -41,10 +42,25 @@ export class BacktraceClient extends BacktraceCoreClient {
         return new BacktraceClientBuilder(options);
     }
 
-    public static initialize(options: BacktraceConfiguration, build?: (builder: BacktraceClientBuilder) => void) {
+    public static initialize(
+        options: BacktraceConfiguration,
+        build?: (builder: BacktraceClientBuilder) => void,
+    ): BacktraceClient {
+        if (this._instance) {
+            return this._instance;
+        }
         const builder = this.builder(options);
         build && build(builder);
-        return builder.build().initialize();
+        this._instance = builder.build().initialize();
+        return this._instance;
+    }
+
+    /**
+     * Returns created BacktraceClient instance if the instance exists.
+     * Otherwise undefined.
+     */
+    public static get instance(): BacktraceClient | undefined {
+        return this._instance;
     }
 
     private captureUnhandledErrors(captureUnhandledExceptions = true, captureUnhandledRejections = true) {
