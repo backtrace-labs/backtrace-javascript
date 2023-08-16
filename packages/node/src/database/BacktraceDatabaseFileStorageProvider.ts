@@ -2,8 +2,8 @@ import {
     BacktraceDatabaseConfiguration,
     BacktraceDatabaseRecord,
     BacktraceDatabaseStorageProvider,
+    jsonEscaper,
 } from '@backtrace/sdk-core';
-import { jsonEscaper } from '@backtrace/sdk-core/src/common/jsonEscaper';
 import fs from 'fs';
 import * as fsPromise from 'fs/promises';
 import path from 'path';

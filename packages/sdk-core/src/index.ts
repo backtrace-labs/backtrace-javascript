@@ -2,6 +2,7 @@ export * from './BacktraceCoreClient';
 export * from './builder/BacktraceCoreClientBuilder';
 export * from './builder/SdkOptions';
 export * from './common/IdGenerator';
+export * from './common/jsonEscaper';
 export * from './model/attachment';
 export * from './model/configuration/BacktraceConfiguration';
 export * from './model/configuration/BacktraceDatabaseConfiguration';
