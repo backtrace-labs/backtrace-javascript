@@ -1,4 +1,4 @@
-import { Middleware, Action } from 'redux';
+import type { Middleware, Action } from 'redux';
 import { BacktraceClient } from '../BacktraceClient';
 
 /**
