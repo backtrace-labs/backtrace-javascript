@@ -6,7 +6,7 @@ export * from './common/jsonEscaper';
 export * from './model/attachment';
 export * from './model/configuration/BacktraceConfiguration';
 export * from './model/configuration/BacktraceDatabaseConfiguration';
-export * from './model/data/BacktraceData';
+export * from './model/data/';
 export * from './model/http';
 export * from './model/report/BacktraceErrorType';
 export * from './model/report/BacktraceReport';

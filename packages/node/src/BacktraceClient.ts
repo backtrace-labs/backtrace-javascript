@@ -4,6 +4,7 @@ import {
     BacktraceCoreClient,
     BacktraceReport,
     BacktraceRequestHandler,
+    BreadcrumbsEventSubscriber,
     DebugIdContainer,
     VariableDebugIdMapProvider,
 } from '@backtrace/sdk-core';
@@ -23,6 +24,7 @@ export class BacktraceClient extends BacktraceCoreClient {
         options: CoreConfiguration,
         handler: BacktraceRequestHandler,
         attributeProviders: BacktraceAttributeProvider[],
+        breadcrumbsEventSubscribers: BreadcrumbsEventSubscriber[],
     ) {
         super(
             options,
@@ -32,7 +34,9 @@ export class BacktraceClient extends BacktraceCoreClient {
             undefined,
             undefined,
             new VariableDebugIdMapProvider(global as DebugIdContainer),
-            undefined,
+            {
+                subscribers: breadcrumbsEventSubscribers,
+            },
             BacktraceDatabaseFileStorageProvider.createIfValid(options.database),
         );
     }

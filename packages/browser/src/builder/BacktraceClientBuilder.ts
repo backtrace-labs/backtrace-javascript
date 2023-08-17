@@ -16,19 +16,18 @@ import { SpiderMonkeyStackTraceConverter } from '../converters/SpiderMonkeyStack
 import { getEngine } from '../engineDetector';
 
 export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<BacktraceClient> {
-    protected readonly breadcrumbsEventSubscribers = [
-        new WebRequestEventSubscriber(),
-        new DocumentEventSubscriber(),
-        new HistoryEventSubscriber(),
-    ];
     constructor(protected readonly options: BacktraceConfiguration) {
-        super(new BacktraceBrowserRequestHandler(options), [
-            new UserAgentAttributeProvider(),
-            new WebsiteAttributeProvider(),
-            new WindowAttributeProvider(),
-            new UserIdentifierAttributeProvider(options),
-            new ApplicationInformationAttributeProvider(options),
-        ]);
+        super(
+            new BacktraceBrowserRequestHandler(options),
+            [
+                new UserAgentAttributeProvider(),
+                new WebsiteAttributeProvider(),
+                new WindowAttributeProvider(),
+                new UserIdentifierAttributeProvider(options),
+                new ApplicationInformationAttributeProvider(options),
+            ],
+            [new WebRequestEventSubscriber(), new DocumentEventSubscriber(), new HistoryEventSubscriber()],
+        );
     }
 
     public build(): BacktraceClient {
@@ -37,7 +36,7 @@ export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<Backtrace
             this.handler,
             this.attributeProviders,
             this.generateStackTraceConverter(),
-            this.breadcrumbsEventSubscribers,
+            this.breadcrumbSubscribers,
         );
     }
 
