@@ -9,7 +9,7 @@ export class BacktraceReactClientBuilder extends BacktraceClientBuilder {
             this.handler,
             this.attributeProviders,
             new ReactStackTraceConverter(this.generateStackTraceConverter()),
-            this.breadcrumbsEventSubscribers,
+            this.breadcrumbSubscribers,
         );
     }
 }

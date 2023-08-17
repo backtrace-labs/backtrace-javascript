@@ -1,15 +1,18 @@
-import React, { useState } from 'react';
-import './App.css';
 import { BacktraceClient, ErrorBoundary } from '@backtrace/react';
-import { ToastContainer, toast } from 'react-toastify';
+import { useState } from 'react';
+import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { SUBMISSION_URL } from './consts';
-import InnerFallback from './components/InnerFallback';
+import './App.css';
 import ButtonWithError from './components/ButtonWithError';
+import InnerFallback from './components/InnerFallback';
+import { SUBMISSION_URL } from './consts';
 
 function App() {
     const [clicked, setClicked] = useState(false);
-    const client = BacktraceClient.instance;
+    const client = BacktraceClient.instance as BacktraceClient;
+    if (!client) {
+        throw new Error('BacktraceClient is uninitialized. Call "BacktraceClient.initialize" function first.');
+    }
 
     async function sendError() {
         await client.send(new Error('Manual Test Error'));

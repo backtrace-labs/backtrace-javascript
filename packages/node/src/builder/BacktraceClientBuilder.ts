@@ -43,6 +43,7 @@ export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<Backtrace
             { ...this._options, attachments: this.transformAttachments() },
             this.handler,
             this.attributeProviders,
+            this.breadcrumbSubscribers,
         );
     }
 }
