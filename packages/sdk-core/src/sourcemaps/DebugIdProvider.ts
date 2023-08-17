@@ -4,7 +4,7 @@ import { DebugIdMapProvider } from './interfaces/DebugIdMapProvider';
 export const SOURCE_DEBUG_ID_VARIABLE = '_btDebugIds';
 
 export class DebugIdProvider {
-    private readonly _fileDebugIds: Record<string, string>;
+    private _fileDebugIds: Record<string, string>;
 
     constructor(
         private readonly _stackTraceConverter: BacktraceStackTraceConverter,
@@ -14,6 +14,12 @@ export class DebugIdProvider {
     }
 
     public getDebugId(file: string): string | undefined {
+        const debugId = this._fileDebugIds[file];
+        if (debugId) {
+            return debugId;
+        }
+        // in case of dynamic require - lazy load dynamically debug ids
+        this._fileDebugIds = this.loadDebugIds();
         return this._fileDebugIds[file];
     }
 
