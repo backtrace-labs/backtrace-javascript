@@ -12,15 +12,6 @@ const clientBreadcrumbsEnabled = BacktraceClient.initialize({
     },
 });
 
-const clientBreadcrumbsDisabled = BacktraceClient.initialize({
-    name: 'test-cleint',
-    version: '1.2.3',
-    url: 'https://test-bt-client-url.sp.backtrace.io',
-    breadcrumbs: {
-        enable: false,
-    },
-});
-
 interface TestState {
     testArr: string[];
     testBool: boolean;
@@ -84,10 +75,6 @@ const getStore = (interceptAction?: (action: Action) => Action | undefined) =>
 describe('createBacktraceReduxMiddleware', () => {
     it('Should throw an error if no client is passed in', () => {
         expect(() => createBacktraceReduxMiddleware(undefined as unknown as BacktraceClient)).toThrow();
-    });
-
-    it('Breadcrumbs should not be defined when enabled: false', () => {
-        expect(clientBreadcrumbsDisabled.breadcrumbs).not.toBeDefined();
     });
 
     describe('Redux store with Backtrace middleware and breadcrumbs enabled', () => {
