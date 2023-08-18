@@ -13,6 +13,7 @@ export const createBacktraceReduxMiddleware = (
     if (!client) {
         throw new Error('Must pass a BacktraceClient to the BacktraceReduxMiddleware.');
     }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const middleware: Middleware = (store) => (next) => (action: Action) => {
         try {
             const response = next(action);

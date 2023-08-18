@@ -31,9 +31,11 @@ const testSlice = createSlice({
         addToTestArray(state, action: PayloadAction<string>) {
             state.testArr.push(action.payload);
         },
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         toggleTestBool(state, action: PayloadAction<undefined>) {
             state.testBool = !state.testBool;
         },
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         throwErrorForTest(state, action: PayloadAction<undefined>) {
             throw internalError;
         },
@@ -41,6 +43,7 @@ const testSlice = createSlice({
 });
 
 const createLoggingMiddleware = (whatToLog: string) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const middleware: Middleware = (store) => (next) => (action) => {
         console.log(`${whatToLog} before`);
         const response = next(action);
