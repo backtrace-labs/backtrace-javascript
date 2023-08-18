@@ -2,7 +2,7 @@ import { BreadcrumbLogLevel, BreadcrumbType } from '../../lib/modules/breadcrumb
 import { BreadcrumbsManager } from '../../lib/modules/breadcrumbs/BreadcrumbsManager';
 
 describe('Breadcrumbs creation tests', () => {
-    describe('Last breadcrumb id attribute should be equal to last bredcrumb id in the array', () => {
+    it('Last breadcrumb id attribute should be equal to last bredcrumb id in the array', () => {
         const breadcrumbsManager = new BreadcrumbsManager();
         breadcrumbsManager.info('test');
 

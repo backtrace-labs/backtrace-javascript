@@ -1,10 +1,10 @@
 import { jsonEscaper } from '../../../common/jsonEscaper';
 import { TimeHelper } from '../../../common/TimeHelper';
 import { OverwritingArray } from '../../../dataStructures/OverwritingArray';
-import { AttributeType } from '../../../model/data/BacktraceData';
 import { Breadcrumb } from '../model/Breadcrumb';
 import { BreadcrumbLogLevel } from '../model/BreadcrumbLogLevel';
 import { BreadcrumbType } from '../model/BreadcrumbType';
+import { RawBreadcrumb } from '../model/RawBreadcrumb';
 import { BreadcrumbsStorage } from './BreadcrumbsStorage';
 
 export class InMemoryBreadcrumbsStorage implements BreadcrumbsStorage {
@@ -31,24 +31,19 @@ export class InMemoryBreadcrumbsStorage implements BreadcrumbsStorage {
         return JSON.stringify([...this._breadcrumbs.values()], jsonEscaper());
     }
 
-    public add(
-        message: string,
-        level: BreadcrumbLogLevel,
-        type: BreadcrumbType,
-        attributes?: Record<string, AttributeType> | undefined,
-    ): number {
+    public add(rawBreadcrumb: RawBreadcrumb): number {
         this._lastBreadcrumbId++;
         const id = this._lastBreadcrumbId;
         const breadcrumb: Breadcrumb = {
             id,
-            message,
+            message: rawBreadcrumb.message,
             timestamp: TimeHelper.now(),
-            type: BreadcrumbType[type].toLowerCase(),
-            level: BreadcrumbLogLevel[level].toLowerCase(),
+            type: BreadcrumbType[rawBreadcrumb.type].toLowerCase(),
+            level: BreadcrumbLogLevel[rawBreadcrumb.level].toLowerCase(),
         };
 
-        if (attributes) {
-            breadcrumb.attributes = attributes;
+        if (rawBreadcrumb.attributes) {
+            breadcrumb.attributes = rawBreadcrumb.attributes;
         }
 
         this._breadcrumbs.add(breadcrumb);
