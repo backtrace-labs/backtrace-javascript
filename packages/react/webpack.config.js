@@ -10,6 +10,9 @@ const common = {
     devtool: 'source-map',
     entry: './src/index.ts',
     plugins: [agentDefinitionPlugin(path.join(__dirname, 'package.json'))],
+    externals: {
+        react: true
+    }
 };
 
 /** @type {Array<import('webpack').Configuration>} */
