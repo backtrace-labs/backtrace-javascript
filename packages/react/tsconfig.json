@@ -3,7 +3,8 @@
     "compilerOptions": {
         "rootDir": "./src",
         "outDir": "./lib",
-        "jsx": "react"
+        "jsx": "react",
+        "composite": true
     },
     "exclude": ["node_modules", "tests", "lib"],
     "references": [
