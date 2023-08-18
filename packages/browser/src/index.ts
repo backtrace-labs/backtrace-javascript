@@ -12,6 +12,7 @@ export {
     BreadcrumbsManager,
     BreadcrumbType,
     JavaScriptEngine,
+    RawBreadcrumb,
 } from '@backtrace/sdk-core';
 export * from './agentDefinition';
 export * from './BacktraceClient';

@@ -1,4 +1,5 @@
 import { BreadcrumbLogLevel, BreadcrumbType } from '../../modules/breadcrumbs';
+import { RawBreadcrumb } from '../../modules/breadcrumbs/model/RawBreadcrumb';
 import { BacktraceAttachment } from '../attachment';
 import { BacktraceData } from '../data/BacktraceData';
 import { BacktraceReport } from '../report/BacktraceReport';
@@ -48,6 +49,12 @@ export interface BacktraceBreadcrumbsSettings {
      * wil be stored.
      */
     maximumBreadcrumbs?: number;
+
+    /**
+     * Inspects breadcrumb and allows to modify it. If the undefined value is being
+     * returned from the method, no breadcrumb will be added to the breadcrumb storage.
+     */
+    intercept?: (breadcrumb: RawBreadcrumb) => RawBreadcrumb | undefined;
 }
 
 export interface BacktraceConfiguration {
