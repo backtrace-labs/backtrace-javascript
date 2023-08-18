@@ -110,7 +110,7 @@ export const uploadCmd = new Command<UploadOptions>({
         description: 'If set, archive with sourcemaps will be outputted to this path instead of being uploaded.',
         type: String,
     })
-    .execute(async function (opts, stack) {
+    .execute(async function (opts, command, stack) {
         const logger = createLogger(opts);
         const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
 
@@ -128,25 +128,25 @@ export const uploadCmd = new Command<UploadOptions>({
 
         const searchPaths = normalizePaths(opts.path, process.cwd());
         if (!searchPaths) {
-            logger.info(this.getHelpMessage(stack));
+            logger.info(Command.getHelpMessage(command, stack));
             return Err('path must be specified');
         }
 
         const uploadUrlResult = getUploadUrl(opts);
         if (uploadUrlResult.isErr()) {
-            logger.info(this.getHelpMessage(stack));
+            logger.info(Command.getHelpMessage(command, stack));
             return uploadUrlResult;
         }
 
         const outputPath = opts.output;
         const uploadUrl = uploadUrlResult.data;
         if (!outputPath && !uploadUrl) {
-            logger.info(this.getHelpMessage(stack));
+            logger.info(Command.getHelpMessage(command, stack));
             return Err('upload URL is required.');
         }
 
         if (outputPath && uploadUrl) {
-            logger.info(this.getHelpMessage(stack));
+            logger.info(Command.getHelpMessage(command, stack));
             return Err('outputting archive and uploading are exclusive');
         }
 

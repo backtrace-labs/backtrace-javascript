@@ -64,14 +64,14 @@ const mainCommand = new Command<GlobalOptions & MainOptions>({
         type: Boolean,
         description: 'Displays the version of backtrace-js',
     })
-    .execute(function (opts, stack, unknown) {
+    .execute(function (opts, command, stack, unknown) {
         const logger = createLogger(opts);
         if (opts.version) {
             return AsyncResult.equip(loadVersion())
                 .then((version) => logger.output(version))
                 .then(() => 0).inner;
         } else {
-            logger.info(this.getHelpMessage(stack));
+            logger.info(Command.getHelpMessage(command, stack));
 
             const unknownOption = unknown?.[0];
             if (!unknownOption) {
