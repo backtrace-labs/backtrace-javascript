@@ -1,0 +1,15 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "rootDir": "./src",
+        "outDir": "./lib",
+        "jsx": "react",
+        "moduleResolution": "node"
+    },
+    "exclude": ["node_modules", "tests", "lib"],
+    "references": [
+        {
+            "path": "../react/tsconfig.json"
+        }
+    ]
+}
