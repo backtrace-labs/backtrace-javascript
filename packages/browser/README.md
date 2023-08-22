@@ -37,7 +37,7 @@ const options: BacktraceConfiguration = {
 }
 
 // Initialize the client
-const client = BacktraceClient.builder(options).build();
+const client = BacktraceClient.initialize(options);
 
 // Send an error
 client.send(new Error("Something broke!"));
@@ -69,13 +69,13 @@ const options: BacktraceConfiguration = {
 }
 
 // Initialize the client
-const client = BacktraceClient.builder(options).build();
+const client = BacktraceClient.initialize(options);
 ```
 
 #### Add attributes during application runtime
 Global attributes can be set during the runtime once specific data has be loaded (e.g. a user has logged in).
 ```ts
-const client = BacktraceClient.builder(options).build();
+const client = BacktraceClient.initialize(options);
 ...
 
 client.addAttribute({
@@ -117,6 +117,8 @@ const options = {
     // Attach the files to all reports
     attachments,
 }
+
+const client = BacktraceClient.initialize(options);
 
 // Later decide to add an attachment to all reports
 client.attachments.push(attachment2)
@@ -178,7 +180,8 @@ The following options are available for the BacktraceClientOptions passed when i
 | Name | Return Type | Description |
 | - | - | - |
 | `addAttribute(attributes: Record<string, unknown>)` | void | Add attributes to the BacktraceClient reports |
-| `builder(options: BacktraceClientOptions).build()` | BacktraceClient | Sets up a new BacktraceClient for reporting|
+| `initialize(options: BacktraceClientOptions)` | BacktraceClient | Initializes a new BacktraceClient (returns the same instance on subsequent calls) |
+| `builder(options: BacktraceClientOptions).build()` | BacktraceClient | (Advanced) Sets up a new BacktraceClient for reporting |
 
 ### BacktraceDatabase
 
