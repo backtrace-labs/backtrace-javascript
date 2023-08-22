@@ -12,11 +12,14 @@ The [@backtrace/browser](#) SDK connects your JavaScript application to Backtrac
     - [File Attachments](#file-attachments)
     - [Breadcrumbs](#breadcrumbs)
     - [Application Stability Metrics](#application-stability-metrics)
+        - [Metrics Configuration](#metrics-configuration)
+        - [Metrics Usage](#metrics-usage)
+    - [Soure Map and Source Code Support](#soure-map-and-source-code-support)
 1. [Advanced SDK Features](#advanced-sdk-features)
     - [BacktraceClient](#backtraceclient)
         - [BacktraceClientOptions](#backtraceclientoptions)
         - [Methods](#methods)
-    - [BacktraceReport](#backtracereport)
+    - [BacktraceReports](#backtracereport)
 
 
 ## Basic Integration
@@ -224,8 +227,8 @@ client.metrics?.send();
 ```
 
 ***
-### Soure Map Support
-
+### Soure Map and Source Code Support
+[(Source Maps feature documentation)](https://docs.saucelabs.com/error-reporting/platform-integrations/source-map/)
 
 ## Advanced SDK Features
 
