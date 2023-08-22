@@ -137,6 +137,49 @@ try {
 Breadcrumbs are snippets of chronological data tracing runtime events. This SDK records a number of events by default, and manual breadcrumbs can also be added.
 
 [(Breadcrumbs feature documentation)](https://docs.saucelabs.com/error-reporting/web-console/debug/#breadcrumbs)
+
+#### Breadcrumbs Configuration
+| Option Name | Type | Description | Default | Required? |
+|-|-|-|-|-|
+| `enable` | Boolean | Determines if the breadcrumbs support is enabled. By default the value is set to true. | `true` | <ul><li>- [ ] </li></ul> |
+| `logLevel` | BreadcrumbLogLevel | Specifies which log level severity to include. By default all logs are included. | All Logs | <ul><li>- [ ] </li></ul> |
+| `eventType` | BreadcrumbType | Specifies which breadcrumb type to include. By default all types are included. | All Types | <ul><li>- [ ] </li></ul> |
+| `maximumBreadcrumbs` | Number | Specifies maximum number of breadcrumbs stored by the library. By default, only 100 breadcrumbs will be stored. | `100` | <ul><li>- [ ] </li></ul> |
+| `intercept` | (breadcrumb: RawBreadcrumb) => RawBreadcrumb \| undefined; | Inspects breadcrumb and allows to modify it. If the undefined value is being returned from the method, no breadcrumb will be added to the breadcrumb storage. | All Breadcrumbs | <ul><li>- [ ] </li></ul> |
+
+```ts
+import { BacktraceClient, BacktraceConfiguration } from "@backtrace/browser";
+
+// BacktraceClientOptions
+const options: BacktraceConfiguration = {
+    // ignoring all but breadcrumbs config for simplicity
+    breadcrumbs: {
+        // breadcrumbs configuration
+    }
+}
+
+// Initialize the client
+const client = BacktraceClient.initialize(options);
+```
+
+#### Default Breadcrumbs
+| Type | Description|
+| - | - |
+| HTTP | Adds a breadcrumb with the url, request type, and reponse status for Fetch or XMLHttpRequests. |
+| History | Adds breadcrumb on pushstate and popstate. |
+| Document/Window | Adds a breadcrumb for document.click, document.dblclick, document.drag, document.drop, window.load, window.unload, window.pagehide, window.pageshow, window.online, and window.offline. |
+
+#### Intercepting Breadcrumbs
+If PII or other information needs to be filtered from a breadcrumb, you can use the intercept function to skip or filter out the sensitive information. Any RawBreadcrumb returned will be used for the breadcrumb. If undefined is returned, no breadcrumb will be added.
+
+#### Manual Breadcrumbs
+In addition to all of the default breadcrumbs that are automatically collected, you can also manually add breadcrumbs of your own.
+
+```ts
+client.breadcrumbs?.info('This is a manual breadcrumb.', {
+                    customAttr: 'wow!'
+                });
+```
 ***
 
 ### Application Stability Metrics
