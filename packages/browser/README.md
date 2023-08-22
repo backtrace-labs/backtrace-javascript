@@ -1,12 +1,12 @@
-# **Backtrace Browser**
+# **Backtrace Browser SDK**
 [Backtrace](https://backtrace.io) captures and reports handled and unhandled exceptions in your production software so you can manage application quality through the complete product lifecycle.
 
 The [@backtrace/browser](#) SDK connects your JavaScript application to Backtrace. The basic integration is quick and easy, after which you can explore the rich set of Backtrace features.
 
 ## Table of Contents
 1. [Basic Integration - Reporting your first errors](#basic-integration)
-1. [Sending an Error](#sending-an-error)
-    - [Manually Sending an Error](#manually-sending-an-error)
+    - [Integrate the SDK](#integrate-the-sdk)
+    - [Upload source maps](#upload-source-maps)
 1. [Error Reporting Features](#error-reporting-features)
     - [Attributes](#attributes)
     - [File Attachments](#file-attachments)
@@ -14,21 +14,23 @@ The [@backtrace/browser](#) SDK connects your JavaScript application to Backtrac
     - [Application Stability Metrics](#application-stability-metrics)
         - [Metrics Configuration](#metrics-configuration)
         - [Metrics Usage](#metrics-usage)
-    - [Soure Map and Source Code Support](#soure-map-and-source-code-support)
 1. [Advanced SDK Features](#advanced-sdk-features)
+    - [Manually send an error](#manually-send-an-error)
     - [BacktraceClient](#backtraceclient)
         - [BacktraceClientOptions](#backtraceclientoptions)
-        - [Methods](#methods)
+        - [BacktraceClient Methods](#backtraceclient-methods)
     - [BacktraceReports](#backtracereport)
 
 
 ## Basic Integration
-All code examples are given in TypeScript.
+### Integrate the SDK
+Add the following code to your application before all other scripts to report client-side errors to Backtrace.
+
 ```ts
 // Import the BacktraceClient from @backtrace/browser with your favoriate package manager.
 import { BacktraceClient, BacktraceConfiguration } from "@backtrace/browser";
 
-// BacktraceClientOptions
+// Configure client options
 const options: BacktraceConfiguration = {
     // Name of the website/application
     name: "MyWebPage",
@@ -40,33 +42,20 @@ const options: BacktraceConfiguration = {
     url: "https://submit.backtrace.io/<universe>/<token>/json",
 }
 
-// Initialize the client
+// Initialize the client with the options
 const client = BacktraceClient.initialize(options);
 
-// Send an error
+// By default, Backtrace will send an error for Uncaught Exceptions and Unhandled Promise Rejections
+
+// Manually send an error
 client.send(new Error("Something broke!"));
 ```
 
-## Sending an Error
-By default, Backtrace will send an error for Uncaught Exceptions and Unhandled Promise Rejections.
+### Upload source maps
+Client-side error reports are based on minified code. Upload source maps and source code to resolve minified code to your original source identifiers.
 
-### Manually Sending an Error
-There are several ways to send an error to Backtrace. For more details on the definition of ```client.send()``` see [Methods](#methods) below.
-
-```ts
-// send as a string
-await client.send('This is a string!');
-
-// send as an Error
-await client.send(new Error('This is an Error!'));
-
-// as a BacktraceReport (string)
-await client.send(new BacktraceReport('This is a report with a string!'));
-
-// as a BacktraceReport (Error)
-await client.send(new BacktraceReport(new Error('This is a report with a string!')));
-```
-
+[(Source Map feature documentation)](https://docs.saucelabs.com/error-reporting/platform-integrations/source-map/)
+<? TBD: Link to source upload doc ?>
 
 ## Error Reporting Features
 ### Attributes
@@ -227,10 +216,25 @@ client.metrics?.send();
 ```
 
 ***
-### Soure Map and Source Code Support
-[(Source Maps feature documentation)](https://docs.saucelabs.com/error-reporting/platform-integrations/source-map/)
 
 ## Advanced SDK Features
+
+### Manually send an error
+There are several ways to send an error to Backtrace. For more details on the definition of ```client.send()``` see [Methods](#methods) below.
+
+```ts
+// send as a string
+await client.send('This is a string!');
+
+// send as an Error
+await client.send(new Error('This is an Error!'));
+
+// as a BacktraceReport (string)
+await client.send(new BacktraceReport('This is a report with a string!'));
+
+// as a BacktraceReport (Error)
+await client.send(new BacktraceReport(new Error('This is a report with a string!')));
+```
 
 ### BacktraceClient
 BacktraceClient is the main SDK class. Error monitoring starts when this object is instantiated, and it will compose and send reports for unhandled errors and unhandled promise rejections. It can also be used to manually send reports from exceptions and rejection handlers.
@@ -257,7 +261,7 @@ The following options are available for the BacktraceClientOptions passed when i
 | `metrics` | BacktraceMetricsOptions | See [Backtrace Stability Metrics](#application-stability-metrics) | | <ul><li>- [ ] </li></ul> |
 | `breadcrumbs` | BacktraceBreadcrumbsSettings | See [Backtrace Breadcrumbs](#breadcrumbs) | | <ul><li>- [ ] </li></ul> |
 
-#### Methods
+#### BacktraceClient Methods
 
 | Name | Return Type | Description |
 | - | - | - |
