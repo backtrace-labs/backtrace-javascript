@@ -5,6 +5,8 @@ The [@backtrace/browser](#) SDK connects your JavaScript application to Backtrac
 
 ## Table of Contents
 1. [Basic Integration - Reporting your first errors](#basic-integration)
+1. [Sending an Error](#sending-an-error)
+    - [Manually Sending an Error](#manually-sending-an-error)
 1. [Error Reporting Features](#error-reporting-features)
     - [Attributes](#attributes)
     - [File Attachments](#file-attachments)
@@ -12,11 +14,10 @@ The [@backtrace/browser](#) SDK connects your JavaScript application to Backtrac
     - [Application Stability Metrics](#application-stability-metrics)
 1. [Advanced SDK Features](#advanced-sdk-features)
     - [BacktraceClient](#backtraceclient)
-    - [BacktraceDatabase](#backtracedatabase)
-    - [BacktraceMetrics](#backtracemetrics)
-    - [Callbacks](#callbacks)
-        - [BeforeSend](#beforesend)
-        - [FilterReport](#filterreport)
+        - [BacktraceClientOptions](#backtraceclientoptions)
+        - [Methods](#methods)
+    - [BacktraceReport](#backtracereport)
+
 
 ## Basic Integration
 All code examples are given in TypeScript.
@@ -42,6 +43,27 @@ const client = BacktraceClient.initialize(options);
 // Send an error
 client.send(new Error("Something broke!"));
 ```
+
+## Sending an Error
+By default, Backtrace will send an error for Uncaught Exceptions and Unhandled Promise Rejections.
+
+### Manually Sending an Error
+There are several ways to send an error to Backtrace. For more details on the definition of ```client.send()``` see [Methods](#methods) below.
+
+```ts
+// send as a string
+await client.send('This is a string!');
+
+// send as an Error
+await client.send(new Error('This is an Error!'));
+
+// as a BacktraceReport (string)
+await client.send(new BacktraceReport('This is a report with a string!'));
+
+// as a BacktraceReport (Error)
+await client.send(new BacktraceReport(new Error('This is a report with a string!')));
+```
+
 
 ## Error Reporting Features
 ### Attributes
@@ -239,8 +261,7 @@ The following options are available for the BacktraceClientOptions passed when i
 | `addAttribute(attributes: Record<string, unknown>)` | void | Add attributes to the BacktraceClient reports |
 | `initialize(options: BacktraceClientOptions)` | BacktraceClient | Initializes a new BacktraceClient (returns the same instance on subsequent calls) |
 | `builder(options: BacktraceClientOptions).build()` | BacktraceClient | (Advanced) Sets up a new BacktraceClient for reporting |
+| `send(data: BacktraceReport \| Error \| string, reportAttributes: Record<string, unknown> = {}, reportAttachments: BacktraceAttachment[] = [])` |  `Promise<void>` | Asynchronously sends error data to Backtrace |
 
 ### BacktraceReport
-
-#### BeforeSend
-Use BeforeSend to modify an error report. BeforeSend will be called at the last possible point in which the BacktraceReport can be modified (attributes added or deleted, additonal attachments added).  The BacktraceReport returned from this function will be the error report sent. If a null is returned the report will be skipped.
+A Backtrace Report is the format that ultimately gets sent to Backtrace. Its structure can be found in ```BacktraceReport.ts```.
