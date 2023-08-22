@@ -45,8 +45,8 @@ export interface BacktraceBreadcrumbsSettings {
     eventType?: BreadcrumbType;
 
     /**
-     * Specifies maximum number of breadcrumbs stored by the library. By default, only 100 breacrumbs
-     * wil be stored.
+     * Specifies maximum number of breadcrumbs stored by the library. By default, only 100 breadcrumbs
+     * will be stored.
      */
     maximumBreadcrumbs?: number;
 
