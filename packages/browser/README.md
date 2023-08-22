@@ -183,9 +183,23 @@ client.breadcrumbs?.info('This is a manual breadcrumb.', {
 ***
 
 ### Application Stability Metrics
-The Backtrace Browser SDK has the ability to send usage Metrics to be viewable in the Backtrace UI. See [BacktraceMetrics](#backtracemetrics) below to configure a metrics object during initialization to track additional metrics data.
+The Backtrace Browser SDK has the ability to send usage Metrics to be viewable in the Backtrace UI.
 
 [(Stability Metrics feature documentation)](https://docs.saucelabs.com/error-reporting/project-setup/stability-metrics/)
+
+#### Metrics Configuration
+| Option Name | Type | Description | Default | Required? |
+|-|-|-|-|-|
+| `metricsSubmissionUrl` | String | Metrics server hostname. By default the value is set to https://events.backtrace.io. | `https://events.backtrace.io` | <ul><li>- [ ] </li></ul> |
+| `enable` | Boolean | Determines if the metrics support is enabled. By default the value is set to true. | `true` | <ul><li>- [ ] </li></ul> |
+| `autoSendInterval` | Number | Indicates how often crash free metrics are sent to Backtrace. The interval is a value in ms. By default, session events are sent on application startup/finish, and every 30 minutes while the application is running. If the value is set to 0. The auto send mode is disabled. In this situation the application needs to maintain send mode manually. | On application startup/finish | <ul><li>- [ ] </li></ul> |
+| `size` | Number | Indicates how many events the metrics storage can store before auto submission. | `50` | <ul><li>- [ ] </li></ul> |
+
+#### Metrics Usage
+```ts
+// metrics will be undefined if not enabled
+client.metrics?.send();
+```
 
 ***
 ### Soure Map Support
@@ -215,8 +229,9 @@ The following options are available for the BacktraceClientOptions passed when i
 | `timeout` | Integer | How long to wait in ms before timing out the connection | `15000` | <ul><li>- [ ] </li></ul> |
 | `ignoreSslCertificate` | Boolean | Ignore SSL Certificate errors | `false` | <ul><li>- [ ] </li></ul> |
 | `rateLimit` | Integer | Limits the number of reports the client will send per minute. If set to '0', there is no limit. If set to a value greater than '0' and the value is reached, the client will not send any reports until the next minute. | `0` | <ul><li>- [ ] </li></ul> |
-| `metrics` | BacktraceMetricsOptions | See [Backtrace Metrics](#backtrace-metrics) | | <ul><li>- [ ] </li></ul> |
-| `database` | BacktraceDatabaseOptions | See [Backtrace Database](#backtrace-database) | |<ul><li>- [ ] </li></ul> |
+| `metrics` | BacktraceMetricsOptions | See [Backtrace Stability Metrics](#application-stability-metrics) | | <ul><li>- [ ] </li></ul> |
+| `breadcrumbs` | BacktraceBreadcrumbsSettings | See [Backtrace Breadcrumbs](#breadcrumbs) | | <ul><li>- [ ] </li></ul> |
+| `database` | BacktraceDatabaseOptions | See [Backtrace Database](#backtracedatabase) | |<ul><li>- [ ] </li></ul> |
 
 #### Methods
 
@@ -227,8 +242,6 @@ The following options are available for the BacktraceClientOptions passed when i
 | `builder(options: BacktraceClientOptions).build()` | BacktraceClient | (Advanced) Sets up a new BacktraceClient for reporting |
 
 ### BacktraceDatabase
-
-### BacktraceMetrics
 
 ### BacktraceReport
 
