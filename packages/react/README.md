@@ -6,8 +6,8 @@ The [@backtrace/react](#) SDK connects your React application to Backtrace. The 
 ## Table of Contents
 1. [Basic Integration - Reporting your first errors](#basic-integration)
     - [Integrate the SDK](#integrate-the-sdk)
-    - [Upload source maps](#upload-source-maps)
     - [Add a Backtrace Error Boundary](#add-a-backtrace-error-boundary)
+    - [Upload source maps](#upload-source-maps)
 1. [Error Reporting Features](#error-reporting-features)
     - [Attributes](#attributes)
     - [File Attachments](#file-attachments)
@@ -52,12 +52,6 @@ const client = BacktraceClient.initialize(options);
 client.send(new Error("Something broke!"));
 ```
 
-### Upload source maps
-Client-side error reports are based on minified code. Upload source maps and source code to resolve minified code to your original source identifiers.
-
-[(Source Map feature documentation)](https://docs.saucelabs.com/error-reporting/platform-integrations/source-map/)
-<? TBD: Link to source upload doc ?>
-
 ### Add a Backtrace Error Boundary
 The ```@backtrace/react``` SDK offers an Error Boundary that will handle errors during rendering, send the error and component stack to Backtrace, and allow you to provide a fallback component.
 
@@ -82,6 +76,12 @@ import Fallback from './components/Fallback';
     <App />
 </ErrorBoundary>
 ```
+
+### Upload source maps
+Client-side error reports are based on minified code. Upload source maps and source code to resolve minified code to your original source identifiers.
+
+[(Source Map feature documentation)](https://docs.saucelabs.com/error-reporting/platform-integrations/source-map/)
+<? TBD: Link to source upload doc ?>
 
 ## Error Reporting Features
 ### Attributes
