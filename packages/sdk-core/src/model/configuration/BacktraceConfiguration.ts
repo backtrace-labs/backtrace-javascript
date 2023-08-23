@@ -78,7 +78,7 @@ export interface BacktraceConfiguration {
 
     /**
      * Determines if unhandled promise rejections should be captured by the library.
-     * By default false.
+     * By default true.
      */
     captureUnhandledPromiseRejections?: boolean;
 
