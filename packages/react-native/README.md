@@ -1,18 +1,31 @@
-# replace-me
+# @backtrace/react-native
 
-## Getting started
+Backtrace
 
-`$ npm install replace-me --save`
+## Installation
 
-### Mostly automatic installation
-
-`$ react-native link replace-me`
+```sh
+npm install @backtrace/react-native
+```
 
 ## Usage
 
-```javascript
-import BacktraceReactNative from 'replace-me';
+```js
+import { multiply } from '@backtrace/react-native';
 
-// TODO: What to do with the module?
-BacktraceReactNative;
+// ...
+
+const result = await multiply(3, 7);
 ```
+
+## Contributing
+
+See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the repository and the development workflow.
+
+## License
+
+MIT
+
+---
+
+Made with [create-react-native-library](https://github.com/callstack/react-native-builder-bob)

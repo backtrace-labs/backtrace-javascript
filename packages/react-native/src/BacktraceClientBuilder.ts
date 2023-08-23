@@ -1,13 +1,18 @@
-import { BacktraceReactClientBuilder, ReactStackTraceConverter } from '@backtrace/react';
+import { BacktraceCoreClientBuilder } from '@backtrace/sdk-core';
 import { BacktraceClient } from './BacktraceClient';
-export class BacktraceClientBuilder extends BacktraceReactClientBuilder {
-    public build(): BacktraceClient {
-        return new BacktraceClient(
-            this.options,
-            this.handler,
-            this.attributeProviders,
-            new ReactStackTraceConverter(this.generateStackTraceConverter()),
-            this.breadcrumbSubscribers,
-        );
-    }
+import { type BacktraceConfiguration } from './BacktraceConfiguration';
+import { ReactnativeRequestHandler } from './ReactNativeRequestHandler';
+
+export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<BacktraceClient> {
+  constructor(private readonly _options: BacktraceConfiguration) {
+    super(new ReactnativeRequestHandler(_options), []);
+  }
+  public build(): BacktraceClient {
+    return new BacktraceClient(
+      this._options,
+      this.handler,
+      this.attributeProviders,
+      this.breadcrumbSubscribers
+    );
+  }
 }
