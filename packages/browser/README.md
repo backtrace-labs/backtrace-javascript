@@ -5,6 +5,7 @@ The [@backtrace/browser](#) SDK connects your JavaScript application to Backtrac
 
 ## Table of Contents
 1. [Basic Integration - Reporting your first errors](#basic-integration)
+    - [Install the package](#install-the-package)
     - [Integrate the SDK](#integrate-the-sdk)
     - [Upload source maps](#upload-source-maps)
 1. [Error Reporting Features](#error-reporting-features)
@@ -23,6 +24,11 @@ The [@backtrace/browser](#) SDK connects your JavaScript application to Backtrac
 
 
 ## Basic Integration
+### Install the package
+```
+$ npm install @backtrace/browser
+```
+
 ### Integrate the SDK
 Add the following code to your application before all other scripts to report client-side errors to Backtrace.
 

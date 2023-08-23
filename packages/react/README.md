@@ -5,6 +5,7 @@ The [@backtrace/react](#) SDK connects your React application to Backtrace. The 
 
 ## Table of Contents
 1. [Basic Integration - Reporting your first errors](#basic-integration)
+    - [Install the package](#install-the-package)
     - [Integrate the SDK](#integrate-the-sdk)
     - [Add a Backtrace Error Boundary](#add-a-backtrace-error-boundary)
     - [Upload source maps](#upload-source-maps)
@@ -24,6 +25,11 @@ The [@backtrace/react](#) SDK connects your React application to Backtrace. The 
 
 
 ## Basic Integration
+### Install the package
+```
+$ npm install @backtrace/react
+```
+
 ### Integrate the SDK
 Add the following code to your application before all other scripts to report client-side errors to Backtrace.
 
