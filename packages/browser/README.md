@@ -25,7 +25,6 @@ The [@backtrace/browser](#) SDK connects your JavaScript application to Backtrac
 
 ## Basic Integration
 ### Install the package
-If you are using a package manager, then install the backtrace-js package.
 ```
 $ npm install @backtrace/browser
 ```
