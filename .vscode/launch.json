@@ -2,6 +2,12 @@
     "version": "0.1.0",
     "configurations": [
         {
+            "name": "Attach to react native app",
+            "cwd": "${workspaceFolder}/examples/sdk/reactNative",
+            "type": "reactnative",
+            "request": "attach"
+        },
+        {
             "name": "Launch",
             "program": "${workspaceFolder}/examples/sdk/node/lib/index.js",
             "request": "launch",
