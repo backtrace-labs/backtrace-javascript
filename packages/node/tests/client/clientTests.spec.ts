@@ -1,4 +1,4 @@
-import { BacktraceReport, BacktraceRequestHandler } from '@backtrace/sdk-core';
+import { BacktraceReport, BacktraceRequestHandler } from '@backtrace-labs/sdk-core';
 import fs from 'fs';
 import path from 'path';
 import { BacktraceBufferAttachment, BacktraceClient, BacktraceFileAttachment } from '../../src/';

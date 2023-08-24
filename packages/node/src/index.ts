@@ -10,7 +10,7 @@ export {
     BreadcrumbsManager,
     BreadcrumbType,
     RawBreadcrumb,
-} from '@backtrace/sdk-core';
+} from '@backtrace-labs/sdk-core';
 export * from './attachment';
 export * from './BacktraceClient';
 export * from './BacktraceConfiguration';

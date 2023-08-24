@@ -1,4 +1,4 @@
-import { BacktraceClientBuilder } from '@backtrace/browser';
+import { BacktraceClientBuilder } from '@backtrace-labs/browser';
 import { BacktraceClient } from '../BacktraceClient';
 import { ReactStackTraceConverter } from '../converters/ReactStackTraceConverter';
 

@@ -1,5 +1,5 @@
-import { BacktraceErrorType, BacktraceReport } from '@backtrace/sdk-core';
-import type { BacktraceStackFrame } from '@backtrace/sdk-core/lib/model/data/BacktraceStackTrace';
+import { BacktraceErrorType, BacktraceReport } from '@backtrace-labs/sdk-core';
+import type { BacktraceStackFrame } from '@backtrace-labs/sdk-core/lib/model/data/BacktraceStackTrace';
 import { NodeDiagnosticReport } from '../database/models/NodeDiagnosticReport';
 
 export class NodeDiagnosticReportConverter {

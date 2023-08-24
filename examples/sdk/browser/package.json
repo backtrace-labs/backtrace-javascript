@@ -1,5 +1,5 @@
 {
-    "name": "@backtrace/browser-example",
+    "name": "@backtrace-labs/browser-example",
     "version": "1.0.0",
     "description": "Backtrace-JavaScript web browser integration",
     "main": "lib/index.js",

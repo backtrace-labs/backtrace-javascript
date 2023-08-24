@@ -1,4 +1,4 @@
-import { BacktraceAttributeProvider } from '@backtrace/sdk-core';
+import { BacktraceAttributeProvider } from '@backtrace-labs/sdk-core';
 import { BacktraceConfiguration } from '../BacktraceConfiguration';
 
 export class ApplicationInformationAttributeProvider implements BacktraceAttributeProvider {

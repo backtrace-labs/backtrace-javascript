@@ -1,1 +1,1 @@
-export * from '@backtrace/rollup-plugin';
+export * from '@backtrace-labs/rollup-plugin';

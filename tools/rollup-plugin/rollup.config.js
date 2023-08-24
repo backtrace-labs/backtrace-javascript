@@ -9,5 +9,5 @@ module.exports = {
         sourcemap: true,
     },
     plugins: [typescript({ tsconfig: './tsconfig.rollup.json' }), BacktracePlugin()],
-    external: ['@backtrace/sourcemap-tools', 'fs', 'path'],
+    external: ['@backtrace-labs/sourcemap-tools', 'fs', 'path'],
 };

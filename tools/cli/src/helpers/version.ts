@@ -1,4 +1,4 @@
-import { AsyncResult, parseJSON, readFile } from '@backtrace/sourcemap-tools';
+import { AsyncResult, parseJSON, readFile } from '@backtrace-labs/sourcemap-tools';
 import path from 'path';
 
 interface PackageJson {
