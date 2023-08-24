@@ -1,7 +1,7 @@
 {
-    "name": "@backtrace/node-example",
+    "name": "@backtrace-labs/node-example",
     "version": "1.0.0",
-    "description": "@backtrace/node example",
+    "description": "@backtrace-labs/node example",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
     "engines": {

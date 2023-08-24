@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-import { AsyncResult, Err } from '@backtrace/sourcemap-tools';
+import { AsyncResult, Err } from '@backtrace-labs/sourcemap-tools';
 import commandLineArgs from 'command-line-args';
 import { Command } from './commands/Command';
 import { loadVersion } from './helpers/version';
-import { LoggerOptions, createLogger } from './logger';
+import { createLogger, LoggerOptions } from './logger';
 import { DEFAULT_OPTIONS_PATH } from './options/loadOptions';
 import { addSourcesCmd } from './sourcemaps/add-sources';
 import { processCmd } from './sourcemaps/process';

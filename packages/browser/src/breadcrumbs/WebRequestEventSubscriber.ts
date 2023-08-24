@@ -3,7 +3,7 @@ import {
     BreadcrumbsEventSubscriber,
     BreadcrumbsManager,
     BreadcrumbType,
-} from '@backtrace/sdk-core';
+} from '@backtrace-labs/sdk-core';
 
 export class WebRequestEventSubscriber implements BreadcrumbsEventSubscriber {
     private _xmlHttpRequestOriginalOpenMethod?: typeof XMLHttpRequest.prototype.open;
@@ -17,7 +17,7 @@ export class WebRequestEventSubscriber implements BreadcrumbsEventSubscriber {
 
         XMLHttpRequest.prototype.open = function (
             method: string,
-            url: string | URL,
+            url: string,
             async?: boolean,
             username?: string | null,
             password?: string | null,

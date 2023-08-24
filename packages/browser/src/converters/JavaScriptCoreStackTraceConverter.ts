@@ -1,6 +1,6 @@
-import { ANONYMOUS_FUNCTION, BacktraceStackTraceConverter, UNKNOWN_FRAME } from '@backtrace/sdk-core';
-import { BacktraceStackFrame } from '@backtrace/sdk-core/lib/model/data/BacktraceStackTrace';
-import { JavaScriptEngine } from '@backtrace/sdk-core/lib/model/data/JavaScriptEngine';
+import { ANONYMOUS_FUNCTION, BacktraceStackTraceConverter, UNKNOWN_FRAME } from '@backtrace-labs/sdk-core';
+import { BacktraceStackFrame } from '@backtrace-labs/sdk-core/lib/model/data/BacktraceStackTrace';
+import { JavaScriptEngine } from '@backtrace-labs/sdk-core/lib/model/data/JavaScriptEngine';
 
 export class JavaScriptCoreStackTraceConverter implements BacktraceStackTraceConverter {
     get engine(): JavaScriptEngine {

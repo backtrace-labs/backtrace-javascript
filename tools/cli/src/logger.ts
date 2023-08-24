@@ -1,4 +1,4 @@
-import { LogLevel, Logger } from '@backtrace/sourcemap-tools';
+import { Logger, LogLevel } from '@backtrace-labs/sourcemap-tools';
 import { format } from 'util';
 
 export interface LoggerOptions {

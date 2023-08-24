@@ -7,7 +7,7 @@ import {
     BreadcrumbsEventSubscriber,
     DebugIdContainer,
     VariableDebugIdMapProvider,
-} from '@backtrace/sdk-core';
+} from '@backtrace-labs/sdk-core';
 import { AGENT } from './agentDefinition';
 import { BacktraceBrowserSessionProvider } from './BacktraceBrowserSessionProvider';
 import { BacktraceConfiguration } from './BacktraceConfiguration';

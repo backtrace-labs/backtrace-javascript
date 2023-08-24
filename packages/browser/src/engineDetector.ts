@@ -1,4 +1,4 @@
-import { JavaScriptEngine } from '@backtrace/sdk-core/lib/model/data/JavaScriptEngine';
+import { JavaScriptEngine } from '@backtrace-labs/sdk-core/lib/model/data/JavaScriptEngine';
 
 export function getEngine(): JavaScriptEngine {
     const normalizedUserAgent = navigator.userAgent.toLowerCase();

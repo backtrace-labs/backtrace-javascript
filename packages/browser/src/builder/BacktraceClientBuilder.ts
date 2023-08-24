@@ -1,5 +1,5 @@
-import { BacktraceCoreClientBuilder, BacktraceStackTraceConverter } from '@backtrace/sdk-core';
-import { V8StackTraceConverter } from '@backtrace/sdk-core/lib/modules/converter/V8StackTraceConverter';
+import { BacktraceCoreClientBuilder, BacktraceStackTraceConverter } from '@backtrace-labs/sdk-core';
+import { V8StackTraceConverter } from '@backtrace-labs/sdk-core/lib/modules/converter/V8StackTraceConverter';
 import { ApplicationInformationAttributeProvider } from '../attributes/ApplicationInformationAttributeProvider';
 import { UserAgentAttributeProvider } from '../attributes/UserAgentAttributeProvider';
 import { UserIdentifierAttributeProvider } from '../attributes/UserIdentifierAttributeProvider';

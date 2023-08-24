@@ -1,4 +1,4 @@
-import { BacktraceAttributeProvider, BacktraceConfiguration, IdGenerator } from '@backtrace/sdk-core';
+import { BacktraceAttributeProvider, BacktraceConfiguration, IdGenerator } from '@backtrace-labs/sdk-core';
 
 export class UserIdentifierAttributeProvider implements BacktraceAttributeProvider {
     public readonly USER_IDENTIFIER = 'backtrace-guid';

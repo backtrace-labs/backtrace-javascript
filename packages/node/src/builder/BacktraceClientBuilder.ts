@@ -1,4 +1,4 @@
-import { BacktraceAttachment, BacktraceAttributeProvider, BacktraceCoreClientBuilder } from '@backtrace/sdk-core';
+import { BacktraceAttachment, BacktraceAttributeProvider, BacktraceCoreClientBuilder } from '@backtrace-labs/sdk-core';
 import { BacktraceFileAttachment } from '../attachment';
 import {
     ApplicationInformationAttributeProvider,
