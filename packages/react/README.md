@@ -9,6 +9,7 @@ easy, after which you can explore the rich set of Backtrace features.
 ## Table of Contents
 
 1. [Basic Integration - Reporting your first errors](#basic-integration)
+    - [Install the package](#install-the-package)
     - [Integrate the SDK](#integrate-the-sdk)
     - [Add a Backtrace Error Boundary](#add-a-backtrace-error-boundary)
     - [Upload source maps](#upload-source-maps)
@@ -27,6 +28,10 @@ easy, after which you can explore the rich set of Backtrace features.
     - [BacktraceReports](#backtracereport)
 
 ## Basic Integration
+### Install the package
+```
+$ npm install @backtrace-labs/react
+```
 
 ### Integrate the SDK
 

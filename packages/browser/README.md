@@ -9,6 +9,7 @@ and easy, after which you can explore the rich set of Backtrace features.
 ## Table of Contents
 
 1. [Basic Integration - Reporting your first errors](#basic-integration)
+    - [Install the package](#install-the-package)
     - [Integrate the SDK](#integrate-the-sdk)
     - [Upload source maps](#upload-source-maps)
 1. [Error Reporting Features](#error-reporting-features)
@@ -26,6 +27,10 @@ and easy, after which you can explore the rich set of Backtrace features.
     - [BacktraceReports](#backtracereport)
 
 ## Basic Integration
+### Install the package
+```
+$ npm install @backtrace-labs/browser
+```
 
 ### Integrate the SDK
 
