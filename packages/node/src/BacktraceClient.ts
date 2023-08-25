@@ -72,6 +72,9 @@ export class BacktraceClient extends BacktraceCoreClient {
         return this._instance;
     }
 
+    /**
+     * Disposes the client and all client callbacks
+     */
     public dispose(): void {
         for (const [name, listener] of Object.entries(this._listeners)) {
             process.removeListener(name, listener);
