@@ -1,4 +1,4 @@
-import { Err, Ok, Result } from '@backtrace/sourcemap-tools';
+import { Err, Ok, Result } from '@backtrace-labs/sourcemap-tools';
 import { jsonc } from 'jsonc';
 
 export function parseJSONC<T>(content: string): Result<T, string> {

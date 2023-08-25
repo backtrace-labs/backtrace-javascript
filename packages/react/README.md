@@ -1,16 +1,17 @@
-# **Backtrace Browser SDK**
+# **Backtrace React SDK**
 
 [Backtrace](https://backtrace.io) captures and reports handled and unhandled exceptions in your production software so
 you can manage application quality through the complete product lifecycle.
 
-The [@backtrace-labs/browser](#) SDK connects your JavaScript application to Backtrace. The basic integration is quick
-and easy, after which you can explore the rich set of Backtrace features.
+The [@backtrace-labs/react](#) SDK connects your React application to Backtrace. The basic integration is quick and
+easy, after which you can explore the rich set of Backtrace features.
 
 ## Table of Contents
 
 1. [Basic Integration - Reporting your first errors](#basic-integration)
     - [Install the package](#install-the-package)
     - [Integrate the SDK](#integrate-the-sdk)
+    - [Add a Backtrace Error Boundary](#add-a-backtrace-error-boundary)
     - [Upload source maps](#upload-source-maps)
 1. [Error Reporting Features](#error-reporting-features)
     - [Attributes](#attributes)
@@ -29,7 +30,7 @@ and easy, after which you can explore the rich set of Backtrace features.
 ## Basic Integration
 ### Install the package
 ```
-$ npm install @backtrace-labs/browser
+$ npm install @backtrace-labs/react
 ```
 
 ### Integrate the SDK
@@ -37,8 +38,8 @@ $ npm install @backtrace-labs/browser
 Add the following code to your application before all other scripts to report client-side errors to Backtrace.
 
 ```ts
-// Import the BacktraceClient from @backtrace-labs/browser with your favoriate package manager.
-import { BacktraceClient, BacktraceConfiguration } from '@backtrace-labs/browser';
+// Import the BacktraceClient from @backtrace-labs/react with your favoriate package manager.
+import { BacktraceClient, BacktraceConfiguration } from '@backtrace-labs/react';
 
 // Configure client options
 const options: BacktraceConfiguration = {
@@ -59,6 +60,34 @@ const client = BacktraceClient.initialize(options);
 
 // Manually send an error
 client.send(new Error('Something broke!'));
+```
+
+### Add a Backtrace Error Boundary
+
+The `@backtrace-labs/react` SDK offers an Error Boundary that will handle errors during rendering, send the error and
+component stack to Backtrace, and allow you to provide a fallback component.
+
+Props:
+
+```ts
+type RenderFallback = () => ReactElement;
+
+export interface Props {
+    children: ReactNode;
+    fallback?: ReactElement | RenderFallback;
+    name?: string; // to identify the ErrorBoundary when multiple are used
+}
+```
+
+Usage:
+
+```ts
+import { ErrorBoundary } from '@backtrace-labs/react';
+import Fallback from './components/Fallback';
+
+<ErrorBoundary name="your-boundary-name" fallback={Fallback}>
+    <App />
+</ErrorBoundary>;
 ```
 
 ### Upload source maps
@@ -137,8 +166,8 @@ BacktraceClient, or dynamically for specific reports. When including attachments
 uploaded with each report.
 
 ```ts
-// Import attachment types from @backtrace-labs/browser
-import { BacktraceStringAttachment, BacktraceUint8ArrayAttachment  } from "@backtrace-labs/browser";
+// Import attachment types from @backtrace-labs/react
+import { BacktraceStringAttachment, BacktraceUint8ArrayAttachment  } from "@backtrace-labs/react";
 
 // BacktraceStringAttachment should be used for text object like a log file, for example
 const attachment1 = new BacktraceStringAttachment("logfile.txt", "This is the start of my log")
@@ -193,7 +222,7 @@ and manual breadcrumbs can also be added.
 | `intercept`          | (breadcrumb: RawBreadcrumb) => RawBreadcrumb \| undefined; | Inspects breadcrumb and allows to modify it. If the undefined value is being returned from the method, no breadcrumb will be added to the breadcrumb storage. | All Breadcrumbs | <ul><li>- [ ] </li></ul> |
 
 ```ts
-import { BacktraceClient, BacktraceConfiguration } from '@backtrace-labs/browser';
+import { BacktraceClient, BacktraceConfiguration } from '@backtrace-labs/react';
 
 // BacktraceClientOptions
 const options: BacktraceConfiguration = {
@@ -236,7 +265,7 @@ client.breadcrumbs?.info('This is a manual breadcrumb.', {
 
 ### Application Stability Metrics
 
-The Backtrace Browser SDK has the ability to send usage Metrics to be viewable in the Backtrace UI.
+The Backtrace React SDK has the ability to send usage Metrics to be viewable in the Backtrace UI.
 
 [(Stability Metrics feature documentation)](https://docs.saucelabs.com/error-reporting/project-setup/stability-metrics/)
 

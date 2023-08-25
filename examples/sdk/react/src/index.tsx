@@ -1,13 +1,13 @@
+import { BacktraceClient, ErrorBoundary } from '@backtrace-labs/react';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import { ErrorBoundary, BacktraceClient } from '@backtrace/react';
 import Fallback from './components/Fallback';
 import { SUBMISSION_URL } from './consts';
 
 BacktraceClient.initialize({
     url: SUBMISSION_URL,
-    name: '@backtrace/react-example',
+    name: '@backtrace-labs/react-example',
     version: '0.0.1',
     userAttributes: {
         'custom-attribute': 'test',

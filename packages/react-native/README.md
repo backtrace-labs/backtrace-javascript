@@ -1,17 +1,17 @@
-# @backtrace/react-native
+# @backtrace-labs/react-native
 
 Backtrace
 
 ## Installation
 
 ```sh
-npm install @backtrace/react-native
+npm install @backtrace-labs/react-native
 ```
 
 ## Usage
 
 ```js
-import { multiply } from '@backtrace/react-native';
+import { multiply } from '@backtrace-labs/react-native';
 
 // ...
 

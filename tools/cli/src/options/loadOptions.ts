@@ -1,4 +1,4 @@
-import { AsyncResult, Ok, ResultPromise, parseJSON, readFile } from '@backtrace/sourcemap-tools';
+import { AsyncResult, Ok, parseJSON, readFile, ResultPromise } from '@backtrace-labs/sourcemap-tools';
 import { parseJSONC } from '../helpers/jsonc';
 import { CliOptions, CommandCliOptions } from './models/CliOptions';
 

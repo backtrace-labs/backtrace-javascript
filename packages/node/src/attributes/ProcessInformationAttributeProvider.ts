@@ -1,4 +1,4 @@
-import { BacktraceAttributeProvider } from '@backtrace/sdk-core';
+import { BacktraceAttributeProvider } from '@backtrace-labs/sdk-core';
 
 export class ProcessInformationAttributeProvider implements BacktraceAttributeProvider {
     public get type(): 'scoped' | 'dynamic' {

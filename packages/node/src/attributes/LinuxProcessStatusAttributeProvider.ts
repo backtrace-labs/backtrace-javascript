@@ -1,4 +1,4 @@
-import { BacktraceAttributeProvider } from '@backtrace/sdk-core';
+import { BacktraceAttributeProvider } from '@backtrace-labs/sdk-core';
 import fs from 'fs';
 import { MEMORY_ATTRIBUTE_MAP, MEMORY_INFORMATION_REGEX, PROCESS_STATUS_MAP } from './processStatusInformationMap';
 

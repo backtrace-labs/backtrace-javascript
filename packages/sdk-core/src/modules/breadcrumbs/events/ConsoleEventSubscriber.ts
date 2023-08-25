@@ -1,4 +1,4 @@
-import { format } from 'util';
+import { textFormatter } from '../../../common/textFormatter';
 import { BreadcrumbsManager } from '../BreadcrumbsManager';
 import { BreadcrumbLogLevel } from '../model/BreadcrumbLogLevel';
 import { BreadcrumbType } from '../model/BreadcrumbType';
@@ -10,11 +10,13 @@ export class ConsoleEventSubscriber implements BreadcrumbsEventSubscriber {
      * All overriden console events
      */
     private readonly _events: Record<string, ConsoleMethod> = {};
-
+    private _formatter!: (...params: unknown[]) => string;
     public start(breadcrumbsManager: BreadcrumbsManager): void {
         if ((breadcrumbsManager.breadcrumbsType & BreadcrumbType.Log) !== BreadcrumbType.Log) {
             return;
         }
+
+        this._formatter = textFormatter();
 
         this.bindToConsoleMethod('log', BreadcrumbLogLevel.Info, breadcrumbsManager);
         this.bindToConsoleMethod('warn', BreadcrumbLogLevel.Warning, breadcrumbsManager);
@@ -36,11 +38,10 @@ export class ConsoleEventSubscriber implements BreadcrumbsEventSubscriber {
         breadcrumbsManager: BreadcrumbsManager,
     ) {
         const originalMethod = console[name] as ConsoleMethod;
-        const defaultImplementation = originalMethod.bind(console);
 
         (console[name] as ConsoleMethod) = (...args: unknown[]) => {
-            defaultImplementation.apply(console, args);
-            const message = format(...args);
+            originalMethod(...args);
+            const message = this._formatter(...args);
             breadcrumbsManager.addBreadcrumb(message, level, BreadcrumbType.Log);
         };
         this._events[name] = originalMethod;

@@ -1,4 +1,4 @@
-import { FileFinder, Ok, ResultPromise } from '@backtrace/sourcemap-tools';
+import { FileFinder, Ok, ResultPromise } from '@backtrace-labs/sourcemap-tools';
 import fs from 'fs';
 import { glob } from 'glob';
 import path from 'path';

@@ -1,4 +1,4 @@
-import { ReactStackTraceConverter } from '@backtrace/react';
+import { ReactStackTraceConverter } from '@backtrace-labs/react';
 import {
     BacktraceCoreClient,
     VariableDebugIdMapProvider,
@@ -6,8 +6,8 @@ import {
     type BacktraceRequestHandler,
     type BreadcrumbsEventSubscriber,
     type DebugIdContainer,
-} from '@backtrace/sdk-core';
-import { V8StackTraceConverter } from '@backtrace/sdk-core/lib/modules/converter/V8StackTraceConverter';
+} from '@backtrace-labs/sdk-core';
+import { V8StackTraceConverter } from '@backtrace-labs/sdk-core/lib/modules/converter/V8StackTraceConverter';
 import { version } from 'react-native/package.json';
 import { BacktraceClientBuilder } from './BacktraceClientBuilder';
 import { type BacktraceConfiguration } from './BacktraceConfiguration';
@@ -23,7 +23,7 @@ export class BacktraceClient extends BacktraceCoreClient {
         super(
             options,
             {
-                agent: '@backtrace/react-native',
+                agent: '@backtrace-labs/react-native',
                 agentVersion: '0.0.1',
                 langName: 'react-native',
                 langVersion: version,

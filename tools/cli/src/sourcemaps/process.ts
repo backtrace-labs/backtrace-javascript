@@ -3,18 +3,18 @@ import {
     AsyncResult,
     DebugIdGenerator,
     Err,
-    Ok,
-    ProcessAssetError,
-    ProcessAssetResult,
-    SourceProcessor,
     failIfEmpty,
     filter,
     log,
     map,
     matchSourceExtension,
+    Ok,
     processAsset,
+    ProcessAssetError,
+    ProcessAssetResult,
+    SourceProcessor,
     writeAsset,
-} from '@backtrace/sourcemap-tools';
+} from '@backtrace-labs/sourcemap-tools';
 import { GlobalOptions } from '..';
 import { Command } from '../commands/Command';
 import { find } from '../helpers/find';

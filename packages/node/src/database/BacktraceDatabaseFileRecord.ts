@@ -1,4 +1,4 @@
-import { BacktraceData, BacktraceDatabaseRecord } from '@backtrace/sdk-core';
+import { BacktraceData, BacktraceDatabaseRecord } from '@backtrace-labs/sdk-core';
 import { BacktraceFileAttachment } from '../attachment';
 
 export class BacktraceDatabaseFileRecord implements BacktraceDatabaseRecord {

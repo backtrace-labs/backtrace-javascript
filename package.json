@@ -1,5 +1,5 @@
 {
-    "name": "@backtrace/javascript",
+    "name": "@backtrace-labs/javascript",
     "version": "0.0.1",
     "description": "Backtrace.io error reporting tool for JavaScript",
     "author": "Backtrace <team@backtrace.io>",

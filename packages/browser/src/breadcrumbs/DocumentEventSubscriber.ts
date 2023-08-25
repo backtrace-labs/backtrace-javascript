@@ -3,7 +3,7 @@ import {
     BreadcrumbsEventSubscriber,
     BreadcrumbsManager,
     BreadcrumbType,
-} from '@backtrace/sdk-core';
+} from '@backtrace-labs/sdk-core';
 
 export class DocumentEventSubscriber implements BreadcrumbsEventSubscriber {
     private readonly _controller: AbortController = new AbortController();

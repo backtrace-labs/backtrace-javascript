@@ -3,7 +3,7 @@ import {
     BacktraceDatabaseRecord,
     BacktraceDatabaseStorageProvider,
     jsonEscaper,
-} from '@backtrace/sdk-core';
+} from '@backtrace-labs/sdk-core';
 import fs from 'fs';
 import * as fsPromise from 'fs/promises';
 import path from 'path';
