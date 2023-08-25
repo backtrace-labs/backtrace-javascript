@@ -2,16 +2,32 @@ import { BacktraceCoreClient } from '../BacktraceCoreClient';
 import { BacktraceRequestHandler } from '../model/http/BacktraceRequestHandler';
 import { BacktraceAttributeProvider } from '../modules/attribute/BacktraceAttributeProvider';
 import { BreadcrumbsEventSubscriber } from '../modules/breadcrumbs';
+import { BacktraceStackTraceConverter } from '../modules/converter';
+import { BacktraceSessionProvider } from '../modules/metrics/BacktraceSessionProvider';
 
 export abstract class BacktraceCoreClientBuilder<T extends BacktraceCoreClient> {
+    protected stackTraceConverter?: BacktraceStackTraceConverter;
+
     constructor(
         protected handler: BacktraceRequestHandler,
         protected readonly attributeProviders: BacktraceAttributeProvider[] = [],
         protected readonly breadcrumbSubscribers: BreadcrumbsEventSubscriber[] = [],
+        protected sessionProvider?: BacktraceSessionProvider,
     ) {}
 
-    public useBreadcrumbSubscriber(breadcrumbSubscriber: BreadcrumbsEventSubscriber) {
+    public addAttributeProvider(provider: BacktraceAttributeProvider) {
+        this.attributeProviders.push(provider);
+        return this;
+    }
+
+    public useBreadcrumbSubscriber(breadcrumbSubscriber: BreadcrumbsEventSubscriber): BacktraceCoreClientBuilder<T> {
         this.breadcrumbSubscribers.push(breadcrumbSubscriber);
+        return this;
+    }
+
+    public useSessionProvider(sessionProvider: BacktraceSessionProvider): BacktraceCoreClientBuilder<T> {
+        this.sessionProvider = sessionProvider;
+        return this;
     }
 
     public useRequestHandler(handler: BacktraceRequestHandler): BacktraceCoreClientBuilder<T> {
@@ -19,5 +35,9 @@ export abstract class BacktraceCoreClientBuilder<T extends BacktraceCoreClient> 
         return this;
     }
 
+    public useStackTraceConverter(stackTraceConverter: BacktraceStackTraceConverter): BacktraceCoreClientBuilder<T> {
+        this.stackTraceConverter = stackTraceConverter;
+        return this;
+    }
     public abstract build(): T;
 }

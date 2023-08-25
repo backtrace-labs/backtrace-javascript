@@ -22,23 +22,21 @@ export class BacktraceClient extends BacktraceCoreClient {
     private static _instance?: BacktraceClient;
     constructor(
         options: CoreConfiguration,
-        handler: BacktraceRequestHandler,
+        requestHandler: BacktraceRequestHandler,
         attributeProviders: BacktraceAttributeProvider[],
         breadcrumbsEventSubscribers: BreadcrumbsEventSubscriber[],
     ) {
-        super(
+        super({
             options,
-            AGENT,
-            handler,
+            sdkOptions: AGENT,
+            requestHandler,
             attributeProviders,
-            undefined,
-            undefined,
-            new VariableDebugIdMapProvider(global as DebugIdContainer),
-            {
+            debugIdMapProvider: new VariableDebugIdMapProvider(global as DebugIdContainer),
+            breadcrumbsSetup: {
                 subscribers: breadcrumbsEventSubscribers,
             },
-            BacktraceDatabaseFileStorageProvider.createIfValid(options.database),
-        );
+            databaseStorageProvider: BacktraceDatabaseFileStorageProvider.createIfValid(options.database),
+        });
     }
 
     public static builder(options: BacktraceConfiguration): BacktraceClientBuilder {

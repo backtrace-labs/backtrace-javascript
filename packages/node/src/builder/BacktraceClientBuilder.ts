@@ -1,4 +1,10 @@
-import { BacktraceAttachment, BacktraceAttributeProvider, BacktraceCoreClientBuilder } from '@backtrace-labs/sdk-core';
+import {
+    BacktraceAttachment,
+    BacktraceAttributeProvider,
+    BacktraceCoreClientBuilder,
+    BacktraceSessionProvider,
+    BreadcrumbsEventSubscriber,
+} from '@backtrace-labs/sdk-core';
 import { BacktraceFileAttachment } from '../attachment';
 import {
     ApplicationInformationAttributeProvider,
@@ -13,19 +19,20 @@ import { BacktraceConfiguration } from '../BacktraceConfiguration';
 import { BacktraceNodeRequestHandler } from '../BacktraceNodeRequestHandler';
 
 export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<BacktraceClient> {
-    constructor(private readonly _options: BacktraceConfiguration) {
-        super(new BacktraceNodeRequestHandler(_options), [
+    constructor(
+        private readonly _options: BacktraceConfiguration,
+        attributeProvider: BacktraceAttributeProvider[] = [
             new ApplicationInformationAttributeProvider(_options),
             new ProcessStatusAttributeProvider(),
             new MachineAttributeProvider(),
             new ProcessInformationAttributeProvider(),
             new LinuxProcessStatusAttributeProvider(),
             new MachineIdentitfierAttributeProvider(),
-        ]);
-    }
-
-    public addAttributeProvider(provider: BacktraceAttributeProvider) {
-        this.attributeProviders.push(provider);
+        ],
+        breadcrumbSubscribers: BreadcrumbsEventSubscriber[] = [],
+        sessionProvider?: BacktraceSessionProvider,
+    ) {
+        super(new BacktraceNodeRequestHandler(_options), attributeProvider, breadcrumbSubscribers, sessionProvider);
     }
 
     /**
