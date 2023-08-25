@@ -2,7 +2,7 @@ export interface EnabledBacktraceDatabaseConfiguration {
     /**
      * Determine if the Database is enabled
      */
-    enabled: true;
+    enable: true;
     /**
      * Path where the SDK can store data.
      */
@@ -46,11 +46,11 @@ export interface EnabledBacktraceDatabaseConfiguration {
 }
 
 export interface DisabledBacktraceDatabaseConfiguration
-    extends Omit<Partial<EnabledBacktraceDatabaseConfiguration>, 'enabled'> {
+    extends Omit<Partial<EnabledBacktraceDatabaseConfiguration>, 'enable'> {
     /**
-     * Determine if the Database is enabled
+     * Determine if the Database is enable
      */
-    enabled?: false;
+    enable?: false;
 }
 
 export type BacktraceDatabaseConfiguration =

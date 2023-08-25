@@ -23,7 +23,7 @@ describe('Database record batch tests', () => {
         const client = BacktraceTestClient.buildFakeClient(
             {
                 database: {
-                    enabled: true,
+                    enable: true,
                     autoSend: true,
                     path: path.join(__dirname, 'database'),
                     maximumRetries,
@@ -56,7 +56,7 @@ describe('Database record batch tests', () => {
         const client = BacktraceTestClient.buildFakeClient(
             {
                 database: {
-                    enabled: true,
+                    enable: true,
                     autoSend: true,
                     path: path.join(__dirname, 'database'),
                     maximumRetries,
