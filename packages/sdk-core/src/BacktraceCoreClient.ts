@@ -1,22 +1,18 @@
 import {
     BacktraceAttachment,
-    BacktraceAttributeProvider,
+    BacktraceConfiguration,
     BacktraceDatabaseRecord,
-    BacktraceDatabaseStorageProvider,
     BacktraceSessionProvider,
-    BacktraceStackTraceConverter,
-    DebugIdMapProvider,
     DebugIdProvider,
+    SdkOptions,
 } from '.';
-import { SdkOptions } from './builder/SdkOptions';
-import { BacktraceConfiguration } from './model/configuration/BacktraceConfiguration';
+import { CoreClientSetup } from './builder/CoreClientSetup';
 import { AttributeType, BacktraceData } from './model/data/BacktraceData';
 import { BacktraceReportSubmission } from './model/http/BacktraceReportSubmission';
-import { BacktraceRequestHandler } from './model/http/BacktraceRequestHandler';
 import { BacktraceReport } from './model/report/BacktraceReport';
 import { AttributeManager } from './modules/attribute/AttributeManager';
 import { ClientAttributeProvider } from './modules/attribute/ClientAttributeProvider';
-import { BacktraceBreadcrumbs, BreadcrumbsSetup } from './modules/breadcrumbs';
+import { BacktraceBreadcrumbs } from './modules/breadcrumbs';
 import { BreadcrumbsManager } from './modules/breadcrumbs/BreadcrumbsManager';
 import { V8StackTraceConverter } from './modules/converter/V8StackTraceConverter';
 import { BacktraceDataBuilder } from './modules/data/BacktraceDataBuilder';
@@ -87,53 +83,58 @@ export abstract class BacktraceCoreClient {
     private readonly _attributeProvider: AttributeManager;
     private readonly _metrics?: BacktraceMetrics;
     private readonly _database?: BacktraceDatabase;
+    private readonly _sessionProvider: BacktraceSessionProvider;
+    private readonly _sdkOptions: SdkOptions;
+    protected readonly options: BacktraceConfiguration;
 
-    protected constructor(
-        protected readonly options: BacktraceConfiguration,
-        private readonly _sdkOptions: SdkOptions,
-        requestHandler: BacktraceRequestHandler,
-        attributeProviders: BacktraceAttributeProvider[] = [],
-        stackTraceConverter: BacktraceStackTraceConverter = new V8StackTraceConverter(),
-        private readonly _sessionProvider: BacktraceSessionProvider = new SingleSessionProvider(),
-        debugIdMapProvider?: DebugIdMapProvider,
-        breadcrumbsSetup?: BreadcrumbsSetup,
-        databaseStorageProvider?: BacktraceDatabaseStorageProvider,
-    ) {
+    protected constructor(private readonly _setup: CoreClientSetup) {
+        this.options = _setup.options;
+        this._sdkOptions = _setup.sdkOptions;
+        this._sessionProvider = this._setup.sessionProvider ?? new SingleSessionProvider();
+
+        const stackTraceConverter = this._setup.stackTraceConverter ?? new V8StackTraceConverter();
+
         this._dataBuilder = new BacktraceDataBuilder(
             this._sdkOptions,
             stackTraceConverter,
-            new DebugIdProvider(stackTraceConverter, debugIdMapProvider),
+            new DebugIdProvider(stackTraceConverter, this._setup.debugIdMapProvider),
         );
 
-        this._reportSubmission = new BacktraceReportSubmission(options, requestHandler);
+        this._reportSubmission = new BacktraceReportSubmission(this.options, this._setup.requestHandler);
         this._attributeProvider = new AttributeManager([
             new ClientAttributeProvider(
-                _sdkOptions.agent,
-                _sdkOptions.agentVersion,
-                _sessionProvider.sessionId,
-                options.userAttributes ?? {},
+                this.agent,
+                this.agentVersion,
+                this._sessionProvider.sessionId,
+                this.options.userAttributes ?? {},
             ),
-            ...(attributeProviders ?? []),
+            ...(this._setup.attributeProviders ?? []),
         ]);
-        this.attachments = options.attachments ?? [];
+        this.attachments = this.options.attachments ?? [];
 
-        if (databaseStorageProvider && options?.database?.enabled === true) {
+        if (this._setup.databaseStorageProvider && this.options?.database?.enabled === true) {
             this._database = new BacktraceDatabase(
                 this.options.database,
-                databaseStorageProvider,
+                this._setup.databaseStorageProvider,
                 this._reportSubmission,
             );
         }
 
-        this._rateLimitWatcher = new RateLimitWatcher(options.rateLimit);
+        this._rateLimitWatcher = new RateLimitWatcher(this.options.rateLimit);
 
-        const metrics = new MetricsBuilder(options, _sessionProvider, this._attributeProvider, requestHandler).build();
+        const metrics = new MetricsBuilder(
+            this.options,
+            this._sessionProvider,
+            this._attributeProvider,
+            this._setup.requestHandler,
+        ).build();
+
         if (metrics) {
             this._metrics = metrics;
         }
 
-        if (options.breadcrumbs?.enable !== false) {
-            this.breadcrumbsManager = new BreadcrumbsManager(options?.breadcrumbs, breadcrumbsSetup);
+        if (this.options.breadcrumbs?.enable !== false) {
+            this.breadcrumbsManager = new BreadcrumbsManager(this.options?.breadcrumbs, this._setup.breadcrumbsSetup);
             this._attributeProvider.addProvider(this.breadcrumbsManager);
             this.attachments.push(this.breadcrumbsManager.breadcrumbsStorage);
         }
