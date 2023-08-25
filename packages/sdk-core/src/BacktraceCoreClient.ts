@@ -219,6 +219,14 @@ export abstract class BacktraceCoreClient {
         }
     }
 
+    /**
+     * Disposes the client and all client callbacks
+     */
+    public dispose() {
+        this.database?.dispose();
+        this.breadcrumbsManager?.dispose();
+    }
+
     private addToDatabase(
         data: BacktraceData,
         attachments: BacktraceAttachment[],

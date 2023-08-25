@@ -19,6 +19,8 @@ import { NodeDiagnosticReportConverter } from './converter/NodeDiagnosticReportC
 import { BacktraceDatabaseFileStorageProvider } from './database/BacktraceDatabaseFileStorageProvider';
 
 export class BacktraceClient extends BacktraceCoreClient {
+    private _listeners: Record<string, NodeJS.UnhandledRejectionListener | NodeJS.UncaughtExceptionListener> = {};
+
     private static _instance?: BacktraceClient;
     constructor(
         options: CoreConfiguration,
@@ -70,6 +72,14 @@ export class BacktraceClient extends BacktraceCoreClient {
         return this._instance;
     }
 
+    public dispose(): void {
+        for (const [name, listener] of Object.entries(this._listeners)) {
+            process.removeListener(name, listener);
+        }
+
+        super.dispose();
+    }
+
     protected initialize() {
         super.initialize();
 
@@ -105,7 +115,7 @@ export class BacktraceClient extends BacktraceCoreClient {
         };
 
         process.prependListener('uncaughtExceptionMonitor', captureUncaughtException);
-
+        this._listeners['uncaughtExceptionMonitor'] = captureUncaughtException;
         if (!captureUnhandledRejections) {
             return;
         }
@@ -188,6 +198,7 @@ export class BacktraceClient extends BacktraceCoreClient {
             process.emitWarning(warning);
         };
         process.prependListener('unhandledRejection', captureUnhandledRejectionsCallback);
+        this._listeners['unhandledRejection'] = captureUnhandledRejectionsCallback;
     }
 
     private captureNodeCrashes() {
