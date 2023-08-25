@@ -237,7 +237,7 @@ export abstract class BacktraceCoreClient {
         this._enabled = false;
         this.database?.dispose();
         this.breadcrumbsManager?.dispose();
-        this._metrics?.close();
+        this._metrics?.dispose();
     }
 
     private addToDatabase(
