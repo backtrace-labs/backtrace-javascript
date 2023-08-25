@@ -20,7 +20,7 @@ If you're using code transpiler plugins (such as Typescript), ensure to enable `
 
 ### Construct an upload URL
 
-A specific URL is required to upload source maps. Follow [these instructions](https://docs.saucelabs.com/error-reporting/project-setup/submission-url/) to create a `symbol-post` token for the `sourcemap` endpoint.
+A specific URL is required to upload source maps. Follow [these instructions](https://docs.saucelabs.com/error-reporting/project-setup/submission-url/) to create an upload URL for the `sourcemap` endpoint with a `symbol-post` token.
 
 ### Install `@backtrace-labs/webpack-plugin` as a developer dependency:
 
