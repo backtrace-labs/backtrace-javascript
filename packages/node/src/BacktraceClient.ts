@@ -195,7 +195,7 @@ export class BacktraceClient extends BacktraceCoreClient {
             return;
         }
 
-        if (!this.options.database?.enabled) {
+        if (!this.options.database?.enable) {
             return;
         }
 

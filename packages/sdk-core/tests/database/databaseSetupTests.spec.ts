@@ -43,7 +43,7 @@ describe('Database setup tests', () => {
 
     it('Should not enable the database if the enable option is set to false', () => {
         const database = new BacktraceDatabase(
-            { enabled: false },
+            { enable: false },
             testStorageProvider,
             new BacktraceReportSubmission(
                 {
@@ -62,7 +62,7 @@ describe('Database setup tests', () => {
     it('Should not enable the database if the storage is not prepared', () => {
         const database = new BacktraceDatabase(
             {
-                enabled: true,
+                enable: true,
                 path: '/path/to/fake/dir',
             },
             testStorageProvider,
