@@ -1,44 +1,8 @@
-import { ReactStackTraceConverter } from '@backtrace-labs/react';
-import {
-    BacktraceCoreClient,
-    VariableDebugIdMapProvider,
-    type BacktraceAttributeProvider,
-    type BacktraceRequestHandler,
-    type BreadcrumbsEventSubscriber,
-    type DebugIdContainer,
-} from '@backtrace-labs/sdk-core';
-import { V8StackTraceConverter } from '@backtrace-labs/sdk-core/lib/modules/converter/V8StackTraceConverter';
-import { version } from 'react-native/package.json';
+import { BacktraceClient as BacktraceReactClient } from '@backtrace-labs/react';
 import { BacktraceClientBuilder } from './BacktraceClientBuilder';
 import { type BacktraceConfiguration } from './BacktraceConfiguration';
 
-export class BacktraceClient extends BacktraceCoreClient {
-    private static _instance?: BacktraceClient;
-    constructor(
-        options: BacktraceConfiguration,
-        handler: BacktraceRequestHandler,
-        attributeProviders: BacktraceAttributeProvider[],
-        breadcrumbsEventSubscribers: BreadcrumbsEventSubscriber[],
-    ) {
-        super(
-            options,
-            {
-                agent: '@backtrace-labs/react-native',
-                agentVersion: '0.0.1',
-                langName: 'react-native',
-                langVersion: version,
-            },
-            handler,
-            attributeProviders,
-            new ReactStackTraceConverter(new V8StackTraceConverter()),
-            undefined,
-            new VariableDebugIdMapProvider(global as DebugIdContainer),
-            {
-                subscribers: breadcrumbsEventSubscribers,
-            },
-        );
-    }
-
+export class BacktraceClient extends BacktraceReactClient {
     public static builder(options: BacktraceConfiguration): BacktraceClientBuilder {
         return new BacktraceClientBuilder(options);
     }
