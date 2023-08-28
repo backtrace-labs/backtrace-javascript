@@ -11,7 +11,7 @@ export abstract class BacktraceCoreClientBuilder<T extends BacktraceCoreClient> 
     constructor(
         protected handler: BacktraceRequestHandler,
         protected readonly attributeProviders: BacktraceAttributeProvider[] = [],
-        protected readonly breadcrumbSubscribers: BreadcrumbsEventSubscriber[] = [],
+        protected readonly breadcrumbsSubscribers: BreadcrumbsEventSubscriber[] = [],
         protected sessionProvider?: BacktraceSessionProvider,
     ) {}
 
@@ -21,7 +21,7 @@ export abstract class BacktraceCoreClientBuilder<T extends BacktraceCoreClient> 
     }
 
     public useBreadcrumbSubscriber(breadcrumbSubscriber: BreadcrumbsEventSubscriber): BacktraceCoreClientBuilder<T> {
-        this.breadcrumbSubscribers.push(breadcrumbSubscriber);
+        this.breadcrumbsSubscribers.push(breadcrumbSubscriber);
         return this;
     }
 

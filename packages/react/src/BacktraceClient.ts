@@ -19,7 +19,7 @@ export class BacktraceClient extends BrowserClient {
         }
         const builder = this.builder(options);
         build && build(builder);
-        this._instance = builder.build().initialize();
+        this._instance = builder.build();
         return this._instance;
     }
 

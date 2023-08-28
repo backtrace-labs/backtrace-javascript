@@ -43,7 +43,7 @@ export class BacktraceDatabase {
             return this._enabled;
         }
 
-        if (this._options?.enabled === false) {
+        if (this._options?.enable === false) {
             return false;
         }
 

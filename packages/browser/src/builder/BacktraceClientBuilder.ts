@@ -32,14 +32,14 @@ export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<Backtrace
             new UserIdentifierAttributeProvider(options),
             new ApplicationInformationAttributeProvider(options),
         ],
-        breadcrumbSubscribers: BreadcrumbsEventSubscriber[] = [
+        breadcrumbsSubscribers: BreadcrumbsEventSubscriber[] = [
             new WebRequestEventSubscriber(),
             new DocumentEventSubscriber(),
             new HistoryEventSubscriber(),
         ],
         sessionProvider: BacktraceSessionProvider = new BacktraceBrowserSessionProvider(),
     ) {
-        super(new BacktraceBrowserRequestHandler(options), attributeProviders, breadcrumbSubscribers, sessionProvider);
+        super(new BacktraceBrowserRequestHandler(options), attributeProviders, breadcrumbsSubscribers, sessionProvider);
     }
 
     public build(): BacktraceClient {
@@ -48,7 +48,7 @@ export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<Backtrace
             this.handler,
             this.attributeProviders,
             this.stackTraceConverter ?? this.generateStackTraceConverter(),
-            this.breadcrumbSubscribers,
+            this.breadcrumbsSubscribers,
             this.sessionProvider,
         );
     }
