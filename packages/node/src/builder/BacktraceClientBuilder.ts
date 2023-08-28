@@ -29,10 +29,10 @@ export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<Backtrace
             new LinuxProcessStatusAttributeProvider(),
             new MachineIdentitfierAttributeProvider(),
         ],
-        breadcrumbSubscribers: BreadcrumbsEventSubscriber[] = [],
+        breadcrumbsSubscribers: BreadcrumbsEventSubscriber[] = [],
         sessionProvider?: BacktraceSessionProvider,
     ) {
-        super(new BacktraceNodeRequestHandler(_options), attributeProvider, breadcrumbSubscribers, sessionProvider);
+        super(new BacktraceNodeRequestHandler(_options), attributeProvider, breadcrumbsSubscribers, sessionProvider);
     }
 
     /**
@@ -50,7 +50,7 @@ export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<Backtrace
             { ...this._options, attachments: this.transformAttachments() },
             this.handler,
             this.attributeProviders,
-            this.breadcrumbSubscribers,
+            this.breadcrumbsSubscribers,
         );
     }
 }

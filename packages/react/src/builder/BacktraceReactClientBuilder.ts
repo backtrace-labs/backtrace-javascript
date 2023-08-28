@@ -7,10 +7,10 @@ export class BacktraceReactClientBuilder extends BacktraceClientBuilder {
     constructor(
         options: BacktraceConfiguration,
         attributeProviders?: BacktraceAttributeProvider[],
-        breadcrumbSubscribers?: BreadcrumbsEventSubscriber[],
+        breadcrumbsSubscribers?: BreadcrumbsEventSubscriber[],
         sessionProvider?: BacktraceSessionProvider,
     ) {
-        super(options, attributeProviders, breadcrumbSubscribers, sessionProvider);
+        super(options, attributeProviders, breadcrumbsSubscribers, sessionProvider);
     }
 
     public build(): BacktraceClient {
@@ -19,7 +19,7 @@ export class BacktraceReactClientBuilder extends BacktraceClientBuilder {
             this.handler,
             this.attributeProviders,
             this.stackTraceConverter ?? new ReactStackTraceConverter(this.generateStackTraceConverter()),
-            this.breadcrumbSubscribers,
+            this.breadcrumbsSubscribers,
             this.sessionProvider,
         );
     }
