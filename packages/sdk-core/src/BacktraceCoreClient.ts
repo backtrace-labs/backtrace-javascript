@@ -138,6 +138,8 @@ export abstract class BacktraceCoreClient {
             this._attributeProvider.addProvider(this.breadcrumbsManager);
             this.attachments.push(this.breadcrumbsManager.breadcrumbsStorage);
         }
+
+        this.initialize();
     }
 
     protected initialize() {

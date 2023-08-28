@@ -37,6 +37,15 @@ export class BacktraceClient extends BacktraceCoreClient {
             },
             databaseStorageProvider: BacktraceDatabaseFileStorageProvider.createIfValid(options.database),
         });
+
+        this.loadNodeCrashes();
+
+        this.captureUnhandledErrors(
+            this.options.captureUnhandledErrors,
+            this.options.captureUnhandledPromiseRejections,
+        );
+
+        this.captureNodeCrashes();
     }
 
     public static builder(options: BacktraceConfiguration): BacktraceClientBuilder {
@@ -56,7 +65,7 @@ export class BacktraceClient extends BacktraceCoreClient {
         }
         const builder = this.builder(options);
         build && build(builder);
-        this._instance = builder.build().initialize();
+        this._instance = builder.build();
         return this._instance;
     }
 
@@ -66,21 +75,6 @@ export class BacktraceClient extends BacktraceCoreClient {
      */
     public static get instance(): BacktraceClient | undefined {
         return this._instance;
-    }
-
-    protected initialize() {
-        super.initialize();
-
-        this.loadNodeCrashes();
-
-        this.captureUnhandledErrors(
-            this.options.captureUnhandledErrors,
-            this.options.captureUnhandledPromiseRejections,
-        );
-
-        this.captureNodeCrashes();
-
-        return this;
     }
 
     private captureUnhandledErrors(captureUnhandledExceptions = true, captureUnhandledRejections = true) {
