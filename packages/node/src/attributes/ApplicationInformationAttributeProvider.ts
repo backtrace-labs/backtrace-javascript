@@ -8,22 +8,26 @@ export class ApplicationInformationAttributeProvider implements BacktraceAttribu
     public readonly APPLICATION_ATTRIBUTE = 'application';
     public readonly APPLICATION_VERSION_ATTRIBUTE = 'application.version';
 
-    private _application?: string = process.env.npm_package_name;
-    private _applicationVersion?: string = process.env.npm_package_version;
+    private _application?: string;
+    private _applicationVersion?: string;
 
     public readonly applicationSearchPaths: string[];
     public get type(): 'scoped' | 'dynamic' {
         return 'scoped';
     }
 
-    constructor(options: BacktraceConfiguration, applicationSearchPaths?: string[]) {
-        if (
-            options.userAttributes?.[this.APPLICATION_ATTRIBUTE] &&
-            options.userAttributes?.[this.APPLICATION_VERSION_ATTRIBUTE]
-        ) {
-            this._application = options.userAttributes[this.APPLICATION_ATTRIBUTE] as string;
-            this._applicationVersion = options.userAttributes[this.APPLICATION_VERSION_ATTRIBUTE] as string;
-        }
+    constructor(
+        options: BacktraceConfiguration,
+        applicationSearchPaths?: string[],
+        nodeConfiguration: { application?: string; version?: string } = {
+            application: process.env?.npm_package_name,
+            version: process.env?.npm_package_version,
+        },
+    ) {
+        this._application =
+            (options.userAttributes?.[this.APPLICATION_ATTRIBUTE] as string) ?? nodeConfiguration?.application;
+        this._applicationVersion =
+            (options.userAttributes?.[this.APPLICATION_VERSION_ATTRIBUTE] as string) ?? nodeConfiguration?.version;
 
         this.applicationSearchPaths = applicationSearchPaths ?? this.generateDefaultApplicationSearchPaths();
     }
