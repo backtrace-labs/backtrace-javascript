@@ -388,6 +388,7 @@ The following options are available for the BacktraceClientOptions passed when i
 | `remove(record: BacktraceDatabaseRecord)`                               | void                                 | Removes the record from the database                                                                                                                                 |
 | `flush()`                                                               | Promise<void>                        | Sends all records to Backtrace and remove them no matter if the submission was successful or not                                                                     |
 | `send()`                                                                | Promise<void>                        | Sends all records to Backtrace. If the submission process fails, the retry information is being increased by the records are not removed from the database.          |
+| `dispose`                                                               | void                                 | Disposes the client                                                                                                                                                  |
 
 ### BacktraceReport
 
