@@ -112,7 +112,7 @@ export abstract class BacktraceCoreClient {
         ]);
         this.attachments = this.options.attachments ?? [];
 
-        if (this._setup.databaseStorageProvider && this.options?.database?.enabled === true) {
+        if (this._setup.databaseStorageProvider && this.options?.database?.enable === true) {
             this._database = new BacktraceDatabase(
                 this.options.database,
                 this._setup.databaseStorageProvider,
