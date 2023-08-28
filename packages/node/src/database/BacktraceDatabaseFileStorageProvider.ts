@@ -25,11 +25,11 @@ export class BacktraceDatabaseFileStorageProvider implements BacktraceDatabaseSt
         if (!options) {
             return undefined;
         }
-        if (!options.enabled) {
+        if (!options.enable) {
             return undefined;
         }
 
-        if (options.enabled && !options.path) {
+        if (options.enable && !options.path) {
             throw new Error(
                 'Missing mandatory path to the database. Please define the database.path option in the configuration.',
             );

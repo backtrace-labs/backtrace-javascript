@@ -6,7 +6,7 @@ import { testStorageProvider } from '../mocks/testStorageProvider';
 
 describe('Database storage provider flow tests', () => {
     const testDatabaseSettings = {
-        enabled: true,
+        enable: true,
         autoSend: false,
         // this option doesn't matter because we mock the database provider
         // interface. However, if bug happen we want to be sure to not create

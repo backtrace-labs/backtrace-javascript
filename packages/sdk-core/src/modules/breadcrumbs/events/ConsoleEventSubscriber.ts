@@ -38,10 +38,9 @@ export class ConsoleEventSubscriber implements BreadcrumbsEventSubscriber {
         breadcrumbsManager: BreadcrumbsManager,
     ) {
         const originalMethod = console[name] as ConsoleMethod;
-        const defaultImplementation = originalMethod.bind(console);
 
         (console[name] as ConsoleMethod) = (...args: unknown[]) => {
-            defaultImplementation.apply(console, args);
+            originalMethod(...args);
             const message = this._formatter(...args);
             breadcrumbsManager.addBreadcrumb(message, level, BreadcrumbType.Log);
         };
