@@ -27,7 +27,9 @@ and easy, after which you can explore the rich set of Backtrace features.
     - [BacktraceReports](#backtracereport)
 
 ## Basic Integration
+
 ### Install the package
+
 ```
 $ npm install @backtrace-labs/browser
 ```
@@ -214,6 +216,7 @@ const client = BacktraceClient.initialize(options);
 | HTTP            | Adds a breadcrumb with the url, request type, and reponse status for Fetch or XMLHttpRequests.                                                                                          |
 | History         | Adds breadcrumb on pushstate and popstate.                                                                                                                                              |
 | Document/Window | Adds a breadcrumb for document.click, document.dblclick, document.drag, document.drop, window.load, window.unload, window.pagehide, window.pageshow, window.online, and window.offline. |
+| Console         | Adds a breadcrumb every time console log is being used by the developer.                                                                                                                |
 
 #### Intercepting Breadcrumbs
 
@@ -315,6 +318,7 @@ The following options are available for the BacktraceClientOptions passed when i
 | `initialize(options: BacktraceClientOptions)`                                                                                                   | BacktraceClient | Initializes a new BacktraceClient (returns the same instance on subsequent calls) |
 | `builder(options: BacktraceClientOptions).build()`                                                                                              | BacktraceClient | (Advanced) Sets up a new BacktraceClient for reporting                            |
 | `send(data: BacktraceReport \| Error \| string, reportAttributes: Record<string, unknown> = {}, reportAttachments: BacktraceAttachment[] = [])` | `Promise<void>` | Asynchronously sends error data to Backtrace                                      |
+| `dispose`                                                                                                                                       | void            | Disposes the client                                                               |
 
 ### BacktraceReport
 
