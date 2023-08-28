@@ -88,6 +88,7 @@ export class BacktraceClient extends BacktraceCoreClient {
         }
 
         super.dispose();
+        BacktraceClient._instance = undefined;
     }
 
     private captureUnhandledErrors(captureUnhandledExceptions = true, captureUnhandledRejections = true) {

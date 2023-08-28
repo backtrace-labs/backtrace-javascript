@@ -80,6 +80,7 @@ export class BacktraceClient extends BacktraceCoreClient {
     public dispose(): void {
         this._disposeController.abort();
         super.dispose();
+        BacktraceClient._instance = undefined;
     }
 
     private captureUnhandledErrors(captureUnhandledExceptions = true, captureUnhandledRejections = true) {
