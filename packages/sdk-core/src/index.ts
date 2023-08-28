@@ -15,4 +15,5 @@ export * from './modules/breadcrumbs';
 export * from './modules/converter';
 export * from './modules/database';
 export * from './modules/metrics/BacktraceSessionProvider';
+export * from './modules/metrics/SingleSessionProvider';
 export * from './sourcemaps/index';

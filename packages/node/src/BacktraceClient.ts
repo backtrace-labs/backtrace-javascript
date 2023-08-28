@@ -24,23 +24,30 @@ export class BacktraceClient extends BacktraceCoreClient {
     private static _instance?: BacktraceClient;
     constructor(
         options: CoreConfiguration,
-        handler: BacktraceRequestHandler,
+        requestHandler: BacktraceRequestHandler,
         attributeProviders: BacktraceAttributeProvider[],
         breadcrumbsEventSubscribers: BreadcrumbsEventSubscriber[],
     ) {
-        super(
+        super({
             options,
-            AGENT,
-            handler,
+            sdkOptions: AGENT,
+            requestHandler,
             attributeProviders,
-            undefined,
-            undefined,
-            new VariableDebugIdMapProvider(global as DebugIdContainer),
-            {
+            debugIdMapProvider: new VariableDebugIdMapProvider(global as DebugIdContainer),
+            breadcrumbsSetup: {
                 subscribers: breadcrumbsEventSubscribers,
             },
-            BacktraceDatabaseFileStorageProvider.createIfValid(options.database),
+            databaseStorageProvider: BacktraceDatabaseFileStorageProvider.createIfValid(options.database),
+        });
+
+        this.loadNodeCrashes();
+
+        this.captureUnhandledErrors(
+            this.options.captureUnhandledErrors,
+            this.options.captureUnhandledPromiseRejections,
         );
+
+        this.captureNodeCrashes();
     }
 
     public static builder(options: BacktraceConfiguration): BacktraceClientBuilder {
@@ -60,7 +67,7 @@ export class BacktraceClient extends BacktraceCoreClient {
         }
         const builder = this.builder(options);
         build && build(builder);
-        this._instance = builder.build().initialize();
+        this._instance = builder.build();
         return this._instance;
     }
 
@@ -81,21 +88,6 @@ export class BacktraceClient extends BacktraceCoreClient {
         }
 
         super.dispose();
-    }
-
-    protected initialize() {
-        super.initialize();
-
-        this.loadNodeCrashes();
-
-        this.captureUnhandledErrors(
-            this.options.captureUnhandledErrors,
-            this.options.captureUnhandledPromiseRejections,
-        );
-
-        this.captureNodeCrashes();
-
-        return this;
     }
 
     private captureUnhandledErrors(captureUnhandledExceptions = true, captureUnhandledRejections = true) {
