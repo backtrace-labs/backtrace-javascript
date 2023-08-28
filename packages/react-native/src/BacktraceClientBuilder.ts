@@ -10,8 +10,8 @@ export class BacktraceClientBuilder extends BacktraceReactClientBuilder {
                 version: '123',
                 ...options,
             },
-            undefined,
-            undefined,
+            [],
+            [],
             new SingleSessionProvider(),
         );
     }

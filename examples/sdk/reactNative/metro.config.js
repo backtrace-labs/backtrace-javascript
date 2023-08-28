@@ -1,9 +1,10 @@
 const {getDefaultConfig, mergeConfig} = require('@react-native/metro-config');
-// const path = require('path');
+const path = require('path');
 
-// const packagePath = path.resolve(
-//   path.join('../../..', 'packages', 'react-native'),
-// );
+const packageDirectory = path.resolve(path.join('../../..', 'packages'));
+
+const reactNativePath = path.join(packageDirectory, 'react-native');
+const reactPath = path.join(packageDirectory, 'react');
 
 /**
  * Metro configuration
@@ -12,10 +13,12 @@ const {getDefaultConfig, mergeConfig} = require('@react-native/metro-config');
  * @type {import('metro-config').MetroConfig}
  */
 const config = {
-  //   resolver: {
-  //     nodeModulesPaths: [packagePath],
-  //   },
-  //   watchFolders: [packagePath],
+  resolver: {
+    nodeModulesPaths: [reactNativePath, reactPath],
+    unstable_enableSymlinks: true,
+    unstable_enablePackageExports: true,
+  },
+  watchFolders: [reactNativePath, reactPath],
 };
 
 module.exports = mergeConfig(getDefaultConfig(__dirname), config);

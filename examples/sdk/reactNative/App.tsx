@@ -24,7 +24,7 @@ import {
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
 
-import {BacktraceClient} from '@backtrace/react-native';
+import {BacktraceClient} from '@backtrace-labs/react-native';
 type SectionProps = PropsWithChildren<{
   title: string;
 }>;
