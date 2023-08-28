@@ -1,4 +1,4 @@
-import { TimeHelper } from '@backtrace/sdk-core/lib/common/TimeHelper';
+import { TimeHelper } from '@backtrace-labs/sdk-core/lib/common/TimeHelper';
 import { BacktraceBrowserSessionProvider } from '../../src/BacktraceBrowserSessionProvider';
 describe('Session provider tests', () => {
     it('Should generate a new uuid on new session', () => {
@@ -26,7 +26,7 @@ describe('Session provider tests', () => {
 
     it('Should not generate a new sessionId if the lastActive timestamp is lower than persistence interval time', () => {
         const fakeId = 'test';
-        const lastSessionActiveDate = new Date(Date.now() - BacktraceBrowserSessionProvider.PERSISTENCE_INTERVAL + 1);
+        const lastSessionActiveDate = new Date(Date.now() - BacktraceBrowserSessionProvider.PERSISTENCE_INTERVAL + 10);
         localStorage.setItem('backtrace-last-active', lastSessionActiveDate.getTime().toString(10));
         localStorage.setItem('backtrace-guid', fakeId);
 

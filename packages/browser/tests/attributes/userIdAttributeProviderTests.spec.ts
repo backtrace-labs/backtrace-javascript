@@ -1,4 +1,4 @@
-import { BacktraceConfiguration } from '@backtrace/sdk-core';
+import { BacktraceConfiguration } from '@backtrace-labs/sdk-core';
 import { UserIdentifierAttributeProvider } from '../../src/attributes/UserIdentifierAttributeProvider';
 describe('User id attribute provider test', () => {
     it(`Should always set user id attribute`, () => {

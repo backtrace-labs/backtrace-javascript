@@ -1,4 +1,5 @@
 import { BreadcrumbLogLevel, BreadcrumbType } from '../../modules/breadcrumbs';
+import { RawBreadcrumb } from '../../modules/breadcrumbs/model/RawBreadcrumb';
 import { BacktraceAttachment } from '../attachment';
 import { BacktraceData } from '../data/BacktraceData';
 import { BacktraceReport } from '../report/BacktraceReport';
@@ -44,10 +45,16 @@ export interface BacktraceBreadcrumbsSettings {
     eventType?: BreadcrumbType;
 
     /**
-     * Specifies maximum number of breadcrumbs stored by the library. By default, only 100 breacrumbs
-     * wil be stored.
+     * Specifies maximum number of breadcrumbs stored by the library. By default, only 100 breadcrumbs
+     * will be stored.
      */
     maximumBreadcrumbs?: number;
+
+    /**
+     * Inspects breadcrumb and allows to modify it. If the undefined value is being
+     * returned from the method, no breadcrumb will be added to the breadcrumb storage.
+     */
+    intercept?: (breadcrumb: RawBreadcrumb) => RawBreadcrumb | undefined;
 }
 
 export interface BacktraceConfiguration {
@@ -71,7 +78,7 @@ export interface BacktraceConfiguration {
 
     /**
      * Determines if unhandled promise rejections should be captured by the library.
-     * By default false.
+     * By default true.
      */
     captureUnhandledPromiseRejections?: boolean;
 

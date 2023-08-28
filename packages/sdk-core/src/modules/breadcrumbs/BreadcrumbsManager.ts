@@ -11,6 +11,7 @@ import { BacktraceReport } from '../../model/report/BacktraceReport';
 import { BreadcrumbsSetup } from './BreadcrumbsSetup';
 import { BreadcrumbsEventSubscriber } from './events/BreadcrurmbsEventSubscriber';
 import { ConsoleEventSubscriber } from './events/ConsoleEventSubscriber';
+import { RawBreadcrumb } from './model/RawBreadcrumb';
 import { BreadcrumbsStorage } from './storage/BreadcrumbsStorage';
 import { InMemoryBreadcrumbsStorage } from './storage/InMemoryBreadcrumbsStorage';
 
@@ -37,12 +38,16 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs {
      * Determines if the breadcrumb manager is enabled.
      */
     private _enabled = true;
+
     private readonly _eventSubscribers: BreadcrumbsEventSubscriber[] = [new ConsoleEventSubscriber()];
+
+    private readonly _interceptor?: (breadcrumb: RawBreadcrumb) => RawBreadcrumb | undefined;
 
     constructor(configuration?: BacktraceBreadcrumbsSettings, options?: BreadcrumbsSetup) {
         this.breadcrumbsType = configuration?.eventType ?? defaultBreadcurmbType;
         this.logLevel = configuration?.logLevel ?? defaultBreadcrumbsLogLevel;
         this.breadcrumbsStorage = options?.storage ?? new InMemoryBreadcrumbsStorage(configuration?.maximumBreadcrumbs);
+        this._interceptor = configuration?.intercept;
         if (options?.subscribers) {
             this._eventSubscribers.push(...options.subscribers);
         }
@@ -104,15 +109,29 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs {
         if (!this._enabled) {
             return false;
         }
-        if ((this.logLevel & level) !== level) {
+        let rawBreadcrumb: RawBreadcrumb = {
+            message,
+            level,
+            type,
+            attributes,
+        };
+        if (this._interceptor) {
+            const interceptorBreadcrumb = this._interceptor(rawBreadcrumb);
+            if (!interceptorBreadcrumb) {
+                return false;
+            }
+            rawBreadcrumb = interceptorBreadcrumb;
+        }
+
+        if ((this.logLevel & rawBreadcrumb.level) !== level) {
             return false;
         }
 
-        if ((this.breadcrumbsType & type) !== type) {
+        if ((this.breadcrumbsType & rawBreadcrumb.type) !== type) {
             return false;
         }
 
-        this.breadcrumbsStorage.add(message, level, type, attributes);
+        this.breadcrumbsStorage.add(rawBreadcrumb);
         return true;
     }
 }

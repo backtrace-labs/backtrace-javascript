@@ -1,5 +1,5 @@
-import { BacktraceAttributeProvider } from '@backtrace/sdk-core';
-import { TimeHelper } from '@backtrace/sdk-core/lib/common/TimeHelper';
+import { BacktraceAttributeProvider } from '@backtrace-labs/sdk-core';
+import { TimeHelper } from '@backtrace-labs/sdk-core/lib/common/TimeHelper';
 
 const PAGE_START_TIME = TimeHelper.now();
 

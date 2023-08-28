@@ -3,7 +3,7 @@ import {
     BacktracePluginOptions,
     matchSourceExtension,
     processAndUploadAssetsCommand,
-} from '@backtrace/sourcemap-tools';
+} from '@backtrace-labs/sourcemap-tools';
 import path from 'path';
 import webpack, { WebpackPluginInstance } from 'webpack';
 

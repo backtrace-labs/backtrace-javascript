@@ -28,9 +28,6 @@
     "references": [
         {
             "path": "../react/tsconfig.json"
-        },
-        {
-            "path": "../sdk-core/tsconfig.json"
         }
     ]
 }

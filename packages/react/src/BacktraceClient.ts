@@ -1,4 +1,4 @@
-import { BacktraceClient as BrowserClient, BacktraceConfiguration } from '@backtrace/browser';
+import { BacktraceClient as BrowserClient, BacktraceConfiguration } from '@backtrace-labs/browser';
 import { BacktraceReactClientBuilder } from './builder/BacktraceReactClientBuilder';
 
 export class BacktraceClient extends BrowserClient {
@@ -19,7 +19,7 @@ export class BacktraceClient extends BrowserClient {
         }
         const builder = this.builder(options);
         build && build(builder);
-        this._instance = builder.build().initialize();
+        this._instance = builder.build();
         return this._instance;
     }
 

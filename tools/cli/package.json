@@ -1,5 +1,5 @@
 {
-    "name": "@backtrace/javascript-cli",
+    "name": "@backtrace-labs/javascript-cli",
     "version": "0.0.1",
     "description": "Backtrace CLI for working with Javascript files.",
     "main": "lib/index.js",
@@ -44,7 +44,7 @@
         "/lib"
     ],
     "dependencies": {
-        "@backtrace/sourcemap-tools": "^0.0.1",
+        "@backtrace-labs/sourcemap-tools": "^0.0.1",
         "command-line-args": "^5.2.1",
         "command-line-usage": "^7.0.1",
         "glob": "^10.3.3",

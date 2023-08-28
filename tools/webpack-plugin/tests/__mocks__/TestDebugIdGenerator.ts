@@ -1,4 +1,4 @@
-import { DebugIdGenerator, SOURCEMAP_DEBUG_ID_KEY } from '@backtrace/sourcemap-tools';
+import { DebugIdGenerator, SOURCEMAP_DEBUG_ID_KEY } from '@backtrace-labs/sourcemap-tools';
 
 export class TestDebugIdGenerator implements DebugIdGenerator {
     public generateSourceSnippet(): string {

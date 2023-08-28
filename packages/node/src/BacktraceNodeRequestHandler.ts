@@ -5,7 +5,7 @@ import {
     BacktraceSubmissionResponse,
     ConnectionError,
     DEFAULT_TIMEOUT,
-} from '@backtrace/sdk-core';
+} from '@backtrace-labs/sdk-core';
 import FormData from 'form-data';
 import http from 'http';
 import https from 'https';

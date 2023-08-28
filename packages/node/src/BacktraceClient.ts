@@ -7,7 +7,7 @@ import {
     BreadcrumbsEventSubscriber,
     DebugIdContainer,
     VariableDebugIdMapProvider,
-} from '@backtrace/sdk-core';
+} from '@backtrace-labs/sdk-core';
 import fs from 'fs';
 import * as fsPromise from 'fs/promises';
 import path from 'path';
@@ -19,26 +19,35 @@ import { NodeDiagnosticReportConverter } from './converter/NodeDiagnosticReportC
 import { BacktraceDatabaseFileStorageProvider } from './database/BacktraceDatabaseFileStorageProvider';
 
 export class BacktraceClient extends BacktraceCoreClient {
+    private _listeners: Record<string, NodeJS.UnhandledRejectionListener | NodeJS.UncaughtExceptionListener> = {};
+
     private static _instance?: BacktraceClient;
     constructor(
         options: CoreConfiguration,
-        handler: BacktraceRequestHandler,
+        requestHandler: BacktraceRequestHandler,
         attributeProviders: BacktraceAttributeProvider[],
         breadcrumbsEventSubscribers: BreadcrumbsEventSubscriber[],
     ) {
-        super(
+        super({
             options,
-            AGENT,
-            handler,
+            sdkOptions: AGENT,
+            requestHandler,
             attributeProviders,
-            undefined,
-            undefined,
-            new VariableDebugIdMapProvider(global as DebugIdContainer),
-            {
+            debugIdMapProvider: new VariableDebugIdMapProvider(global as DebugIdContainer),
+            breadcrumbsSetup: {
                 subscribers: breadcrumbsEventSubscribers,
             },
-            BacktraceDatabaseFileStorageProvider.createIfValid(options.database),
+            databaseStorageProvider: BacktraceDatabaseFileStorageProvider.createIfValid(options.database),
+        });
+
+        this.loadNodeCrashes();
+
+        this.captureUnhandledErrors(
+            this.options.captureUnhandledErrors,
+            this.options.captureUnhandledPromiseRejections,
         );
+
+        this.captureNodeCrashes();
     }
 
     public static builder(options: BacktraceConfiguration): BacktraceClientBuilder {
@@ -58,7 +67,7 @@ export class BacktraceClient extends BacktraceCoreClient {
         }
         const builder = this.builder(options);
         build && build(builder);
-        this._instance = builder.build().initialize();
+        this._instance = builder.build();
         return this._instance;
     }
 
@@ -70,19 +79,16 @@ export class BacktraceClient extends BacktraceCoreClient {
         return this._instance;
     }
 
-    protected initialize() {
-        super.initialize();
+    /**
+     * Disposes the client and all client callbacks
+     */
+    public dispose(): void {
+        for (const [name, listener] of Object.entries(this._listeners)) {
+            process.removeListener(name, listener);
+        }
 
-        this.loadNodeCrashes();
-
-        this.captureUnhandledErrors(
-            this.options.captureUnhandledErrors,
-            this.options.captureUnhandledPromiseRejections,
-        );
-
-        this.captureNodeCrashes();
-
-        return this;
+        super.dispose();
+        BacktraceClient._instance = undefined;
     }
 
     private captureUnhandledErrors(captureUnhandledExceptions = true, captureUnhandledRejections = true) {
@@ -105,7 +111,7 @@ export class BacktraceClient extends BacktraceCoreClient {
         };
 
         process.prependListener('uncaughtExceptionMonitor', captureUncaughtException);
-
+        this._listeners['uncaughtExceptionMonitor'] = captureUncaughtException;
         if (!captureUnhandledRejections) {
             return;
         }
@@ -188,6 +194,7 @@ export class BacktraceClient extends BacktraceCoreClient {
             process.emitWarning(warning);
         };
         process.prependListener('unhandledRejection', captureUnhandledRejectionsCallback);
+        this._listeners['unhandledRejection'] = captureUnhandledRejectionsCallback;
     }
 
     private captureNodeCrashes() {
@@ -195,7 +202,7 @@ export class BacktraceClient extends BacktraceCoreClient {
             return;
         }
 
-        if (!this.options.database?.enabled) {
+        if (!this.options.database?.enable) {
             return;
         }
 

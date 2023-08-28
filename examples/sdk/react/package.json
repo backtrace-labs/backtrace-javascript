@@ -1,5 +1,5 @@
 {
-    "name": "@backtrace/react-example",
+    "name": "@backtrace-labs/react-example",
     "version": "0.1.0",
     "private": true,
     "dependencies": {

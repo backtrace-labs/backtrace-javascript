@@ -1,4 +1,4 @@
-export * from '@backtrace/browser';
+export * from '@backtrace-labs/browser';
 export { BacktraceClient } from './BacktraceClient';
 export * from './builder/BacktraceReactClientBuilder';
 export * from './converters/ReactStackTraceConverter';

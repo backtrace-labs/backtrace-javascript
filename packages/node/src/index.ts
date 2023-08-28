@@ -9,7 +9,8 @@ export {
     BreadcrumbsEventSubscriber,
     BreadcrumbsManager,
     BreadcrumbType,
-} from '@backtrace/sdk-core';
+    RawBreadcrumb,
+} from '@backtrace-labs/sdk-core';
 export * from './attachment';
 export * from './BacktraceClient';
 export * from './BacktraceConfiguration';

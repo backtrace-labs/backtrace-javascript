@@ -3,17 +3,17 @@ import {
     AsyncResult,
     DebugIdGenerator,
     Err,
-    Ok,
-    SourceProcessor,
     failIfEmpty,
     filter,
     log,
     map,
     matchSourceMapExtension,
+    Ok,
     parseJSON,
     readFile,
+    SourceProcessor,
     writeFile,
-} from '@backtrace/sourcemap-tools';
+} from '@backtrace-labs/sourcemap-tools';
 import { GlobalOptions } from '..';
 import { Command } from '../commands/Command';
 import { find } from '../helpers/find';

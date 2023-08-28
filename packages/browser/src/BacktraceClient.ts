@@ -3,37 +3,41 @@ import {
     BacktraceCoreClient,
     BacktraceReport,
     BacktraceRequestHandler,
+    BacktraceSessionProvider,
     BacktraceStackTraceConverter,
     BreadcrumbsEventSubscriber,
     DebugIdContainer,
     VariableDebugIdMapProvider,
-} from '@backtrace/sdk-core';
+} from '@backtrace-labs/sdk-core';
 import { AGENT } from './agentDefinition';
 import { BacktraceBrowserSessionProvider } from './BacktraceBrowserSessionProvider';
 import { BacktraceConfiguration } from './BacktraceConfiguration';
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 
 export class BacktraceClient extends BacktraceCoreClient {
+    private readonly _disposeController: AbortController = new AbortController();
+
     protected static _instance?: BacktraceClient;
     constructor(
         options: BacktraceConfiguration,
-        handler: BacktraceRequestHandler,
+        requestHandler: BacktraceRequestHandler,
         attributeProviders: BacktraceAttributeProvider[],
         stackTraceConverter: BacktraceStackTraceConverter,
         breadcrumbsEventSubscriber: BreadcrumbsEventSubscriber[],
+        sessionProvider: BacktraceSessionProvider = new BacktraceBrowserSessionProvider(),
     ) {
-        super(
+        super({
             options,
-            AGENT,
-            handler,
+            sdkOptions: AGENT,
+            requestHandler,
             attributeProviders,
             stackTraceConverter,
-            new BacktraceBrowserSessionProvider(),
-            new VariableDebugIdMapProvider(window as DebugIdContainer),
-            {
+            sessionProvider,
+            debugIdMapProvider: new VariableDebugIdMapProvider(window as DebugIdContainer),
+            breadcrumbsSetup: {
                 subscribers: breadcrumbsEventSubscriber,
             },
-        );
+        });
 
         this.captureUnhandledErrors(options.captureUnhandledErrors, options.captureUnhandledPromiseRejections);
     }
@@ -58,7 +62,7 @@ export class BacktraceClient extends BacktraceCoreClient {
         }
         const builder = this.builder(options);
         build && build(builder);
-        this._instance = builder.build().initialize();
+        this._instance = builder.build();
         return this._instance;
     }
 
@@ -70,32 +74,53 @@ export class BacktraceClient extends BacktraceCoreClient {
         return this._instance;
     }
 
+    /**
+     * Disposes the client and all client callbacks
+     */
+    public dispose(): void {
+        this._disposeController.abort();
+        super.dispose();
+        BacktraceClient._instance = undefined;
+    }
+
     private captureUnhandledErrors(captureUnhandledExceptions = true, captureUnhandledRejections = true) {
         if (captureUnhandledExceptions) {
-            window.addEventListener('error', async (errorEvent: ErrorEvent) => {
-                await this.send(
-                    new BacktraceReport(errorEvent.error, {
-                        'error.type': 'Unhandled exception',
-                    }),
-                );
-            });
+            window.addEventListener(
+                'error',
+                async (errorEvent: ErrorEvent) => {
+                    await this.send(
+                        new BacktraceReport(errorEvent.error, {
+                            'error.type': 'Unhandled exception',
+                        }),
+                    );
+                },
+                {
+                    signal: this._disposeController.signal,
+                },
+            );
         }
 
         if (captureUnhandledRejections) {
-            window.addEventListener('unhandledrejection', async (errorEvent: PromiseRejectionEvent) => {
-                await this.send(
-                    new BacktraceReport(
-                        errorEvent.reason,
-                        {
-                            'error.type': 'Unhandled exception',
-                        },
-                        [],
-                        {
-                            classifiers: ['UnhandledPromiseRejection'],
-                        },
-                    ),
-                );
-            });
+            window.addEventListener(
+                'unhandledrejection',
+                async (errorEvent: PromiseRejectionEvent) => {
+                    await this.send(
+                        new BacktraceReport(
+                            errorEvent.reason,
+                            {
+                                'error.type': 'Unhandled exception',
+                            },
+                            [],
+                            {
+                                classifiers: ['UnhandledPromiseRejection'],
+                            },
+                        ),
+                    );
+                },
+                {
+                    signal: this._disposeController.signal,
+                },
+            );
         }
     }
 }
