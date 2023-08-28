@@ -13,6 +13,7 @@ export {
     BreadcrumbType,
     JavaScriptEngine,
     RawBreadcrumb,
+    SingleSessionProvider,
 } from '@backtrace-labs/sdk-core';
 export * from './agentDefinition';
 export * from './BacktraceClient';

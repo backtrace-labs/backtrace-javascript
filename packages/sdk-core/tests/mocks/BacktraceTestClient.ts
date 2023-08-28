@@ -22,8 +22,8 @@ export class BacktraceTestClient extends BacktraceCoreClient {
         attachments: BacktraceAttachment[] = [],
         storageProvider?: BacktraceDatabaseStorageProvider,
     ) {
-        super(
-            {
+        super({
+            options: {
                 ...{
                     url: TEST_SUBMISSION_URL,
                     token: TOKEN,
@@ -34,20 +34,16 @@ export class BacktraceTestClient extends BacktraceCoreClient {
                 },
                 ...(options ?? {}),
             },
-            {
+            sdkOptions: {
                 agent: 'test',
                 agentVersion: '0.0.1',
                 langName: 'test',
                 langVersion: 'test',
             },
-            handler,
+            requestHandler: handler,
             attributeProviders,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            storageProvider,
-        );
+            databaseStorageProvider: storageProvider,
+        });
         this.requestHandler = handler;
         this.storageProvider = storageProvider;
     }
@@ -67,12 +63,6 @@ export class BacktraceTestClient extends BacktraceCoreClient {
                 };
             },
         });
-        return new BacktraceTestClient(
-            options,
-            testHttpClient,
-            attributeProviders,
-            attachments,
-            storageProvider,
-        ).initialize();
+        return new BacktraceTestClient(options, testHttpClient, attributeProviders, attachments, storageProvider);
     }
 }
