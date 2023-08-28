@@ -9,21 +9,25 @@ export class ApplicationInformationAttributeProvider implements BacktraceAttribu
     public readonly APPLICATION_VERSION_ATTRIBUTE = 'application.version';
 
     private _application?: string;
-    private _applicationVersion?: string = process.env.npm_package_version;
+    private _applicationVersion?: string;
 
     public readonly applicationSearchPaths: string[];
     public get type(): 'scoped' | 'dynamic' {
         return 'scoped';
     }
 
-    constructor(options: BacktraceConfiguration, applicationSearchPaths?: string[]) {
-        if (
-            options.userAttributes?.[this.APPLICATION_ATTRIBUTE] &&
-            options.userAttributes?.[this.APPLICATION_VERSION_ATTRIBUTE]
-        ) {
-            this._application = options.userAttributes[this.APPLICATION_ATTRIBUTE] as string;
-            this._applicationVersion = options.userAttributes[this.APPLICATION_VERSION_ATTRIBUTE] as string;
-        }
+    constructor(
+        options: BacktraceConfiguration,
+        applicationSearchPaths?: string[],
+        nodeConfiguration: { application?: string; version?: string } = {
+            application: process.env?.npm_package_name,
+            version: process.env?.npm_package_version,
+        },
+    ) {
+        this._application =
+            (options.userAttributes?.[this.APPLICATION_ATTRIBUTE] as string) ?? nodeConfiguration?.application;
+        this._applicationVersion =
+            (options.userAttributes?.[this.APPLICATION_VERSION_ATTRIBUTE] as string) ?? nodeConfiguration?.version;
 
         this.applicationSearchPaths = applicationSearchPaths ?? this.generateDefaultApplicationSearchPaths();
     }
@@ -49,7 +53,7 @@ export class ApplicationInformationAttributeProvider implements BacktraceAttribu
     }
 
     private generateDefaultApplicationSearchPaths() {
-        const possibleSourcePaths = [process.cwd()];
+        const possibleSourcePaths = [process.cwd(), this.generatePathBasedOnTheDirName()];
         const potentialCommandLineStartupFile = process.argv[1];
         if (potentialCommandLineStartupFile) {
             const potentialCommandLineStartupFilePath = path.resolve(potentialCommandLineStartupFile);
@@ -61,6 +65,15 @@ export class ApplicationInformationAttributeProvider implements BacktraceAttribu
             possibleSourcePaths.unshift(path.dirname(require.main.path));
         }
         return possibleSourcePaths;
+    }
+
+    private generatePathBasedOnTheDirName() {
+        const nodeModulesIndex = __dirname.lastIndexOf('node_modules');
+        if (nodeModulesIndex === -1) {
+            return __dirname;
+        }
+
+        return __dirname.substring(0, nodeModulesIndex);
     }
 
     private readApplicationInformation(): Record<string, unknown> | undefined {
