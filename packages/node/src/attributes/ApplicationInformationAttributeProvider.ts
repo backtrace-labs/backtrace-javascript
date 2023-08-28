@@ -8,7 +8,7 @@ export class ApplicationInformationAttributeProvider implements BacktraceAttribu
     public readonly APPLICATION_ATTRIBUTE = 'application';
     public readonly APPLICATION_VERSION_ATTRIBUTE = 'application.version';
 
-    private _application?: string;
+    private _application?: string = process.env.npm_package_name;
     private _applicationVersion?: string = process.env.npm_package_version;
 
     public readonly applicationSearchPaths: string[];
@@ -48,8 +48,21 @@ export class ApplicationInformationAttributeProvider implements BacktraceAttribu
         };
     }
 
+    private generatePathBasedOnTheDirName() {
+        const nodeModulesIndex = __dirname.lastIndexOf('node_modules');
+        if (nodeModulesIndex === -1) {
+            return __dirname;
+        }
+
+        return __dirname.substring(0, nodeModulesIndex);
+    }
+
     private generateDefaultApplicationSearchPaths() {
         const possibleSourcePaths = [process.cwd()];
+        const dirNamePath = this.generatePathBasedOnTheDirName();
+        if (dirNamePath) {
+            possibleSourcePaths.push(dirNamePath);
+        }
         const potentialCommandLineStartupFile = process.argv[1];
         if (potentialCommandLineStartupFile) {
             const potentialCommandLineStartupFilePath = path.resolve(potentialCommandLineStartupFile);
