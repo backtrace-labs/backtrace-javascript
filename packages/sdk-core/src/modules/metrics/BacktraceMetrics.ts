@@ -96,7 +96,7 @@ export class BacktraceMetrics {
     /**
      * Cleans up metrics interface.
      */
-    public close() {
+    public dispose() {
         if (this._updateIntervalId) {
             clearInterval(this._updateIntervalId);
         }

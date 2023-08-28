@@ -23,6 +23,13 @@ import { SingleSessionProvider } from './modules/metrics/SingleSessionProvider';
 import { RateLimitWatcher } from './modules/rateLimiter/RateLimitWatcher';
 export abstract class BacktraceCoreClient {
     /**
+     * Determines if the client is enabled.
+     */
+    public get enabled() {
+        return this._enabled;
+    }
+
+    /**
      * Current session id
      */
     public get sessionId(): string {
@@ -87,6 +94,8 @@ export abstract class BacktraceCoreClient {
     private readonly _sdkOptions: SdkOptions;
     protected readonly options: BacktraceConfiguration;
 
+    private _enabled = false;
+
     protected constructor(private readonly _setup: CoreClientSetup) {
         this.options = _setup.options;
         this._sdkOptions = _setup.sdkOptions;
@@ -140,6 +149,7 @@ export abstract class BacktraceCoreClient {
         }
 
         this.initialize();
+        this._enabled = true;
     }
 
     /**
@@ -182,6 +192,9 @@ export abstract class BacktraceCoreClient {
         reportAttributes: Record<string, unknown> = {},
         reportAttachments: BacktraceAttachment[] = [],
     ): Promise<void> {
+        if (!this._enabled) {
+            return;
+        }
         if (this._rateLimitWatcher.skipReport()) {
             return;
         }
@@ -213,6 +226,16 @@ export abstract class BacktraceCoreClient {
         if (submissionResult.status === 'Ok') {
             this._database?.remove(record);
         }
+    }
+
+    /**
+     * Disposes the client and all client callbacks
+     */
+    public dispose() {
+        this._enabled = false;
+        this.database?.dispose();
+        this.breadcrumbsManager?.dispose();
+        this._metrics?.dispose();
     }
 
     private addToDatabase(
