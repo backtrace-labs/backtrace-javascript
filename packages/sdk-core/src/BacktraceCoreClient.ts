@@ -142,13 +142,6 @@ export abstract class BacktraceCoreClient {
         this.initialize();
     }
 
-    protected initialize() {
-        this._database?.start();
-        this._metrics?.start();
-        this.breadcrumbsManager?.start();
-        return this;
-    }
-
     /**
      * Add attribute to Backtrace Client reports.
      * @param attributes key-value object with attributes.
@@ -238,6 +231,13 @@ export abstract class BacktraceCoreClient {
 
         record.locked = true;
         return record;
+    }
+
+    private initialize() {
+        this._database?.start();
+        this._metrics?.start();
+        this.breadcrumbsManager?.start();
+        return this;
     }
 
     private generateSubmissionData(report: BacktraceReport): BacktraceData | undefined {
