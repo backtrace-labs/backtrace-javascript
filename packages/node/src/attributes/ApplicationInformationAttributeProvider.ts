@@ -48,21 +48,8 @@ export class ApplicationInformationAttributeProvider implements BacktraceAttribu
         };
     }
 
-    private generatePathBasedOnTheDirName() {
-        const nodeModulesIndex = __dirname.lastIndexOf('node_modules');
-        if (nodeModulesIndex === -1) {
-            return __dirname;
-        }
-
-        return __dirname.substring(0, nodeModulesIndex);
-    }
-
     private generateDefaultApplicationSearchPaths() {
-        const possibleSourcePaths = [process.cwd()];
-        const dirNamePath = this.generatePathBasedOnTheDirName();
-        if (dirNamePath) {
-            possibleSourcePaths.push(dirNamePath);
-        }
+        const possibleSourcePaths = [process.cwd(), this.generatePathBasedOnTheDirName()];
         const potentialCommandLineStartupFile = process.argv[1];
         if (potentialCommandLineStartupFile) {
             const potentialCommandLineStartupFilePath = path.resolve(potentialCommandLineStartupFile);
@@ -74,6 +61,15 @@ export class ApplicationInformationAttributeProvider implements BacktraceAttribu
             possibleSourcePaths.unshift(path.dirname(require.main.path));
         }
         return possibleSourcePaths;
+    }
+
+    private generatePathBasedOnTheDirName() {
+        const nodeModulesIndex = __dirname.lastIndexOf('node_modules');
+        if (nodeModulesIndex === -1) {
+            return __dirname;
+        }
+
+        return __dirname.substring(0, nodeModulesIndex);
     }
 
     private readApplicationInformation(): Record<string, unknown> | undefined {
