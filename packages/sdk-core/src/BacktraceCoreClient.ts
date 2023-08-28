@@ -90,10 +90,11 @@ export abstract class BacktraceCoreClient {
     private readonly _attributeProvider: AttributeManager;
     private readonly _metrics?: BacktraceMetrics;
     private readonly _database?: BacktraceDatabase;
-    private _enabled = true;
     private readonly _sessionProvider: BacktraceSessionProvider;
     private readonly _sdkOptions: SdkOptions;
     protected readonly options: BacktraceConfiguration;
+
+    private _enabled = false;
 
     protected constructor(private readonly _setup: CoreClientSetup) {
         this.options = _setup.options;
@@ -148,6 +149,7 @@ export abstract class BacktraceCoreClient {
         }
 
         this.initialize();
+        this._enabled = true;
     }
 
     /**
