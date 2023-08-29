@@ -42,12 +42,7 @@ export class BacktraceBrowserRequestHandler implements BacktraceRequestHandler {
             const response = await fetch(submissionUrl, {
                 method: 'POST',
                 body: payload,
-                headers:
-                    typeof payload === 'string'
-                        ? this.JSON_HEADERS
-                        : {
-                              'Content-Type': 'multipart/form-data',
-                          },
+                headers: typeof payload === 'string' ? this.JSON_HEADERS : {},
                 signal: controller.signal,
             });
 
