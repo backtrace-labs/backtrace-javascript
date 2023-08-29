@@ -16,6 +16,7 @@ export {
     SingleSessionProvider,
 } from '@backtrace-labs/sdk-core';
 export * from './agentDefinition';
+export * from './BacktraceBrowserRequestHandler';
 export * from './BacktraceClient';
 export * from './BacktraceConfiguration';
 export * from './builder/BacktraceClientBuilder';

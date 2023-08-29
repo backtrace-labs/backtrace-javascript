@@ -103,6 +103,7 @@
         "typescript": "^5.0.2"
     },
     "dependencies": {
-        "@backtrace-labs/react": "file:../react"
+        "@backtrace-labs/react": "^0.0.1",
+        "@backtrace-labs/sdk-core": "^0.0.1"
     }
 }
