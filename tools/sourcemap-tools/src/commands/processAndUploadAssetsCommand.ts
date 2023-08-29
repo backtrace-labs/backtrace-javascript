@@ -3,13 +3,12 @@ import { RawSourceMap } from 'source-map';
 import { DebugIdGenerator } from '../DebugIdGenerator';
 import { SourceProcessor } from '../SourceProcessor';
 import { SymbolUploader, SymbolUploaderOptions, UploadResult } from '../SymbolUploader';
-import { ZipArchive } from '../ZipArchive';
 import { inspect, map, pass } from '../helpers/common';
 import { Asset, AssetWithContent } from '../models/Asset';
 import { AsyncResult } from '../models/AsyncResult';
 import { ProcessAssetError, ProcessAssetResult } from '../models/ProcessAssetResult';
 import { Result, flatMap, isErr } from '../models/Result';
-import { archiveSourceMaps } from './archiveSourceMaps';
+import { createArchive, finalizeArchive } from './archiveSourceMaps';
 import { loadSourceMap, stripSourcesContent } from './loadSourceMaps';
 import { processAsset } from './processAsset';
 import { uploadArchive } from './uploadArchive';
@@ -53,9 +52,7 @@ export interface ProcessAndUploadAssetsCommandOptions {
     assetFinished?(asset: ProcessAssetResult): unknown;
     beforeLoad?(asset: Asset): unknown;
     afterLoad?(asset: AssetWithContent<RawSourceMap>): unknown;
-    beforeArchive?(assets: AssetWithContent<RawSourceMap>[]): unknown;
-    afterArchive?(archive: ZipArchive): unknown;
-    beforeUpload?(archive: ZipArchive): unknown;
+    beforeUpload?(assets: AssetWithContent<RawSourceMap>[]): unknown;
     afterUpload?(result: UploadResult): unknown;
     assetError?(error: ProcessAssetError): unknown;
     uploadError?(error: string): unknown;
@@ -71,7 +68,6 @@ export function processAndUploadAssetsCommand(
         : undefined;
 
     const processCommand = processAsset(sourceProcessor);
-    const archiveCommand = archiveSourceMaps(sourceProcessor);
     const uploadCommand = sourceMapUploader ? uploadArchive(sourceMapUploader) : undefined;
 
     return async function processAndUploadAssets(assets: Asset[]): Promise<ProcessResult> {
@@ -123,11 +119,13 @@ export function processAndUploadAssetsCommand(
                             .then(includeSources ? pass : stripSourcesContent).inner,
                 ),
             )
-            .then(options?.beforeArchive ? inspect(options.beforeArchive) : pass)
-            .then(archiveCommand)
-            .then(options?.afterArchive ? inspect(options.afterArchive) : pass)
             .then(options?.beforeUpload ? inspect(options.beforeUpload) : pass)
-            .then(uploadCommand)
+            .then(createArchive(sourceProcessor))
+            .then(async ({ assets, archive }) => {
+                const promise = uploadCommand(archive);
+                await finalizeArchive({ assets, archive });
+                return promise;
+            })
             .then(options?.afterUpload ? inspect(options.afterUpload) : pass)
             .thenErr(options?.uploadError ? inspect(options.uploadError) : pass).inner;
 

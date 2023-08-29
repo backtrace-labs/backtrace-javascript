@@ -2,35 +2,46 @@ import path from 'path';
 import { RawSourceMap } from 'source-map';
 import { SourceProcessor } from '../SourceProcessor';
 import { ZipArchive } from '../ZipArchive';
-import { map } from '../helpers/common';
 import { AssetWithContent, AssetWithDebugId } from '../models/Asset';
-import { AsyncResult, ResultPromise } from '../models/AsyncResult';
-import { Ok, Result } from '../models/Result';
+import { Ok, Result, flatMap } from '../models/Result';
 
 type AssetWithDebugIdAndSourceMap = AssetWithContent<RawSourceMap> & AssetWithDebugId;
 
-export function archiveSourceMaps(sourceProcessor: SourceProcessor) {
-    return function archiveSourceMaps(sourceMaps: AssetWithContent<RawSourceMap>[]) {
-        return AsyncResult.fromValue<AssetWithContent<RawSourceMap>[], string>(sourceMaps)
-            .then(map(readDebugId(sourceProcessor)))
-            .then(createArchive).inner;
+export interface ArchiveWithSourceMapsAndDebugIds {
+    readonly archive: ZipArchive;
+    readonly assets: AssetWithDebugIdAndSourceMap[];
+}
+
+export function createArchive(sourceProcessor: SourceProcessor) {
+    return function createArchive(
+        assets: AssetWithContent<RawSourceMap>[],
+    ): Result<ArchiveWithSourceMapsAndDebugIds, string> {
+        const archive = new ZipArchive();
+
+        const readResult = flatMap(assets.map(readDebugId(sourceProcessor)));
+        if (readResult.isErr()) {
+            return readResult;
+        }
+
+        return Ok({
+            archive,
+            assets: readResult.data,
+        });
     };
+}
+
+export async function finalizeArchive(archive: ArchiveWithSourceMapsAndDebugIds) {
+    for (const asset of archive.assets) {
+        const fileName = path.basename(asset.name);
+        await archive.archive.append(`${asset.debugId}-${fileName}`, JSON.stringify(asset.content));
+    }
+
+    await archive.archive.finalize();
+    return archive;
 }
 
 export function readDebugId(sourceProcessor: SourceProcessor) {
     return function readDebugId(asset: AssetWithContent<RawSourceMap>): Result<AssetWithDebugIdAndSourceMap, string> {
         return sourceProcessor.getSourceMapDebugId(asset.content).map((debugId) => ({ ...asset, debugId }));
     };
-}
-
-export async function createArchive(assets: AssetWithDebugIdAndSourceMap[]): ResultPromise<ZipArchive, string> {
-    const archive = new ZipArchive();
-
-    for (const asset of assets) {
-        const fileName = path.basename(asset.name);
-        archive.append(`${asset.debugId}-${fileName}`, JSON.stringify(asset.content));
-    }
-
-    await archive.finalize();
-    return Ok(archive);
 }
