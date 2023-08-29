@@ -1,6 +1,6 @@
 {
     "name": "@backtrace-labs/browser",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "Backtrace-JavaScript web browser integration",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
