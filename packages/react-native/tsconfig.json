@@ -25,9 +25,5 @@
         "target": "esnext",
         "verbatimModuleSyntax": true
     },
-    "references": [
-        {
-            "path": "../react/tsconfig.json"
-        }
-    ]
+    "references": []
 }
