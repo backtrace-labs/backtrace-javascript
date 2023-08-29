@@ -25,15 +25,17 @@ import {
 } from 'react-native/Libraries/NewAppScreen';
 
 import {BacktraceClient} from '@backtrace-labs/react-native';
+import {SUBMISSION_URL} from './src/consts';
 type SectionProps = PropsWithChildren<{
   title: string;
 }>;
 
 const client = BacktraceClient.initialize({
-  url: 'https://submit.backtrace.io/yolo/d5ea4541c2babfcdf6da55d48ee3dbe98af2567899feba1155be551878423e57/json',
+  url: SUBMISSION_URL,
   captureUnhandledErrors: false,
   captureUnhandledPromiseRejections: false,
 });
+client.send(new Error('foo'));
 
 function Section({children, title}: SectionProps): JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
@@ -69,7 +71,7 @@ function App(): JSX.Element {
   };
 
   console.log('setting set interval for auto error submission');
-  client.send(new Error('foo'));
+  // client.send(new Error('foo'));
 
   // setInterval(function generateCoolandTinyError() {
   //   const innerFunction = () => {

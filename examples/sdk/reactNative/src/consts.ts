@@ -1,0 +1,2 @@
+export const SUBMISSION_URL =
+  'https://submit.backtrace.io/your-universe/0000000000000000000000000000000000000000000000000000000000000000/json';
