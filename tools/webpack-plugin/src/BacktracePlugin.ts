@@ -29,8 +29,7 @@ export class BacktracePlugin implements WebpackPluginInstance {
                 assetFinished: (asset) => logger.info(`[${asset.asset.name}] asset processed successfully`),
                 assetError: (asset) => logger.error(`[${asset.asset.name}] ${asset.error}`),
 
-                beforeArchive: (paths) => logger.log(`creating archive to upload from ${paths.length} files`),
-                beforeUpload: () => logger.log(`uploading sourcemaps...`),
+                beforeUpload: (paths) => logger.log(`uploading ${paths.length} sourcemaps...`),
                 afterUpload: (result) => logger.info(`sourcemaps uploaded to Backtrace: ${result.rxid}`),
                 uploadError: (error) => logger.error(`failed to upload sourcemaps: ${error}`),
             });
