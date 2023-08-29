@@ -1,6 +1,6 @@
 import fs from 'fs';
-import { Readable } from 'stream';
-import { Logger, LogLevel } from '../Logger';
+import { EventEmitter, Readable } from 'stream';
+import { LogLevel, Logger } from '../Logger';
 import { ResultPromise } from '../models/AsyncResult';
 import { Err, Ok, Result } from '../models/Result';
 
@@ -22,6 +22,14 @@ export async function writeFile(file: ContentFile) {
         return Ok(file);
     } catch (err) {
         return Err(`failed to write file: ${err instanceof Error ? err.message : 'unknown error'}`);
+    }
+}
+
+export async function createWriteStream(path: string) {
+    try {
+        return Ok(fs.createWriteStream(path));
+    } catch (err) {
+        return Err(`failed to create write stream to file: ${err instanceof Error ? err.message : 'unknown error'}`);
     }
 }
 
@@ -82,5 +90,19 @@ export function inspect<T>(fn: (t: T) => unknown) {
     return function inspect(t: T): T {
         fn(t);
         return t;
+    };
+}
+
+export function waitOn(event: string) {
+    return function waitOn<T extends EventEmitter>(ee: T) {
+        return new Promise<T>((resolve, reject) => {
+            ee.once(event, (err) => {
+                if (err instanceof Error) {
+                    reject(err);
+                } else {
+                    resolve(ee);
+                }
+            });
+        });
     };
 }

@@ -3,6 +3,7 @@ import {
     Asset,
     AssetWithContent,
     AsyncResult,
+    createWriteStream,
     DebugIdGenerator,
     Err,
     failIfEmpty,
@@ -21,7 +22,7 @@ import {
     SymbolUploader,
     uploadArchive,
     UploadResult,
-    writeStream,
+    waitOn,
     ZipArchive,
 } from '@backtrace-labs/sourcemap-tools';
 import { Readable } from 'stream';
@@ -270,8 +271,11 @@ function isAssetProcessed(sourceProcessor: SourceProcessor) {
 }
 
 function saveArchive(filePath: string) {
-    return async function saveArchive(stream: Readable): ResultPromise<UploadResult, string> {
-        return AsyncResult.equip(writeStream([stream, filePath])).then(([, rxid]) => ({ rxid })).inner;
+    return async function saveArchive(stream: Pick<Readable, 'pipe'>): ResultPromise<UploadResult, string> {
+        return AsyncResult.equip(createWriteStream(filePath))
+            .then((s) => stream.pipe(s))
+            .then(waitOn('close'))
+            .then<UploadResult>(() => ({ rxid: filePath })).inner;
     };
 }
 
