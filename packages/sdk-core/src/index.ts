@@ -13,6 +13,7 @@ export * from './model/report/BacktraceReport';
 export * from './modules/attribute/BacktraceAttributeProvider';
 export * from './modules/breadcrumbs';
 export * from './modules/converter';
+export * from './modules/converter/V8StackTraceConverter';
 export * from './modules/database';
 export * from './modules/metrics/BacktraceSessionProvider';
 export * from './modules/metrics/SingleSessionProvider';

@@ -82,8 +82,7 @@ export class BacktraceBrowserRequestHandler implements BacktraceRequestHandler {
 
     private createFormData(json: string, attachments: BacktraceAttachment<Blob | string>[]) {
         const formData = new FormData();
-        const blob = new Blob([json]);
-        formData.append(this.UPLOAD_FILE_NAME, blob, `${this.UPLOAD_FILE_NAME}.json`);
+        formData.append(this.UPLOAD_FILE_NAME, json);
 
         if (!attachments || attachments.length === 0) {
             return formData;

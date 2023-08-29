@@ -12,6 +12,7 @@ export class BacktraceReportSubmission {
     }
 
     public send(data: BacktraceData, attachments: BacktraceAttachment[]) {
-        return this._requestHandler.postError(this._submissionUrl, JSON.stringify(data, jsonEscaper()), attachments);
+        const json = JSON.stringify(data, jsonEscaper());
+        return this._requestHandler.postError(this._submissionUrl, json, attachments);
     }
 }
