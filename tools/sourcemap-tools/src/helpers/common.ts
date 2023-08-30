@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { EventEmitter, Readable, Writable } from 'stream';
+import { Readable, Writable } from 'stream';
 import { LogLevel, Logger } from '../Logger';
 import { ResultPromise } from '../models/AsyncResult';
 import { Err, Ok, Result } from '../models/Result';
@@ -96,19 +96,5 @@ export function inspect<T>(fn: (t: T) => unknown) {
     return function inspect(t: T): T {
         fn(t);
         return t;
-    };
-}
-
-export function waitOn(event: string) {
-    return function waitOn<T extends EventEmitter>(ee: T) {
-        return new Promise<T>((resolve, reject) => {
-            ee.once(event, (err) => {
-                if (err instanceof Error) {
-                    reject(err);
-                } else {
-                    resolve(ee);
-                }
-            });
-        });
     };
 }
