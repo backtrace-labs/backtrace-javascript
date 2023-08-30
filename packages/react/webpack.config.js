@@ -9,6 +9,9 @@ const common = {
     mode: process.env.NODE_ENV ?? 'production',
     devtool: 'source-map',
     entry: './src/index.ts',
+    externals: {
+        react: true,
+    },
     plugins: [agentDefinitionPlugin(path.join(__dirname, 'package.json'))],
 };
 
