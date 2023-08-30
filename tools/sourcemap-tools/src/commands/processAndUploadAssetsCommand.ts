@@ -122,8 +122,13 @@ export function processAndUploadAssetsCommand(
             .then(options?.beforeUpload ? inspect(options.beforeUpload) : pass)
             .then(createArchive(sourceProcessor))
             .then(async ({ assets, archive }) => {
+                // We first create the upload request, which pipes the archive to itself
                 const promise = uploadCommand(archive);
+
+                // Next we finalize the archive, which causes the assets to be written to the archive, and consequently to the request
                 await finalizeArchive({ assets, archive });
+
+                // Finally, we return the upload request promise
                 return promise;
             })
             .then(options?.afterUpload ? inspect(options.afterUpload) : pass)

@@ -13,7 +13,7 @@ export class ZipArchive {
         this._pack.pipe(this._gz);
     }
 
-    public async append(name: string, sourceMap: string) {
+    public append(name: string, sourceMap: string) {
         this._pack.entry({ name }, sourceMap);
         return this;
     }

@@ -205,8 +205,15 @@ export const uploadCmd = new Command<UploadOptions>({
                           const uploader = uploadArchive(
                               new SymbolUploader(uploadUrl, { ignoreSsl: opts.insecure ?? false }),
                           );
+
+                          // We first create the upload request, which pipes the archive to itself
                           const promise = uploader(archive);
+
+                          // Next we finalize the archive, which causes the assets to be written to the archive,
+                          // and consequently to the request
                           await finalizeArchive({ assets, archive });
+
+                          // Finally, we return the upload request promise
                           return promise;
                       })
                       .then(logDebug(`archive uploaded to ${uploadUrl}`)).inner
