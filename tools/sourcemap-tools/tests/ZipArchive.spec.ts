@@ -23,8 +23,8 @@ describe('ZipArchive', () => {
         archive.pipe(outputStream);
 
         const entries = [
-            ['entry1', Buffer.from('entry1')],
-            ['entry2', Buffer.from('entry2')],
+            ['entry1', 'entry1Data'],
+            ['entry2', 'entry2Data'],
         ] as const;
 
         for (const [name, buf] of entries) {
@@ -40,7 +40,7 @@ describe('ZipArchive', () => {
             const entry = entries.find(([e]) => e === file.path);
             assert(entry);
 
-            expect(entry[1]).toEqual(file.data);
+            expect(file.data.toString('utf-8')).toEqual(entry[1]);
         }
     });
 });

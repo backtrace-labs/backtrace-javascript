@@ -23,8 +23,7 @@ export function BacktracePlugin(options?: BacktracePluginOptions): Plugin {
                 assetFinished: (asset) => info(`[${asset.asset.name}] asset processed successfully`),
                 assetError: (asset) => this.warn(`[${asset.asset.name}] ${asset.error}`),
 
-                beforeArchive: (paths) => this.debug(`creating archive to upload from ${paths.length} files`),
-                beforeUpload: () => info(`uploading sourcemaps...`),
+                beforeUpload: (paths) => info(`uploading ${paths.length} sourcemaps...`),
                 afterUpload: (result) => info(`sourcemaps uploaded to Backtrace: ${result.rxid}`),
                 uploadError: (error) => this.warn(`failed to upload sourcemaps: ${error}`),
             });
