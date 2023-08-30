@@ -1,6 +1,6 @@
 {
     "name": "@backtrace-labs/browser",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "description": "Backtrace-JavaScript web browser integration",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
@@ -49,6 +49,7 @@
         "webpack-cli": "^5.1.4"
     },
     "dependencies": {
+        "@backtrace-labs/sdk-core": "^0.0.2",
         "ua-parser-js": "^1.0.35"
     }
 }
