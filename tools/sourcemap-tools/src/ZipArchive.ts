@@ -1,32 +1,38 @@
-import archiver from 'archiver';
-import { Readable, Transform, TransformCallback, TransformOptions } from 'stream';
+import zlib from 'node:zlib';
+import { TransformOptions } from 'stream';
+import tar from 'tar-stream';
 
-export class ZipArchive extends Transform {
-    private readonly _archive: archiver.Archiver;
+export class ZipArchive {
+    private readonly _pack: tar.Pack;
+    private readonly _gz: zlib.Gzip;
 
     constructor(opts?: TransformOptions) {
-        super(opts);
-        this._archive = archiver('zip');
+        this._pack = tar.pack(opts);
+        this._gz = zlib.createGzip();
+
+        this._pack.pipe(this._gz);
     }
 
-    public append(name: string, sourceMap: string | Readable | Buffer) {
-        this._archive.append(sourceMap, { name });
+    public append(name: string, sourceMap: string) {
+        this._pack.entry({ name }, sourceMap);
         return this;
     }
 
     public finalize() {
-        return this._archive.finalize();
+        this._pack.finalize();
+
+        return new Promise<ZipArchive>((resolve, reject) => {
+            this._gz.on('close', () => resolve(this));
+            this._gz.on('error', reject);
+        });
     }
 
-    public override pipe<T extends NodeJS.WritableStream>(destination: T, options?: { end?: boolean }): T {
-        return this._archive.pipe(destination, options);
+    public on(event: string, listener: (...args: unknown[]) => void): this {
+        this._pack.on(event, listener);
+        return this;
     }
 
-    public override _transform(chunk: unknown, encoding: BufferEncoding, callback: TransformCallback): void {
-        return this._archive._transform(chunk, encoding, callback);
-    }
-
-    public override _flush(callback: TransformCallback): void {
-        return this._archive._flush(callback);
+    public pipe<T extends NodeJS.WritableStream>(destination: T, options?: { end?: boolean }): T {
+        return this._gz.pipe(destination, options);
     }
 }

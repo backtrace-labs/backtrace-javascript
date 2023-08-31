@@ -1,6 +1,6 @@
 import fs from 'fs';
-import { Readable } from 'stream';
-import { Logger, LogLevel } from '../Logger';
+import { Readable, Writable } from 'stream';
+import { LogLevel, Logger } from '../Logger';
 import { ResultPromise } from '../models/AsyncResult';
 import { Err, Ok, Result } from '../models/Result';
 
@@ -23,6 +23,20 @@ export async function writeFile(file: ContentFile) {
     } catch (err) {
         return Err(`failed to write file: ${err instanceof Error ? err.message : 'unknown error'}`);
     }
+}
+
+export function createWriteStream(path: string) {
+    try {
+        return Ok(fs.createWriteStream(path));
+    } catch (err) {
+        return Err(`failed to create write stream to file: ${err instanceof Error ? err.message : 'unknown error'}`);
+    }
+}
+
+export function pipeStream(readable: Pick<Readable, 'pipe'>) {
+    return function pipeStream(writable: Writable) {
+        return readable.pipe(writable);
+    };
 }
 
 export async function writeStream(file: StreamFile) {

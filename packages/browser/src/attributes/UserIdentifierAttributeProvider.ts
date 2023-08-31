@@ -1,23 +1,15 @@
-import { BacktraceAttributeProvider, BacktraceConfiguration, IdGenerator } from '@backtrace-labs/sdk-core';
+import { BacktraceAttributeProvider, IdGenerator } from '@backtrace-labs/sdk-core';
 
 export class UserIdentifierAttributeProvider implements BacktraceAttributeProvider {
     public readonly USER_IDENTIFIER = 'backtrace-guid';
-    private _guid: string | undefined;
-
-    constructor(options: BacktraceConfiguration) {
-        this._guid = options.userAttributes?.['guid'] as string;
-    }
 
     public get type(): 'scoped' | 'dynamic' {
         return 'scoped';
     }
-    public get(): Record<string, unknown> {
-        if (!this._guid) {
-            this._guid = this.generateUuidToLocalStorage() ?? IdGenerator.uuid();
-        }
 
+    public get(): Record<string, unknown> {
         return {
-            guid: this._guid,
+            guid: this.generateUuidToLocalStorage() ?? IdGenerator.uuid(),
         };
     }
 
