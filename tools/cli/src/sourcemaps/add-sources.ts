@@ -15,7 +15,7 @@ import {
     writeFile,
 } from '@backtrace-labs/sourcemap-tools';
 import { GlobalOptions } from '..';
-import { Command } from '../commands/Command';
+import { Command, CommandContext } from '../commands/Command';
 import { find } from '../helpers/find';
 import { logAsset } from '../helpers/logs';
 import { normalizePaths } from '../helpers/normalizePaths';
@@ -66,101 +66,106 @@ export const addSourcesCmd = new Command<AddSourcesOptions>({
         type: Boolean,
         description: 'Exits with zero exit code if no sourcemaps are found.',
     })
-    .execute(async function ({ opts, getHelpMessage }) {
-        const logger = createLogger(opts);
-        const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
+    .execute(addSourcesToSourcemaps);
 
-        const optsResult = await loadAndJoinOptions(opts.config)('add-sources', opts, {
-            path: process.cwd(),
-        });
+/**
+ * Adds sources to sourcemaps found in path(s).
+ */
+export async function addSourcesToSourcemaps({ opts, getHelpMessage }: CommandContext<AddSourcesOptions>) {
+    const logger = createLogger(opts);
+    const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
 
-        if (optsResult.isErr()) {
-            return optsResult;
-        }
-
-        opts = optsResult.data;
-
-        logger.trace(`resolved options: \n${JSON.stringify(opts, null, '  ')}`);
-
-        const searchPaths = normalizePaths(opts.path, process.cwd());
-        if (!searchPaths.length) {
-            logger.info(getHelpMessage());
-            return Err('path must be specified');
-        }
-
-        const logDebug = log(logger, 'debug');
-        const logTrace = log(logger, 'trace');
-        const logDebugAsset = logAsset(logger, 'debug');
-        const logTraceAsset = logAsset(logger, 'trace');
-
-        const readAssetCommand = (asset: Asset) =>
-            AsyncResult.fromValue<Asset, string>(asset)
-                .then((asset) => readFile(asset.path))
-                .then<AssetWithContent>((content) => ({ ...asset, content }))
-                .thenErr((error) => `${asset.name}: ${error}`).inner;
-
-        const loadAssetCommand = (asset: AssetWithContent) =>
-            AsyncResult.fromValue<AssetWithContent, string>(asset)
-                .then(({ content }) => parseJSON<object>(content))
-                .then<AssetWithSourceMap>((sourceMap) => ({ ...asset, sourceMap }))
-                .thenErr((error) => `${asset.name}: ${error}`).inner;
-
-        const doesSourceMapHaveSourcesCommand = (asset: AssetWithSourceMap) =>
-            AsyncResult.fromValue<AssetWithSourceMap, string>(asset)
-                .then(logTraceAsset('checking if sourcemap has sources'))
-                .then(doesSourceMapHaveSources(sourceProcessor))
-                .then(
-                    logDebug(
-                        ({ asset, result }) =>
-                            `${asset.name}: ` + (result ? 'sourcemap has sources' : 'sourcemap does not have sources'),
-                    ),
-                )
-                .thenErr((error) => `${asset.name}: ${error}`).inner;
-
-        const filterAssetsCommand = (assets: AssetWithSourceMap[]) =>
-            AsyncResult.fromValue<AssetWithSourceMap[], string>(assets)
-                .then(map(doesSourceMapHaveSourcesCommand))
-                .then(filter((f) => !f.result))
-                .then(map((f) => f.asset)).inner;
-
-        const addSourceCommand = (asset: AssetWithSourceMap) =>
-            AsyncResult.fromValue<AssetWithSourceMap, string>(asset)
-                .then(logTraceAsset('adding source'))
-                .then(addSource(sourceProcessor))
-                .then(logDebugAsset('source added'))
-                .thenErr((error) => `${asset.name}: ${error}`).inner;
-
-        const writeSourceMapCommand = (asset: AssetWithSourceMap) =>
-            AsyncResult.fromValue<AssetWithSourceMap, string>(asset)
-                .then(logTraceAsset('writing sourcemap'))
-                .then(writeSourceMap)
-                .then(logDebugAsset('sourcemap written'))
-                .thenErr((error) => `${asset.name}: ${error}`).inner;
-
-        return AsyncResult.equip(find(...searchPaths))
-            .then(logDebug((r) => `found ${r.length} files`))
-            .then(map(logTrace((result) => `found file: ${result.path}`)))
-            .then(filter((t) => t.direct || matchSourceMapExtension(t.path)))
-            .then(map((t) => t.path))
-            .then(logDebug((r) => `found ${r.length} files for adding sources`))
-            .then(map(logTrace((path) => `file to add sources to: ${path}`)))
-            .then(opts['pass-with-no-files'] ? Ok : failIfEmpty('no sourcemaps found'))
-            .then(map(toAsset))
-            .then(map(readAssetCommand))
-            .then(map(loadAssetCommand))
-            .then(opts.force ? Ok : filterAssetsCommand)
-            .then(logDebug((r) => `adding sources to ${r.length} files`))
-            .then(map(logTrace(({ path }) => `file to add sources to: ${path}`)))
-            .then(
-                opts['pass-with-no-files']
-                    ? Ok
-                    : failIfEmpty('no sourcemaps without sources found, use --force to overwrite sources'),
-            )
-            .then(map(addSourceCommand))
-            .then(opts['dry-run'] ? Ok : map(writeSourceMapCommand))
-            .then(map(output(logger)))
-            .then(() => 0).inner;
+    const optsResult = await loadAndJoinOptions(opts.config)('add-sources', opts, {
+        path: process.cwd(),
     });
+
+    if (optsResult.isErr()) {
+        return optsResult;
+    }
+
+    opts = optsResult.data;
+
+    logger.trace(`resolved options: \n${JSON.stringify(opts, null, '  ')}`);
+
+    const searchPaths = normalizePaths(opts.path, process.cwd());
+    if (!searchPaths.length) {
+        logger.info(getHelpMessage());
+        return Err('path must be specified');
+    }
+
+    const logDebug = log(logger, 'debug');
+    const logTrace = log(logger, 'trace');
+    const logDebugAsset = logAsset(logger, 'debug');
+    const logTraceAsset = logAsset(logger, 'trace');
+
+    const readAssetCommand = (asset: Asset) =>
+        AsyncResult.fromValue<Asset, string>(asset)
+            .then((asset) => readFile(asset.path))
+            .then<AssetWithContent>((content) => ({ ...asset, content }))
+            .thenErr((error) => `${asset.name}: ${error}`).inner;
+
+    const loadAssetCommand = (asset: AssetWithContent) =>
+        AsyncResult.fromValue<AssetWithContent, string>(asset)
+            .then(({ content }) => parseJSON<object>(content))
+            .then<AssetWithSourceMap>((sourceMap) => ({ ...asset, sourceMap }))
+            .thenErr((error) => `${asset.name}: ${error}`).inner;
+
+    const doesSourceMapHaveSourcesCommand = (asset: AssetWithSourceMap) =>
+        AsyncResult.fromValue<AssetWithSourceMap, string>(asset)
+            .then(logTraceAsset('checking if sourcemap has sources'))
+            .then(doesSourceMapHaveSources(sourceProcessor))
+            .then(
+                logDebug(
+                    ({ asset, result }) =>
+                        `${asset.name}: ` + (result ? 'sourcemap has sources' : 'sourcemap does not have sources'),
+                ),
+            )
+            .thenErr((error) => `${asset.name}: ${error}`).inner;
+
+    const filterAssetsCommand = (assets: AssetWithSourceMap[]) =>
+        AsyncResult.fromValue<AssetWithSourceMap[], string>(assets)
+            .then(map(doesSourceMapHaveSourcesCommand))
+            .then(filter((f) => !f.result))
+            .then(map((f) => f.asset)).inner;
+
+    const addSourceCommand = (asset: AssetWithSourceMap) =>
+        AsyncResult.fromValue<AssetWithSourceMap, string>(asset)
+            .then(logTraceAsset('adding source'))
+            .then(addSource(sourceProcessor))
+            .then(logDebugAsset('source added'))
+            .thenErr((error) => `${asset.name}: ${error}`).inner;
+
+    const writeSourceMapCommand = (asset: AssetWithSourceMap) =>
+        AsyncResult.fromValue<AssetWithSourceMap, string>(asset)
+            .then(logTraceAsset('writing sourcemap'))
+            .then(writeSourceMap)
+            .then(logDebugAsset('sourcemap written'))
+            .thenErr((error) => `${asset.name}: ${error}`).inner;
+
+    return AsyncResult.equip(find(...searchPaths))
+        .then(logDebug((r) => `found ${r.length} files`))
+        .then(map(logTrace((result) => `found file: ${result.path}`)))
+        .then(filter((t) => t.direct || matchSourceMapExtension(t.path)))
+        .then(map((t) => t.path))
+        .then(logDebug((r) => `found ${r.length} files for adding sources`))
+        .then(map(logTrace((path) => `file to add sources to: ${path}`)))
+        .then(opts['pass-with-no-files'] ? Ok : failIfEmpty('no sourcemaps found'))
+        .then(map(toAsset))
+        .then(map(readAssetCommand))
+        .then(map(loadAssetCommand))
+        .then(opts.force ? Ok : filterAssetsCommand)
+        .then(logDebug((r) => `adding sources to ${r.length} files`))
+        .then(map(logTrace(({ path }) => `file to add sources to: ${path}`)))
+        .then(
+            opts['pass-with-no-files']
+                ? Ok
+                : failIfEmpty('no sourcemaps without sources found, use --force to overwrite sources'),
+        )
+        .then(map(addSourceCommand))
+        .then(opts['dry-run'] ? Ok : map(writeSourceMapCommand))
+        .then(map(output(logger)))
+        .then(() => 0).inner;
+}
 
 function toAsset(file: string): Asset {
     return { name: file, path: file };
