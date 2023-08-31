@@ -165,8 +165,14 @@ export abstract class BacktraceCoreClient {
      * Add attribute to Backtrace Client reports.
      * @param attributes key-value object with attributes.
      */
-    public addAttribute(attributes: Record<string, unknown>) {
-        this._attributeManager.add(attributes);
+    public addAttribute(attributes: Record<string, unknown>): void;
+    public addAttribute(attributes: () => Record<string, unknown>): void;
+    public addAttribute(attributes: Record<string, unknown> | (() => Record<string, unknown>)) {
+        if (typeof attributes === 'function') {
+            this._attributeManager.addProvider({ type: 'dynamic', get: attributes });
+        } else {
+            this._attributeManager.add(attributes);
+        }
     }
 
     /**
