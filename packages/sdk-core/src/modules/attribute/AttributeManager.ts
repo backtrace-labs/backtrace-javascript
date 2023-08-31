@@ -1,13 +1,9 @@
-import { AttributeType } from '../../model/data/BacktraceData';
 import { ReportData } from '../../model/report/ReportData';
 import { BacktraceAttributeProvider } from './BacktraceAttributeProvider';
 import { ReportDataBuilder } from './ReportDataBuilder';
 
 export class AttributeManager {
-    public readonly attributes: Record<string, AttributeType> = {};
-    public readonly annotations: Record<string, unknown> = {};
-
-    private readonly _dynamicAttributeProviders: BacktraceAttributeProvider[] = [];
+    private readonly _attributeSources: Array<Record<string, unknown> | (() => Record<string, unknown>)> = [];
 
     constructor(providers: BacktraceAttributeProvider[]) {
         for (const provider of providers) {
@@ -16,11 +12,11 @@ export class AttributeManager {
     }
 
     /**
-     * Adds attributes to manager manager cache
+     * Adds attributes to manager cache
      * @param attributes attributes object
      */
     public add(attributes: Record<string, unknown>) {
-        this.addStaticAttributes(attributes);
+        this._attributeSources.push(attributes);
     }
 
     /**
@@ -30,11 +26,11 @@ export class AttributeManager {
      */
     public async addProvider(attributeProvider: BacktraceAttributeProvider) {
         if (attributeProvider.type === 'dynamic') {
-            this._dynamicAttributeProviders.push(attributeProvider);
+            this._attributeSources.push(() => attributeProvider.get());
             return;
         }
         const attributes = attributeProvider.get();
-        this.addStaticAttributes(attributes);
+        this._attributeSources.push(attributes);
     }
 
     /**
@@ -43,14 +39,15 @@ export class AttributeManager {
      */
     public get(): ReportData {
         const result = {
-            annotations: {
-                ...this.annotations,
-            },
-            attributes: { ...this.attributes },
+            annotations: {},
+            attributes: {},
         };
 
-        for (const attributeProvider of this._dynamicAttributeProviders) {
-            const providerResult = ReportDataBuilder.build(attributeProvider.get());
+        for (const attributeProvider of this._attributeSources) {
+            const providerResult = ReportDataBuilder.build(
+                typeof attributeProvider === 'function' ? attributeProvider() : attributeProvider,
+            );
+
             result.attributes = {
                 ...result.attributes,
                 ...providerResult.attributes,
@@ -63,16 +60,5 @@ export class AttributeManager {
         }
 
         return result;
-    }
-
-    private addStaticAttributes(attributes: Record<string, unknown>) {
-        const reportAttributes = ReportDataBuilder.build(attributes);
-        for (const attributeKey in reportAttributes.attributes) {
-            this.attributes[attributeKey] = reportAttributes.attributes[attributeKey];
-        }
-
-        for (const annotationKey in reportAttributes.annotations) {
-            this.annotations[annotationKey] = reportAttributes.annotations[annotationKey];
-        }
     }
 }
