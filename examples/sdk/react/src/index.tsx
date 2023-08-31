@@ -21,7 +21,7 @@ BacktraceClient.initialize({
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 root.render(
     <React.StrictMode>
-        <ErrorBoundary name="main-boundary" fallback={<Fallback />}>
+        <ErrorBoundary name="main-boundary" fallback={(error: Error) => <Fallback error={error} />}>
             <App />
         </ErrorBoundary>
     </React.StrictMode>,
