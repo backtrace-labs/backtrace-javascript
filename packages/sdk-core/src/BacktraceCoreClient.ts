@@ -1,5 +1,6 @@
 import {
     BacktraceAttachment,
+    BacktraceAttributeProvider,
     BacktraceConfiguration,
     BacktraceDatabaseRecord,
     BacktraceSessionProvider,
@@ -12,6 +13,7 @@ import { BacktraceReportSubmission } from './model/http/BacktraceReportSubmissio
 import { BacktraceReport } from './model/report/BacktraceReport';
 import { AttributeManager } from './modules/attribute/AttributeManager';
 import { ClientAttributeProvider } from './modules/attribute/ClientAttributeProvider';
+import { UserAttributeProvider } from './modules/attribute/UserAttributeProvider';
 import { BacktraceBreadcrumbs } from './modules/breadcrumbs';
 import { BreadcrumbsManager } from './modules/breadcrumbs/BreadcrumbsManager';
 import { V8StackTraceConverter } from './modules/converter/V8StackTraceConverter';
@@ -110,15 +112,21 @@ export abstract class BacktraceCoreClient {
         );
 
         this._reportSubmission = new BacktraceReportSubmission(this.options, this._setup.requestHandler);
-        this._attributeProvider = new AttributeManager([
-            new ClientAttributeProvider(
-                this.agent,
-                this.agentVersion,
-                this._sessionProvider.sessionId,
-                this.options.userAttributes ?? {},
-            ),
-            ...(this._setup.attributeProviders ?? []),
-        ]);
+
+        const attributeProviders: BacktraceAttributeProvider[] = [
+            new ClientAttributeProvider(this.agent, this.agentVersion, this._sessionProvider.sessionId),
+        ];
+
+        if (this._setup.attributeProviders) {
+            attributeProviders.push(...this._setup.attributeProviders);
+        }
+
+        if (this._setup.options.userAttributes) {
+            attributeProviders.push(new UserAttributeProvider(this._setup.options.userAttributes));
+        }
+
+        this._attributeProvider = new AttributeManager(attributeProviders);
+
         this.attachments = this.options.attachments ?? [];
 
         if (this._setup.databaseStorageProvider && this.options?.database?.enable === true) {
