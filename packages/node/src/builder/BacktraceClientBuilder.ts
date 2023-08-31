@@ -5,6 +5,9 @@ import {
     BacktraceSessionProvider,
     BreadcrumbsEventSubscriber,
 } from '@backtrace-labs/sdk-core';
+import { BacktraceClient } from '../BacktraceClient';
+import { BacktraceConfiguration } from '../BacktraceConfiguration';
+import { BacktraceNodeRequestHandler } from '../BacktraceNodeRequestHandler';
 import { BacktraceFileAttachment } from '../attachment';
 import {
     ApplicationInformationAttributeProvider,
@@ -14,15 +17,12 @@ import {
     ProcessInformationAttributeProvider,
     ProcessStatusAttributeProvider,
 } from '../attributes';
-import { BacktraceClient } from '../BacktraceClient';
-import { BacktraceConfiguration } from '../BacktraceConfiguration';
-import { BacktraceNodeRequestHandler } from '../BacktraceNodeRequestHandler';
 
 export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<BacktraceClient> {
     constructor(
         private readonly _options: BacktraceConfiguration,
         attributeProvider: BacktraceAttributeProvider[] = [
-            new ApplicationInformationAttributeProvider(_options),
+            new ApplicationInformationAttributeProvider(),
             new ProcessStatusAttributeProvider(),
             new MachineAttributeProvider(),
             new ProcessInformationAttributeProvider(),
