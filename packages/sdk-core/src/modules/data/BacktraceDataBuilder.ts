@@ -2,9 +2,10 @@ import { BacktraceStackTraceConverter, DebugIdProvider } from '../..';
 import { SdkOptions } from '../../builder/SdkOptions';
 import { IdGenerator } from '../../common/IdGenerator';
 import { TimeHelper } from '../../common/TimeHelper';
-import { AttributeType, BacktraceData } from '../../model/data/BacktraceData';
+import { BacktraceData } from '../../model/data/BacktraceData';
 import { BacktraceStackFrame, BacktraceStackTrace } from '../../model/data/BacktraceStackTrace';
 import { BacktraceReport } from '../../model/report/BacktraceReport';
+import { AttributeManager } from '../attribute/AttributeManager';
 import { ReportDataBuilder } from '../attribute/ReportDataBuilder';
 
 export class BacktraceDataBuilder {
@@ -13,14 +14,13 @@ export class BacktraceDataBuilder {
     constructor(
         private readonly _sdkOptions: SdkOptions,
         private readonly _stackTraceConverter: BacktraceStackTraceConverter,
+        private readonly _attributeManager: AttributeManager,
         private readonly _debugIdProvider: DebugIdProvider,
     ) {}
 
-    public build(
-        report: BacktraceReport,
-        clientAttributes: Record<string, AttributeType> = {},
-        clientAnnotations: Record<string, unknown> = {},
-    ): BacktraceData {
+    public build(report: BacktraceReport): BacktraceData {
+        const { annotations, attributes } = this._attributeManager.get();
+
         const reportData = ReportDataBuilder.build(report.attributes);
         const { threads, detectedDebugIdentifier } = this.getThreads(report);
 
@@ -35,12 +35,12 @@ export class BacktraceDataBuilder {
             mainThread: this.MAIN_THREAD_NAME,
             threads,
             annotations: {
-                ...clientAnnotations,
+                ...annotations,
                 ...reportData.annotations,
                 ...report.annotations,
             },
             attributes: {
-                ...clientAttributes,
+                ...attributes,
                 ...reportData.attributes,
             },
         };

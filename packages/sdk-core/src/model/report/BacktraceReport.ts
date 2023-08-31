@@ -1,3 +1,4 @@
+import { jsonEscaper } from '../../common/jsonEscaper';
 import { TimeHelper } from '../../common/TimeHelper';
 import { BacktraceAttachment } from '../attachment';
 import { BacktraceStackFrame } from '../data/BacktraceStackTrace';
@@ -69,17 +70,17 @@ export class BacktraceReport {
         this.skipFrames = options?.skipFrames ?? 0;
         let errorType: BacktraceErrorType = 'Exception';
         if (data instanceof Error) {
+            this.message = this.generateErrorMessage(data.message);
             this.annotations['error'] = {
                 ...data,
-                message: data.message,
+                message: this.message,
                 name: data.name,
                 stack: data.stack,
             };
             this.classifiers = [data.name];
-            this.message = data.message;
             this.stackTrace['main'] = {
                 stack: data.stack ?? '',
-                message: data.message,
+                message: this.message,
             };
 
             // Supported in ES2022
@@ -87,10 +88,10 @@ export class BacktraceReport {
                 this.innerReport.push((data as { cause?: unknown }).cause);
             }
         } else {
-            this.message = data;
+            this.message = this.generateErrorMessage(data);
             this.stackTrace['main'] = {
                 stack: new Error().stack ?? '',
-                message: data,
+                message: this.message,
             };
             this.classifiers = ['Message'];
             errorType = 'Message';
@@ -108,5 +109,9 @@ export class BacktraceReport {
         if (options?.classifiers) {
             this.classifiers.unshift(...options.classifiers);
         }
+    }
+
+    private generateErrorMessage(data: unknown) {
+        return typeof data === 'object' ? JSON.stringify(data, jsonEscaper()) : data?.toString() ?? '';
     }
 }

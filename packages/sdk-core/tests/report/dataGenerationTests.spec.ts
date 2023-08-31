@@ -1,6 +1,7 @@
 import { BacktraceReport, DebugIdProvider } from '../../src';
 import { TimeHelper } from '../../src/common/TimeHelper';
 import { BacktraceStackFrame } from '../../src/model/data/BacktraceStackTrace';
+import { AttributeManager } from '../../src/modules/attribute/AttributeManager';
 import { V8StackTraceConverter } from '../../src/modules/converter/V8StackTraceConverter';
 import { BacktraceDataBuilder } from '../../src/modules/data/BacktraceDataBuilder';
 
@@ -14,6 +15,7 @@ describe('Data generation tests', () => {
     const dataBuilder = new BacktraceDataBuilder(
         sdkOptions,
         new V8StackTraceConverter(),
+        new AttributeManager([]),
         new DebugIdProvider(new V8StackTraceConverter()),
     );
 
@@ -93,7 +95,12 @@ describe('Data generation tests', () => {
         jest.spyOn(stackTraceConverter, 'convert').mockReturnValue(frames);
         jest.spyOn(debugIdProvider, 'getDebugId').mockReturnValue(expected);
 
-        const dataBuilder = new BacktraceDataBuilder(sdkOptions, stackTraceConverter, debugIdProvider);
+        const dataBuilder = new BacktraceDataBuilder(
+            sdkOptions,
+            stackTraceConverter,
+            new AttributeManager([]),
+            debugIdProvider,
+        );
 
         const errorReport = new BacktraceReport(new Error());
         const backtraceData = dataBuilder.build(errorReport);
@@ -116,5 +123,67 @@ describe('Data generation tests', () => {
         expect(backtraceData.threads[secondName]).toBeDefined();
         expect(backtraceData.threads[secondName].fault).toBeFalsy();
         expect(backtraceData.threads[secondName].stack.length).toBeDefined();
+    });
+
+    it('should override attribute provider attributes with report attributes', () => {
+        const providerAttributes = {
+            foo: 'bar',
+            xyz: 'abc',
+        };
+
+        const reportAttributes = {
+            foo: 'baz',
+        };
+
+        const expected = {
+            ...providerAttributes,
+            ...reportAttributes,
+        };
+
+        const dataBuilder = new BacktraceDataBuilder(
+            sdkOptions,
+            new V8StackTraceConverter(),
+            new AttributeManager([
+                {
+                    type: 'scoped',
+                    get: () => providerAttributes,
+                },
+            ]),
+            new DebugIdProvider(new V8StackTraceConverter()),
+        );
+
+        const data = dataBuilder.build(new BacktraceReport(new Error(), reportAttributes));
+        expect(data.attributes).toMatchObject(expected);
+    });
+
+    it('should override attribute provider annotations with report annotations', () => {
+        const providerAnnotations = {
+            foo: { x: 'bar' },
+            xyz: { x: 'abc' },
+        };
+
+        const reportAnnotations = {
+            foo: { x: 'baz' },
+        };
+
+        const expected = {
+            ...providerAnnotations,
+            ...reportAnnotations,
+        };
+
+        const dataBuilder = new BacktraceDataBuilder(
+            sdkOptions,
+            new V8StackTraceConverter(),
+            new AttributeManager([
+                {
+                    type: 'scoped',
+                    get: () => providerAnnotations,
+                },
+            ]),
+            new DebugIdProvider(new V8StackTraceConverter()),
+        );
+
+        const data = dataBuilder.build(new BacktraceReport(new Error(), reportAnnotations));
+        expect(data.annotations).toMatchObject(expected);
     });
 });

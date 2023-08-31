@@ -6,15 +6,15 @@ import {
     BreadcrumbsEventSubscriber,
 } from '@backtrace-labs/sdk-core';
 import { V8StackTraceConverter } from '@backtrace-labs/sdk-core/lib/modules/converter/V8StackTraceConverter';
+import { BacktraceBrowserRequestHandler } from '../BacktraceBrowserRequestHandler';
+import { BacktraceBrowserSessionProvider } from '../BacktraceBrowserSessionProvider';
+import { BacktraceClient } from '../BacktraceClient';
+import { BacktraceConfiguration } from '../BacktraceConfiguration';
 import { ApplicationInformationAttributeProvider } from '../attributes/ApplicationInformationAttributeProvider';
 import { UserAgentAttributeProvider } from '../attributes/UserAgentAttributeProvider';
 import { UserIdentifierAttributeProvider } from '../attributes/UserIdentifierAttributeProvider';
 import { WebsiteAttributeProvider } from '../attributes/WebsiteAttributeProvider';
 import { WindowAttributeProvider } from '../attributes/WindowAttributeProvider';
-import { BacktraceBrowserRequestHandler } from '../BacktraceBrowserRequestHandler';
-import { BacktraceBrowserSessionProvider } from '../BacktraceBrowserSessionProvider';
-import { BacktraceClient } from '../BacktraceClient';
-import { BacktraceConfiguration } from '../BacktraceConfiguration';
 import { DocumentEventSubscriber } from '../breadcrumbs/DocumentEventSubscriber';
 import { HistoryEventSubscriber } from '../breadcrumbs/HistoryEventSubscriber';
 import { WebRequestEventSubscriber } from '../breadcrumbs/WebRequestEventSubscriber';
@@ -29,7 +29,7 @@ export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<Backtrace
             new UserAgentAttributeProvider(),
             new WebsiteAttributeProvider(),
             new WindowAttributeProvider(),
-            new UserIdentifierAttributeProvider(options),
+            new UserIdentifierAttributeProvider(),
             new ApplicationInformationAttributeProvider(options),
         ],
         breadcrumbsSubscribers: BreadcrumbsEventSubscriber[] = [

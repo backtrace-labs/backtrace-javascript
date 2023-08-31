@@ -2,7 +2,6 @@ import { BacktraceAttributeProvider } from '@backtrace-labs/sdk-core';
 import fs from 'fs';
 import path from 'path';
 import process from 'process';
-import { BacktraceConfiguration } from '../BacktraceConfiguration';
 
 export class ApplicationInformationAttributeProvider implements BacktraceAttributeProvider {
     public readonly APPLICATION_ATTRIBUTE = 'application';
@@ -17,17 +16,14 @@ export class ApplicationInformationAttributeProvider implements BacktraceAttribu
     }
 
     constructor(
-        options: BacktraceConfiguration,
         applicationSearchPaths?: string[],
         nodeConfiguration: { application?: string; version?: string } = {
             application: process.env?.npm_package_name,
             version: process.env?.npm_package_version,
         },
     ) {
-        this._application =
-            (options.userAttributes?.[this.APPLICATION_ATTRIBUTE] as string) ?? nodeConfiguration?.application;
-        this._applicationVersion =
-            (options.userAttributes?.[this.APPLICATION_VERSION_ATTRIBUTE] as string) ?? nodeConfiguration?.version;
+        this._application = nodeConfiguration?.application;
+        this._applicationVersion = nodeConfiguration?.version;
 
         this.applicationSearchPaths = applicationSearchPaths ?? this.generateDefaultApplicationSearchPaths();
     }
