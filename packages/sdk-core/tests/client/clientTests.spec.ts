@@ -14,6 +14,11 @@ describe('Client tests', () => {
             expect(client.requestHandler.postError).toBeCalled();
         });
 
+        it(`Should not throw when sending a report with unexpected payload`, async () => {
+            expect(async () => await client.send([{ foo: 'bar' }, { bar: 'baz' }] as unknown as string)).not.toThrow();
+            expect(client.requestHandler.postError).toBeCalled();
+        });
+
         it(`Should not throw when sending a report`, async () => {
             expect(async () => await client.send(new BacktraceReport(new Error('test')))).not.toThrow();
             expect(client.requestHandler.postError).toBeCalled();

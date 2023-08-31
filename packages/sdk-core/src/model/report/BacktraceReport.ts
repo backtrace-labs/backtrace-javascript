@@ -1,3 +1,4 @@
+import { jsonEscaper } from '../../common/jsonEscaper';
 import { TimeHelper } from '../../common/TimeHelper';
 import { BacktraceAttachment } from '../attachment';
 import { BacktraceStackFrame } from '../data/BacktraceStackTrace';
@@ -87,10 +88,10 @@ export class BacktraceReport {
                 this.innerReport.push((data as { cause?: unknown }).cause);
             }
         } else {
-            this.message = data;
+            this.message = typeof data === 'object' ? JSON.stringify(data, jsonEscaper()) : data.toString();
             this.stackTrace['main'] = {
                 stack: new Error().stack ?? '',
-                message: data,
+                message: this.message,
             };
             this.classifiers = ['Message'];
             errorType = 'Message';
