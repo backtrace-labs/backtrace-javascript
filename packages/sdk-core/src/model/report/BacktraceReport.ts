@@ -70,9 +70,10 @@ export class BacktraceReport {
         this.skipFrames = options?.skipFrames ?? 0;
         let errorType: BacktraceErrorType = 'Exception';
         if (data instanceof Error) {
+            this.message = this.generateErrorMessage(data.message);
             this.annotations['error'] = {
                 ...data,
-                message: data.message,
+                message: this.message,
                 name: data.name,
                 stack: data.stack,
             };
@@ -80,7 +81,7 @@ export class BacktraceReport {
             this.message = data.message;
             this.stackTrace['main'] = {
                 stack: data.stack ?? '',
-                message: data.message,
+                message: this.message,
             };
 
             // Supported in ES2022
@@ -88,7 +89,7 @@ export class BacktraceReport {
                 this.innerReport.push((data as { cause?: unknown }).cause);
             }
         } else {
-            this.message = typeof data === 'object' ? JSON.stringify(data, jsonEscaper()) : data.toString();
+            this.message = this.generateErrorMessage(data);
             this.stackTrace['main'] = {
                 stack: new Error().stack ?? '',
                 message: this.message,
@@ -109,5 +110,9 @@ export class BacktraceReport {
         if (options?.classifiers) {
             this.classifiers.unshift(...options.classifiers);
         }
+    }
+
+    private generateErrorMessage(data: unknown) {
+        return typeof data === 'object' ? JSON.stringify(data, jsonEscaper()) : data?.toString() ?? '';
     }
 }
