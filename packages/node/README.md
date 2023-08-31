@@ -44,7 +44,7 @@ $ npm install @backtrace-labs/node
 Add the following code to your application before all other scripts to report node errors to Backtrace.
 
 ```ts
-// Import the BacktraceClient from @backtrace-labs/node with your favoriate package manager.
+// Import the BacktraceClient from @backtrace-labs/node with your favorite package manager.
 import { BacktraceClient, BacktraceConfiguration } from '@backtrace-labs/node';
 
 // Configure client options
@@ -109,6 +109,23 @@ const options: BacktraceConfiguration = {
 const client = BacktraceClient.initialize(options);
 ```
 
+You can also include attributes that will be resolved when creating a report:
+
+```ts
+// BacktraceClientOptions
+const options: BacktraceConfiguration = {
+    url: 'https://submit.backtrace.io/<universe>/<token>/json',
+
+    // Attach the attributes object
+    userAttributes: () => ({
+        attribute: getAttributeValue(),
+    }),
+};
+
+// Initialize the client
+const client = BacktraceClient.initialize(options);
+```
+
 #### Add attributes during application runtime
 
 Global attributes can be set during the runtime once specific data has be loaded (e.g. a user has logged in).
@@ -120,6 +137,17 @@ const client = BacktraceClient.initialize(options);
 client.addAttribute({
     "clientID": "de6faf4d-d5b5-486c-9789-318f58a14476"
 })
+```
+
+You can also add attributes that will be resolved when creating a report:
+
+```ts
+const client = BacktraceClient.initialize(options);
+...
+
+client.addAttribute(() => ({
+    "clientID": resolveCurrentClientId()
+}))
 ```
 
 #### Add attributes to an error report
