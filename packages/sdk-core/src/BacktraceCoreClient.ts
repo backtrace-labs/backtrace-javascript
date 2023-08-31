@@ -105,12 +105,6 @@ export abstract class BacktraceCoreClient {
 
         const stackTraceConverter = this._setup.stackTraceConverter ?? new V8StackTraceConverter();
 
-        this._dataBuilder = new BacktraceDataBuilder(
-            this._sdkOptions,
-            stackTraceConverter,
-            new DebugIdProvider(stackTraceConverter, this._setup.debugIdMapProvider),
-        );
-
         this._reportSubmission = new BacktraceReportSubmission(this.options, this._setup.requestHandler);
 
         const attributeProviders: BacktraceAttributeProvider[] = [
@@ -126,6 +120,13 @@ export abstract class BacktraceCoreClient {
         }
 
         this._attributeManager = new AttributeManager(attributeProviders);
+
+        this._dataBuilder = new BacktraceDataBuilder(
+            this._sdkOptions,
+            stackTraceConverter,
+            this._attributeManager,
+            new DebugIdProvider(stackTraceConverter, this._setup.debugIdMapProvider),
+        );
 
         this.attachments = this.options.attachments ?? [];
 
@@ -270,8 +271,7 @@ export abstract class BacktraceCoreClient {
     }
 
     private generateSubmissionData(report: BacktraceReport): BacktraceData | undefined {
-        const { annotations, attributes } = this._attributeManager.get();
-        const backtraceData = this._dataBuilder.build(report, attributes, annotations);
+        const backtraceData = this._dataBuilder.build(report);
         if (!this.options.beforeSend) {
             return backtraceData;
         }
