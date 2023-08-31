@@ -78,7 +78,6 @@ export class BacktraceReport {
                 stack: data.stack,
             };
             this.classifiers = [data.name];
-            this.message = data.message;
             this.stackTrace['main'] = {
                 stack: data.stack ?? '',
                 message: this.message,
