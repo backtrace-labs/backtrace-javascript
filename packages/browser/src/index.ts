@@ -1,8 +1,10 @@
 export {
     AttributeType,
     BacktraceAttachment,
+    BacktraceAttributeProvider,
     BacktraceData,
     BacktraceReport,
+    BacktraceRequestHandler,
     BacktraceStackFrame,
     BacktraceStackTraceConverter,
     BacktraceStringAttachment,
@@ -14,6 +16,7 @@ export {
     JavaScriptEngine,
     RawBreadcrumb,
     SingleSessionProvider,
+    V8StackTraceConverter,
 } from '@backtrace-labs/sdk-core';
 export * from './agentDefinition';
 export * from './BacktraceBrowserRequestHandler';

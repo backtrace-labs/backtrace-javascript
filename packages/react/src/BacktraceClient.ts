@@ -1,7 +1,38 @@
-import { BacktraceClient as BrowserClient, BacktraceConfiguration } from '@backtrace-labs/browser';
+import {
+    BacktraceAttributeProvider,
+    BacktraceClient as BrowserClient,
+    BacktraceConfiguration,
+    BacktraceRequestHandler,
+    BacktraceStackTraceConverter,
+    BreadcrumbsEventSubscriber,
+} from '@backtrace-labs/browser';
+import { BacktraceSessionProvider, SdkOptions } from '@backtrace-labs/sdk-core';
+import { AGENT } from './agentDefinition';
 import { BacktraceReactClientBuilder } from './builder/BacktraceReactClientBuilder';
 
 export class BacktraceClient extends BrowserClient {
+    protected static _instance?: BacktraceClient;
+
+    constructor(
+        options: BacktraceConfiguration,
+        requestHandler: BacktraceRequestHandler,
+        attributeProviders: BacktraceAttributeProvider[],
+        stackTraceConverter: BacktraceStackTraceConverter,
+        breadcrumbsEventSubscriber: BreadcrumbsEventSubscriber[],
+        sessionProvider?: BacktraceSessionProvider,
+        sdkOptions: SdkOptions = AGENT,
+    ) {
+        super(
+            options,
+            requestHandler,
+            attributeProviders,
+            stackTraceConverter,
+            breadcrumbsEventSubscriber,
+            sessionProvider,
+            sdkOptions,
+        );
+    }
+
     public static builder(options: BacktraceConfiguration): BacktraceReactClientBuilder {
         return new BacktraceReactClientBuilder(options);
     }

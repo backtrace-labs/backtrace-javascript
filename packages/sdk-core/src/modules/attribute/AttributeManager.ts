@@ -1,13 +1,9 @@
-import { AttributeType } from '../../model/data/BacktraceData';
 import { ReportData } from '../../model/report/ReportData';
 import { BacktraceAttributeProvider } from './BacktraceAttributeProvider';
 import { ReportDataBuilder } from './ReportDataBuilder';
 
 export class AttributeManager {
-    public readonly attributes: Record<string, AttributeType> = {};
-    public readonly annotations: Record<string, unknown> = {};
-
-    private readonly _dynamicAttributeProviders: BacktraceAttributeProvider[] = [];
+    private readonly _attributeProviders: BacktraceAttributeProvider[] = [];
 
     constructor(providers: BacktraceAttributeProvider[]) {
         for (const provider of providers) {
@@ -16,11 +12,15 @@ export class AttributeManager {
     }
 
     /**
-     * Adds attributes to manager manager cache
+     * Adds attributes to manager cache
      * @param attributes attributes object
      */
-    public add(attributes: Record<string, unknown>) {
-        this.addStaticAttributes(attributes);
+    public add(attributes: Record<string, unknown> | (() => Record<string, unknown>)) {
+        if (typeof attributes === 'function') {
+            this.addProvider({ type: 'dynamic', get: attributes });
+        } else {
+            this.addProvider({ type: 'scoped', get: () => attributes });
+        }
     }
 
     /**
@@ -28,13 +28,17 @@ export class AttributeManager {
      * @param attributeProvider
      * @returns
      */
-    public async addProvider(attributeProvider: BacktraceAttributeProvider) {
+    public addProvider(attributeProvider: BacktraceAttributeProvider) {
         if (attributeProvider.type === 'dynamic') {
-            this._dynamicAttributeProviders.push(attributeProvider);
+            this._attributeProviders.push(attributeProvider);
             return;
+        } else {
+            const attributes = attributeProvider.get();
+            this._attributeProviders.push({
+                type: 'scoped',
+                get: () => attributes,
+            });
         }
-        const attributes = attributeProvider.get();
-        this.addStaticAttributes(attributes);
     }
 
     /**
@@ -43,14 +47,13 @@ export class AttributeManager {
      */
     public get(): ReportData {
         const result = {
-            annotations: {
-                ...this.annotations,
-            },
-            attributes: { ...this.attributes },
+            annotations: {},
+            attributes: {},
         };
 
-        for (const attributeProvider of this._dynamicAttributeProviders) {
+        for (const attributeProvider of this._attributeProviders) {
             const providerResult = ReportDataBuilder.build(attributeProvider.get());
+
             result.attributes = {
                 ...result.attributes,
                 ...providerResult.attributes,
@@ -63,16 +66,5 @@ export class AttributeManager {
         }
 
         return result;
-    }
-
-    private addStaticAttributes(attributes: Record<string, unknown>) {
-        const reportAttributes = ReportDataBuilder.build(attributes);
-        for (const attributeKey in reportAttributes.attributes) {
-            this.attributes[attributeKey] = reportAttributes.attributes[attributeKey];
-        }
-
-        for (const annotationKey in reportAttributes.annotations) {
-            this.annotations[annotationKey] = reportAttributes.annotations[annotationKey];
-        }
     }
 }
