@@ -16,8 +16,7 @@
     },
     "workspaces": [
         "packages/*",
-        "tools/*",
-        "examples/*"
+        "tools/*"
     ],
     "repository": {
         "type": "git",
