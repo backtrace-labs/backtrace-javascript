@@ -16,6 +16,8 @@ export class V8StackTraceConverter implements BacktraceStackTraceConverter {
         // remove error header from stack trace - if the error header exists
         if (stackFrames[0].indexOf(errorHeader[0]) !== -1) {
             stackFrames = stackFrames.slice(errorHeader.length);
+        } else {
+            stackFrames = stackFrames.slice(1);
         }
         for (const stackFrame of stackFrames) {
             const normalizedStackFrame = stackFrame.trim();

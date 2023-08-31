@@ -166,18 +166,14 @@ export abstract class BacktraceCoreClient {
      * @param attributes Report attributes
      * @param attachments Report attachments
      */
-    public async send(
-        error: Error,
-        attributes?: Record<string, unknown>,
-        attachments?: BacktraceAttachment[],
-    ): Promise<void>;
+    public send(error: Error, attributes?: Record<string, unknown>, attachments?: BacktraceAttachment[]): Promise<void>;
     /**
      * Asynchronously sends a message report to Backtrace
      * @param message Report message
      * @param attributes Report attributes
      * @param attachments Report attachments
      */
-    public async send(
+    public send(
         message: string,
         attributes?: Record<string, unknown>,
         attachments?: BacktraceAttachment[],
@@ -186,17 +182,18 @@ export abstract class BacktraceCoreClient {
      * Asynchronously sends error data to Backtrace
      * @param report Backtrace Report
      */
-    public async send(report: BacktraceReport): Promise<void>;
-    public async send(
+    public send(report: BacktraceReport): Promise<void>;
+    // This function CANNOT be an async function due to possible async state machine stack frame inclusion, which breaks the skip stacks
+    public send(
         data: BacktraceReport | Error | string,
         reportAttributes: Record<string, unknown> = {},
         reportAttachments: BacktraceAttachment[] = [],
     ): Promise<void> {
         if (!this._enabled) {
-            return;
+            return Promise.resolve();
         }
         if (this._rateLimitWatcher.skipReport()) {
-            return;
+            return Promise.resolve();
         }
 
         const report = this.isReport(data)
@@ -207,25 +204,26 @@ export abstract class BacktraceCoreClient {
 
         this.breadcrumbsManager?.logReport(report);
         if (this.options.skipReport && this.options.skipReport(report)) {
-            return;
+            return Promise.resolve();
         }
 
         const backtraceData = this.generateSubmissionData(report);
         if (!backtraceData) {
-            return;
+            return Promise.resolve();
         }
 
         const submissionAttachments = this.generateSubmissionAttachments(report, reportAttachments);
         const record = this.addToDatabase(backtraceData, submissionAttachments);
 
-        const submissionResult = await this._reportSubmission.send(backtraceData, submissionAttachments);
-        if (!record) {
-            return;
-        }
-        record.locked = false;
-        if (submissionResult.status === 'Ok') {
-            this._database?.remove(record);
-        }
+        return this._reportSubmission.send(backtraceData, submissionAttachments).then((submissionResult) => {
+            if (!record) {
+                return;
+            }
+            record.locked = false;
+            if (submissionResult.status === 'Ok') {
+                this._database?.remove(record);
+            }
+        });
     }
 
     /**
