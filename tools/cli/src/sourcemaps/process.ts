@@ -58,7 +58,7 @@ export const processCmd = new Command<ProcessOptions>({
         type: Boolean,
         description: 'Exits with zero exit code if no files for processing are found.',
     })
-    .execute(async function (opts, command, stack) {
+    .execute(async function ({ opts, getHelpMessage }) {
         const logger = createLogger(opts);
         const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
 
@@ -76,7 +76,7 @@ export const processCmd = new Command<ProcessOptions>({
 
         const searchPaths = normalizePaths(opts.path, process.cwd());
         if (!searchPaths) {
-            logger.info(Command.getHelpMessage(command, stack));
+            logger.info(getHelpMessage());
             return Err('path must be specified');
         }
 

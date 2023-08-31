@@ -1,18 +1,24 @@
 import { Err, Ok, Result } from '@backtrace-labs/sourcemap-tools';
 import commandLineArgs from 'command-line-args';
 import commandLineUsage, { Section } from 'command-line-usage';
-import { createLogger, LoggerOptions } from '../logger';
+import { LoggerOptions, createLogger } from '../logger';
 import { CommandError } from '../models/CommandError';
 import { ExtendedOptionDefinition } from '../models/OptionDefinition';
 
 const CLI_COMMAND = 'backtrace-js';
 
 export type CommandFunction<T> = (
-    values: Partial<T>,
-    command: Command,
-    stack?: Command[],
-    unknown?: string[],
+    context: CommandContext<T>,
 ) => Result<number, string> | Promise<Result<number, string>>;
+
+export interface CommandOptions {
+    readonly _unknown?: string[];
+}
+
+export interface CommandContext<T> {
+    readonly opts: Partial<T> & CommandOptions;
+    getHelpMessage(): string;
+}
 
 export class Command<T extends object = object> {
     public readonly subcommands: Command[] = [];
@@ -84,9 +90,12 @@ export class Command<T extends object = object> {
         }
 
         if (this._execute) {
-            return (
-                await this._execute(values as T, this, stack, [...(values._unknown ?? []), values._subcommand])
-            ).mapErr((error) => ({
+            const context: CommandContext<T> = {
+                opts: values as T,
+                getHelpMessage: () => Command.getHelpMessage(this, stack),
+            };
+
+            return (await this._execute(context)).mapErr((error) => ({
                 command: this,
                 error,
                 stack,

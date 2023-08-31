@@ -66,13 +66,14 @@ export const addSourcesCmd = new Command<AddSourcesOptions>({
         type: Boolean,
         description: 'Exits with zero exit code if no sourcemaps are found.',
     })
-    .execute(async function (opts, command, stack) {
+    .execute(async function ({ opts, getHelpMessage }) {
         const logger = createLogger(opts);
         const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
 
         const optsResult = await loadAndJoinOptions(opts.config)('add-sources', opts, {
             path: process.cwd(),
         });
+
         if (optsResult.isErr()) {
             return optsResult;
         }
@@ -83,7 +84,7 @@ export const addSourcesCmd = new Command<AddSourcesOptions>({
 
         const searchPaths = normalizePaths(opts.path, process.cwd());
         if (!searchPaths.length) {
-            logger.info(Command.getHelpMessage(command, stack));
+            logger.info(getHelpMessage());
             return Err('path must be specified');
         }
 

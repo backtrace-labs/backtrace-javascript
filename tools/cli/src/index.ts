@@ -4,7 +4,7 @@ import { AsyncResult, Err } from '@backtrace-labs/sourcemap-tools';
 import commandLineArgs from 'command-line-args';
 import { Command } from './commands/Command';
 import { loadVersion } from './helpers/version';
-import { createLogger, LoggerOptions } from './logger';
+import { LoggerOptions, createLogger } from './logger';
 import { DEFAULT_OPTIONS_PATH } from './options/loadOptions';
 import { addSourcesCmd } from './sourcemaps/add-sources';
 import { processCmd } from './sourcemaps/process';
@@ -64,16 +64,16 @@ const mainCommand = new Command<GlobalOptions & MainOptions>({
         type: Boolean,
         description: 'Displays the version of backtrace-js',
     })
-    .execute(function (opts, command, stack, unknown) {
+    .execute(function ({ opts, getHelpMessage }) {
         const logger = createLogger(opts);
         if (opts.version) {
             return AsyncResult.equip(loadVersion())
                 .then((version) => logger.output(version))
                 .then(() => 0).inner;
         } else {
-            logger.info(Command.getHelpMessage(command, stack));
+            logger.info(getHelpMessage());
 
-            const unknownOption = unknown?.[0];
+            const unknownOption = opts._unknown?.[0];
             if (!unknownOption) {
                 return Err(`Unknown command.`);
             }
