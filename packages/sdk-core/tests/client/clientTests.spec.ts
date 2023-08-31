@@ -14,6 +14,21 @@ describe('Client tests', () => {
             expect(client.requestHandler.postError).toBeCalled();
         });
 
+        it(`Should not throw when sending data with unexpected payload`, async () => {
+            expect(async () => await client.send([{ foo: 'bar' }, { bar: 'baz' }] as unknown as string)).not.toThrow();
+            expect(client.requestHandler.postError).toBeCalled();
+        });
+
+        it(`Should not throw when sending an error with unexpected payload`, async () => {
+            expect(async () => {
+                const payload = [{ foo: 'bar' }, { bar: 'baz' }] as unknown as string;
+                const error = new Error('test');
+                error.message = payload;
+                await client.send(error);
+            }).not.toThrow();
+            expect(client.requestHandler.postError).toBeCalled();
+        });
+
         it(`Should not throw when sending a report`, async () => {
             expect(async () => await client.send(new BacktraceReport(new Error('test')))).not.toThrow();
             expect(client.requestHandler.postError).toBeCalled();
