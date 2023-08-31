@@ -3,7 +3,7 @@ import { BacktraceAttributeProvider } from './BacktraceAttributeProvider';
 import { ReportDataBuilder } from './ReportDataBuilder';
 
 export class AttributeManager {
-    private readonly _attributeSources: Array<Record<string, unknown> | (() => Record<string, unknown>)> = [];
+    private readonly _attributeProviders: BacktraceAttributeProvider[] = [];
 
     constructor(providers: BacktraceAttributeProvider[]) {
         for (const provider of providers) {
@@ -15,8 +15,12 @@ export class AttributeManager {
      * Adds attributes to manager cache
      * @param attributes attributes object
      */
-    public add(attributes: Record<string, unknown>) {
-        this._attributeSources.push(attributes);
+    public add(attributes: Record<string, unknown> | (() => Record<string, unknown>)) {
+        if (typeof attributes === 'function') {
+            this.addProvider({ type: 'dynamic', get: attributes });
+        } else {
+            this.addProvider({ type: 'scoped', get: () => attributes });
+        }
     }
 
     /**
@@ -24,13 +28,17 @@ export class AttributeManager {
      * @param attributeProvider
      * @returns
      */
-    public async addProvider(attributeProvider: BacktraceAttributeProvider) {
+    public addProvider(attributeProvider: BacktraceAttributeProvider) {
         if (attributeProvider.type === 'dynamic') {
-            this._attributeSources.push(() => attributeProvider.get());
+            this._attributeProviders.push(attributeProvider);
             return;
+        } else {
+            const attributes = attributeProvider.get();
+            this._attributeProviders.push({
+                type: 'scoped',
+                get: () => attributes,
+            });
         }
-        const attributes = attributeProvider.get();
-        this._attributeSources.push(attributes);
     }
 
     /**
@@ -43,10 +51,8 @@ export class AttributeManager {
             attributes: {},
         };
 
-        for (const attributeProvider of this._attributeSources) {
-            const providerResult = ReportDataBuilder.build(
-                typeof attributeProvider === 'function' ? attributeProvider() : attributeProvider,
-            );
+        for (const attributeProvider of this._attributeProviders) {
+            const providerResult = ReportDataBuilder.build(attributeProvider.get());
 
             result.attributes = {
                 ...result.attributes,

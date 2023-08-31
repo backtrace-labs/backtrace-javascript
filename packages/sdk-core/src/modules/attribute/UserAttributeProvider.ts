@@ -1,21 +1,15 @@
 import { BacktraceAttributeProvider } from './BacktraceAttributeProvider';
 
 export class UserAttributeProvider implements BacktraceAttributeProvider {
-    constructor(private readonly _source: Record<string, unknown> | (() => Record<string, unknown>)) {}
+    public readonly type: 'scoped' | 'dynamic';
+    private readonly _source: () => Record<string, unknown>;
 
-    public get type(): 'scoped' | 'dynamic' {
-        return typeof this._source === 'function' ? 'dynamic' : 'scoped';
+    constructor(source: Record<string, unknown> | (() => Record<string, unknown>)) {
+        this._source = typeof source === 'function' ? source : () => source;
+        this.type = typeof source === 'function' ? 'dynamic' : 'scoped';
     }
 
     public get(): Record<string, unknown> {
-        if (typeof this._source === 'function') {
-            try {
-                return this._source();
-            } catch {
-                return {};
-            }
-        }
-
-        return this._source;
+        return this._source();
     }
 }
