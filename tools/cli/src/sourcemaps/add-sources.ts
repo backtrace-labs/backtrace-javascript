@@ -16,10 +16,11 @@ import {
 } from '@backtrace-labs/sourcemap-tools';
 import { GlobalOptions } from '..';
 import { Command, CommandContext } from '../commands/Command';
+import { toAsset } from '../helpers/common';
 import { find } from '../helpers/find';
 import { logAsset } from '../helpers/logs';
 import { normalizePaths } from '../helpers/normalizePaths';
-import { CliLogger, createLogger } from '../logger';
+import { CliLogger } from '../logger';
 import { loadAndJoinOptions } from '../options/loadOptions';
 
 export interface AddSourcesOptions extends GlobalOptions {
@@ -71,8 +72,7 @@ export const addSourcesCmd = new Command<AddSourcesOptions>({
 /**
  * Adds sources to sourcemaps found in path(s).
  */
-export async function addSourcesToSourcemaps({ opts, getHelpMessage }: CommandContext<AddSourcesOptions>) {
-    const logger = createLogger(opts);
+export async function addSourcesToSourcemaps({ opts, logger, getHelpMessage }: CommandContext<AddSourcesOptions>) {
     const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
 
     const optsResult = await loadAndJoinOptions(opts.config)('add-sources', opts, {
@@ -163,12 +163,7 @@ export async function addSourcesToSourcemaps({ opts, getHelpMessage }: CommandCo
         )
         .then(map(addSourceCommand))
         .then(opts['dry-run'] ? Ok : map(writeSourceMapCommand))
-        .then(map(output(logger)))
-        .then(() => 0).inner;
-}
-
-function toAsset(file: string): Asset {
-    return { name: file, path: file };
+        .then(map(output(logger))).inner;
 }
 
 function doesSourceMapHaveSources(sourceProcessor: SourceProcessor) {

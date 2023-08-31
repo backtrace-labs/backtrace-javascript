@@ -1,7 +1,7 @@
 import { Err, Ok, Result } from '@backtrace-labs/sourcemap-tools';
 import commandLineArgs from 'command-line-args';
 import commandLineUsage, { Section } from 'command-line-usage';
-import { LoggerOptions, createLogger } from '../logger';
+import { CliLogger, LoggerOptions, createLogger } from '../logger';
 import { CommandError } from '../models/CommandError';
 import { ExtendedOptionDefinition } from '../models/OptionDefinition';
 
@@ -9,7 +9,7 @@ const CLI_COMMAND = 'backtrace-js';
 
 export type CommandFunction<T> = (
     context: CommandContext<T>,
-) => Result<number, string> | Promise<Result<number, string>>;
+) => Result<number | unknown, string> | Promise<Result<number | unknown, string>>;
 
 export interface CommandOptions {
     readonly _unknown?: string[];
@@ -17,6 +17,7 @@ export interface CommandOptions {
 
 export interface CommandContext<T> {
     readonly opts: Partial<T> & CommandOptions;
+    readonly logger: CliLogger;
     getHelpMessage(): string;
 }
 
@@ -92,14 +93,17 @@ export class Command<T extends object = object> {
         if (this._execute) {
             const context: CommandContext<T> = {
                 opts: values as T,
+                logger,
                 getHelpMessage: () => Command.getHelpMessage(this, stack),
             };
 
-            return (await this._execute(context)).mapErr((error) => ({
-                command: this,
-                error,
-                stack,
-            }));
+            return (await this._execute(context))
+                .map((data) => (typeof data === 'number' ? data : 0))
+                .mapErr((error) => ({
+                    command: this,
+                    error,
+                    stack,
+                }));
         }
 
         logger.info(Command.getHelpMessage(this, stack));

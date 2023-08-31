@@ -27,10 +27,11 @@ import {
 } from '@backtrace-labs/sourcemap-tools';
 import { GlobalOptions } from '..';
 import { Command, CommandContext } from '../commands/Command';
+import { toAsset } from '../helpers/common';
 import { find } from '../helpers/find';
 import { logAsset } from '../helpers/logs';
 import { normalizePaths } from '../helpers/normalizePaths';
-import { CliLogger, createLogger } from '../logger';
+import { CliLogger } from '../logger';
 import { loadAndJoinOptions } from '../options/loadOptions';
 
 export interface UploadOptions extends GlobalOptions {
@@ -115,8 +116,7 @@ export const uploadCmd = new Command<UploadOptions>({
 /**
  * Uploads sourcemaps found in path(s).
  */
-export async function uploadSourcemaps({ opts, getHelpMessage }: CommandContext<UploadOptions>) {
-    const logger = createLogger(opts);
+export async function uploadSourcemaps({ opts, logger, getHelpMessage }: CommandContext<UploadOptions>) {
     const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
 
     const optsResult = await loadAndJoinOptions(opts.config)('upload', opts, {
@@ -250,8 +250,7 @@ export async function uploadSourcemaps({ opts, getHelpMessage }: CommandContext<
         )
         .then(createArchiveCommand)
         .then((archive) => (opts['dry-run'] ? Ok(null) : saveArchiveCommand(archive)))
-        .then(output(logger))
-        .then(() => 0).inner;
+        .then(output(logger)).inner;
 }
 
 function validateUrl(url: string) {
@@ -281,10 +280,6 @@ function getUploadUrl(opts: Partial<UploadOptions>): Result<string | undefined, 
     }
 
     return Ok(undefined);
-}
-
-function toAsset(file: string): Asset {
-    return { name: file, path: file };
 }
 
 function isAssetProcessed(sourceProcessor: SourceProcessor) {

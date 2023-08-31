@@ -17,10 +17,11 @@ import {
 } from '@backtrace-labs/sourcemap-tools';
 import { GlobalOptions } from '..';
 import { Command, CommandContext } from '../commands/Command';
+import { toAsset } from '../helpers/common';
 import { find } from '../helpers/find';
 import { logAsset } from '../helpers/logs';
 import { normalizePaths } from '../helpers/normalizePaths';
-import { CliLogger, createLogger } from '../logger';
+import { CliLogger } from '../logger';
 import { loadAndJoinOptions } from '../options/loadOptions';
 
 export interface ProcessOptions extends GlobalOptions {
@@ -36,7 +37,7 @@ export const processCmd = new Command<ProcessOptions>({
 })
     .option({
         name: 'path',
-        description: 'Path to sourcemap files or directories containing sourcemaps to upload.',
+        description: 'Path to source files or directories containing sourcemaps to process.',
         defaultOption: true,
         multiple: true,
         alias: 'p',
@@ -63,8 +64,7 @@ export const processCmd = new Command<ProcessOptions>({
 /**
  * Processes source files found in path(s).
  */
-export async function processSources({ opts, getHelpMessage }: CommandContext<ProcessOptions>) {
-    const logger = createLogger(opts);
+export async function processSources({ opts, logger, getHelpMessage }: CommandContext<ProcessOptions>) {
     const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
 
     const optsResult = await loadAndJoinOptions(opts.config)('process', opts, {
@@ -141,12 +141,7 @@ export async function processSources({ opts, getHelpMessage }: CommandContext<Pr
         )
         .then(map(processCommand))
         .then(opts['dry-run'] ? Ok : map(writeCommand))
-        .then(map(output(logger)))
-        .then(() => 0).inner;
-}
-
-function toAsset(file: string): Asset {
-    return { name: file, path: file };
+        .then(map(output(logger))).inner;
 }
 
 function isAssetProcessed(sourceProcessor: SourceProcessor) {
