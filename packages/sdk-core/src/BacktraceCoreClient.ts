@@ -216,12 +216,23 @@ export abstract class BacktraceCoreClient {
         const record = this.addToDatabase(backtraceData, submissionAttachments);
 
         return this._reportSubmission.send(backtraceData, submissionAttachments).then((submissionResult) => {
-            if (!record) {
-                return;
+            if (record) {
+                record.locked = false;
+                if (submissionResult.status === 'Ok') {
+                    this._database?.remove(record);
+                }
             }
-            record.locked = false;
-            if (submissionResult.status === 'Ok') {
-                this._database?.remove(record);
+            if (report.innerError) {
+                return this.send(
+                    new BacktraceReport(
+                        report.innerError,
+                        {
+                            'parent.rx': submissionResult?.result?._rxid,
+                            ...reportAttributes,
+                        },
+                        reportAttachments,
+                    ),
+                );
             }
         });
     }

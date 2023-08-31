@@ -2,7 +2,11 @@ import { BacktraceReport, BacktraceRequestHandler } from '@backtrace-labs/sdk-co
 import fs from 'fs';
 import path from 'path';
 import { BacktraceBufferAttachment, BacktraceClient, BacktraceFileAttachment } from '../../src/';
+import { CauseExampleError } from './CauseExampleError';
 describe('Client tests', () => {
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
     const requestHandler: BacktraceRequestHandler = {
         post: jest.fn().mockResolvedValue(Promise.resolve()),
         postError: jest.fn().mockResolvedValue(Promise.resolve()),
@@ -41,6 +45,18 @@ describe('Client tests', () => {
         it(`Should not throw when sending a report`, async () => {
             expect(async () => await client.send(new BacktraceReport(new Error('test')))).not.toThrow();
             expect(requestHandler.postError).toBeCalled();
+        });
+
+        it('Should send inner error after sending a report', async () => {
+            const error = new CauseExampleError('cause-test', new Error('cause'));
+            await client.send(error);
+            expect(requestHandler.postError).toBeCalledTimes(2);
+        });
+
+        it('Should not send inner error if the inner error is an object', async () => {
+            const error = new CauseExampleError('cause-test', { data: 'foo' });
+            await client.send(error);
+            expect(requestHandler.postError).toBeCalledTimes(1);
         });
     });
 

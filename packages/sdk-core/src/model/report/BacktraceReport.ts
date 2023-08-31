@@ -27,7 +27,7 @@ export class BacktraceReport {
     /**
      * Report inner errors
      */
-    public readonly innerReport: unknown[] = [];
+    public readonly innerError?: Error;
 
     /**
      * Report timestamp in ms
@@ -84,8 +84,9 @@ export class BacktraceReport {
             };
 
             // Supported in ES2022
-            if ((data as { cause?: unknown }).cause) {
-                this.innerReport.push((data as { cause?: unknown }).cause);
+            const cause = (data as { cause?: unknown }).cause;
+            if (cause instanceof Error) {
+                this.innerError = cause;
             }
         } else {
             this.message = this.generateErrorMessage(data);
