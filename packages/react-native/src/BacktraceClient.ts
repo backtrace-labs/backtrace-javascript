@@ -23,7 +23,7 @@ export class BacktraceClient extends BacktraceCoreClient {
         super({
             options,
             sdkOptions: {
-                agent: '@backtrace/react',
+                agent: '@backtrace/react-native',
                 agentVersion: '1.0.0',
                 langName: 'react-native',
                 langVersion: 'unknown',
@@ -37,6 +37,7 @@ export class BacktraceClient extends BacktraceCoreClient {
             stackTraceConverter: new ReactStackTraceConverter(new V8StackTraceConverter()),
             sessionProvider: new SingleSessionProvider(),
         });
+        this.captureUnhandledErrors(options.captureUnhandledErrors, options.captureUnhandledPromiseRejections);
     }
 
     public static builder(options: BacktraceConfiguration): BacktraceClientBuilder {
@@ -65,5 +66,20 @@ export class BacktraceClient extends BacktraceCoreClient {
      */
     public static get instance(): BacktraceClient | undefined {
         return this._instance;
+    }
+
+    private captureUnhandledErrors(captureUnhandledExceptions = true, captureUnhandledRejections = true) {
+        if (!captureUnhandledExceptions && !captureUnhandledRejections) {
+            return;
+        }
+        const globalErrorHandler = ErrorUtils.getGlobalHandler();
+        ErrorUtils.setGlobalHandler((error: Error, fatal?: boolean) => {
+            this.send(error, {
+                'error.type': 'Unhandled exception',
+                fatal,
+            }).then(() => {
+                globalErrorHandler(error, fatal);
+            });
+        });
     }
 }

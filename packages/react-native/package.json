@@ -95,6 +95,7 @@
     },
     "dependencies": {
         "@backtrace-labs/react": "^0.0.3",
-        "@backtrace-labs/sdk-core": "^0.0.3"
+        "@backtrace-labs/sdk-core": "^0.0.3",
+        "react-native-device-info": "^10.9.0"
     }
 }

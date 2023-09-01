@@ -13,9 +13,6 @@ const common = {
         react: true,
     },
     plugins: [agentDefinitionPlugin(path.join(__dirname, 'package.json'))],
-    externals: {
-        react: true
-    }
 };
 
 /** @type {Array<import('webpack').Configuration>} */
