@@ -85,13 +85,12 @@ export const runCmd = new Command<RunOptions>({
             return Err('cannot read config file');
         }
 
+        const runProcess = shouldRunCommand(opts, config, 'process');
         const runAddSources = shouldRunCommand(opts, config, 'add-sources');
         const runUpload = shouldRunCommand(opts, config, 'upload');
-        const runProcess = shouldRunCommand(opts, config, 'process');
         if (!runAddSources && !runUpload && !runProcess) {
             logger.info(getHelpMessage());
-
-            return Err('--add-sources, --upload and/or --process must be specified');
+            return Err('--process, --add-sources and/or --upload must be specified');
         }
 
         const searchPaths = normalizePaths(opts.path, process.cwd());
@@ -114,37 +113,43 @@ export const runCmd = new Command<RunOptions>({
                 .then<AssetWithSourceMapPath>((sourceMapPath) => ({ ...asset, sourceMapPath }))
                 .then(logDebugAsset('read sourcemap path')).inner;
 
-        const addSourcesCommand = (assets: AssetWithSourceMapPath[]) =>
-            AsyncResult.equip(
-                addSourcesToSourcemaps({
-                    opts: { ...opts, 'pass-with-no-files': true, path: assets.map((a) => a.sourceMapPath) },
-                    getHelpMessage,
-                    logger: logger.clone({ prefix: 'add-sources:' }),
-                }),
-            )
-                .then(logInfo((results) => `added sources to ${results.length} files`))
-                .then(() => assets).inner;
-
         const processCommand = (assets: AssetWithSourceMapPath[]) =>
-            AsyncResult.equip(
-                processSources({
-                    opts: { ...opts, 'pass-with-no-files': true, path: assets.map((a) => a.path) },
-                    getHelpMessage,
-                    logger: logger.clone({ prefix: 'process:' }),
-                }),
-            )
+            AsyncResult.fromValue<AssetWithSourceMapPath[], string>(assets)
+                .then(logDebug(`running process...`))
+                .then((assets) =>
+                    processSources({
+                        opts: { ...opts, 'pass-with-no-files': true, path: assets.map((a) => a.path) },
+                        getHelpMessage,
+                        logger: logger.clone({ prefix: 'process:' }),
+                    }),
+                )
                 .then(logInfo((results) => `processed ${results.length} files`))
                 .then(() => assets).inner;
 
+        const addSourcesCommand = (assets: AssetWithSourceMapPath[]) =>
+            AsyncResult.fromValue<AssetWithSourceMapPath[], string>(assets)
+                .then(logDebug(`running add-sources...`))
+                .then((assets) =>
+                    addSourcesToSourcemaps({
+                        opts: { ...opts, 'pass-with-no-files': true, path: assets.map((a) => a.sourceMapPath) },
+                        getHelpMessage,
+                        logger: logger.clone({ prefix: 'add-sources:' }),
+                    }),
+                )
+                .then(logInfo((results) => `added sources to ${results.length} files`))
+                .then(() => assets).inner;
+
         const uploadCommand = (assets: AssetWithSourceMapPath[]) =>
-            AsyncResult.equip(
-                uploadSourcemaps({
-                    opts: { ...opts, 'pass-with-no-files': true, path: assets.map((a) => a.sourceMapPath) },
-                    getHelpMessage,
-                    logger: logger.clone({ prefix: 'upload:' }),
-                }),
-            )
-                .then(logInfo((result) => `upload result: ${result?.rxid ?? '<dry-run>'}`))
+            AsyncResult.fromValue<AssetWithSourceMapPath[], string>(assets)
+                .then(logDebug(`running upload...`))
+                .then((assets) =>
+                    uploadSourcemaps({
+                        opts: { ...opts, path: assets.map((a) => a.sourceMapPath) },
+                        getHelpMessage,
+                        logger: logger.clone({ prefix: 'upload:' }),
+                    }),
+                )
+                .then(logInfo((result) => `uploaded ${result.assets.length} files: ${result.rxid}`))
                 .then(() => assets).inner;
 
         return AsyncResult.equip(find(...searchPaths))
@@ -154,11 +159,11 @@ export const runCmd = new Command<RunOptions>({
             .then(map((t) => t.path))
             .then(logDebug((r) => `found ${r.length} source files`))
             .then(map(logTrace((path) => `found source file: ${path}`)))
-            .then(opts['pass-with-no-files'] ? Ok : failIfEmpty('no sourcemaps found'))
+            .then(opts['pass-with-no-files'] ? Ok : failIfEmpty('no source files found'))
             .then(map(toAsset))
             .then(map(getSourceMapPathCommand))
-            .then(runAddSources ? addSourcesCommand : Ok)
             .then(runProcess ? processCommand : Ok)
+            .then(runAddSources ? addSourcesCommand : Ok)
             .then(runUpload ? uploadCommand : Ok).inner;
     });
 

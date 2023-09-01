@@ -25,8 +25,8 @@ const mainCommand = new Command<GlobalOptions & MainOptions>({
 })
     .subcommand(runCmd)
     .subcommand(processCmd)
-    .subcommand(uploadCmd)
     .subcommand(addSourcesCmd)
+    .subcommand(uploadCmd)
     .option({
         name: 'help',
         type: Boolean,

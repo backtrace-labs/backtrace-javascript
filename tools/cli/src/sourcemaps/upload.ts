@@ -47,6 +47,10 @@ export interface UploadOptions extends GlobalOptions {
     readonly output: string;
 }
 
+export interface UploadResultWithAssets extends UploadResult {
+    readonly assets: Asset[];
+}
+
 export const uploadCmd = new Command<UploadOptions>({
     name: 'upload',
     description: 'Uploading of sourcemaps to Backtrace',
@@ -199,7 +203,7 @@ export async function uploadSourcemaps({ opts, logger, getHelpMessage }: Command
                     .then(pipeStream(archive))
                     .then(() => finalizeArchive({ assets, archive })).inner;
             })
-            .then<UploadResult>(() => ({ rxid: outputPath }))
+            .then<UploadResultWithAssets>(() => ({ rxid: outputPath, assets: archive.assets }))
             .then(logDebug(`saved archive to ${outputPath}`)).inner;
 
     const uploadArchiveCommand = (uploadUrl: string) => (archive: ArchiveWithSourceMapsAndDebugIds) =>
@@ -218,6 +222,7 @@ export async function uploadSourcemaps({ opts, logger, getHelpMessage }: Command
                 // Finally, we return the upload request promise
                 return promise;
             })
+            .then<UploadResultWithAssets>((result) => ({ ...result, assets: archive.assets }))
             .then(logDebug(`archive uploaded to ${uploadUrl}`)).inner;
 
     const saveArchiveCommand = outputPath
@@ -249,7 +254,11 @@ export async function uploadSourcemaps({ opts, logger, getHelpMessage }: Command
                 : failIfEmpty('no processed sourcemaps found, make sure to run process first'),
         )
         .then(createArchiveCommand)
-        .then((archive) => (opts['dry-run'] ? Ok(null) : saveArchiveCommand(archive))).inner;
+        .then((archive) =>
+            opts['dry-run']
+                ? Ok<UploadResultWithAssets>({ rxid: '<dry-run>', assets: archive.assets })
+                : saveArchiveCommand(archive),
+        ).inner;
 }
 
 function validateUrl(url: string) {
@@ -290,8 +299,8 @@ function isAssetProcessed(sourceProcessor: SourceProcessor) {
 }
 
 function output(logger: CliLogger) {
-    return function output(result: UploadResult | null) {
-        logger.output(result?.rxid ?? '<dry run>');
+    return function output(result: UploadResult) {
+        logger.output(result.rxid);
         return result;
     };
 }
