@@ -17,6 +17,7 @@ import { toAsset } from '../helpers/common';
 import { find } from '../helpers/find';
 import { logAsset } from '../helpers/logs';
 import { normalizePaths } from '../helpers/normalizePaths';
+import { CliLogger } from '../logger';
 import { loadOptions } from '../options/loadOptions';
 import { CliOptions, CommandCliOptions } from '../options/models/CliOptions';
 import { addSourcesToSourcemaps } from './add-sources';
@@ -58,6 +59,7 @@ export const runCmd = new Command<RunOptions>({
     .option({
         name: 'path',
         type: String,
+        defaultOption: true,
         description: 'Path to sources.',
         multiple: true,
         alias: 'p',
@@ -102,7 +104,6 @@ export const runCmd = new Command<RunOptions>({
         const logInfo = log(logger, 'info');
         const logDebug = log(logger, 'debug');
         const logTrace = log(logger, 'trace');
-        const logDebugAsset = logAsset(logger, 'debug');
         const logTraceAsset = logAsset(logger, 'trace');
         const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
 
@@ -111,17 +112,19 @@ export const runCmd = new Command<RunOptions>({
                 .then(logTraceAsset('reading sourcemap path'))
                 .then(getSourceMapPath(sourceProcessor))
                 .then<AssetWithSourceMapPath>((sourceMapPath) => ({ ...asset, sourceMapPath }))
-                .then(logDebugAsset('read sourcemap path')).inner;
+                .then(logTraceAsset('read sourcemap path')).inner;
 
         const processCommand = (assets: AssetWithSourceMapPath[]) =>
             AsyncResult.fromValue<AssetWithSourceMapPath[], string>(assets)
                 .then(logDebug(`running process...`))
                 .then((assets) =>
-                    processSources({
-                        opts: { ...opts, 'pass-with-no-files': true, path: assets.map((a) => a.path) },
-                        getHelpMessage,
-                        logger: logger.clone({ prefix: 'process:' }),
-                    }),
+                    assets.length
+                        ? processSources({
+                              opts: { ...opts, 'pass-with-no-files': true, path: assets.map((a) => a.path) },
+                              getHelpMessage,
+                              logger: logger.clone({ prefix: 'process:' }),
+                          })
+                        : Ok([]),
                 )
                 .then(logInfo((results) => `processed ${results.length} files`))
                 .then(() => assets).inner;
@@ -130,11 +133,13 @@ export const runCmd = new Command<RunOptions>({
             AsyncResult.fromValue<AssetWithSourceMapPath[], string>(assets)
                 .then(logDebug(`running add-sources...`))
                 .then((assets) =>
-                    addSourcesToSourcemaps({
-                        opts: { ...opts, 'pass-with-no-files': true, path: assets.map((a) => a.sourceMapPath) },
-                        getHelpMessage,
-                        logger: logger.clone({ prefix: 'add-sources:' }),
-                    }),
+                    assets.length
+                        ? addSourcesToSourcemaps({
+                              opts: { ...opts, 'pass-with-no-files': true, path: assets.map((a) => a.sourceMapPath) },
+                              getHelpMessage,
+                              logger: logger.clone({ prefix: 'add-sources:' }),
+                          })
+                        : Ok([]),
                 )
                 .then(logInfo((results) => `added sources to ${results.length} files`))
                 .then(() => assets).inner;
@@ -143,17 +148,23 @@ export const runCmd = new Command<RunOptions>({
             AsyncResult.fromValue<AssetWithSourceMapPath[], string>(assets)
                 .then(logDebug(`running upload...`))
                 .then((assets) =>
-                    uploadSourcemaps({
-                        opts: { ...opts, path: assets.map((a) => a.sourceMapPath) },
-                        getHelpMessage,
-                        logger: logger.clone({ prefix: 'upload:' }),
-                    }),
+                    assets.length
+                        ? uploadSourcemaps({
+                              opts: { ...opts, path: assets.map((a) => a.sourceMapPath) },
+                              getHelpMessage,
+                              logger: logger.clone({ prefix: 'upload:' }),
+                          })
+                        : Ok(null),
                 )
-                .then(logInfo((result) => `uploaded ${result.assets.length} files: ${result.rxid}`))
+                .then(
+                    logInfo((result) =>
+                        result ? `uploaded ${result.assets.length} files: ${result.rxid}` : `no files uploaded`,
+                    ),
+                )
                 .then(() => assets).inner;
 
         return AsyncResult.equip(find(...searchPaths))
-            .then(logDebug((r) => `found ${r.length} files`))
+            .then(logTrace((r) => `found ${r.length} files`))
             .then(map(logTrace((result) => `found file: ${result.path}`)))
             .then(filter((t) => t.direct || matchSourceExtension(t.path)))
             .then(map((t) => t.path))
@@ -162,6 +173,7 @@ export const runCmd = new Command<RunOptions>({
             .then(opts['pass-with-no-files'] ? Ok : failIfEmpty('no source files found'))
             .then(map(toAsset))
             .then(map(getSourceMapPathCommand))
+            .then(map(printAssetInfo(logger)))
             .then(runProcess ? processCommand : Ok)
             .then(runAddSources ? addSourcesCommand : Ok)
             .then(runUpload ? uploadCommand : Ok).inner;
@@ -170,6 +182,14 @@ export const runCmd = new Command<RunOptions>({
 function getSourceMapPath(sourceProcessor: SourceProcessor) {
     return function getSourceMapPath(asset: Asset) {
         return sourceProcessor.getSourceMapPathFromSourceFile(asset.path);
+    };
+}
+
+function printAssetInfo(logger: CliLogger) {
+    return function printAssetInfo(asset: AssetWithSourceMapPath) {
+        logger.debug(`${asset.path}`);
+        logger.debug(`└── ${asset.sourceMapPath}`);
+        return asset;
     };
 }
 
