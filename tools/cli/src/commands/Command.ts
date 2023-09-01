@@ -1,7 +1,7 @@
 import { Err, Ok, Result } from '@backtrace-labs/sourcemap-tools';
 import commandLineArgs from 'command-line-args';
 import commandLineUsage, { Section } from 'command-line-usage';
-import { CliLogger, LoggerOptions, createLogger } from '../logger';
+import { CliLogger, CreateLoggerOptions, createLogger } from '../logger';
 import { CommandError } from '../models/CommandError';
 import { ExtendedOptionDefinition } from '../models/OptionDefinition';
 
@@ -83,7 +83,7 @@ export class Command<T extends object = object> {
             }
         }
 
-        const logger = createLogger(values as LoggerOptions);
+        const logger = createLogger(values as CreateLoggerOptions);
 
         if (values.help) {
             logger.output(Command.getHelpMessage(this, stack));

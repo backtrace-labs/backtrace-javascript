@@ -4,13 +4,13 @@ import { AsyncResult, Err } from '@backtrace-labs/sourcemap-tools';
 import commandLineArgs from 'command-line-args';
 import { Command } from './commands/Command';
 import { loadVersion } from './helpers/version';
-import { LoggerOptions, createLogger } from './logger';
+import { CreateLoggerOptions, createLogger } from './logger';
 import { DEFAULT_OPTIONS_PATH } from './options/loadOptions';
 import { addSourcesCmd } from './sourcemaps/add-sources';
 import { processCmd } from './sourcemaps/process';
 import { uploadCmd } from './sourcemaps/upload';
 
-export interface GlobalOptions extends LoggerOptions {
+export interface GlobalOptions extends CreateLoggerOptions {
     readonly help: boolean;
     readonly config: string;
 }
@@ -91,7 +91,7 @@ const mainCommand = new Command<GlobalOptions & MainOptions>({
     if (result.isOk()) {
         process.exit(result.data);
     } else {
-        const loggerOptions = commandLineArgs(mainCommand.options, { partial: true }) as Partial<LoggerOptions>;
+        const loggerOptions = commandLineArgs(mainCommand.options, { partial: true }) as Partial<CreateLoggerOptions>;
         const logger = createLogger(loggerOptions);
         logger.error(result.data.error);
         process.exit(1);
