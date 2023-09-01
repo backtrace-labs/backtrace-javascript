@@ -42,14 +42,14 @@ export const runCmd = new Command<RunOptions>({
     description: 'Runs all of the source commands in one go.',
 })
     .option({
-        name: 'add-sources',
-        type: Boolean,
-        description: 'Adds sources to found sourcemaps.',
-    })
-    .option({
         name: 'process',
         type: Boolean,
         description: 'Processes found sources.',
+    })
+    .option({
+        name: 'add-sources',
+        type: Boolean,
+        description: 'Adds sources to found sourcemaps.',
     })
     .option({
         name: 'upload',
