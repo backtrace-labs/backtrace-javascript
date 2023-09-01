@@ -52,7 +52,7 @@ describe('Summed events tests', () => {
         const expectedJson = {
             application: APPLICATION,
             appversion: APPLICATION_VERSION,
-            summed_events: [new SummedEvent('Application Launches', attributeManager.attributes)],
+            summed_events: [new SummedEvent('Application Launches', attributeManager.get().attributes)],
             metadata: {
                 dropped_events: 0,
             },
@@ -90,7 +90,7 @@ describe('Summed events tests', () => {
         const expectedJson = {
             application: APPLICATION,
             appversion: APPLICATION_VERSION,
-            summed_events: [new SummedEvent('Application Launches', attributeManager.attributes)],
+            summed_events: [new SummedEvent('Application Launches', attributeManager.get().attributes)],
             metadata: {
                 dropped_events: 0,
             },
@@ -126,7 +126,7 @@ describe('Summed events tests', () => {
         const expectedJson = {
             application: APPLICATION,
             appversion: APPLICATION_VERSION,
-            summed_events: [new SummedEvent('Application Launches', attributeManager.attributes)],
+            summed_events: [new SummedEvent('Application Launches', attributeManager.get().attributes)],
             metadata: {
                 dropped_events: 0,
             },
@@ -134,7 +134,7 @@ describe('Summed events tests', () => {
 
         metrics.start();
 
-        expect(attributeManager.attributes).toMatchObject(customAttributes);
+        expect(attributeManager.get().attributes).toMatchObject(customAttributes);
         expect(testHttpClient.post).toBeCalledWith(expect.anything(), JSON.stringify(expectedJson));
     });
 

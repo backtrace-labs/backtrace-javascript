@@ -111,7 +111,7 @@ export interface BacktraceConfiguration {
      * Attributes are additional metadata that can be attached to error and crash reports. You can use attributes to filter,
      * aggregate, analyze, and debug errors in the Backtrace console.
      */
-    userAttributes?: Record<string, unknown>;
+    userAttributes?: Record<string, unknown> | (() => Record<string, unknown>);
     /**
      * Attachments are additional files/data that can be send with error to Backtrace.
      */

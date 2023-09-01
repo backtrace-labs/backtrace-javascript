@@ -7,6 +7,7 @@ import {
     BacktraceStackTraceConverter,
     BreadcrumbsEventSubscriber,
     DebugIdContainer,
+    SdkOptions,
     VariableDebugIdMapProvider,
 } from '@backtrace-labs/sdk-core';
 import { AGENT } from './agentDefinition';
@@ -25,10 +26,11 @@ export class BacktraceClient extends BacktraceCoreClient {
         stackTraceConverter: BacktraceStackTraceConverter,
         breadcrumbsEventSubscriber: BreadcrumbsEventSubscriber[],
         sessionProvider: BacktraceSessionProvider = new BacktraceBrowserSessionProvider(),
+        sdkOptions: SdkOptions = AGENT,
     ) {
         super({
             options,
-            sdkOptions: AGENT,
+            sdkOptions,
             requestHandler,
             attributeProviders,
             stackTraceConverter,

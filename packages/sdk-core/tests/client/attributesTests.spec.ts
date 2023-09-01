@@ -74,9 +74,10 @@ describe('Attributes tests', () => {
             ]);
 
             expect(scopedAttributeGetFunction).not.toBeCalled();
-            expect(fakeClient.attributes[providerAttributeKey]).toBeUndefined();
+            // This causes a call to scopedAttributeGetFunction
+            expect(fakeClient.attributes[providerAttributeKey]).toEqual(providerAttributeValue);
             await fakeClient.send('foo');
-            expect(scopedAttributeGetFunction).toHaveBeenCalledTimes(1);
+            expect(scopedAttributeGetFunction).toHaveBeenCalledTimes(2);
         });
     });
 });

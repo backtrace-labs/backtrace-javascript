@@ -4,8 +4,8 @@ import { AttributeType } from '../../src/model/data/BacktraceData';
 import { AttributeManager } from '../../src/modules/attribute/AttributeManager';
 import { MetricsBuilder } from '../../src/modules/metrics/MetricsBuilder';
 import { MetricsUrlInformation } from '../../src/modules/metrics/MetricsUrlInformation';
-import { UniqueEvent } from '../../src/modules/metrics/model/UniqueEvent';
 import { SingleSessionProvider } from '../../src/modules/metrics/SingleSessionProvider';
+import { UniqueEvent } from '../../src/modules/metrics/model/UniqueEvent';
 import { APPLICATION, APPLICATION_VERSION, TEST_SUBMISSION_URL } from '../mocks/BacktraceTestClient';
 import { testHttpClient } from '../mocks/testHttpClient';
 import { mockSubmissionQueue } from './mocks/mockSubmissionQueue';
@@ -53,7 +53,7 @@ describe('Unique events tests', () => {
         const expectedJson = {
             application: APPLICATION,
             appversion: APPLICATION_VERSION,
-            unique_events: [new UniqueEvent(attributeManager.attributes)],
+            unique_events: [new UniqueEvent(attributeManager.get().attributes)],
             metadata: {
                 dropped_events: 0,
             },
@@ -158,7 +158,7 @@ describe('Unique events tests', () => {
         const expectedJson = {
             application: APPLICATION,
             appversion: APPLICATION_VERSION,
-            unique_events: [new UniqueEvent(attributeManager.attributes)],
+            unique_events: [new UniqueEvent(attributeManager.get().attributes)],
             metadata: {
                 dropped_events: 0,
             },
@@ -166,7 +166,7 @@ describe('Unique events tests', () => {
 
         metrics.start();
 
-        expect(attributeManager.attributes).toMatchObject(customAttributes);
+        expect(attributeManager.get().attributes).toMatchObject(customAttributes);
         expect(testHttpClient.post).toBeCalledWith(uniqueEventsSubmissionUrl, JSON.stringify(expectedJson));
     });
 });

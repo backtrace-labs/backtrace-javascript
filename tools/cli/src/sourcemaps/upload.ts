@@ -1,30 +1,30 @@
 import {
-    archiveSourceMaps,
+    ArchiveWithSourceMapsAndDebugIds,
     Asset,
     AssetWithContent,
     AsyncResult,
+    createArchive,
+    createWriteStream,
     DebugIdGenerator,
     Err,
     failIfEmpty,
     filter,
+    finalizeArchive,
     loadSourceMap,
     log,
     map,
     matchSourceMapExtension,
     Ok,
     pass,
+    pipeStream,
     RawSourceMap,
     Result,
-    ResultPromise,
     SourceProcessor,
     stripSourcesContent,
     SymbolUploader,
     uploadArchive,
     UploadResult,
-    writeStream,
-    ZipArchive,
 } from '@backtrace-labs/sourcemap-tools';
-import { Readable } from 'stream';
 import { GlobalOptions } from '..';
 import { Command } from '../commands/Command';
 import { find } from '../helpers/find';
@@ -183,20 +183,39 @@ export const uploadCmd = new Command<UploadOptions>({
         const createArchiveCommand = (assets: AssetWithContent<RawSourceMap>[]) =>
             AsyncResult.fromValue<AssetWithContent<RawSourceMap>[], string>(assets)
                 .then(logTrace('creating archive'))
-                .then(archiveSourceMaps(sourceProcessor))
+                .then(createArchive(sourceProcessor))
                 .then(logDebug('archive created')).inner;
 
         const saveArchiveCommand = outputPath
-            ? (archive: ZipArchive) =>
-                  AsyncResult.fromValue<ZipArchive, string>(archive)
+            ? (archive: ArchiveWithSourceMapsAndDebugIds) =>
+                  AsyncResult.fromValue<ArchiveWithSourceMapsAndDebugIds, string>(archive)
                       .then(logTrace(`saving archive to ${outputPath}`))
-                      .then(saveArchive(outputPath))
+                      .then(({ assets, archive }) => {
+                          return AsyncResult.equip(createWriteStream(outputPath))
+                              .then(pipeStream(archive))
+                              .then(() => finalizeArchive({ assets, archive })).inner;
+                      })
+                      .then<UploadResult>(() => ({ rxid: outputPath }))
                       .then(logDebug(`saved archive to ${outputPath}`)).inner
             : uploadUrl
-            ? (archive: ZipArchive) =>
-                  AsyncResult.fromValue<ZipArchive, string>(archive)
+            ? (archive: ArchiveWithSourceMapsAndDebugIds) =>
+                  AsyncResult.fromValue<ArchiveWithSourceMapsAndDebugIds, string>(archive)
                       .then(logTrace(`uploading archive to ${uploadUrl}`))
-                      .then(uploadArchive(new SymbolUploader(uploadUrl, { ignoreSsl: opts.insecure ?? false })))
+                      .then(async ({ assets, archive }) => {
+                          const uploader = uploadArchive(
+                              new SymbolUploader(uploadUrl, { ignoreSsl: opts.insecure ?? false }),
+                          );
+
+                          // We first create the upload request, which pipes the archive to itself
+                          const promise = uploader(archive);
+
+                          // Next we finalize the archive, which causes the assets to be written to the archive,
+                          // and consequently to the request
+                          await finalizeArchive({ assets, archive });
+
+                          // Finally, we return the upload request promise
+                          return promise;
+                      })
                       .then(logDebug(`archive uploaded to ${uploadUrl}`)).inner
             : undefined;
 
@@ -206,10 +225,11 @@ export const uploadCmd = new Command<UploadOptions>({
 
         return AsyncResult.equip(find(...searchPaths))
             .then(logDebug((r) => `found ${r.length} files`))
-            .then(map(logTrace((path) => `found file: ${path}`)))
-            .then(filter(matchSourceMapExtension))
-            .then(logDebug((r) => `found ${r.length} files matching sourcemap extension`))
-            .then(map(logTrace((path) => `file matching extension: ${path}`)))
+            .then(map(logTrace((result) => `found file: ${result.path}`)))
+            .then(filter((t) => t.direct || matchSourceMapExtension(t.path)))
+            .then(map((t) => t.path))
+            .then(logDebug((r) => `found ${r.length} files for upload`))
+            .then(map(logTrace((path) => `file for upload: ${path}`)))
             .then(opts['pass-with-no-files'] ? Ok : failIfEmpty('no sourcemaps found'))
             .then(map(toAsset))
             .then(opts.force ? Ok : filterProcessedAssetsCommand)
@@ -265,12 +285,6 @@ function isAssetProcessed(sourceProcessor: SourceProcessor) {
         return AsyncResult.equip(sourceProcessor.isSourceMapFileProcessed(asset.path)).then(
             (result) => ({ asset, result } as const),
         ).inner;
-    };
-}
-
-function saveArchive(filePath: string) {
-    return async function saveArchive(stream: Readable): ResultPromise<UploadResult, string> {
-        return AsyncResult.equip(writeStream([stream, filePath])).then(([, rxid]) => ({ rxid })).inner;
     };
 }
 

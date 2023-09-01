@@ -34,7 +34,7 @@ export class SymbolUploader {
      * Uploads the symbol to Backtrace.
      * @param content Symbol stream.
      */
-    public async uploadSymbol(readable: Readable): ResultPromise<UploadResult, string> {
+    public async uploadSymbol(readable: Pick<Readable, 'pipe'>): ResultPromise<UploadResult, string> {
         const protocol = this._url.protocol === 'https:' ? https : http;
 
         return new Promise<Result<UploadResult, string>>((resolve, reject) => {
