@@ -1,5 +1,6 @@
 import {
     Asset,
+    AssetWithContent,
     AsyncResult,
     DebugIdGenerator,
     Err,
@@ -9,15 +10,14 @@ import {
     map,
     matchSourceMapExtension,
     Ok,
-    parseJSON,
-    readFile,
+    RawSourceMap,
     SourceProcessor,
     writeFile,
 } from '@backtrace-labs/sourcemap-tools';
 import path from 'path';
 import { GlobalOptions } from '..';
 import { Command, CommandContext } from '../commands/Command';
-import { toAsset } from '../helpers/common';
+import { loadSourceMapFromPathOrFromSource, toAsset } from '../helpers/common';
 import { find } from '../helpers/find';
 import { logAsset } from '../helpers/logs';
 import { normalizePaths, relativePaths } from '../helpers/normalizePaths';
@@ -30,14 +30,6 @@ export interface AddSourcesOptions extends GlobalOptions {
     readonly force: boolean;
     readonly skipFailing: boolean;
     readonly 'pass-with-no-files': boolean;
-}
-
-interface AssetWithContent extends Asset {
-    readonly content: string;
-}
-
-interface AssetWithSourceMap extends Asset {
-    readonly sourceMap: object;
 }
 
 export const addSourcesCmd = new Command<AddSourcesOptions>({
@@ -103,20 +95,14 @@ export async function addSourcesToSourcemaps({ opts, logger, getHelpMessage }: C
     const logDebugAsset = logAsset(logger, 'debug');
     const logTraceAsset = logAsset(logger, 'trace');
 
-    const readAssetCommand = (asset: Asset) =>
+    const loadSourceMapCommand = (asset: Asset) =>
         AsyncResult.fromValue<Asset, string>(asset)
-            .then((asset) => readFile(asset.path))
-            .then<AssetWithContent>((content) => ({ ...asset, content }))
-            .thenErr((error) => `${asset.name}: ${error}`).inner;
+            .then(logTraceAsset('loading sourcemap'))
+            .then(loadSourceMapFromPathOrFromSource(sourceProcessor))
+            .then(logDebugAsset('loaded sourcemap')).inner;
 
-    const loadAssetCommand = (asset: AssetWithContent) =>
-        AsyncResult.fromValue<AssetWithContent, string>(asset)
-            .then(({ content }) => parseJSON<object>(content))
-            .then<AssetWithSourceMap>((sourceMap) => ({ ...asset, sourceMap }))
-            .thenErr((error) => `${asset.name}: ${error}`).inner;
-
-    const doesSourceMapHaveSourcesCommand = (asset: AssetWithSourceMap) =>
-        AsyncResult.fromValue<AssetWithSourceMap, string>(asset)
+    const doesSourceMapHaveSourcesCommand = (asset: AssetWithContent<RawSourceMap>) =>
+        AsyncResult.fromValue<AssetWithContent<RawSourceMap>, string>(asset)
             .then(logTraceAsset('checking if sourcemap has sources'))
             .then(doesSourceMapHaveSources(sourceProcessor))
             .then(
@@ -127,21 +113,21 @@ export async function addSourcesToSourcemaps({ opts, logger, getHelpMessage }: C
             )
             .thenErr((error) => `${asset.name}: ${error}`).inner;
 
-    const filterAssetsCommand = (assets: AssetWithSourceMap[]) =>
-        AsyncResult.fromValue<AssetWithSourceMap[], string>(assets)
+    const filterAssetsCommand = (assets: AssetWithContent<RawSourceMap>[]) =>
+        AsyncResult.fromValue<AssetWithContent<RawSourceMap>[], string>(assets)
             .then(map(doesSourceMapHaveSourcesCommand))
             .then(filter((f) => !f.result))
             .then(map((f) => f.asset)).inner;
 
-    const addSourceCommand = (asset: AssetWithSourceMap) =>
-        AsyncResult.fromValue<AssetWithSourceMap, string>(asset)
+    const addSourceCommand = (asset: AssetWithContent<RawSourceMap>) =>
+        AsyncResult.fromValue<AssetWithContent<RawSourceMap>, string>(asset)
             .then(logTraceAsset('adding source'))
             .then(addSource(sourceProcessor))
             .then(logDebugAsset('source added'))
             .thenErr((error) => `${asset.name}: ${error}`).inner;
 
-    const writeSourceMapCommand = (asset: AssetWithSourceMap) =>
-        AsyncResult.fromValue<AssetWithSourceMap, string>(asset)
+    const writeSourceMapCommand = (asset: AssetWithContent<RawSourceMap>) =>
+        AsyncResult.fromValue<AssetWithContent<RawSourceMap>, string>(asset)
             .then(logTraceAsset('writing sourcemap'))
             .then(writeSourceMap)
             .then(logDebugAsset('sourcemap written'))
@@ -156,8 +142,7 @@ export async function addSourcesToSourcemaps({ opts, logger, getHelpMessage }: C
         .then(map(logTrace((path) => `file to add sources to: ${path}`)))
         .then(opts['pass-with-no-files'] ? Ok : failIfEmpty('no sourcemaps found'))
         .then(map(toAsset))
-        .then(map(readAssetCommand))
-        .then(map(loadAssetCommand))
+        .then(map(loadSourceMapCommand))
         .then(opts.force ? Ok : filterAssetsCommand)
         .then(logDebug((r) => `adding sources to ${r.length} files`))
         .then(map(logTrace(({ path }) => `file to add sources to: ${path}`)))
@@ -171,29 +156,29 @@ export async function addSourcesToSourcemaps({ opts, logger, getHelpMessage }: C
 }
 
 function doesSourceMapHaveSources(sourceProcessor: SourceProcessor) {
-    return function doesSourceMapHaveSources(asset: AssetWithSourceMap) {
+    return function doesSourceMapHaveSources(asset: AssetWithContent<RawSourceMap>) {
         return {
             asset,
-            result: sourceProcessor.doesSourceMapHaveSources(asset.sourceMap as never),
+            result: sourceProcessor.doesSourceMapHaveSources(asset.content),
         };
     };
 }
 
 function addSource(sourceProcessor: SourceProcessor) {
-    return function addSource(asset: AssetWithSourceMap) {
-        return AsyncResult.equip(
-            sourceProcessor.addSourcesToSourceMap(asset.sourceMap as never, asset.path),
-        ).then<AssetWithSourceMap>((newSourceMap) => ({ ...asset, sourceMap: newSourceMap })).inner;
+    return function addSource(asset: AssetWithContent<RawSourceMap>) {
+        return AsyncResult.equip(sourceProcessor.addSourcesToSourceMap(asset.content, asset.path)).then<
+            AssetWithContent<RawSourceMap>
+        >((newSourceMap) => ({ ...asset, sourceMap: newSourceMap })).inner;
     };
 }
 
-function writeSourceMap(asset: AssetWithSourceMap) {
-    const { sourceMap, path } = asset;
-    return AsyncResult.equip(writeFile([JSON.stringify(sourceMap), path])).then(() => asset).inner;
+function writeSourceMap(asset: AssetWithContent<RawSourceMap>) {
+    const { content, path } = asset;
+    return AsyncResult.equip(writeFile([JSON.stringify(content), path])).then(() => asset).inner;
 }
 
 function output(logger: CliLogger) {
-    return function output(asset: AssetWithSourceMap) {
+    return function output(asset: AssetWithContent<RawSourceMap>) {
         logger.output(asset.path);
         return asset;
     };
