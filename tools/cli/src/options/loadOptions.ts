@@ -1,4 +1,4 @@
-import { AsyncResult, Ok, parseJSON, readFile, ResultPromise } from '@backtrace-labs/sourcemap-tools';
+import { AsyncResult, Ok, readFile, ResultPromise } from '@backtrace-labs/sourcemap-tools';
 import { parseJSONC } from '../helpers/jsonc';
 import { CliOptions, CommandCliOptions } from './models/CliOptions';
 
@@ -28,8 +28,13 @@ export function loadAndJoinOptions(path?: string) {
     };
 }
 
-export function loadOptions(path?: string) {
-    return AsyncResult.equip(readFile(path ?? DEFAULT_OPTIONS_PATH)).then(parseJSON<CliOptions>).inner;
+export async function loadOptions(path?: string): ResultPromise<CliOptions | undefined, string> {
+    const readResult = await readFile(path ?? DEFAULT_OPTIONS_PATH);
+    if (readResult.isErr()) {
+        return path ? readResult : Ok(undefined);
+    }
+
+    return AsyncResult.equip(readResult).then(parseJSONC<CliOptions>).inner;
 }
 
 export function joinOptions<K extends keyof CommandCliOptions>(
@@ -38,7 +43,6 @@ export function joinOptions<K extends keyof CommandCliOptions>(
     defaults?: Partial<CommandCliOptions[K]>,
 ) {
     return function joinOptions(loadedOptions: CliOptions): Partial<CommandCliOptions[K] & CliOptions> {
-        // console.log(key, defaults, loadedOptions, loadedOptions[key], options);
         return {
             ...defaults,
             ...loadedOptions,

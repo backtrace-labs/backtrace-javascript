@@ -8,6 +8,7 @@ import { CreateLoggerOptions, createLogger } from './logger';
 import { DEFAULT_OPTIONS_PATH } from './options/loadOptions';
 import { addSourcesCmd } from './sourcemaps/add-sources';
 import { processCmd } from './sourcemaps/process';
+import { runCmd } from './sourcemaps/run';
 import { uploadCmd } from './sourcemaps/upload';
 
 export interface GlobalOptions extends CreateLoggerOptions {
@@ -22,6 +23,7 @@ export interface MainOptions {
 const mainCommand = new Command<GlobalOptions & MainOptions>({
     name: '',
 })
+    .subcommand(runCmd)
     .subcommand(processCmd)
     .subcommand(uploadCmd)
     .subcommand(addSourcesCmd)
