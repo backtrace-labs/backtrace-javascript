@@ -11,14 +11,15 @@ import {
     map,
     matchSourceExtension,
 } from '@backtrace-labs/sourcemap-tools';
+import path from 'path';
 import { GlobalOptions } from '..';
 import { Command } from '../commands/Command';
 import { toAsset } from '../helpers/common';
 import { find } from '../helpers/find';
 import { logAsset } from '../helpers/logs';
-import { normalizePaths } from '../helpers/normalizePaths';
+import { normalizePaths, relativePaths } from '../helpers/normalizePaths';
 import { CliLogger } from '../logger';
-import { loadOptions } from '../options/loadOptions';
+import { findConfig, loadOptions } from '../options/loadOptions';
 import { CliOptions, CommandCliOptions } from '../options/models/CliOptions';
 import { addSourcesToSourcemaps } from './add-sources';
 import { processSources } from './process';
@@ -76,21 +77,30 @@ export const runCmd = new Command<RunOptions>({
         description: 'Exits with zero exit code if no sourcemaps are found.',
     })
     .execute(async function ({ opts, logger, getHelpMessage }) {
-        const optsResult = await loadOptions(opts.config);
-        if (optsResult.isErr()) {
-            return optsResult;
+        const configPath = opts.config ?? (await findConfig());
+        if (!configPath) {
+            return Err('cannot find config file');
         }
 
-        const config = optsResult.data;
+        logger.debug(`reading config from ${configPath}`);
+
+        const configResult = await loadOptions(configPath);
+        if (configResult.isErr()) {
+            return configResult;
+        }
+
+        const config = configResult.data;
         if (!config) {
             logger.info(getHelpMessage());
             return Err('cannot read config file');
         }
 
         opts = {
-            path: config.path ?? process.cwd(),
             ...opts,
+            path: opts.path ?? (config.path ? relativePaths(config.path, path.dirname(configPath)) : process.cwd()),
         };
+
+        logger.trace(`resolved options: \n${JSON.stringify(opts, null, '  ')}`);
 
         const runProcess = shouldRunCommand(opts, config, 'process');
         const runAddSources = shouldRunCommand(opts, config, 'add-sources');

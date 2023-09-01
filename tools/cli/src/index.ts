@@ -5,7 +5,7 @@ import commandLineArgs from 'command-line-args';
 import { Command } from './commands/Command';
 import { loadVersion } from './helpers/version';
 import { CreateLoggerOptions, createLogger } from './logger';
-import { DEFAULT_OPTIONS_PATH } from './options/loadOptions';
+import { DEFAULT_OPTIONS_FILENAME } from './options/loadOptions';
 import { addSourcesCmd } from './sourcemaps/add-sources';
 import { processCmd } from './sourcemaps/process';
 import { runCmd } from './sourcemaps/run';
@@ -59,7 +59,7 @@ const mainCommand = new Command<GlobalOptions & MainOptions>({
         name: 'config',
         type: String,
         global: true,
-        description: `Path to the config file. Default: ${DEFAULT_OPTIONS_PATH}`,
+        description: `Path to the config file. Default: ${DEFAULT_OPTIONS_FILENAME}`,
     })
     .option({
         name: 'version',

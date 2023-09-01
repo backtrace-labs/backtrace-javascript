@@ -3,20 +3,22 @@ import { AddSourcesOptions } from '../../sourcemaps/add-sources';
 import { ProcessOptions } from '../../sourcemaps/process';
 import { UploadOptions } from '../../sourcemaps/upload';
 
-export type CommonCliOptions = Omit<
-    {
-        [K in keyof UploadOptions & keyof AddSourcesOptions & keyof ProcessOptions]:
-            | UploadOptions[K]
-            | AddSourcesOptions[K]
-            | ProcessOptions[K];
-    },
-    keyof GlobalOptions
+export type CommonCliOptions = Partial<
+    Omit<
+        {
+            [K in keyof UploadOptions & keyof AddSourcesOptions & keyof ProcessOptions]:
+                | UploadOptions[K]
+                | AddSourcesOptions[K]
+                | ProcessOptions[K];
+        },
+        keyof GlobalOptions
+    >
 >;
 
 export interface CommandCliOptions {
-    readonly upload: UploadOptions;
-    readonly 'add-sources': AddSourcesOptions;
-    readonly process: ProcessOptions;
+    readonly upload: Partial<UploadOptions>;
+    readonly 'add-sources': Partial<AddSourcesOptions>;
+    readonly process: Partial<ProcessOptions>;
 }
 
 export interface RunCliOptions {

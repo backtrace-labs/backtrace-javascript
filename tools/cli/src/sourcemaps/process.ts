@@ -15,14 +15,15 @@ import {
     SourceProcessor,
     writeAsset,
 } from '@backtrace-labs/sourcemap-tools';
+import path from 'path';
 import { GlobalOptions } from '..';
 import { Command, CommandContext } from '../commands/Command';
 import { toAsset } from '../helpers/common';
 import { find } from '../helpers/find';
 import { logAsset } from '../helpers/logs';
-import { normalizePaths } from '../helpers/normalizePaths';
+import { normalizePaths, relativePaths } from '../helpers/normalizePaths';
 import { CliLogger } from '../logger';
-import { loadAndJoinOptions } from '../options/loadOptions';
+import { findConfig, loadOptionsForCommand } from '../options/loadOptions';
 
 export interface ProcessOptions extends GlobalOptions {
     readonly path: string | string[];
@@ -66,16 +67,20 @@ export const processCmd = new Command<ProcessOptions>({
  */
 export async function processSources({ opts, logger, getHelpMessage }: CommandContext<ProcessOptions>) {
     const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
-
-    const optsResult = await loadAndJoinOptions(opts.config)('process', opts, {
-        path: process.cwd(),
-    });
-
-    if (optsResult.isErr()) {
-        return optsResult;
+    const configPath = opts.config ?? (await findConfig());
+    const configResult = await loadOptionsForCommand(configPath)('process');
+    if (configResult.isErr()) {
+        return configResult;
     }
 
-    opts = optsResult.data;
+    const config = configResult.data;
+    opts = {
+        ...config,
+        ...opts,
+        path:
+            opts.path ??
+            (config.path && configPath ? relativePaths(config.path, path.dirname(configPath)) : process.cwd()),
+    };
 
     logger.trace(`resolved options: \n${JSON.stringify(opts, null, '  ')}`);
 

@@ -25,20 +25,21 @@ import {
     uploadArchive,
     UploadResult,
 } from '@backtrace-labs/sourcemap-tools';
+import path from 'path';
 import { GlobalOptions } from '..';
 import { Command, CommandContext } from '../commands/Command';
 import { toAsset } from '../helpers/common';
 import { find } from '../helpers/find';
 import { logAsset } from '../helpers/logs';
-import { normalizePaths } from '../helpers/normalizePaths';
+import { normalizePaths, relativePaths } from '../helpers/normalizePaths';
 import { CliLogger } from '../logger';
-import { loadAndJoinOptions } from '../options/loadOptions';
+import { findConfig, loadOptionsForCommand } from '../options/loadOptions';
 
 export interface UploadOptions extends GlobalOptions {
     readonly url: string;
     readonly subdomain: string;
     readonly token: string;
-    readonly path: string[];
+    readonly path: string | string[];
     readonly 'include-sources': string;
     readonly insecure: boolean;
     readonly 'dry-run': boolean;
@@ -122,16 +123,20 @@ export const uploadCmd = new Command<UploadOptions>({
  */
 export async function uploadSourcemaps({ opts, logger, getHelpMessage }: CommandContext<UploadOptions>) {
     const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
-
-    const optsResult = await loadAndJoinOptions(opts.config)('upload', opts, {
-        url: process.env.BACKTRACE_JS_UPLOAD_URL,
-    });
-
-    if (optsResult.isErr()) {
-        return optsResult;
+    const configPath = opts.config ?? (await findConfig());
+    const configResult = await loadOptionsForCommand(configPath)('upload');
+    if (configResult.isErr()) {
+        return configResult;
     }
 
-    opts = optsResult.data;
+    const config = configResult.data;
+    opts = {
+        ...config,
+        ...opts,
+        path:
+            opts.path ??
+            (config.path && configPath ? relativePaths(config.path, path.dirname(configPath)) : process.cwd()),
+    };
 
     logger.trace(`resolved options: \n${JSON.stringify(opts, null, '  ')}`);
 
