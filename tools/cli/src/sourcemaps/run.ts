@@ -28,7 +28,7 @@ export interface RunOptions extends GlobalOptions {
     readonly 'add-sources': boolean;
     readonly upload: boolean;
     readonly process: boolean;
-    readonly path: string[];
+    readonly path: string | string[];
     readonly force: boolean;
     readonly 'pass-with-no-files': boolean;
 }
@@ -86,6 +86,11 @@ export const runCmd = new Command<RunOptions>({
             logger.info(getHelpMessage());
             return Err('cannot read config file');
         }
+
+        opts = {
+            path: config.path ?? process.cwd(),
+            ...opts,
+        };
 
         const runProcess = shouldRunCommand(opts, config, 'process');
         const runAddSources = shouldRunCommand(opts, config, 'add-sources');
