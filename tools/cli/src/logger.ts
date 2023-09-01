@@ -1,10 +1,16 @@
 import { Logger, LogLevel } from '@backtrace-labs/sourcemap-tools';
 import { format } from 'util';
 
-export interface LoggerOptions {
+export interface CreateLoggerOptions {
     readonly verbose?: boolean[];
     readonly quiet?: boolean;
     readonly 'log-level'?: CliLogLevel;
+}
+
+export interface CliLoggerOptions {
+    readonly level: CliLogLevel;
+    readonly silent?: boolean;
+    readonly prefix?: string;
 }
 
 export type CliLogLevel = LogLevel | 'output';
@@ -12,8 +18,12 @@ export type CliLogLevel = LogLevel | 'output';
 export class CliLogger implements Logger {
     private readonly _levelMap: Record<CliLogLevel, boolean>;
 
-    constructor(public readonly level: CliLogLevel, public readonly silent?: boolean) {
-        this._levelMap = this.createLevelMap(level);
+    constructor(public readonly options: CliLoggerOptions) {
+        this._levelMap = this.createLevelMap(options.level);
+    }
+
+    public clone(options?: Partial<CliLoggerOptions>) {
+        return new CliLogger({ ...this.options, ...options });
     }
 
     public output(value: unknown | Error, ...args: unknown[]) {
@@ -43,7 +53,7 @@ export class CliLogger implements Logger {
     public log(level: CliLogLevel, value: unknown | Error, ...args: unknown[]) {
         const isOutput = level === 'output';
 
-        if (this.silent && !isOutput) {
+        if (this.options.silent && !isOutput) {
             return;
         }
 
@@ -56,6 +66,11 @@ export class CliLogger implements Logger {
             : (...args: Parameters<typeof console.error>) => console.error(...args);
 
         const message: unknown[] = [];
+
+        if (this.options.prefix) {
+            message.push(`${this.options.prefix}`);
+        }
+
         if (!isOutput) {
             message.push(`${level}:`);
         }
@@ -90,7 +105,7 @@ export class CliLogger implements Logger {
     }
 }
 
-export function createLogger(options?: LoggerOptions) {
+export function createLogger(options?: CreateLoggerOptions) {
     let level: CliLogLevel | undefined;
     if (options?.['log-level']) {
         level = options?.['log-level'];
@@ -105,5 +120,5 @@ export function createLogger(options?: LoggerOptions) {
         }
     }
 
-    return new CliLogger(level ?? 'info', options?.quiet);
+    return new CliLogger({ level: level ?? 'info', silent: options?.quiet });
 }

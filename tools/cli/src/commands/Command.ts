@@ -1,22 +1,31 @@
 import { Err, Ok, Result } from '@backtrace-labs/sourcemap-tools';
 import commandLineArgs from 'command-line-args';
 import commandLineUsage, { Section } from 'command-line-usage';
-import { createLogger, LoggerOptions } from '../logger';
+import { CliLogger, CreateLoggerOptions, createLogger } from '../logger';
 import { CommandError } from '../models/CommandError';
 import { ExtendedOptionDefinition } from '../models/OptionDefinition';
 
 const CLI_COMMAND = 'backtrace-js';
 
+export type CommandFunction<T> = (
+    context: CommandContext<T>,
+) => Result<number | unknown, string> | Promise<Result<number | unknown, string>>;
+
+export interface CommandOptions {
+    readonly _unknown?: string[];
+}
+
+export interface CommandContext<T> {
+    readonly opts: Partial<T> & CommandOptions;
+    readonly logger: CliLogger;
+    getHelpMessage(): string;
+}
+
 export class Command<T extends object = object> {
     public readonly subcommands: Command[] = [];
     public readonly options: ExtendedOptionDefinition[] = [];
     public readonly helpSections: Section[] = [];
-    private _execute?: (
-        this: this,
-        values: Partial<T>,
-        stack?: Command[],
-        unknown?: string[],
-    ) => Result<number, string> | Promise<Result<number, string>>;
+    private _execute?: CommandFunction<T>;
 
     constructor(public readonly definition: ExtendedOptionDefinition) {}
 
@@ -60,7 +69,7 @@ export class Command<T extends object = object> {
 
         if (valuesResult.isErr()) {
             const logger = createLogger();
-            logger.info(this.getHelpMessage(stack));
+            logger.info(Command.getHelpMessage(this, stack));
             return valuesResult.mapErr((error) => ({ command: this, error, stack }));
         }
 
@@ -74,24 +83,30 @@ export class Command<T extends object = object> {
             }
         }
 
-        const logger = createLogger(values as LoggerOptions);
+        const logger = createLogger(values as CreateLoggerOptions);
 
         if (values.help) {
-            logger.output(this.getHelpMessage(stack));
+            logger.output(Command.getHelpMessage(this, stack));
             return Ok(0);
         }
 
         if (this._execute) {
-            return (
-                await this._execute.call(this, values as T, stack, [...(values._unknown ?? []), values._subcommand])
-            ).mapErr((error) => ({
-                command: this,
-                error,
-                stack,
-            }));
+            const context: CommandContext<T> = {
+                opts: values as T,
+                logger,
+                getHelpMessage: () => Command.getHelpMessage(this, stack),
+            };
+
+            return (await this._execute(context))
+                .map((data) => (typeof data === 'number' ? data : 0))
+                .mapErr((error) => ({
+                    command: this,
+                    error,
+                    stack,
+                }));
         }
 
-        logger.info(this.getHelpMessage(stack));
+        logger.info(Command.getHelpMessage(this, stack));
 
         if (subCommandMode) {
             return Err({ command: this, stack, error: 'Unknown command.' });
@@ -100,17 +115,17 @@ export class Command<T extends object = object> {
         return Err({ command: this, stack, error: 'Unknown option.' });
     }
 
-    public getHelpMessage(stack?: Command[]) {
+    public static getHelpMessage(command: Command, stack?: Command[]) {
         const globalOptions = [
-            ...this.options.filter((o) => o.global),
+            ...command.options.filter((o) => o.global),
             ...(stack?.flatMap((o) => o.options.filter((o) => o.global)) ?? []),
         ];
 
-        const nonGlobalOptions = this.options.filter((o) => !o.global);
+        const nonGlobalOptions = command.options.filter((o) => !o.global);
 
         let cmd = CLI_COMMAND;
         const stackCmd = `${
-            [...(stack ?? []), this]
+            [...(stack ?? []), command]
                 .map((s) => s.definition.name)
                 .filter((s) => !!s)
                 .join(' ') ?? ''
@@ -121,7 +136,7 @@ export class Command<T extends object = object> {
         }
 
         let usage = cmd;
-        if (this.subcommands.length) {
+        if (command.subcommands.length) {
             usage += ' <command>';
         }
 
@@ -142,18 +157,18 @@ export class Command<T extends object = object> {
             },
         ];
 
-        if (this.helpSections.length) {
-            sections.push(...this.helpSections);
+        if (command.helpSections.length) {
+            sections.push(...command.helpSections);
         }
 
         sections.push({
             content: `Usage: ${usage}`,
         });
 
-        if (this.subcommands.length) {
+        if (command.subcommands.length) {
             sections.push({
                 header: 'Available commands',
-                content: this.subcommands.map((s) => ({
+                content: command.subcommands.map((s) => ({
                     name: s.definition.name,
                     summary: s.definition.description,
                 })),
