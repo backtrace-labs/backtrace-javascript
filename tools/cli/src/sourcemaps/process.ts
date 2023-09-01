@@ -59,7 +59,7 @@ export const processCmd = new Command<ProcessOptions>({
         type: Boolean,
         description: 'Exits with zero exit code if no files for processing are found.',
     })
-    .execute(processSources);
+    .execute((context) => AsyncResult.equip(processSources(context)).then(map(output(context.logger))).inner);
 
 /**
  * Processes source files found in path(s).
@@ -140,8 +140,7 @@ export async function processSources({ opts, logger, getHelpMessage }: CommandCo
                 : failIfEmpty('no files for processing found, they may be already processed'),
         )
         .then(map(processCommand))
-        .then(opts['dry-run'] ? Ok : map(writeCommand))
-        .then(map(output(logger))).inner;
+        .then(opts['dry-run'] ? Ok : map(writeCommand)).inner;
 }
 
 function isAssetProcessed(sourceProcessor: SourceProcessor) {

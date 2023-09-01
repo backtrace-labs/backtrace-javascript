@@ -67,7 +67,7 @@ export const addSourcesCmd = new Command<AddSourcesOptions>({
         type: Boolean,
         description: 'Exits with zero exit code if no sourcemaps are found.',
     })
-    .execute(addSourcesToSourcemaps);
+    .execute((context) => AsyncResult.equip(addSourcesToSourcemaps(context)).then(map(output(context.logger))).inner);
 
 /**
  * Adds sources to sourcemaps found in path(s).
@@ -162,8 +162,7 @@ export async function addSourcesToSourcemaps({ opts, logger, getHelpMessage }: C
                 : failIfEmpty('no sourcemaps without sources found, use --force to overwrite sources'),
         )
         .then(map(addSourceCommand))
-        .then(opts['dry-run'] ? Ok : map(writeSourceMapCommand))
-        .then(map(output(logger))).inner;
+        .then(opts['dry-run'] ? Ok : map(writeSourceMapCommand)).inner;
 }
 
 function doesSourceMapHaveSources(sourceProcessor: SourceProcessor) {

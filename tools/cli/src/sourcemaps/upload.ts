@@ -111,7 +111,7 @@ export const uploadCmd = new Command<UploadOptions>({
         description: 'If set, archive with sourcemaps will be outputted to this path instead of being uploaded.',
         type: String,
     })
-    .execute(uploadSourcemaps);
+    .execute((context) => AsyncResult.equip(uploadSourcemaps(context)).then(output(context.logger)).inner);
 
 /**
  * Uploads sourcemaps found in path(s).
@@ -249,8 +249,7 @@ export async function uploadSourcemaps({ opts, logger, getHelpMessage }: Command
                 : failIfEmpty('no processed sourcemaps found, make sure to run process first'),
         )
         .then(createArchiveCommand)
-        .then((archive) => (opts['dry-run'] ? Ok(null) : saveArchiveCommand(archive)))
-        .then(output(logger)).inner;
+        .then((archive) => (opts['dry-run'] ? Ok(null) : saveArchiveCommand(archive))).inner;
 }
 
 function validateUrl(url: string) {
