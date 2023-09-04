@@ -10,7 +10,6 @@ import {
     failIfEmpty,
     filter,
     finalizeArchive,
-    loadSourceMap,
     log,
     map,
     matchSourceMapExtension,
@@ -28,7 +27,7 @@ import {
 import path from 'path';
 import { GlobalOptions } from '..';
 import { Command, CommandContext } from '../commands/Command';
-import { toAsset } from '../helpers/common';
+import { loadSourceMapFromPathOrFromSource, toAsset } from '../helpers/common';
 import { find } from '../helpers/find';
 import { logAsset } from '../helpers/logs';
 import { normalizePaths, relativePaths } from '../helpers/normalizePaths';
@@ -169,8 +168,8 @@ export async function uploadSourcemaps({ opts, logger, getHelpMessage }: Command
     const logDebugAsset = logAsset(logger, 'debug');
     const logTraceAsset = logAsset(logger, 'trace');
 
-    const isAssetProcessedCommand = (asset: Asset) =>
-        AsyncResult.fromValue<Asset, string>(asset)
+    const isAssetProcessedCommand = (asset: AssetWithContent<RawSourceMap>) =>
+        AsyncResult.fromValue<AssetWithContent<RawSourceMap>, string>(asset)
             .then(logTraceAsset('checking if asset is processed'))
             .then(isAssetProcessed(sourceProcessor))
             .then(
@@ -181,8 +180,8 @@ export async function uploadSourcemaps({ opts, logger, getHelpMessage }: Command
             )
             .thenErr((error) => `${asset.name}: ${error}`).inner;
 
-    const filterProcessedAssetsCommand = (assets: Asset[]) =>
-        AsyncResult.fromValue<Asset[], string>(assets)
+    const filterProcessedAssetsCommand = (assets: AssetWithContent<RawSourceMap>[]) =>
+        AsyncResult.fromValue<AssetWithContent<RawSourceMap>[], string>(assets)
             .then(map(isAssetProcessedCommand))
             .then(filter((f) => f.result))
             .then(map((f) => f.asset)).inner;
@@ -190,7 +189,7 @@ export async function uploadSourcemaps({ opts, logger, getHelpMessage }: Command
     const loadSourceMapCommand = (asset: Asset) =>
         AsyncResult.fromValue<Asset, string>(asset)
             .then(logTraceAsset('loading sourcemap'))
-            .then(loadSourceMap)
+            .then(loadSourceMapFromPathOrFromSource(sourceProcessor))
             .then(logDebugAsset('loaded sourcemap'))
             .then(opts['include-sources'] ? pass : stripSourcesContent).inner;
 
@@ -249,8 +248,8 @@ export async function uploadSourcemaps({ opts, logger, getHelpMessage }: Command
         .then(map(logTrace((path) => `file for upload: ${path}`)))
         .then(opts['pass-with-no-files'] ? Ok : failIfEmpty('no sourcemaps found'))
         .then(map(toAsset))
-        .then(opts.force ? Ok : filterProcessedAssetsCommand)
         .then(map(loadSourceMapCommand))
+        .then(opts.force ? Ok : filterProcessedAssetsCommand)
         .then(logDebug((r) => `uploading ${r.length} files`))
         .then(map(logTrace(({ path }) => `file to upload: ${path}`)))
         .then(
@@ -296,10 +295,9 @@ function getUploadUrl(opts: Partial<UploadOptions>): Result<string | undefined, 
 }
 
 function isAssetProcessed(sourceProcessor: SourceProcessor) {
-    return function isAssetProcessed(asset: Asset) {
-        return AsyncResult.equip(sourceProcessor.isSourceMapFileProcessed(asset.path)).then(
-            (result) => ({ asset, result } as const),
-        ).inner;
+    return function isAssetProcessed(asset: AssetWithContent<RawSourceMap>) {
+        const result = sourceProcessor.isSourceMapProcessed(asset.content);
+        return { asset, result } as const;
     };
 }
 
