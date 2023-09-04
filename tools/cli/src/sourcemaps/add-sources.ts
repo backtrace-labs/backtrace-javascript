@@ -168,7 +168,7 @@ function addSource(sourceProcessor: SourceProcessor) {
     return function addSource(asset: AssetWithContent<RawSourceMap>) {
         return AsyncResult.equip(sourceProcessor.addSourcesToSourceMap(asset.content, asset.path)).then<
             AssetWithContent<RawSourceMap>
-        >((newSourceMap) => ({ ...asset, sourceMap: newSourceMap })).inner;
+        >((newSourceMap) => ({ ...asset, content: newSourceMap })).inner;
     };
 }
 
