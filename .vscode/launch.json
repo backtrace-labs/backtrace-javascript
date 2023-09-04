@@ -5,7 +5,8 @@
             "name": "Attach to react native app",
             "cwd": "${workspaceFolder}/examples/sdk/reactNative",
             "type": "reactnative",
-            "request": "attach"
+            "request": "attach",
+            "skipFiles": ["<node_internals>/**", "${workspaceFolder}/node_modules/tslib/**/*.js"]
         },
         {
             "name": "Launch",
