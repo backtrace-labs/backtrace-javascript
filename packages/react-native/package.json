@@ -31,8 +31,7 @@
         "clean": "rimraf \"lib\"",
         "format:check": "eslint \"**/*.{js,ts,tsx}\"",
         "prepack": "bob build",
-        "prepublishOnly": "bob build",
-        "test": "jest"
+        "prepublishOnly": "bob build"
     },
     "keywords": [
         "Error",

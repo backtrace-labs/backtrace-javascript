@@ -81,6 +81,7 @@ export class AsyncResult<T, E> {
     public thenErr<N>(transform: (data: E) => Promise<Result<T, N>>): AsyncResult<T, N>;
     public thenErr<N>(transform: (data: E) => Result<T, N>): AsyncResult<T, N>;
     public thenErr<N>(transform: (data: E) => Promise<N>): AsyncResult<T, N>;
+    public thenErr<NT, NE>(transform: (data: E) => Result<NT, NE>): AsyncResult<NT, NE>;
     public thenErr<N>(transform: (data: E) => N): AsyncResult<T, N>;
     public thenErr<N>(transform: (data: E) => Result<T, N> | N | Promise<N | Result<T, N>>): AsyncResult<T, N>;
     public thenErr<N>(transform: (data: E) => Result<never, N> | N | Promise<N | Result<never, N>>): AsyncResult<T, N> {

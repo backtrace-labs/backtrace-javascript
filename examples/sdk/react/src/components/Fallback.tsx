@@ -1,6 +1,10 @@
 import '../App.css';
 
-export default function Fallback() {
+interface Props {
+    error: Error;
+}
+
+export default function Fallback({ error }: Props) {
     return (
         <div className="App">
             <div className="App-header center">
@@ -14,6 +18,7 @@ export default function Fallback() {
                     ErrorBoundary!
                 </h1>
                 <p className="card-text">Check your Backtrace console to see the Error and Component stacks!</p>
+                <p className="card-text">Error: {error.message}</p>
             </div>
         </div>
     );

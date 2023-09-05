@@ -6,6 +6,7 @@ Backtrace utility for managing Javascript files.
 
 1. [Description](#description)
 1. [Usage](#usage)
+    - [`run`](#run)
     - [`process`](#process)
     - [`upload`](#upload)
     - [`add-sources`](#add-sources)
@@ -41,6 +42,44 @@ It is advisable to add these commands to your production build scripts. For exam
 ```
 
 `backtrace-js` exposes the following commands:
+
+## `run`
+
+A handy shortcut for executing all commands. Executes commands in order:
+
+1. [`process`](#process)
+1. [`add-sources`](#add-sources)
+1. [`upload`](#upload)
+
+Requires the config file to function. `run` accepts some common options, but command-specific options are taken from the
+config.
+
+### Options
+
+#### `--process`
+
+Runs the [`process`](#process) command.
+
+#### `--add-sources`
+
+Runs the [`add-sources`](#add-sources) command.
+
+#### `--upload`
+
+Runs the [`upload`](#upload) command.
+
+#### `<path>`, `--path <string>`, `-p <string>`
+
+Searches for files within provided paths. This is the default positional argument. If not provided, will search in the
+current directory.
+
+#### `--force`, `-f`
+
+Forces processing of already processed files. May result in duplicate appended data.
+
+#### `--pass-with-no-files`
+
+By default, `run` will return a non-zero exit code when no files are found. Pass this to return 0.
 
 ## `process`
 
@@ -269,6 +308,11 @@ An example of the file:
     },
     "add-sources": {
         "force": true
+    },
+    "run": {
+        "process": true,
+        "add-sources": false,
+        "upload": true
     }
 }
 ```
