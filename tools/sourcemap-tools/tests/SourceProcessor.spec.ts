@@ -304,5 +304,24 @@ function foo(){console.log("Hello World!")}foo();`;
 
             expect(actualPosition).toEqual(expectedPosition);
         });
+
+        it('should modify only mappings', async () => {
+            const debugIdGenerator = new DebugIdGenerator();
+            const sourceProcessor = new SourceProcessor(debugIdGenerator);
+            const count = 3;
+
+            const sourceMap = {
+                version: 3,
+                file: Math.random().toString(),
+                sources: [new Array(100)].map(() => Math.random().toString()),
+                names: [new Array(100)].map(() => Math.random().toString()),
+                mappings: 'AACA,SAASA,MACLC,QAAQC,IAAI,cAAc,CAC9B,CACAF,IAAI',
+                foo: 'bar',
+            };
+
+            const result = await sourceProcessor.offsetSourceMap(sourceMap, count);
+            expect(result).toEqual({ ...sourceMap, mappings: expect.any(String) });
+            expect(result.mappings).not.toEqual(sourceMap.mappings);
+        });
     });
 });
