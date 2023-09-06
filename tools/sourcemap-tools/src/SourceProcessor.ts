@@ -1,10 +1,10 @@
 import path from 'path';
-import { RawSourceMap } from 'source-map';
 import { DebugIdGenerator } from './DebugIdGenerator';
 import { parseJSON, readFile } from './helpers/common';
 import { appendBeforeWhitespaces } from './helpers/stringHelpers';
 import { stringToUuid } from './helpers/stringToUuid';
 import { AsyncResult, ResultPromise } from './models/AsyncResult';
+import { RawSourceMap } from './models/RawSourceMap';
 import { Err, Ok, Result } from './models/Result';
 
 export interface ProcessResult {
