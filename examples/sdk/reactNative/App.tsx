@@ -13,6 +13,7 @@ import { SUBMISSION_URL } from './src/consts';
 type SectionProps = PropsWithChildren<{
     title: string;
 }>;
+console.log(__DEV__);
 
 const client = BacktraceClient.initialize({
     url: SUBMISSION_URL,
@@ -56,16 +57,16 @@ function App(): JSX.Element {
     console.log('setting set interval for auto error submission');
     client.send(new Error('foo'));
 
-    setInterval(async function generateCoolandTinyError() {
+    setTimeout(async function generateCoolandTinyError() {
         const innerFunction = async () => {
             if (!isDarkMode) {
                 throw new Error('test');
             }
-            return Promise.resolve();
+            throw new Error('test!!!');
         };
         console.log('Submitting the error');
         await innerFunction();
-    }, 300);
+    }, 1000);
 
     return (
         <SafeAreaView style={backgroundStyle}>
