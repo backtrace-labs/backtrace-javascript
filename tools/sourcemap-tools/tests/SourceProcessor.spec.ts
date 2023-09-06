@@ -163,23 +163,12 @@ function foo(){console.log("Hello World!")}foo();`;
             const expectedNewLineCount = (snippet.match(/\n/g)?.length ?? 0) + 1;
 
             jest.spyOn(debugIdGenerator, 'generateSourceSnippet').mockReturnValue(snippet);
-
-            const unmodifiedConsumer = await new SourceMapConsumer(sourceMap);
-            const expectedPosition = unmodifiedConsumer.originalPositionFor({
-                line: 1,
-                column: source.indexOf('foo();'),
-            });
+            const offsetSpy = jest.spyOn(sourceProcessor, 'offsetSourceMap');
 
             const result = await sourceProcessor.processSourceAndSourceMap(source, sourceMap);
             assert(result.isOk());
 
-            const modifiedConsumer = await new SourceMapConsumer(result.data.sourceMap);
-            const actualPosition = modifiedConsumer.originalPositionFor({
-                line: 1 + expectedNewLineCount,
-                column: source.indexOf('foo();'),
-            });
-
-            expect(actualPosition).toEqual(expectedPosition);
+            expect(offsetSpy).toBeCalledWith(expect.anything(), expectedNewLineCount);
         });
 
         it('should offset sourcemap lines by number of newlines in source snippet + 1 with source having shebang not on the first line', async () => {
@@ -189,12 +178,7 @@ function foo(){console.log("Hello World!")}foo();`;
             const expectedNewLineCount = (snippet.match(/\n/g)?.length ?? 0) + 1;
 
             jest.spyOn(debugIdGenerator, 'generateSourceSnippet').mockReturnValue(snippet);
-
-            const unmodifiedConsumer = await new SourceMapConsumer(sourceMap);
-            const expectedPosition = unmodifiedConsumer.originalPositionFor({
-                line: 1,
-                column: source.indexOf('foo();'),
-            });
+            const offsetSpy = jest.spyOn(sourceProcessor, 'offsetSourceMap');
 
             const result = await sourceProcessor.processSourceAndSourceMap(
                 sourceWithShebangElsewhere,
@@ -202,39 +186,22 @@ function foo(){console.log("Hello World!")}foo();`;
             );
             assert(result.isOk());
 
-            const modifiedConsumer = await new SourceMapConsumer(result.data.sourceMap);
-            const actualPosition = modifiedConsumer.originalPositionFor({
-                line: 1 + expectedNewLineCount,
-                column: source.indexOf('foo();'),
-            });
-
-            expect(actualPosition).toEqual(expectedPosition);
+            expect(offsetSpy).toBeCalledWith(expect.anything(), expectedNewLineCount);
         });
 
-        it('should offset sourcemap lines by number of newlines in source with shebang with snippet + 3', async () => {
+        it('should offset sourcemap lines by number of newlines in source with shebang with snippet + 1', async () => {
             const debugIdGenerator = new DebugIdGenerator();
             const sourceProcessor = new SourceProcessor(debugIdGenerator);
             const snippet = 'a\nb\nc\nd';
-            const expectedNewLineCount = (snippet.match(/\n/g)?.length ?? 0) + 3;
+            const expectedNewLineCount = (snippet.match(/\n/g)?.length ?? 0) + 1;
 
             jest.spyOn(debugIdGenerator, 'generateSourceSnippet').mockReturnValue(snippet);
-
-            const unmodifiedConsumer = await new SourceMapConsumer(sourceMap);
-            const expectedPosition = unmodifiedConsumer.originalPositionFor({
-                line: 1,
-                column: source.indexOf('foo();'),
-            });
+            const offsetSpy = jest.spyOn(sourceProcessor, 'offsetSourceMap');
 
             const result = await sourceProcessor.processSourceAndSourceMap(sourceWithShebang, sourceWithShebangMap);
             assert(result.isOk());
 
-            const modifiedConsumer = await new SourceMapConsumer(result.data.sourceMap);
-            const actualPosition = modifiedConsumer.originalPositionFor({
-                line: 1 + expectedNewLineCount,
-                column: source.indexOf('foo();'),
-            });
-
-            expect(actualPosition).toEqual(expectedPosition);
+            expect(offsetSpy).toBeCalledWith(expect.anything(), expectedNewLineCount);
         });
 
         it('should call process function with content from files', async () => {
@@ -312,6 +279,30 @@ function foo(){console.log("Hello World!")}foo();`;
             assert(result.isOk());
 
             expect(result.data.sourcesContent).toEqual([sourceContent]);
+        });
+    });
+
+    describe('offsetSourceMap', () => {
+        it('should offset sourcemap lines by count', async () => {
+            const debugIdGenerator = new DebugIdGenerator();
+            const sourceProcessor = new SourceProcessor(debugIdGenerator);
+            const count = 3;
+
+            const unmodifiedConsumer = await new SourceMapConsumer(sourceWithShebangMap);
+            const expectedPosition = unmodifiedConsumer.originalPositionFor({
+                line: 2,
+                column: source.indexOf('foo();'),
+            });
+
+            const result = await sourceProcessor.offsetSourceMap(sourceWithShebangMap, count);
+
+            const modifiedConsumer = await new SourceMapConsumer(result);
+            const actualPosition = modifiedConsumer.originalPositionFor({
+                line: 2 + count,
+                column: source.indexOf('foo();'),
+            });
+
+            expect(actualPosition).toEqual(expectedPosition);
         });
     });
 });
