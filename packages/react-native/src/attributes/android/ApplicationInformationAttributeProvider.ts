@@ -14,7 +14,6 @@ export class ApplicationInformationAttributeProvider implements BacktraceAttribu
         return {
             application: BacktraceApplicationAttributeProvider.readApplicationName(),
             'application.version': BacktraceApplicationAttributeProvider.readApplicationVersion(),
-            guid: BacktraceApplicationAttributeProvider.readMachineId(),
         };
     }
 }
