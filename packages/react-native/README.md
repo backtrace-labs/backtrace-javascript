@@ -1,31 +1,7 @@
-# @backtrace-labs/react-native
+# **Backtrace React SDK**
 
-Backtrace
+[Backtrace](https://backtrace.io) captures and reports handled and unhandled exceptions in your production software so
+you can manage application quality through the complete product lifecycle.
 
-## Installation
-
-```sh
-npm install @backtrace-labs/react-native
-```
-
-## Usage
-
-```js
-import { multiply } from '@backtrace-labs/react-native';
-
-// ...
-
-const result = await multiply(3, 7);
-```
-
-## Contributing
-
-See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the repository and the development workflow.
-
-## License
-
-MIT
-
----
-
-Made with [create-react-native-library](https://github.com/callstack/react-native-builder-bob)
+The [@backtrace-labs/react-bative](#) SDK connects your React-native application to Backtrace. The basic integration is
+quick and easy, after which you can explore the rich set of Backtrace features.

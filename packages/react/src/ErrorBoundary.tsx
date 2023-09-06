@@ -2,7 +2,7 @@ import { Component, ErrorInfo, isValidElement, ReactElement, ReactNode } from 'r
 import { BacktraceReport } from '.';
 import { BacktraceClient } from './BacktraceClient';
 
-type RenderFallback = () => ReactElement;
+type RenderFallback = (error: Error) => ReactElement;
 
 export interface Props {
     children: ReactNode;
@@ -11,7 +11,6 @@ export interface Props {
 }
 
 export interface State {
-    hasError: boolean;
     error?: Error;
 }
 
@@ -21,7 +20,6 @@ export class ErrorBoundary extends Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.state = {
-            hasError: false,
             error: undefined,
         };
         // grabbing here so it will fail fast if BacktraceClient is uninitialized
@@ -33,7 +31,7 @@ export class ErrorBoundary extends Component<Props, State> {
     }
 
     public static getDerivedStateFromError(error: Error) {
-        return { hasError: true, error };
+        return { error };
     }
 
     public async componentDidCatch(error: Error, info: ErrorInfo) {
@@ -49,11 +47,11 @@ export class ErrorBoundary extends Component<Props, State> {
     render() {
         const { fallback, children } = this.props;
 
-        if (!this.state.hasError) {
+        if (!this.state.error) {
             return children;
         }
 
-        const fallbackComponent = typeof fallback === 'function' ? fallback() : fallback;
+        const fallbackComponent = typeof fallback === 'function' ? fallback(this.state.error) : fallback;
 
         if (fallbackComponent && isValidElement(fallbackComponent)) {
             return fallbackComponent;

@@ -31,8 +31,7 @@
         "clean": "rimraf \"lib\"",
         "format:check": "eslint \"**/*.{js,ts,tsx}\"",
         "prepack": "bob build",
-        "prepublishOnly": "bob build",
-        "test": "jest"
+        "prepublishOnly": "bob build"
     },
     "keywords": [
         "Error",
@@ -95,7 +94,6 @@
     },
     "dependencies": {
         "@backtrace-labs/react": "^0.0.3",
-        "@backtrace-labs/sdk-core": "^0.0.3",
-        "react-native-device-info": "^10.9.0"
+        "@backtrace-labs/sdk-core": "^0.0.3"
     }
 }

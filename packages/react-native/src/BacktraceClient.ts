@@ -11,6 +11,7 @@ import {
 } from '@backtrace-labs/sdk-core';
 import { BacktraceClientBuilder } from './BacktraceClientBuilder';
 import { type BacktraceConfiguration } from './BacktraceConfiguration';
+import { enableUnhandledPromiseRejectionTracker } from './unhandledPromiseRejectionTracker';
 
 export class BacktraceClient extends BacktraceCoreClient {
     private static _instance?: BacktraceClient;
@@ -69,17 +70,79 @@ export class BacktraceClient extends BacktraceCoreClient {
     }
 
     private captureUnhandledErrors(captureUnhandledExceptions = true, captureUnhandledRejections = true) {
-        if (!captureUnhandledExceptions && !captureUnhandledRejections) {
-            return;
-        }
-        const globalErrorHandler = ErrorUtils.getGlobalHandler();
-        ErrorUtils.setGlobalHandler((error: Error, fatal?: boolean) => {
-            this.send(error, {
-                'error.type': 'Unhandled exception',
-                fatal,
-            }).then(() => {
-                globalErrorHandler(error, fatal);
+        if (captureUnhandledExceptions) {
+            const globalErrorHandler = ErrorUtils.getGlobalHandler();
+            ErrorUtils.setGlobalHandler((error: Error, fatal?: boolean) => {
+                this.send(error, {
+                    'error.type': 'Unhandled exception',
+                    fatal,
+                }).then(() => {
+                    globalErrorHandler(error, fatal);
+                });
             });
-        });
+        }
+
+        if (captureUnhandledRejections) {
+            enableUnhandledPromiseRejectionTracker(this);
+            //             const hermesInternal = HermesInternal as HermesUnhandledRejection | undefined;
+            //             if (hermesInternal?.hasPromise?.() && hermesInternal?.enablePromiseRejectionTracker) {
+            //                 hermesInternal.enablePromiseRejectionTracker({
+            //                     allRejections: true,
+            //                     onUnhandled: (id: number, rejection: Error | object = {}) => {
+            //                         this.send(
+            //                             new BacktraceReport(
+            //                                 rejection as Error,
+            //                                 {
+            //                                     'error.type': 'Unhandled exception',
+            //                                     unhandledPromiseRejectionId: id,
+            //                                 },
+            //                                 [],
+            //                                 {
+            //                                     classifiers: ['UnhandledPromiseRejection'],
+            //                                     skipFrames: rejection instanceof Error ? 0 : 1,
+            //                                 },
+            //                             ),
+            //                         );
+            //                     },
+            //                 });
+            //             } else {
+            //                 require('promise/setimmediate/rejection-tracking').enable({
+            //     allRejections: true,
+            //     onUnhandled: (id, rejection = {}) => {
+            //       let message: string;
+            //       let stack: ?string;
+
+            //       const stringValue = Object.prototype.toString.call(rejection);
+            //       if (stringValue === '[object Error]') {
+            //         message = Error.prototype.toString.call(rejection);
+            //         const error: Error = (rejection: $FlowFixMe);
+            //         stack = error.stack;
+            //       } else {
+            //         try {
+            //           message = require('pretty-format')(rejection);
+            //         } catch {
+            //           message =
+            //             typeof rejection === 'string'
+            //               ? rejection
+            //               : JSON.stringify((rejection: $FlowFixMe));
+            //         }
+            //       }
+
+            //       const warning =
+            //         `Possible Unhandled Promise Rejection (id: ${id}):\n` +
+            //         `${message ?? ''}\n` +
+            //         (stack == null ? '' : stack);
+            //       console.warn(warning);
+            //     },
+            //     onHandled: id => {
+            //       const warning =
+            //         `Promise Rejection Handled (id: ${id})\n` +
+            //         'This means you can ignore any previous messages of the form ' +
+            //         `"Possible Unhandled Promise Rejection (id: ${id}):"`;
+            //       console.warn(warning);
+            //     },
+            //   });
+            // }
+        }
     }
 }
