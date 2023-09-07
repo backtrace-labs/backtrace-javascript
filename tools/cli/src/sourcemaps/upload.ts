@@ -11,6 +11,7 @@ import {
     filter,
     finalizeArchive,
     log,
+    LogLevel,
     map,
     matchSourceMapExtension,
     Ok,
@@ -28,6 +29,7 @@ import path from 'path';
 import { GlobalOptions } from '..';
 import { Command, CommandContext } from '../commands/Command';
 import { loadSourceMapFromPathOrFromSource, toAsset } from '../helpers/common';
+import { ErrorBehaviors, filterBehaviorSkippedElements, getErrorBehavior, handleError } from '../helpers/errorBehavior';
 import { find } from '../helpers/find';
 import { logAsset } from '../helpers/logs';
 import { normalizePaths, relativePaths } from '../helpers/normalizePaths';
@@ -45,6 +47,7 @@ export interface UploadOptions extends GlobalOptions {
     readonly force: boolean;
     readonly 'pass-with-no-files': boolean;
     readonly output: string;
+    readonly 'asset-error-behavior': string;
 }
 
 export interface UploadResultWithAssets extends UploadResult {
@@ -110,6 +113,12 @@ export const uploadCmd = new Command<UploadOptions>({
         description: 'Exits with zero exit code if no files for uploading are found.',
     })
     .option({
+        name: 'asset-error-behavior',
+        alias: 'e',
+        type: String,
+        description: `What to do when an asset fails. Can be one of: ${Object.keys(ErrorBehaviors).join(', ')}.`,
+    })
+    .option({
         name: 'output',
         alias: 'o',
         description: 'If set, archive with sourcemaps will be outputted to this path instead of being uploaded.',
@@ -168,8 +177,21 @@ export async function uploadSourcemaps({ opts, logger, getHelpMessage }: Command
     const logDebugAsset = logAsset(logger, 'debug');
     const logTraceAsset = logAsset(logger, 'trace');
 
+    const assetErrorBehaviorResult = getErrorBehavior(opts['asset-error-behavior'] ?? 'exit');
+    if (assetErrorBehaviorResult.isErr()) {
+        logger.info(getHelpMessage());
+        return assetErrorBehaviorResult;
+    }
+
+    const assetErrorBehavior = assetErrorBehaviorResult.data;
+
+    const handleFailedAsset = handleError(assetErrorBehavior);
+
+    const logAssetBehaviorError = (asset: Asset) => (err: string, level: LogLevel) =>
+        logAsset(logger, level)(err)(asset);
+
     const isAssetProcessedCommand = (asset: AssetWithContent<RawSourceMap>) =>
-        AsyncResult.fromValue<AssetWithContent<RawSourceMap>, string>(asset)
+        AsyncResult.fromValue<AssetWithContent<RawSourceMap>, never>(asset)
             .then(logTraceAsset('checking if asset is processed'))
             .then(isAssetProcessed(sourceProcessor))
             .then(
@@ -177,11 +199,10 @@ export async function uploadSourcemaps({ opts, logger, getHelpMessage }: Command
                     ({ asset, result }) =>
                         `${asset.name}: ` + (result ? 'asset is processed' : 'asset is not processed'),
                 ),
-            )
-            .thenErr((error) => `${asset.name}: ${error}`).inner;
+            ).inner;
 
     const filterProcessedAssetsCommand = (assets: AssetWithContent<RawSourceMap>[]) =>
-        AsyncResult.fromValue<AssetWithContent<RawSourceMap>[], string>(assets)
+        AsyncResult.fromValue<AssetWithContent<RawSourceMap>[], never>(assets)
             .then(map(isAssetProcessedCommand))
             .then(filter((f) => f.result))
             .then(map((f) => f.asset)).inner;
@@ -191,7 +212,8 @@ export async function uploadSourcemaps({ opts, logger, getHelpMessage }: Command
             .then(logTraceAsset('loading sourcemap'))
             .then(loadSourceMapFromPathOrFromSource(sourceProcessor))
             .then(logDebugAsset('loaded sourcemap'))
-            .then(opts['include-sources'] ? pass : stripSourcesContent).inner;
+            .then(opts['include-sources'] ? pass : stripSourcesContent)
+            .thenErr(handleFailedAsset<AssetWithContent<RawSourceMap>>(logAssetBehaviorError(asset))).inner;
 
     const createArchiveCommand = (assets: AssetWithContent<RawSourceMap>[]) =>
         AsyncResult.fromValue<AssetWithContent<RawSourceMap>[], string>(assets)
@@ -224,7 +246,9 @@ export async function uploadSourcemaps({ opts, logger, getHelpMessage }: Command
                 await finalizeArchive({ assets, archive });
 
                 // Finally, we return the upload request promise
-                return promise;
+                const result = await promise;
+                console.log(result);
+                return result;
             })
             .then<UploadResultWithAssets>((result) => ({ ...result, assets: archive.assets }))
             .then(logDebug(`archive uploaded to ${uploadUrl}`)).inner;
@@ -249,6 +273,7 @@ export async function uploadSourcemaps({ opts, logger, getHelpMessage }: Command
         .then(opts['pass-with-no-files'] ? Ok : failIfEmpty('no sourcemaps found'))
         .then(map(toAsset))
         .then(map(loadSourceMapCommand))
+        .then(filterBehaviorSkippedElements)
         .then(opts.force ? Ok : filterProcessedAssetsCommand)
         .then(logDebug((r) => `uploading ${r.length} files`))
         .then(map(logTrace(({ path }) => `file to upload: ${path}`)))

@@ -43,10 +43,10 @@ export function joinOptions<K extends keyof CommandCliOptions>(key: K, defaults?
         return {
             ...defaults,
             ...loadedOptions,
-            ...loadedOptions[key],
             'add-sources': undefined,
             upload: undefined,
             process: undefined,
+            ...loadedOptions[key],
         };
     };
 }

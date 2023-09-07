@@ -6,6 +6,7 @@ import {
     failIfEmpty,
     filter,
     log,
+    LogLevel,
     map,
     matchSourceExtension,
     Ok,
@@ -19,6 +20,7 @@ import path from 'path';
 import { GlobalOptions } from '..';
 import { Command, CommandContext } from '../commands/Command';
 import { toAsset } from '../helpers/common';
+import { ErrorBehaviors, filterBehaviorSkippedElements, getErrorBehavior, handleError } from '../helpers/errorBehavior';
 import { find } from '../helpers/find';
 import { logAsset } from '../helpers/logs';
 import { normalizePaths, relativePaths } from '../helpers/normalizePaths';
@@ -30,6 +32,7 @@ export interface ProcessOptions extends GlobalOptions {
     readonly 'dry-run': boolean;
     readonly force: boolean;
     readonly 'pass-with-no-files': boolean;
+    readonly 'asset-error-behavior': string;
 }
 
 export const processCmd = new Command<ProcessOptions>({
@@ -54,6 +57,12 @@ export const processCmd = new Command<ProcessOptions>({
         alias: 'f',
         type: Boolean,
         description: 'Processes files even if already processed.',
+    })
+    .option({
+        name: 'asset-error-behavior',
+        alias: 'e',
+        type: String,
+        description: `What to do when an asset fails. Can be one of: ${Object.keys(ErrorBehaviors).join(', ')}.`,
     })
     .option({
         name: 'pass-with-no-files',
@@ -95,6 +104,21 @@ export async function processSources({ opts, logger, getHelpMessage }: CommandCo
     const logDebugAsset = logAsset(logger, 'debug');
     const logTraceAsset = logAsset(logger, 'trace');
 
+    const assetErrorBehaviorResult = getErrorBehavior(opts['asset-error-behavior'] ?? 'exit');
+    if (assetErrorBehaviorResult.isErr()) {
+        logger.info(getHelpMessage());
+        return assetErrorBehaviorResult;
+    }
+
+    const assetErrorBehavior = assetErrorBehaviorResult.data;
+    const handleFailedAsset = handleError(assetErrorBehavior);
+
+    const logAssetBehaviorError = (asset: Asset) => (err: string, level: LogLevel) =>
+        logAsset(logger, level)(err)(asset);
+
+    const logProcessResultBehaviorError = (err: ProcessAssetError, level: LogLevel) =>
+        logAsset(logger, level)(err.error)(err.asset);
+
     const isAssetProcessedCommand = (asset: Asset) =>
         AsyncResult.fromValue<Asset, string>(asset)
             .then(logTraceAsset('checking if asset is processed'))
@@ -105,11 +129,13 @@ export async function processSources({ opts, logger, getHelpMessage }: CommandCo
                         `${asset.name}: ` + (result ? 'asset is processed' : 'asset is not processed'),
                 ),
             )
+            .thenErr(handleFailedAsset<{ asset: Asset; result: boolean }>(logAssetBehaviorError(asset)))
             .thenErr((error) => `${asset.name}: ${error}`).inner;
 
     const filterUnprocessedAssetsCommand = (assets: Asset[]) =>
         AsyncResult.fromValue<Asset[], string>(assets)
             .then(map(isAssetProcessedCommand))
+            .then(filterBehaviorSkippedElements)
             .then(filter((f) => !f.result))
             .then(map((f) => f.asset)).inner;
 
@@ -118,6 +144,7 @@ export async function processSources({ opts, logger, getHelpMessage }: CommandCo
             .then(logTraceAsset('processing file'))
             .then(processAsset(sourceProcessor))
             .then(logDebugAsset('file processed'))
+            .thenErr(handleFailedAsset<ProcessAssetResult, ProcessAssetError>(logProcessResultBehaviorError))
             .thenErr(({ asset, error }) => `${asset.name}: ${error}`).inner;
 
     const writeCommand = (result: ProcessAssetResult) =>
@@ -125,6 +152,7 @@ export async function processSources({ opts, logger, getHelpMessage }: CommandCo
             .then(logTraceAsset('writing file'))
             .then(writeAsset)
             .then(logDebugAsset('file written'))
+            .thenErr(handleFailedAsset<ProcessAssetResult, ProcessAssetError>(logProcessResultBehaviorError))
             .thenErr(({ asset, error }) => `${asset.name}: ${error}`).inner;
 
     return AsyncResult.equip(find(...searchPaths))
@@ -145,7 +173,9 @@ export async function processSources({ opts, logger, getHelpMessage }: CommandCo
                 : failIfEmpty('no files for processing found, they may be already processed'),
         )
         .then(map(processCommand))
-        .then(opts['dry-run'] ? Ok : map(writeCommand)).inner;
+        .then(filterBehaviorSkippedElements)
+        .then(opts['dry-run'] ? Ok : map(writeCommand))
+        .then(filterBehaviorSkippedElements).inner;
 }
 
 function isAssetProcessed(sourceProcessor: SourceProcessor) {

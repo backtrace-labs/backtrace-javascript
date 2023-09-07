@@ -3,6 +3,7 @@ import {
     AsyncResult,
     DebugIdGenerator,
     Err,
+    LogLevel,
     Ok,
     SourceProcessor,
     failIfEmpty,
@@ -15,12 +16,12 @@ import path from 'path';
 import { GlobalOptions } from '..';
 import { Command } from '../commands/Command';
 import { toAsset } from '../helpers/common';
+import { ErrorBehaviors, filterBehaviorSkippedElements, getErrorBehavior, handleError } from '../helpers/errorBehavior';
 import { find } from '../helpers/find';
 import { logAsset } from '../helpers/logs';
 import { normalizePaths, relativePaths } from '../helpers/normalizePaths';
 import { CliLogger } from '../logger';
-import { findConfig, loadOptions } from '../options/loadOptions';
-import { CliOptions, CommandCliOptions } from '../options/models/CliOptions';
+import { findConfig, loadOptionsForCommand } from '../options/loadOptions';
 import { addSourcesToSourcemaps } from './add-sources';
 import { processSources } from './process';
 import { uploadSourcemaps } from './upload';
@@ -32,6 +33,7 @@ export interface RunOptions extends GlobalOptions {
     readonly path: string | string[];
     readonly force: boolean;
     readonly 'pass-with-no-files': boolean;
+    readonly 'asset-error-behavior': string;
 }
 
 interface AssetWithSourceMapPath extends Asset {
@@ -72,11 +74,18 @@ export const runCmd = new Command<RunOptions>({
         description: 'Forces execution of commands.',
     })
     .option({
+        name: 'asset-error-behavior',
+        alias: 'e',
+        type: String,
+        description: `What to do when an asset fails. Can be one of: ${Object.keys(ErrorBehaviors).join(', ')}.`,
+    })
+    .option({
         name: 'pass-with-no-files',
         type: Boolean,
         description: 'Exits with zero exit code if no sourcemaps are found.',
     })
     .execute(async function ({ opts, logger, getHelpMessage }) {
+        const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
         const configPath = opts.config ?? (await findConfig());
         if (!configPath) {
             return Err('cannot find config file');
@@ -84,7 +93,7 @@ export const runCmd = new Command<RunOptions>({
 
         logger.debug(`reading config from ${configPath}`);
 
-        const configResult = await loadOptions(configPath);
+        const configResult = await loadOptionsForCommand(configPath)('run');
         if (configResult.isErr()) {
             return configResult;
         }
@@ -96,15 +105,16 @@ export const runCmd = new Command<RunOptions>({
         }
 
         opts = {
+            ...config,
             ...opts,
             path: opts.path ?? (config.path ? relativePaths(config.path, path.dirname(configPath)) : process.cwd()),
         };
 
         logger.trace(`resolved options: \n${JSON.stringify(opts, null, '  ')}`);
 
-        const runProcess = shouldRunCommand(opts, config, 'process');
-        const runAddSources = shouldRunCommand(opts, config, 'add-sources');
-        const runUpload = shouldRunCommand(opts, config, 'upload');
+        const runProcess = opts.process;
+        const runAddSources = opts['add-sources'];
+        const runUpload = opts.upload;
         if (!runAddSources && !runUpload && !runProcess) {
             logger.info(getHelpMessage());
             return Err('--process, --add-sources and/or --upload must be specified');
@@ -120,14 +130,27 @@ export const runCmd = new Command<RunOptions>({
         const logDebug = log(logger, 'debug');
         const logTrace = log(logger, 'trace');
         const logTraceAsset = logAsset(logger, 'trace');
-        const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
+
+        const assetErrorBehaviorResult = getErrorBehavior(opts['asset-error-behavior'] ?? 'exit');
+        if (assetErrorBehaviorResult.isErr()) {
+            logger.info(getHelpMessage());
+            return assetErrorBehaviorResult;
+        }
+
+        const assetErrorBehavior = assetErrorBehaviorResult.data;
+
+        const handleFailedAsset = handleError(assetErrorBehavior);
+
+        const logAssetBehaviorError = (asset: Asset) => (err: string, level: LogLevel) =>
+            logAsset(logger, level)(err)(asset);
 
         const getSourceMapPathCommand = (asset: Asset) =>
             AsyncResult.fromValue<Asset, string>(asset)
                 .then(logTraceAsset('reading sourcemap path'))
                 .then(getSourceMapPath(sourceProcessor))
                 .then<AssetWithSourceMapPath>((sourceMapPath) => ({ ...asset, sourceMapPath }))
-                .then(logTraceAsset('read sourcemap path')).inner;
+                .then(logTraceAsset('read sourcemap path'))
+                .thenErr(handleFailedAsset<AssetWithSourceMapPath>(logAssetBehaviorError(asset))).inner;
 
         const processCommand = (assets: AssetWithSourceMapPath[]) =>
             AsyncResult.fromValue<AssetWithSourceMapPath[], string>(assets)
@@ -188,6 +211,7 @@ export const runCmd = new Command<RunOptions>({
             .then(opts['pass-with-no-files'] ? Ok : failIfEmpty('no source files found'))
             .then(map(toAsset))
             .then(map(getSourceMapPathCommand))
+            .then(filterBehaviorSkippedElements)
             .then(map(printAssetInfo(logger)))
             .then(runProcess ? processCommand : Ok)
             .then(runAddSources ? addSourcesCommand : Ok)
@@ -206,20 +230,4 @@ function printAssetInfo(logger: CliLogger) {
         logger.debug(`└── ${asset.sourceMapPath}`);
         return asset;
     };
-}
-
-function shouldRunCommand(opts: Partial<RunOptions>, config: CliOptions, key: keyof CommandCliOptions) {
-    if (opts[key]) {
-        return true;
-    }
-
-    if (!config?.run) {
-        return false;
-    }
-
-    if (Array.isArray(config.run)) {
-        return config.run.includes(key);
-    }
-
-    return !!config.run[key];
 }

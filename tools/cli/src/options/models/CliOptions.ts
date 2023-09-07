@@ -1,6 +1,7 @@
 import { GlobalOptions } from '../..';
 import { AddSourcesOptions } from '../../sourcemaps/add-sources';
 import { ProcessOptions } from '../../sourcemaps/process';
+import { RunOptions } from '../../sourcemaps/run';
 import { UploadOptions } from '../../sourcemaps/upload';
 
 export type CommonCliOptions = Partial<
@@ -16,13 +17,10 @@ export type CommonCliOptions = Partial<
 >;
 
 export interface CommandCliOptions {
+    readonly run: Partial<RunOptions>;
     readonly upload: Partial<UploadOptions>;
     readonly 'add-sources': Partial<AddSourcesOptions>;
     readonly process: Partial<ProcessOptions>;
 }
 
-export interface RunCliOptions {
-    readonly run: (keyof CommandCliOptions)[] | Partial<Record<keyof CommandCliOptions, boolean>>;
-}
-
-export type CliOptions = Partial<CommonCliOptions & CommandCliOptions & RunCliOptions>;
+export type CliOptions = Partial<CommonCliOptions & CommandCliOptions>;

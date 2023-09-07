@@ -95,7 +95,7 @@ const mainCommand = new Command<GlobalOptions & MainOptions>({
     } else {
         const loggerOptions = commandLineArgs(mainCommand.options, { partial: true }) as Partial<CreateLoggerOptions>;
         const logger = createLogger(loggerOptions);
-        logger.error(result.data.error);
+        logger.fatal(result.data.error);
         process.exit(1);
     }
 })();
