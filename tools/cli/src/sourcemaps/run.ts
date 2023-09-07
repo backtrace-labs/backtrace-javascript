@@ -5,7 +5,6 @@ import {
     Err,
     LogLevel,
     Ok,
-    Result,
     SourceProcessor,
     failIfEmpty,
     filter,
@@ -17,13 +16,12 @@ import path from 'path';
 import { GlobalOptions } from '..';
 import { Command } from '../commands/Command';
 import { toAsset } from '../helpers/common';
-import { ErrorBehavior, GetErrorBehavior, filterFailedElements, handleError } from '../helpers/errorBehavior';
+import { filterFailedElements, getErrorBehavior, handleError } from '../helpers/errorBehavior';
 import { find } from '../helpers/find';
 import { logAsset } from '../helpers/logs';
 import { normalizePaths, relativePaths } from '../helpers/normalizePaths';
 import { CliLogger } from '../logger';
-import { findConfig, loadOptions } from '../options/loadOptions';
-import { CliOptions, CommandCliOptions } from '../options/models/CliOptions';
+import { findConfig, loadOptionsForCommand } from '../options/loadOptions';
 import { addSourcesToSourcemaps } from './add-sources';
 import { processSources } from './process';
 import { uploadSourcemaps } from './upload';
@@ -35,7 +33,7 @@ export interface RunOptions extends GlobalOptions {
     readonly path: string | string[];
     readonly force: boolean;
     readonly 'pass-with-no-files': boolean;
-    readonly 'asset-error-behavior': Result<ErrorBehavior, string>;
+    readonly 'asset-error-behavior': string;
 }
 
 interface AssetWithSourceMapPath extends Asset {
@@ -78,7 +76,7 @@ export const runCmd = new Command<RunOptions>({
     .option({
         name: 'asset-error-behavior',
         alias: 'e',
-        type: GetErrorBehavior,
+        type: getErrorBehavior,
     })
     .option({
         name: 'pass-with-no-files',
@@ -94,7 +92,7 @@ export const runCmd = new Command<RunOptions>({
 
         logger.debug(`reading config from ${configPath}`);
 
-        const configResult = await loadOptions(configPath);
+        const configResult = await loadOptionsForCommand(configPath)('run');
         if (configResult.isErr()) {
             return configResult;
         }
@@ -106,15 +104,16 @@ export const runCmd = new Command<RunOptions>({
         }
 
         opts = {
+            ...config,
             ...opts,
             path: opts.path ?? (config.path ? relativePaths(config.path, path.dirname(configPath)) : process.cwd()),
         };
 
         logger.trace(`resolved options: \n${JSON.stringify(opts, null, '  ')}`);
 
-        const runProcess = shouldRunCommand(opts, config, 'process');
-        const runAddSources = shouldRunCommand(opts, config, 'add-sources');
-        const runUpload = shouldRunCommand(opts, config, 'upload');
+        const runProcess = opts.process;
+        const runAddSources = opts['add-sources'];
+        const runUpload = opts.upload;
         if (!runAddSources && !runUpload && !runProcess) {
             logger.info(getHelpMessage());
             return Err('--process, --add-sources and/or --upload must be specified');
@@ -131,12 +130,14 @@ export const runCmd = new Command<RunOptions>({
         const logTrace = log(logger, 'trace');
         const logTraceAsset = logAsset(logger, 'trace');
 
-        if (opts['asset-error-behavior']?.isErr()) {
+        const assetErrorBehaviorResult = getErrorBehavior(opts['asset-error-behavior'] ?? 'exit');
+        if (assetErrorBehaviorResult.isErr()) {
             logger.info(getHelpMessage());
-            return opts['asset-error-behavior'];
+            return assetErrorBehaviorResult;
         }
 
-        const assetErrorBehavior = (opts['asset-error-behavior']?.data as ErrorBehavior) ?? 'exit';
+        const assetErrorBehavior = assetErrorBehaviorResult.data;
+
         const handleFailedAsset = handleError(assetErrorBehavior);
 
         const logAssetBehaviorError = (asset: Asset) => (err: string, level: LogLevel) =>
@@ -228,20 +229,4 @@ function printAssetInfo(logger: CliLogger) {
         logger.debug(`└── ${asset.sourceMapPath}`);
         return asset;
     };
-}
-
-function shouldRunCommand(opts: Partial<RunOptions>, config: CliOptions, key: keyof CommandCliOptions) {
-    if (opts[key]) {
-        return true;
-    }
-
-    if (!config?.run) {
-        return false;
-    }
-
-    if (Array.isArray(config.run)) {
-        return config.run.includes(key);
-    }
-
-    return !!config.run[key];
 }

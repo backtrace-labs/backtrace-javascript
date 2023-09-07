@@ -13,7 +13,6 @@ import {
     processAsset,
     ProcessAssetError,
     ProcessAssetResult,
-    Result,
     SourceProcessor,
     writeAsset,
 } from '@backtrace-labs/sourcemap-tools';
@@ -21,13 +20,7 @@ import path from 'path';
 import { GlobalOptions } from '..';
 import { Command, CommandContext } from '../commands/Command';
 import { toAsset } from '../helpers/common';
-import {
-    ErrorBehavior,
-    ErrorBehaviors,
-    filterFailedElements,
-    GetErrorBehavior,
-    handleError,
-} from '../helpers/errorBehavior';
+import { ErrorBehaviors, filterFailedElements, getErrorBehavior, handleError } from '../helpers/errorBehavior';
 import { find } from '../helpers/find';
 import { logAsset } from '../helpers/logs';
 import { normalizePaths, relativePaths } from '../helpers/normalizePaths';
@@ -39,7 +32,7 @@ export interface ProcessOptions extends GlobalOptions {
     readonly 'dry-run': boolean;
     readonly force: boolean;
     readonly 'pass-with-no-files': boolean;
-    readonly 'asset-error-behavior': Result<ErrorBehavior, string>;
+    readonly 'asset-error-behavior': string;
 }
 
 export const processCmd = new Command<ProcessOptions>({
@@ -68,7 +61,7 @@ export const processCmd = new Command<ProcessOptions>({
     .option({
         name: 'asset-error-behavior',
         alias: 'e',
-        type: GetErrorBehavior,
+        type: String,
         typeLabel: 'string',
         description: `What to do when an asset fails. Can be one of: ${Object.keys(ErrorBehaviors).join(', ')}.`,
     })
@@ -112,12 +105,13 @@ export async function processSources({ opts, logger, getHelpMessage }: CommandCo
     const logDebugAsset = logAsset(logger, 'debug');
     const logTraceAsset = logAsset(logger, 'trace');
 
-    if (opts['asset-error-behavior']?.isErr()) {
+    const assetErrorBehaviorResult = getErrorBehavior(opts['asset-error-behavior'] ?? 'exit');
+    if (assetErrorBehaviorResult.isErr()) {
         logger.info(getHelpMessage());
-        return opts['asset-error-behavior'];
+        return assetErrorBehaviorResult;
     }
 
-    const assetErrorBehavior = (opts['asset-error-behavior']?.data as ErrorBehavior) ?? 'exit';
+    const assetErrorBehavior = assetErrorBehaviorResult.data;
     const handleFailedAsset = handleError(assetErrorBehavior);
 
     const logAssetBehaviorError = (asset: Asset) => (err: string, level: LogLevel) =>

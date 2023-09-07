@@ -12,7 +12,7 @@ export const ErrorBehaviors = {
 
 export type ErrorBehavior = keyof typeof ErrorBehaviors;
 
-export function GetErrorBehavior(type: string): Result<ErrorBehavior, string> {
+export function getErrorBehavior(type: string): Result<ErrorBehavior, string> {
     const valid = Object.keys(ErrorBehaviors);
     if (valid.includes(type)) {
         return Ok(type as ErrorBehavior);
