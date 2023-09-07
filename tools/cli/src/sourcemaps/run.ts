@@ -14,7 +14,7 @@ import {
 } from '@backtrace-labs/sourcemap-tools';
 import path from 'path';
 import { GlobalOptions } from '..';
-import { Command } from '../commands/Command';
+import { Command, CommandContext } from '../commands/Command';
 import { toAsset } from '../helpers/common';
 import { ErrorBehaviors, filterBehaviorSkippedElements, getErrorBehavior, handleError } from '../helpers/errorBehavior';
 import { find } from '../helpers/find';
@@ -84,139 +84,141 @@ export const runCmd = new Command<RunOptions>({
         type: Boolean,
         description: 'Exits with zero exit code if no sourcemaps are found.',
     })
-    .execute(async function ({ opts, logger, getHelpMessage }) {
-        const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
-        const configPath = opts.config ?? (await findConfig());
-        if (!configPath) {
-            return Err('cannot find config file');
-        }
+    .execute(runSourcemapCommands);
 
-        logger.debug(`reading config from ${configPath}`);
+export async function runSourcemapCommands({ opts, logger, getHelpMessage }: CommandContext<RunOptions>) {
+    const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
+    const configPath = opts.config ?? (await findConfig());
+    if (!configPath) {
+        return Err('cannot find config file');
+    }
 
-        const configResult = await loadOptionsForCommand(configPath)('run');
-        if (configResult.isErr()) {
-            return configResult;
-        }
+    logger.debug(`reading config from ${configPath}`);
 
-        const config = configResult.data;
-        if (!config) {
-            logger.info(getHelpMessage());
-            return Err('cannot read config file');
-        }
+    const configResult = await loadOptionsForCommand(configPath)('run');
+    if (configResult.isErr()) {
+        return configResult;
+    }
 
-        opts = {
-            ...config,
-            ...opts,
-            path: opts.path ?? (config.path ? relativePaths(config.path, path.dirname(configPath)) : process.cwd()),
-        };
+    const config = configResult.data;
+    if (!config) {
+        logger.info(getHelpMessage());
+        return Err('cannot read config file');
+    }
 
-        logger.trace(`resolved options: \n${JSON.stringify(opts, null, '  ')}`);
+    opts = {
+        ...config,
+        ...opts,
+        path: opts.path ?? (config.path ? relativePaths(config.path, path.dirname(configPath)) : process.cwd()),
+    };
 
-        const runProcess = opts.process;
-        const runAddSources = opts['add-sources'];
-        const runUpload = opts.upload;
-        if (!runAddSources && !runUpload && !runProcess) {
-            logger.info(getHelpMessage());
-            return Err('--process, --add-sources and/or --upload must be specified');
-        }
+    logger.trace(`resolved options: \n${JSON.stringify(opts, null, '  ')}`);
 
-        const searchPaths = normalizePaths(opts.path, process.cwd());
-        if (!searchPaths.length) {
-            logger.info(getHelpMessage());
-            return Err('path must be specified');
-        }
+    const runProcess = opts.process;
+    const runAddSources = opts['add-sources'];
+    const runUpload = opts.upload;
+    if (!runAddSources && !runUpload && !runProcess) {
+        logger.info(getHelpMessage());
+        return Err('--process, --add-sources and/or --upload must be specified');
+    }
 
-        const logInfo = log(logger, 'info');
-        const logDebug = log(logger, 'debug');
-        const logTrace = log(logger, 'trace');
-        const logTraceAsset = logAsset(logger, 'trace');
+    const searchPaths = normalizePaths(opts.path, process.cwd());
+    if (!searchPaths.length) {
+        logger.info(getHelpMessage());
+        return Err('path must be specified');
+    }
 
-        const assetErrorBehaviorResult = getErrorBehavior(opts['asset-error-behavior'] ?? 'exit');
-        if (assetErrorBehaviorResult.isErr()) {
-            logger.info(getHelpMessage());
-            return assetErrorBehaviorResult;
-        }
+    const logInfo = log(logger, 'info');
+    const logDebug = log(logger, 'debug');
+    const logTrace = log(logger, 'trace');
+    const logTraceAsset = logAsset(logger, 'trace');
 
-        const assetErrorBehavior = assetErrorBehaviorResult.data;
+    const assetErrorBehaviorResult = getErrorBehavior(opts['asset-error-behavior'] ?? 'exit');
+    if (assetErrorBehaviorResult.isErr()) {
+        logger.info(getHelpMessage());
+        return assetErrorBehaviorResult;
+    }
 
-        const handleFailedAsset = handleError(assetErrorBehavior);
+    const assetErrorBehavior = assetErrorBehaviorResult.data;
 
-        const logAssetBehaviorError = (asset: Asset) => (err: string, level: LogLevel) =>
-            logAsset(logger, level)(err)(asset);
+    const handleFailedAsset = handleError(assetErrorBehavior);
 
-        const getSourceMapPathCommand = (asset: Asset) =>
-            AsyncResult.fromValue<Asset, string>(asset)
-                .then(logTraceAsset('reading sourcemap path'))
-                .then(getSourceMapPath(sourceProcessor))
-                .then<AssetWithSourceMapPath>((sourceMapPath) => ({ ...asset, sourceMapPath }))
-                .then(logTraceAsset('read sourcemap path'))
-                .thenErr(handleFailedAsset<AssetWithSourceMapPath>(logAssetBehaviorError(asset))).inner;
+    const logAssetBehaviorError = (asset: Asset) => (err: string, level: LogLevel) =>
+        logAsset(logger, level)(err)(asset);
 
-        const processCommand = (assets: AssetWithSourceMapPath[]) =>
-            AsyncResult.fromValue<AssetWithSourceMapPath[], string>(assets)
-                .then(logDebug(`running process...`))
-                .then((assets) =>
-                    assets.length
-                        ? processSources({
-                              opts: { ...opts, 'pass-with-no-files': true, path: assets.map((a) => a.path) },
-                              getHelpMessage,
-                              logger: logger.clone({ prefix: 'process:' }),
-                          })
-                        : Ok([]),
-                )
-                .then(logInfo((results) => `processed ${results.length} files`))
-                .then(() => assets).inner;
+    const getSourceMapPathCommand = (asset: Asset) =>
+        AsyncResult.fromValue<Asset, string>(asset)
+            .then(logTraceAsset('reading sourcemap path'))
+            .then(getSourceMapPath(sourceProcessor))
+            .then<AssetWithSourceMapPath>((sourceMapPath) => ({ ...asset, sourceMapPath }))
+            .then(logTraceAsset('read sourcemap path'))
+            .thenErr(handleFailedAsset<AssetWithSourceMapPath>(logAssetBehaviorError(asset))).inner;
 
-        const addSourcesCommand = (assets: AssetWithSourceMapPath[]) =>
-            AsyncResult.fromValue<AssetWithSourceMapPath[], string>(assets)
-                .then(logDebug(`running add-sources...`))
-                .then((assets) =>
-                    assets.length
-                        ? addSourcesToSourcemaps({
-                              opts: { ...opts, 'pass-with-no-files': true, path: assets.map((a) => a.sourceMapPath) },
-                              getHelpMessage,
-                              logger: logger.clone({ prefix: 'add-sources:' }),
-                          })
-                        : Ok([]),
-                )
-                .then(logInfo((results) => `added sources to ${results.length} files`))
-                .then(() => assets).inner;
+    const processCommand = (assets: AssetWithSourceMapPath[]) =>
+        AsyncResult.fromValue<AssetWithSourceMapPath[], string>(assets)
+            .then(logDebug(`running process...`))
+            .then((assets) =>
+                assets.length
+                    ? processSources({
+                          opts: { ...opts, 'pass-with-no-files': true, path: assets.map((a) => a.path) },
+                          getHelpMessage,
+                          logger: logger.clone({ prefix: 'process:' }),
+                      })
+                    : Ok([]),
+            )
+            .then(logInfo((results) => `processed ${results.length} files`))
+            .then(() => assets).inner;
 
-        const uploadCommand = (assets: AssetWithSourceMapPath[]) =>
-            AsyncResult.fromValue<AssetWithSourceMapPath[], string>(assets)
-                .then(logDebug(`running upload...`))
-                .then((assets) =>
-                    assets.length
-                        ? uploadSourcemaps({
-                              opts: { ...opts, path: assets.map((a) => a.sourceMapPath) },
-                              getHelpMessage,
-                              logger: logger.clone({ prefix: 'upload:' }),
-                          })
-                        : Ok(null),
-                )
-                .then(
-                    logInfo((result) =>
-                        result ? `uploaded ${result.assets.length} files: ${result.rxid}` : `no files uploaded`,
-                    ),
-                )
-                .then(() => assets).inner;
+    const addSourcesCommand = (assets: AssetWithSourceMapPath[]) =>
+        AsyncResult.fromValue<AssetWithSourceMapPath[], string>(assets)
+            .then(logDebug(`running add-sources...`))
+            .then((assets) =>
+                assets.length
+                    ? addSourcesToSourcemaps({
+                          opts: { ...opts, 'pass-with-no-files': true, path: assets.map((a) => a.sourceMapPath) },
+                          getHelpMessage,
+                          logger: logger.clone({ prefix: 'add-sources:' }),
+                      })
+                    : Ok([]),
+            )
+            .then(logInfo((results) => `added sources to ${results.length} files`))
+            .then(() => assets).inner;
 
-        return AsyncResult.equip(find(...searchPaths))
-            .then(logTrace((r) => `found ${r.length} files`))
-            .then(map(logTrace((result) => `found file: ${result.path}`)))
-            .then(filter((t) => t.direct || matchSourceExtension(t.path)))
-            .then(map((t) => t.path))
-            .then(logDebug((r) => `found ${r.length} source files`))
-            .then(map(logTrace((path) => `found source file: ${path}`)))
-            .then(opts['pass-with-no-files'] ? Ok : failIfEmpty('no source files found'))
-            .then(map(toAsset))
-            .then(map(getSourceMapPathCommand))
-            .then(filterBehaviorSkippedElements)
-            .then(map(printAssetInfo(logger)))
-            .then(runProcess ? processCommand : Ok)
-            .then(runAddSources ? addSourcesCommand : Ok)
-            .then(runUpload ? uploadCommand : Ok).inner;
-    });
+    const uploadCommand = (assets: AssetWithSourceMapPath[]) =>
+        AsyncResult.fromValue<AssetWithSourceMapPath[], string>(assets)
+            .then(logDebug(`running upload...`))
+            .then((assets) =>
+                assets.length
+                    ? uploadSourcemaps({
+                          opts: { ...opts, path: assets.map((a) => a.sourceMapPath) },
+                          getHelpMessage,
+                          logger: logger.clone({ prefix: 'upload:' }),
+                      })
+                    : Ok(null),
+            )
+            .then(
+                logInfo((result) =>
+                    result ? `uploaded ${result.assets.length} files: ${result.rxid}` : `no files uploaded`,
+                ),
+            )
+            .then(() => assets).inner;
+
+    return AsyncResult.equip(find(...searchPaths))
+        .then(logTrace((r) => `found ${r.length} files`))
+        .then(map(logTrace((result) => `found file: ${result.path}`)))
+        .then(filter((t) => t.direct || matchSourceExtension(t.path)))
+        .then(map((t) => t.path))
+        .then(logDebug((r) => `found ${r.length} source files`))
+        .then(map(logTrace((path) => `found source file: ${path}`)))
+        .then(opts['pass-with-no-files'] ? Ok : failIfEmpty('no source files found'))
+        .then(map(toAsset))
+        .then(map(getSourceMapPathCommand))
+        .then(filterBehaviorSkippedElements)
+        .then(map(printAssetInfo(logger)))
+        .then(runProcess ? processCommand : Ok)
+        .then(runAddSources ? addSourcesCommand : Ok)
+        .then(runUpload ? uploadCommand : Ok).inner;
+}
 
 function getSourceMapPath(sourceProcessor: SourceProcessor) {
     return function getSourceMapPath(asset: Asset) {
