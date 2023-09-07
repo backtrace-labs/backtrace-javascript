@@ -1,0 +1,15 @@
+{
+    "version": 3,
+    "file": "entry2.js",
+    "mappings": "",
+    "sources": [
+        "../sources/dependency.ts",
+        "../sources/entry2.ts"
+    ],
+    "names": [],
+    "sourceRoot": "",
+    "sourcesContent": [
+        "export function doSomething() {\n    console.log('Done something');\n}\n",
+        "import { doSomething } from './dependency';\n\nconsole.log('Hello World Entry 2!');\ndoSomething();\n"
+    ]
+}
