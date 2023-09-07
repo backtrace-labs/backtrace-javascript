@@ -1,10 +1,10 @@
 import path from 'path';
-import { BasicSourceMapConsumer, Position, RawSourceMap, SourceMapConsumer, SourceMapGenerator } from 'source-map';
 import { DebugIdGenerator } from './DebugIdGenerator';
 import { parseJSON, readFile } from './helpers/common';
 import { appendBeforeWhitespaces } from './helpers/stringHelpers';
 import { stringToUuid } from './helpers/stringToUuid';
 import { AsyncResult, ResultPromise } from './models/AsyncResult';
+import { RawSourceMap } from './models/RawSourceMap';
 import { Err, Ok, Result } from './models/Result';
 
 export interface ProcessResult {
@@ -70,6 +70,14 @@ export class SourceProcessor {
             debugId = stringToUuid(source);
         }
 
+        if (typeof sourceMap === 'string') {
+            const parseResult = parseJSON<RawSourceMap>(sourceMap);
+            if (parseResult.isErr()) {
+                return parseResult;
+            }
+            sourceMap = parseResult.data;
+        }
+
         const sourceSnippet = this._debugIdGenerator.generateSourceSnippet(debugId);
 
         const shebang = source.match(/^(#!.+\n)/)?.[1];
@@ -86,13 +94,9 @@ export class SourceProcessor {
         // So if we add any code to generated code, mappings after that code will become invalid
         // We need to offset the mapping lines by sourceSnippetNewlineCount:
         // original code X:Y => generated code (A + sourceSnippetNewlineCount):B
-        const sourceSnippetNewlineCount = (sourceSnippet.match(/\n/g)?.length ?? 0) + (shebang ? 1 : 0);
-        const offsetSourceMapResult = await this.offsetSourceMap(sourceMap, 0, sourceSnippetNewlineCount + 1);
-        if (offsetSourceMapResult.isErr()) {
-            return offsetSourceMapResult;
-        }
-
-        const newSourceMap = this._debugIdGenerator.addSourceMapDebugId(offsetSourceMapResult.data, debugId);
+        const sourceSnippetNewlineCount = sourceSnippet.match(/\n/g)?.length ?? 0;
+        const offsetSourceMap = await this.offsetSourceMap(sourceMap, sourceSnippetNewlineCount + 1);
+        const newSourceMap = this._debugIdGenerator.addSourceMapDebugId(offsetSourceMap, debugId);
         return Ok({ debugId, source: newSource, sourceMap: newSourceMap });
     }
 
@@ -197,46 +201,11 @@ export class SourceProcessor {
         return sourceMap.sources?.length === sourceMap.sourcesContent?.length;
     }
 
-    private async offsetSourceMap(
-        sourceMap: string | RawSourceMap,
-        fromLine: number,
-        count: number,
-    ): ResultPromise<RawSourceMap, string> {
-        if (typeof sourceMap === 'string') {
-            const parseResult = parseJSON<RawSourceMap>(sourceMap);
-            if (parseResult.isErr()) {
-                return parseResult;
-            }
-            sourceMap = parseResult.data;
-        }
-
-        const consumer = (await new SourceMapConsumer(sourceMap)) as BasicSourceMapConsumer;
-        const newSourceMap = new SourceMapGenerator({
-            file: consumer.file,
-            sourceRoot: consumer.sourceRoot,
-        });
-
-        consumer.eachMapping((m) => {
-            if (m.generatedLine < fromLine) {
-                return;
-            }
-
-            // Despite how the mappings are written, addMapping expects here a null value if the column/line is not set
-            newSourceMap.addMapping({
-                source: m.source,
-                name: m.name,
-                generated:
-                    m?.generatedColumn != null && m?.generatedLine != null
-                        ? { column: m.generatedColumn, line: m.generatedLine + count }
-                        : (null as unknown as Position),
-                original:
-                    m?.originalColumn != null && m?.originalLine != null
-                        ? { column: m.originalColumn, line: m.originalLine }
-                        : (null as unknown as Position),
-            });
-        });
-
-        const newSourceMapJson = newSourceMap.toJSON();
-        return Ok({ ...sourceMap, ...newSourceMapJson });
+    public async offsetSourceMap(sourceMap: RawSourceMap, count: number): Promise<RawSourceMap> {
+        // Each line in sourcemap is separated by a semicolon.
+        // Offsetting source map lines is just done by prepending semicolons
+        const offset = ';'.repeat(count);
+        const mappings = offset + sourceMap.mappings;
+        return { ...sourceMap, mappings };
     }
 }
