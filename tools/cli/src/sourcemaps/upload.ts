@@ -115,8 +115,7 @@ export const uploadCmd = new Command<UploadOptions>({
     .option({
         name: 'asset-error-behavior',
         alias: 'e',
-        type: getErrorBehavior,
-        typeLabel: 'string',
+        type: String,
         description: `What to do when an asset fails. Can be one of: ${Object.keys(ErrorBehaviors).join(', ')}.`,
     })
     .option({

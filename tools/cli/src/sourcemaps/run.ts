@@ -16,7 +16,7 @@ import path from 'path';
 import { GlobalOptions } from '..';
 import { Command } from '../commands/Command';
 import { toAsset } from '../helpers/common';
-import { filterBehaviorSkippedElements, getErrorBehavior, handleError } from '../helpers/errorBehavior';
+import { ErrorBehaviors, filterBehaviorSkippedElements, getErrorBehavior, handleError } from '../helpers/errorBehavior';
 import { find } from '../helpers/find';
 import { logAsset } from '../helpers/logs';
 import { normalizePaths, relativePaths } from '../helpers/normalizePaths';
@@ -76,7 +76,8 @@ export const runCmd = new Command<RunOptions>({
     .option({
         name: 'asset-error-behavior',
         alias: 'e',
-        type: getErrorBehavior,
+        type: String,
+        description: `What to do when an asset fails. Can be one of: ${Object.keys(ErrorBehaviors).join(', ')}.`,
     })
     .option({
         name: 'pass-with-no-files',

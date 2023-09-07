@@ -62,7 +62,6 @@ export const processCmd = new Command<ProcessOptions>({
         name: 'asset-error-behavior',
         alias: 'e',
         type: String,
-        typeLabel: 'string',
         description: `What to do when an asset fails. Can be one of: ${Object.keys(ErrorBehaviors).join(', ')}.`,
     })
     .option({
