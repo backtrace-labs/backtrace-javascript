@@ -19,7 +19,7 @@ import path from 'path';
 import { GlobalOptions } from '..';
 import { Command, CommandContext } from '../commands/Command';
 import { loadSourceMapFromPathOrFromSource, toAsset } from '../helpers/common';
-import { ErrorBehaviors, filterFailedElements, getErrorBehavior, handleError } from '../helpers/errorBehavior';
+import { ErrorBehaviors, filterBehaviorSkippedElements, getErrorBehavior, handleError } from '../helpers/errorBehavior';
 import { find } from '../helpers/find';
 import { logAsset } from '../helpers/logs';
 import { normalizePaths, relativePaths } from '../helpers/normalizePaths';
@@ -168,7 +168,7 @@ export async function addSourcesToSourcemaps({ opts, logger, getHelpMessage }: C
         .then(opts['pass-with-no-files'] ? Ok : failIfEmpty('no sourcemaps found'))
         .then(map(toAsset))
         .then(map(loadSourceMapCommand))
-        .then(filterFailedElements)
+        .then(filterBehaviorSkippedElements)
         .then(opts.force ? Ok : filterAssetsCommand)
         .then(logDebug((r) => `adding sources to ${r.length} files`))
         .then(map(logTrace(({ path }) => `file to add sources to: ${path}`)))
@@ -178,9 +178,9 @@ export async function addSourcesToSourcemaps({ opts, logger, getHelpMessage }: C
                 : failIfEmpty('no sourcemaps without sources found, use --force to overwrite sources'),
         )
         .then(map(addSourceCommand))
-        .then(filterFailedElements)
+        .then(filterBehaviorSkippedElements)
         .then(opts['dry-run'] ? Ok : map(writeSourceMapCommand))
-        .then(filterFailedElements).inner;
+        .then(filterBehaviorSkippedElements).inner;
 }
 
 function doesSourceMapHaveSources(sourceProcessor: SourceProcessor) {

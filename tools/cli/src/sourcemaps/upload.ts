@@ -29,7 +29,7 @@ import path from 'path';
 import { GlobalOptions } from '..';
 import { Command, CommandContext } from '../commands/Command';
 import { loadSourceMapFromPathOrFromSource, toAsset } from '../helpers/common';
-import { ErrorBehaviors, filterFailedElements, getErrorBehavior, handleError } from '../helpers/errorBehavior';
+import { ErrorBehaviors, filterBehaviorSkippedElements, getErrorBehavior, handleError } from '../helpers/errorBehavior';
 import { find } from '../helpers/find';
 import { logAsset } from '../helpers/logs';
 import { normalizePaths, relativePaths } from '../helpers/normalizePaths';
@@ -274,7 +274,7 @@ export async function uploadSourcemaps({ opts, logger, getHelpMessage }: Command
         .then(opts['pass-with-no-files'] ? Ok : failIfEmpty('no sourcemaps found'))
         .then(map(toAsset))
         .then(map(loadSourceMapCommand))
-        .then(filterFailedElements)
+        .then(filterBehaviorSkippedElements)
         .then(opts.force ? Ok : filterProcessedAssetsCommand)
         .then(logDebug((r) => `uploading ${r.length} files`))
         .then(map(logTrace(({ path }) => `file to upload: ${path}`)))

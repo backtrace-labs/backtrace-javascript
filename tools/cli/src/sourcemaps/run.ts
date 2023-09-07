@@ -16,7 +16,7 @@ import path from 'path';
 import { GlobalOptions } from '..';
 import { Command } from '../commands/Command';
 import { toAsset } from '../helpers/common';
-import { filterFailedElements, getErrorBehavior, handleError } from '../helpers/errorBehavior';
+import { filterBehaviorSkippedElements, getErrorBehavior, handleError } from '../helpers/errorBehavior';
 import { find } from '../helpers/find';
 import { logAsset } from '../helpers/logs';
 import { normalizePaths, relativePaths } from '../helpers/normalizePaths';
@@ -210,7 +210,7 @@ export const runCmd = new Command<RunOptions>({
             .then(opts['pass-with-no-files'] ? Ok : failIfEmpty('no source files found'))
             .then(map(toAsset))
             .then(map(getSourceMapPathCommand))
-            .then(filterFailedElements)
+            .then(filterBehaviorSkippedElements)
             .then(map(printAssetInfo(logger)))
             .then(runProcess ? processCommand : Ok)
             .then(runAddSources ? addSourcesCommand : Ok)

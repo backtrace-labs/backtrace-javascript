@@ -20,7 +20,7 @@ import path from 'path';
 import { GlobalOptions } from '..';
 import { Command, CommandContext } from '../commands/Command';
 import { toAsset } from '../helpers/common';
-import { ErrorBehaviors, filterFailedElements, getErrorBehavior, handleError } from '../helpers/errorBehavior';
+import { ErrorBehaviors, filterBehaviorSkippedElements, getErrorBehavior, handleError } from '../helpers/errorBehavior';
 import { find } from '../helpers/find';
 import { logAsset } from '../helpers/logs';
 import { normalizePaths, relativePaths } from '../helpers/normalizePaths';
@@ -136,7 +136,7 @@ export async function processSources({ opts, logger, getHelpMessage }: CommandCo
     const filterUnprocessedAssetsCommand = (assets: Asset[]) =>
         AsyncResult.fromValue<Asset[], string>(assets)
             .then(map(isAssetProcessedCommand))
-            .then(filterFailedElements)
+            .then(filterBehaviorSkippedElements)
             .then(filter((f) => !f.result))
             .then(map((f) => f.asset)).inner;
 
@@ -174,9 +174,9 @@ export async function processSources({ opts, logger, getHelpMessage }: CommandCo
                 : failIfEmpty('no files for processing found, they may be already processed'),
         )
         .then(map(processCommand))
-        .then(filterFailedElements)
+        .then(filterBehaviorSkippedElements)
         .then(opts['dry-run'] ? Ok : map(writeCommand))
-        .then(filterFailedElements).inner;
+        .then(filterBehaviorSkippedElements).inner;
 }
 
 function isAssetProcessed(sourceProcessor: SourceProcessor) {

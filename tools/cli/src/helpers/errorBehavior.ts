@@ -21,7 +21,7 @@ export function getErrorBehavior(type: string): Result<ErrorBehavior, string> {
     return Err(`invalid error behavior "${type}", expected one of: ${valid.join(', ')}`);
 }
 
-export interface FailedElement<E> {
+export interface BehaviorSkippedElement<E> {
     readonly reason: Result<never, E>;
 }
 
@@ -29,21 +29,21 @@ export function handleError(behavior: ErrorBehavior = 'exit') {
     return function _handleAssetErrors<T, E = string>(
         fn?: (err: E, behavior: Exclude<ErrorBehavior, 'skip' | 'exit'>) => void,
     ) {
-        return function _handleAssetErrors(error: E): Result<T | FailedElement<E>, E> {
+        return function _handleAssetErrors(error: E): Result<T | BehaviorSkippedElement<E>, E> {
             switch (behavior) {
                 case 'exit':
                     return Err(error);
                 case 'skip':
-                    return Ok<FailedElement<E>>({ reason: Err(error) });
+                    return Ok<BehaviorSkippedElement<E>>({ reason: Err(error) });
                 default:
                     fn && fn(error, behavior);
-                    return Ok<FailedElement<E>>({ reason: Err(error) });
+                    return Ok<BehaviorSkippedElement<E>>({ reason: Err(error) });
             }
         };
     };
 }
 
-export function filterFailedElements<T>(asset: Array<T | FailedElement<unknown>>): T[] {
+export function filterBehaviorSkippedElements<T>(asset: Array<T | BehaviorSkippedElement<unknown>>): T[] {
     return asset.filter(
         (a) => !(typeof a === 'object' && !!a && 'reason' in a && a.reason instanceof ResultErr),
     ) as T[];
