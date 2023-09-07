@@ -12,7 +12,7 @@ export class WebsiteAttributeProvider implements BacktraceAttributeProvider {
             application: document.title || 'unknown', // application is required. Using unknown string if it is not found.
             'process.age': Math.floor((new Date().getTime() - PAGE_START_TIME) / 1000),
             hostname: window.location && window.location.hostname,
-            referer: window.location && window.location.href,
+            referrer: window.location && window.location.href,
             'location.port': document.location.port,
             'location.protocol': document.location.protocol,
             'location.origin': window.location.origin,
