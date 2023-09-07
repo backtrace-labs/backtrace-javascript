@@ -33,7 +33,7 @@ export function createArchive(sourceProcessor: SourceProcessor) {
 export async function finalizeArchive(archive: ArchiveWithSourceMapsAndDebugIds) {
     for (const asset of archive.assets) {
         const fileName = path.basename(asset.name);
-        await archive.archive.append(`${asset.debugId}-${fileName}`, JSON.stringify(asset.content));
+        archive.archive.append(`${asset.debugId}-${fileName}`, JSON.stringify(asset.content));
     }
 
     await archive.archive.finalize();
@@ -42,6 +42,9 @@ export async function finalizeArchive(archive: ArchiveWithSourceMapsAndDebugIds)
 
 export function readDebugId(sourceProcessor: SourceProcessor) {
     return function readDebugId(asset: AssetWithContent<RawSourceMap>): Result<AssetWithDebugIdAndSourceMap, string> {
-        return sourceProcessor.getSourceMapDebugId(asset.content).map((debugId) => ({ ...asset, debugId }));
+        return sourceProcessor
+            .getSourceMapDebugId(asset.content)
+            .map((debugId) => ({ ...asset, debugId }))
+            .mapErr((err) => `${asset.name}: ${err}`);
     };
 }

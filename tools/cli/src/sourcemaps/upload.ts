@@ -41,7 +41,7 @@ export interface UploadOptions extends GlobalOptions {
     readonly subdomain: string;
     readonly token: string;
     readonly path: string | string[];
-    readonly 'include-sources': string;
+    readonly 'include-sources': boolean;
     readonly insecure: boolean;
     readonly 'dry-run': boolean;
     readonly force: boolean;
@@ -213,6 +213,7 @@ export async function uploadSourcemaps({ opts, logger, getHelpMessage }: Command
             .then(loadSourceMapFromPathOrFromSource(sourceProcessor))
             .then(logDebugAsset('loaded sourcemap'))
             .then(opts['include-sources'] ? pass : stripSourcesContent)
+            .thenErr((err) => `${asset.name}: ${err}`)
             .thenErr(handleFailedAsset<AssetWithContent<RawSourceMap>>(logAssetBehaviorError(asset))).inner;
 
     const createArchiveCommand = (assets: AssetWithContent<RawSourceMap>[]) =>
@@ -247,7 +248,6 @@ export async function uploadSourcemaps({ opts, logger, getHelpMessage }: Command
 
                 // Finally, we return the upload request promise
                 const result = await promise;
-                console.log(result);
                 return result;
             })
             .then<UploadResultWithAssets>((result) => ({ ...result, assets: archive.assets }))
@@ -282,11 +282,16 @@ export async function uploadSourcemaps({ opts, logger, getHelpMessage }: Command
                 ? Ok
                 : failIfEmpty('no processed sourcemaps found, make sure to run process first'),
         )
-        .then(createArchiveCommand)
-        .then((archive) =>
-            opts['dry-run']
-                ? Ok<UploadResultWithAssets>({ rxid: '<dry-run>', assets: archive.assets })
-                : saveArchiveCommand(archive),
+        .then((assets) =>
+            !assets.length
+                ? Ok<UploadResultWithAssets>({ rxid: '<no sourcemaps uploaded>', assets })
+                : AsyncResult.fromValue<AssetWithContent<RawSourceMap>[], string>(assets)
+                      .then(createArchiveCommand)
+                      .then((archive) =>
+                          opts['dry-run']
+                              ? Ok<UploadResultWithAssets>({ rxid: '<dry-run>', assets: archive.assets })
+                              : saveArchiveCommand(archive),
+                      ).inner,
         ).inner;
 }
 
