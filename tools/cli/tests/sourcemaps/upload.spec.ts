@@ -1,26 +1,13 @@
-import { Ok, RawSourceMap, SymbolUploader, ZipArchive } from '@backtrace-labs/sourcemap-tools';
+import { RawSourceMap, ZipArchive } from '@backtrace-labs/sourcemap-tools';
 import assert from 'assert';
 import { randomUUID } from 'crypto';
 import fs from 'fs';
 import { glob } from 'glob';
 import path from 'path';
-import { Transform } from 'stream';
 import { CliLogger } from '../../src/logger';
 import { uploadSourcemaps } from '../../src/sourcemaps/upload';
-import { getHelpMessage } from '../_helpers/common';
+import { getHelpMessage, mockUploader } from '../_helpers/common';
 import { withWorkingCopy } from '../_helpers/testFiles';
-
-function mockUploader(rxid = 'rxid') {
-    const blackhole = new Transform({
-        transform(_, __, callback) {
-            callback();
-        },
-    });
-
-    return jest.spyOn(SymbolUploader.prototype, 'uploadSymbol').mockImplementation(async (readable) => {
-        return new Promise((resolve) => readable.pipe(blackhole).on('finish', () => resolve(Ok({ rxid }))));
-    });
-}
 
 describe('upload', () => {
     beforeEach(() => {

@@ -12,7 +12,7 @@ export type TestFiles =
     | 'with-sources'
     | 'invalid';
 
-const TEST_FILE_DIR = path.join(__dirname, '../_files');
+export const TEST_FILE_DIR = path.join(__dirname, '../_files');
 
 function createWorkingCopy(source: TestFiles, outputDir: string) {
     const sourceDir = path.join(TEST_FILE_DIR, source);
