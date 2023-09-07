@@ -7,10 +7,12 @@ import {
     failIfEmpty,
     filter,
     log,
+    LogLevel,
     map,
     matchSourceMapExtension,
     Ok,
     RawSourceMap,
+    Result,
     SourceProcessor,
     writeFile,
 } from '@backtrace-labs/sourcemap-tools';
@@ -18,6 +20,13 @@ import path from 'path';
 import { GlobalOptions } from '..';
 import { Command, CommandContext } from '../commands/Command';
 import { loadSourceMapFromPathOrFromSource, toAsset } from '../helpers/common';
+import {
+    ErrorBehavior,
+    ErrorBehaviors,
+    filterFailedElements,
+    GetErrorBehavior,
+    handleError,
+} from '../helpers/errorBehavior';
 import { find } from '../helpers/find';
 import { logAsset } from '../helpers/logs';
 import { normalizePaths, relativePaths } from '../helpers/normalizePaths';
@@ -30,6 +39,7 @@ export interface AddSourcesOptions extends GlobalOptions {
     readonly force: boolean;
     readonly skipFailing: boolean;
     readonly 'pass-with-no-files': boolean;
+    readonly 'asset-error-behavior': Result<ErrorBehavior, string>;
 }
 
 export const addSourcesCmd = new Command<AddSourcesOptions>({
@@ -54,6 +64,13 @@ export const addSourcesCmd = new Command<AddSourcesOptions>({
         alias: 'f',
         type: Boolean,
         description: 'Processes files even if sourcesContent is not empty. Will overwrite existing sources.',
+    })
+    .option({
+        name: 'asset-error-behavior',
+        alias: 'e',
+        type: GetErrorBehavior,
+        typeLabel: 'string',
+        description: `What to do when an asset fails. Can be one of: ${Object.keys(ErrorBehaviors).join(', ')}.`,
     })
     .option({
         name: 'pass-with-no-files',
@@ -95,14 +112,26 @@ export async function addSourcesToSourcemaps({ opts, logger, getHelpMessage }: C
     const logDebugAsset = logAsset(logger, 'debug');
     const logTraceAsset = logAsset(logger, 'trace');
 
+    if (opts['asset-error-behavior']?.isErr()) {
+        logger.info(getHelpMessage());
+        return opts['asset-error-behavior'];
+    }
+
+    const assetErrorBehavior = (opts['asset-error-behavior']?.data as ErrorBehavior) ?? 'exit';
+    const handleFailedAsset = handleError(assetErrorBehavior);
+
+    const logAssetBehaviorError = (asset: Asset) => (err: string, level: LogLevel) =>
+        logAsset(logger, level)(err)(asset);
+
     const loadSourceMapCommand = (asset: Asset) =>
         AsyncResult.fromValue<Asset, string>(asset)
             .then(logTraceAsset('loading sourcemap'))
             .then(loadSourceMapFromPathOrFromSource(sourceProcessor))
-            .then(logDebugAsset('loaded sourcemap')).inner;
+            .then(logDebugAsset('loaded sourcemap'))
+            .thenErr(handleFailedAsset<AssetWithContent<RawSourceMap>>(logAssetBehaviorError(asset))).inner;
 
     const doesSourceMapHaveSourcesCommand = (asset: AssetWithContent<RawSourceMap>) =>
-        AsyncResult.fromValue<AssetWithContent<RawSourceMap>, string>(asset)
+        AsyncResult.fromValue<AssetWithContent<RawSourceMap>, never>(asset)
             .then(logTraceAsset('checking if sourcemap has sources'))
             .then(doesSourceMapHaveSources(sourceProcessor))
             .then(
@@ -110,11 +139,10 @@ export async function addSourcesToSourcemaps({ opts, logger, getHelpMessage }: C
                     ({ asset, result }) =>
                         `${asset.name}: ` + (result ? 'sourcemap has sources' : 'sourcemap does not have sources'),
                 ),
-            )
-            .thenErr((error) => `${asset.name}: ${error}`).inner;
+            ).inner;
 
     const filterAssetsCommand = (assets: AssetWithContent<RawSourceMap>[]) =>
-        AsyncResult.fromValue<AssetWithContent<RawSourceMap>[], string>(assets)
+        AsyncResult.fromValue<AssetWithContent<RawSourceMap>[], never>(assets)
             .then(map(doesSourceMapHaveSourcesCommand))
             .then(filter((f) => !f.result))
             .then(map((f) => f.asset)).inner;
@@ -124,6 +152,7 @@ export async function addSourcesToSourcemaps({ opts, logger, getHelpMessage }: C
             .then(logTraceAsset('adding source'))
             .then(addSource(sourceProcessor))
             .then(logDebugAsset('source added'))
+            .thenErr(handleFailedAsset<AssetWithContent<RawSourceMap>>(logAssetBehaviorError(asset)))
             .thenErr((error) => `${asset.name}: ${error}`).inner;
 
     const writeSourceMapCommand = (asset: AssetWithContent<RawSourceMap>) =>
@@ -131,6 +160,7 @@ export async function addSourcesToSourcemaps({ opts, logger, getHelpMessage }: C
             .then(logTraceAsset('writing sourcemap'))
             .then(writeSourceMap)
             .then(logDebugAsset('sourcemap written'))
+            .thenErr(handleFailedAsset<AssetWithContent<RawSourceMap>>(logAssetBehaviorError(asset)))
             .thenErr((error) => `${asset.name}: ${error}`).inner;
 
     return AsyncResult.equip(find(...searchPaths))
@@ -143,6 +173,7 @@ export async function addSourcesToSourcemaps({ opts, logger, getHelpMessage }: C
         .then(opts['pass-with-no-files'] ? Ok : failIfEmpty('no sourcemaps found'))
         .then(map(toAsset))
         .then(map(loadSourceMapCommand))
+        .then(filterFailedElements)
         .then(opts.force ? Ok : filterAssetsCommand)
         .then(logDebug((r) => `adding sources to ${r.length} files`))
         .then(map(logTrace(({ path }) => `file to add sources to: ${path}`)))
@@ -152,7 +183,9 @@ export async function addSourcesToSourcemaps({ opts, logger, getHelpMessage }: C
                 : failIfEmpty('no sourcemaps without sources found, use --force to overwrite sources'),
         )
         .then(map(addSourceCommand))
-        .then(opts['dry-run'] ? Ok : map(writeSourceMapCommand)).inner;
+        .then(filterFailedElements)
+        .then(opts['dry-run'] ? Ok : map(writeSourceMapCommand))
+        .then(filterFailedElements).inner;
 }
 
 function doesSourceMapHaveSources(sourceProcessor: SourceProcessor) {
