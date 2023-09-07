@@ -159,7 +159,7 @@ export class SourceProcessor {
     public getSourceMapPathFromSource(source: string, sourcePath: string) {
         const match = source.match(/^\/\/# sourceMappingURL=(.+)$/m);
         if (!match || !match[1]) {
-            return Err('could not find source map for source.');
+            return Err('could not find source map for source');
         }
 
         return Ok(path.resolve(path.dirname(sourcePath), match[1]));
