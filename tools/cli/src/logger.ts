@@ -13,7 +13,7 @@ export interface CliLoggerOptions {
     readonly prefix?: string;
 }
 
-export type CliLogLevel = LogLevel | 'output';
+export type CliLogLevel = LogLevel | 'output' | 'fatal';
 
 export class CliLogger implements Logger {
     private readonly _levelMap: Record<CliLogLevel, boolean>;
@@ -28,6 +28,10 @@ export class CliLogger implements Logger {
 
     public output(value: unknown | Error, ...args: unknown[]) {
         return this.log('output', value, ...args);
+    }
+
+    public fatal(value: unknown | Error, ...args: unknown[]) {
+        return this.log('fatal', value, ...args);
     }
 
     public error(value: unknown | Error, ...args: unknown[]) {
@@ -87,15 +91,17 @@ export class CliLogger implements Logger {
     private createLevelMap(level: CliLogLevel): Record<CliLogLevel, boolean> {
         const levelMap: Record<CliLogLevel, number> = {
             output: 0,
-            error: 1,
-            warn: 2,
-            info: 3,
-            debug: 4,
-            trace: 5,
+            fatal: 1,
+            error: 2,
+            warn: 3,
+            info: 4,
+            debug: 5,
+            trace: 6,
         };
 
         return {
             output: levelMap[level] >= levelMap['output'],
+            fatal: levelMap[level] >= levelMap['fatal'],
             error: levelMap[level] >= levelMap['error'],
             warn: levelMap[level] >= levelMap['warn'],
             info: levelMap[level] >= levelMap['info'],
