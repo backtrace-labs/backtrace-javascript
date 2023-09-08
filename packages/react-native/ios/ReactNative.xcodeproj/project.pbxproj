@@ -7,8 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		5E555C0D2413F4C50049A1A2 /* ReactNative.mm in Sources */ = {isa = PBXBuildFile; fileRef = B3E7B5891CC2AC0600A0062D /* ReactNative.mm */; };
-		F4FF95D7245B92E800C19C63 /*  ReactNative.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4FF95D6245B92E800C19C63 /*  ReactNative.swift */; };
+		5BFCFD002AA9FE6000EBFD38 /* BacktraceApplicationAttributeProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BFCFCFF2AA9FE6000EBFD38 /* BacktraceApplicationAttributeProvider.swift */; };
+		5BFCFD022AA9FED900EBFD38 /* BacktraceDeviceAttributeProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BFCFD012AA9FED900EBFD38 /* BacktraceDeviceAttributeProvider.swift */; };
+		5BFCFD042AA9FF1300EBFD38 /* BacktraceSystemAttributeProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BFCFD032AA9FF1300EBFD38 /* BacktraceSystemAttributeProvider.swift */; };
+		5BFCFD062AAA11AA00EBFD38 /* BacktraceApplicationAttributeProvider.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5BFCFD052AAA11AA00EBFD38 /* BacktraceApplicationAttributeProvider.mm */; };
+		5BFCFD092AAA125300EBFD38 /* BacktraceSystemAttributeProvider.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5BFCFD082AAA125300EBFD38 /* BacktraceSystemAttributeProvider.mm */; };
+		F4FF95D7245B92E800C19C63 /* ReactNative.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4FF95D6245B92E800C19C63 /* ReactNative.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,6 +29,11 @@
 
 /* Begin PBXFileReference section */
 		134814201AA4EA6300B7C361 /* libReactNative.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libReactNative.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		5BFCFCFF2AA9FE6000EBFD38 /* BacktraceApplicationAttributeProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BacktraceApplicationAttributeProvider.swift; sourceTree = "<group>"; };
+		5BFCFD012AA9FED900EBFD38 /* BacktraceDeviceAttributeProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BacktraceDeviceAttributeProvider.swift; sourceTree = "<group>"; };
+		5BFCFD032AA9FF1300EBFD38 /* BacktraceSystemAttributeProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BacktraceSystemAttributeProvider.swift; sourceTree = "<group>"; };
+		5BFCFD052AAA11AA00EBFD38 /* BacktraceApplicationAttributeProvider.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = BacktraceApplicationAttributeProvider.mm; sourceTree = "<group>"; };
+		5BFCFD082AAA125300EBFD38 /* BacktraceSystemAttributeProvider.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = BacktraceSystemAttributeProvider.mm; sourceTree = "<group>"; };
 		B3E7B5891CC2AC0600A0062D /* ReactNative.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ReactNative.mm; sourceTree = "<group>"; };
 		F4FF95D5245B92E700C19C63 /* ReactNative-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ReactNative-Bridging-Header.h"; sourceTree = "<group>"; };
 		F4FF95D6245B92E800C19C63 /* ReactNative.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactNative.swift; sourceTree = "<group>"; };
@@ -52,6 +61,11 @@
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
+				5BFCFD082AAA125300EBFD38 /* BacktraceSystemAttributeProvider.mm */,
+				5BFCFD052AAA11AA00EBFD38 /* BacktraceApplicationAttributeProvider.mm */,
+				5BFCFD032AA9FF1300EBFD38 /* BacktraceSystemAttributeProvider.swift */,
+				5BFCFD012AA9FED900EBFD38 /* BacktraceDeviceAttributeProvider.swift */,
+				5BFCFCFF2AA9FE6000EBFD38 /* BacktraceApplicationAttributeProvider.swift */,
 				F4FF95D6245B92E800C19C63 /* ReactNative.swift */,
 				B3E7B5891CC2AC0600A0062D /* ReactNative.mm */,
 				F4FF95D5245B92E700C19C63 /* ReactNative-Bridging-Header.h */,
@@ -116,8 +130,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5BFCFD022AA9FED900EBFD38 /* BacktraceDeviceAttributeProvider.swift in Sources */,
+				5BFCFD042AA9FF1300EBFD38 /* BacktraceSystemAttributeProvider.swift in Sources */,
 				F4FF95D7245B92E800C19C63 /* ReactNative.swift in Sources */,
-				B3E7B58A1CC2AC0600A0062D /* ReactNative.mm in Sources */,
+				5BFCFD062AAA11AA00EBFD38 /* BacktraceApplicationAttributeProvider.mm in Sources */,
+				5BFCFD002AA9FE6000EBFD38 /* BacktraceApplicationAttributeProvider.swift in Sources */,
+				5BFCFD092AAA125300EBFD38 /* BacktraceSystemAttributeProvider.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
