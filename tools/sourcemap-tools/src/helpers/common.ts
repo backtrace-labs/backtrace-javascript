@@ -86,6 +86,13 @@ export function filter<T>(fn: (t: T) => boolean) {
     };
 }
 
+export function filterAsync<T>(fn: (t: T) => boolean | Promise<boolean>) {
+    return async function filterAsync(t: T[]) {
+        const results = await Promise.all(t.map(async (v) => [v, await fn(v)] as const));
+        return results.filter((r) => r[1]).map((r) => r[0]);
+    };
+}
+
 export function log(logger: Logger, level: LogLevel) {
     return function log<T>(message: string | ((t: T) => string)) {
         return inspect<T>((t) => logger[level](typeof message === 'function' ? message(t) : message));
@@ -97,4 +104,8 @@ export function inspect<T>(fn: (t: T) => unknown) {
         fn(t);
         return t;
     };
+}
+
+export function not(value: boolean) {
+    return !value;
 }
