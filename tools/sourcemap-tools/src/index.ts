@@ -6,6 +6,7 @@ export * from './SymbolUploader';
 export * from './ZipArchive';
 export * from './commands';
 export * from './helpers/common';
+export * from './helpers/flow';
 export * from './helpers/match';
 export * from './models/Asset';
 export * from './models/AsyncResult';
