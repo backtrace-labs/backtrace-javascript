@@ -8,16 +8,19 @@ import {
     SourceProcessor,
     failIfEmpty,
     filter,
+    flow,
     log,
     map,
     matchSourceExtension,
+    not,
+    pass,
 } from '@backtrace-labs/sourcemap-tools';
 import path from 'path';
 import { GlobalOptions } from '..';
 import { Command, CommandContext } from '../commands/Command';
 import { toAsset } from '../helpers/common';
 import { ErrorBehaviors, filterBehaviorSkippedElements, getErrorBehavior, handleError } from '../helpers/errorBehavior';
-import { find } from '../helpers/find';
+import { buildIncludeExclude, find } from '../helpers/find';
 import { logAsset } from '../helpers/logs';
 import { normalizePaths, relativePaths } from '../helpers/normalizePaths';
 import { CliLogger } from '../logger';
@@ -31,6 +34,8 @@ export interface RunOptions extends GlobalOptions {
     readonly upload: boolean;
     readonly process: boolean;
     readonly path: string | string[];
+    readonly include: string | string[];
+    readonly exclude: string | string[];
     readonly force: boolean;
     readonly 'pass-with-no-files': boolean;
     readonly 'asset-error-behavior': string;
@@ -66,6 +71,20 @@ export const runCmd = new Command<RunOptions>({
         description: 'Path to sources.',
         multiple: true,
         alias: 'p',
+    })
+    .option({
+        name: 'include',
+        description: 'Includes specified paths.',
+        type: String,
+        multiple: true,
+        alias: 'i',
+    })
+    .option({
+        name: 'exclude',
+        description: 'Excludes specified paths.',
+        type: String,
+        multiple: true,
+        alias: 'x',
     })
     .option({
         name: 'force',
@@ -203,9 +222,16 @@ export async function runSourcemapCommands({ opts, logger, getHelpMessage }: Com
             )
             .then(() => assets).inner;
 
-    return AsyncResult.equip(find(...searchPaths))
+    const includePaths = normalizePaths(opts.include);
+    const excludePaths = normalizePaths(opts.exclude);
+    const { isIncluded, isExcluded } = await buildIncludeExclude(includePaths, excludePaths, logDebug);
+
+    return AsyncResult.fromValue<string[], string>(searchPaths)
+        .then(find)
         .then(logTrace((r) => `found ${r.length} files`))
         .then(map(logTrace((result) => `found file: ${result.path}`)))
+        .then(isIncluded ? filter(isIncluded) : pass)
+        .then(isExcluded ? filter(flow(isExcluded, not)) : pass)
         .then(filter((t) => t.direct || matchSourceExtension(t.path)))
         .then(map((t) => t.path))
         .then(logDebug((r) => `found ${r.length} source files`))

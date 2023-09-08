@@ -6,11 +6,14 @@ import {
     Err,
     failIfEmpty,
     filter,
+    flow,
     log,
     LogLevel,
     map,
     matchSourceMapExtension,
+    not,
     Ok,
+    pass,
     RawSourceMap,
     SourceProcessor,
     writeFile,
@@ -20,7 +23,7 @@ import { GlobalOptions } from '..';
 import { Command, CommandContext } from '../commands/Command';
 import { loadSourceMapFromPathOrFromSource, toAsset } from '../helpers/common';
 import { ErrorBehaviors, filterBehaviorSkippedElements, getErrorBehavior, handleError } from '../helpers/errorBehavior';
-import { find } from '../helpers/find';
+import { buildIncludeExclude, find } from '../helpers/find';
 import { logAsset } from '../helpers/logs';
 import { normalizePaths, relativePaths } from '../helpers/normalizePaths';
 import { CliLogger } from '../logger';
@@ -28,6 +31,8 @@ import { findConfig, loadOptionsForCommand } from '../options/loadOptions';
 
 export interface AddSourcesOptions extends GlobalOptions {
     readonly path: string | string[];
+    readonly include: string | string[];
+    readonly exclude: string | string[];
     readonly 'dry-run': boolean;
     readonly force: boolean;
     readonly skipFailing: boolean;
@@ -45,6 +50,20 @@ export const addSourcesCmd = new Command<AddSourcesOptions>({
         defaultOption: true,
         multiple: true,
         alias: 'p',
+    })
+    .option({
+        name: 'include',
+        description: 'Includes specified paths.',
+        type: String,
+        multiple: true,
+        alias: 'i',
+    })
+    .option({
+        name: 'exclude',
+        description: 'Excludes specified paths.',
+        type: String,
+        multiple: true,
+        alias: 'x',
     })
     .option({
         name: 'dry-run',
@@ -158,9 +177,16 @@ export async function addSourcesToSourcemaps({ opts, logger, getHelpMessage }: C
             .thenErr(handleFailedAsset<AssetWithContent<RawSourceMap>>(logAssetBehaviorError(asset)))
             .thenErr((error) => `${asset.name}: ${error}`).inner;
 
-    return AsyncResult.equip(find(...searchPaths))
+    const includePaths = normalizePaths(opts.include);
+    const excludePaths = normalizePaths(opts.exclude);
+    const { isIncluded, isExcluded } = await buildIncludeExclude(includePaths, excludePaths, logDebug);
+
+    return AsyncResult.fromValue<string[], string>(searchPaths)
+        .then(find)
         .then(logDebug((r) => `found ${r.length} files`))
         .then(map(logTrace((result) => `found file: ${result.path}`)))
+        .then(isIncluded ? filter(isIncluded) : pass)
+        .then(isExcluded ? filter(flow(isExcluded, not)) : pass)
         .then(filter((t) => t.direct || matchSourceMapExtension(t.path)))
         .then(map((t) => t.path))
         .then(logDebug((r) => `found ${r.length} files for adding sources`))

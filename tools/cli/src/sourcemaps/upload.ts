@@ -10,10 +10,12 @@ import {
     failIfEmpty,
     filter,
     finalizeArchive,
+    flow,
     log,
     LogLevel,
     map,
     matchSourceMapExtension,
+    not,
     Ok,
     pass,
     pipeStream,
@@ -30,7 +32,7 @@ import { GlobalOptions } from '..';
 import { Command, CommandContext } from '../commands/Command';
 import { loadSourceMapFromPathOrFromSource, toAsset } from '../helpers/common';
 import { ErrorBehaviors, filterBehaviorSkippedElements, getErrorBehavior, handleError } from '../helpers/errorBehavior';
-import { find } from '../helpers/find';
+import { buildIncludeExclude, find } from '../helpers/find';
 import { logAsset } from '../helpers/logs';
 import { normalizePaths, relativePaths } from '../helpers/normalizePaths';
 import { CliLogger } from '../logger';
@@ -41,6 +43,8 @@ export interface UploadOptions extends GlobalOptions {
     readonly subdomain: string;
     readonly token: string;
     readonly path: string | string[];
+    readonly include: string | string[];
+    readonly exclude: string | string[];
     readonly 'include-sources': boolean;
     readonly insecure: boolean;
     readonly 'dry-run': boolean;
@@ -65,6 +69,20 @@ export const uploadCmd = new Command<UploadOptions>({
         defaultOption: true,
         multiple: true,
         alias: 'p',
+    })
+    .option({
+        name: 'include',
+        description: 'Includes specified paths.',
+        type: String,
+        multiple: true,
+        alias: 'i',
+    })
+    .option({
+        name: 'exclude',
+        description: 'Excludes specified paths.',
+        type: String,
+        multiple: true,
+        alias: 'x',
     })
     .option({
         name: 'url',
@@ -263,9 +281,16 @@ export async function uploadSourcemaps({ opts, logger, getHelpMessage }: Command
         throw new Error('processArchive function should be defined');
     }
 
-    return AsyncResult.equip(find(...searchPaths))
+    const includePaths = normalizePaths(opts.include);
+    const excludePaths = normalizePaths(opts.exclude);
+    const { isIncluded, isExcluded } = await buildIncludeExclude(includePaths, excludePaths, logDebug);
+
+    return AsyncResult.fromValue<string[], string>(searchPaths)
+        .then(find)
         .then(logDebug((r) => `found ${r.length} files`))
         .then(map(logTrace((result) => `found file: ${result.path}`)))
+        .then(isIncluded ? filter(isIncluded) : pass)
+        .then(isExcluded ? filter(flow(isExcluded, not)) : pass)
         .then(filter((t) => t.direct || matchSourceMapExtension(t.path)))
         .then(map((t) => t.path))
         .then(logDebug((r) => `found ${r.length} files for upload`))
