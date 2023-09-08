@@ -7,6 +7,7 @@ export class ApplicationInformationAttributeProvider implements BacktraceAttribu
     }
     public get(): Record<string, unknown> {
         if (!NativeModules.BacktraceApplicationAttributeProvider) {
+            console.log('BacktraceApplicationAttributeProvider is null');
             return {};
         }
         const BacktraceApplicationAttributeProvider = NativeModules.BacktraceApplicationAttributeProvider;
