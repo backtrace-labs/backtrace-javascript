@@ -241,7 +241,7 @@ export async function uploadSourcemaps({ opts, logger, getHelpMessage }: Command
 
     const includePaths = normalizePaths(opts.include);
     const excludePaths = normalizePaths(opts.exclude);
-    const { isIncluded, isExcluded } = await buildIncludeExclude(includePaths, excludePaths, logDebug);
+    const { isIncluded, isExcluded } = await buildIncludeExclude(includePaths, excludePaths, logTrace);
 
     return pipe(
         searchPaths,
