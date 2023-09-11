@@ -1,3 +1,4 @@
+import { Ok } from '@backtrace-labs/sourcemap-tools';
 import assert from 'assert';
 import { randomUUID } from 'crypto';
 import fs from 'fs';
@@ -51,7 +52,9 @@ describe('run', () => {
                 assert(result.isOk(), result.data as string);
 
                 const expected = [...(await glob(`${workingDir}/*.js`)), ...(await glob(`${workingDir}/*.js.map`))];
-                expect(result.data.flatMap((d) => [d.path, d.sourceMapPath])).toEqual(expect.arrayContaining(expected));
+                expect(result.data.flatMap((d) => [d.source.path, d.sourceMap.path])).toEqual(
+                    expect.arrayContaining(expected),
+                );
             }),
         );
 
@@ -85,7 +88,9 @@ describe('run', () => {
                     ...(await glob(`${workingDir}/entry*.js`)),
                     ...(await glob(`${workingDir}/entry*.js.map`)),
                 ];
-                expect(result.data.flatMap((d) => [d.path, d.sourceMapPath])).toEqual(expect.arrayContaining(expected));
+                expect(result.data.flatMap((d) => [d.source.path, d.sourceMap.path])).toEqual(
+                    expect.arrayContaining(expected),
+                );
             }),
         );
     });
@@ -105,7 +110,7 @@ describe('run', () => {
                     },
                 });
 
-                const processSpy = jest.spyOn(processCmd, 'processSources');
+                const processSpy = jest.spyOn(processCmd, 'processSource');
                 processSpy.mockClear();
 
                 const result = await runSourcemapCommands({
@@ -119,6 +124,57 @@ describe('run', () => {
 
                 assert(result.isOk(), result.data as string);
                 expect(processSpy).toBeCalled();
+            }),
+        );
+
+        it(
+            'should call process with every source when process=true',
+            withWorkingCopy('original', async (workingDir) => {
+                const config = await mockOptions(workingDir, {
+                    run: {
+                        'add-sources': true,
+                        process: true,
+                        upload: true,
+                    },
+                    upload: {
+                        url: 'https://test',
+                    },
+                });
+
+                type InnerProcess = ReturnType<typeof processCmd.processSource>;
+                const innerProcess = jest
+                    .fn<ReturnType<InnerProcess>, Parameters<InnerProcess>>()
+                    .mockImplementation((asset) =>
+                        Promise.resolve({
+                            source: asset.source,
+                            sourceMap: {
+                                ...asset.sourceMap,
+                                content: { ...asset.sourceMap.content, debugId: 'debugId' },
+                            },
+                            debugId: 'debugId',
+                        }),
+                    );
+
+                const processSpy = jest.spyOn(processCmd, 'processSource').mockReturnValue(innerProcess);
+                processSpy.mockClear();
+
+                const result = await runSourcemapCommands({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: workingDir,
+                        config,
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+
+                const files = await glob(`${workingDir}/*.js`);
+                for (const file of files) {
+                    expect(innerProcess).toBeCalledWith(
+                        expect.objectContaining({ source: expect.objectContaining({ path: file }) }),
+                    );
+                }
             }),
         );
 
@@ -167,7 +223,7 @@ describe('run', () => {
                     },
                 });
 
-                const addSourcesSpy = jest.spyOn(addSourcesCmd, 'addSourcesToSourcemaps');
+                const addSourcesSpy = jest.spyOn(addSourcesCmd, 'addSourceToSourceMap');
                 addSourcesSpy.mockClear();
 
                 const result = await runSourcemapCommands({
@@ -181,6 +237,48 @@ describe('run', () => {
 
                 assert(result.isOk(), result.data as string);
                 expect(addSourcesSpy).toBeCalled();
+            }),
+        );
+
+        it(
+            'should call add-sources with every sourcemap when add-sources=true',
+            withWorkingCopy('original', async (workingDir) => {
+                const config = await mockOptions(workingDir, {
+                    run: {
+                        'add-sources': true,
+                        process: true,
+                        upload: true,
+                    },
+                    upload: {
+                        url: 'https://test',
+                    },
+                });
+
+                type InnerAddSources = ReturnType<typeof addSourcesCmd.addSourceToSourceMap>;
+                const innerAddSources = jest
+                    .fn<ReturnType<InnerAddSources>, Parameters<InnerAddSources>>()
+                    .mockImplementation((asset) => Promise.resolve(Ok(asset)));
+
+                const addSourcesSpy = jest
+                    .spyOn(addSourcesCmd, 'addSourceToSourceMap')
+                    .mockReturnValue(innerAddSources);
+                addSourcesSpy.mockClear();
+
+                const result = await runSourcemapCommands({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: workingDir,
+                        config,
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+
+                const files = await glob(`${workingDir}/*.js.map`);
+                for (const file of files) {
+                    expect(innerAddSources).toBeCalledWith(expect.objectContaining({ path: file }));
+                }
             }),
         );
 
@@ -229,7 +327,7 @@ describe('run', () => {
                     },
                 });
 
-                const uploadSpy = jest.spyOn(uploadCmd, 'uploadSourcemaps');
+                const uploadSpy = jest.spyOn(uploadCmd, 'uploadOrSaveAssets');
                 uploadSpy.mockClear();
 
                 const result = await runSourcemapCommands({
@@ -260,7 +358,7 @@ describe('run', () => {
                     },
                 });
 
-                const uploadSpy = jest.spyOn(uploadCmd, 'uploadSourcemaps');
+                const uploadSpy = jest.spyOn(uploadCmd, 'uploadOrSaveAssets');
                 uploadSpy.mockClear();
 
                 const result = await runSourcemapCommands({

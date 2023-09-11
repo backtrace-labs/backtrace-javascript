@@ -1,33 +1,41 @@
 import {
     Asset,
-    AsyncResult,
+    AssetWithContent,
     DebugIdGenerator,
     Err,
     LogLevel,
     Ok,
+    R,
+    RawSourceMap,
+    RawSourceMapWithDebugId,
+    SourceAndSourceMap,
     SourceProcessor,
+    UploadResult,
     failIfEmpty,
     filter,
+    filterAsync,
     flow,
     log,
     map,
+    mapAsync,
     matchSourceExtension,
     not,
     pass,
+    pipe,
 } from '@backtrace-labs/sourcemap-tools';
 import path from 'path';
 import { GlobalOptions } from '..';
 import { Command, CommandContext } from '../commands/Command';
-import { toAsset } from '../helpers/common';
+import { isAssetProcessed, readSourceAndSourceMap, toAsset, writeSourceAndSourceMap } from '../helpers/common';
 import { ErrorBehaviors, filterBehaviorSkippedElements, getErrorBehavior, handleError } from '../helpers/errorBehavior';
 import { buildIncludeExclude, find } from '../helpers/find';
-import { logAsset } from '../helpers/logs';
+import { logAsset, logAssets } from '../helpers/logs';
 import { normalizePaths, relativePaths } from '../helpers/normalizePaths';
 import { CliLogger } from '../logger';
-import { findConfig, loadOptionsForCommand } from '../options/loadOptions';
-import { addSourcesToSourcemaps } from './add-sources';
-import { processSources } from './process';
-import { uploadSourcemaps } from './upload';
+import { findConfig, joinOptions, loadOptions } from '../options/loadOptions';
+import { addSourceToSourceMap } from './add-sources';
+import { processSource } from './process';
+import { saveAssets, uploadAssets, uploadOrSaveAssets } from './upload';
 
 export interface RunOptions extends GlobalOptions {
     readonly 'add-sources': boolean;
@@ -36,13 +44,14 @@ export interface RunOptions extends GlobalOptions {
     readonly path: string | string[];
     readonly include: string | string[];
     readonly exclude: string | string[];
+    readonly 'dry-run': boolean;
+    readonly url: string;
+    readonly 'include-sources': boolean;
+    readonly output: string;
+    readonly insecure: boolean;
     readonly force: boolean;
     readonly 'pass-with-no-files': boolean;
     readonly 'asset-error-behavior': string;
-}
-
-interface AssetWithSourceMapPath extends Asset {
-    readonly sourceMapPath: string;
 }
 
 export const runCmd = new Command<RunOptions>({
@@ -87,6 +96,35 @@ export const runCmd = new Command<RunOptions>({
         alias: 'x',
     })
     .option({
+        name: 'url',
+        type: String,
+        description: 'URL to upload to.',
+        alias: 'u',
+    })
+    .option({
+        name: 'output',
+        alias: 'o',
+        description: 'If set, archive with sourcemaps will be outputted to this path instead of being uploaded.',
+        type: String,
+    })
+    .option({
+        name: 'include-sources',
+        type: Boolean,
+        description: 'Uploads the sourcemaps with "sourcesContent" key.',
+    })
+    .option({
+        name: 'insecure',
+        alias: 'k',
+        type: Boolean,
+        description: 'Disables HTTPS certificate checking.',
+    })
+    .option({
+        name: 'dry-run',
+        alias: 'n',
+        type: Boolean,
+        description: 'Does not modify the files at the end.',
+    })
+    .option({
         name: 'force',
         alias: 'f',
         type: Boolean,
@@ -108,40 +146,35 @@ export const runCmd = new Command<RunOptions>({
 export async function runSourcemapCommands({ opts, logger, getHelpMessage }: CommandContext<RunOptions>) {
     const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
     const configPath = opts.config ?? (await findConfig());
-    if (!configPath) {
-        return Err('cannot find config file');
-    }
 
     logger.debug(`reading config from ${configPath}`);
 
-    const configResult = await loadOptionsForCommand(configPath)('run');
+    const configResult = await loadOptions(configPath);
     if (configResult.isErr()) {
         return configResult;
     }
 
     const config = configResult.data;
-    if (!config) {
-        logger.info(getHelpMessage());
-        return Err('cannot read config file');
-    }
+    const runOptions = config ? { ...joinOptions('run')(config), ...opts } : opts;
+    const processOptions = config ? { ...joinOptions('process')(config), ...opts } : opts;
+    const addSourcsOptions = config ? { ...joinOptions('add-sources')(config), ...opts } : opts;
+    const uploadOptions = config ? { ...joinOptions('upload')(config), ...opts } : opts;
 
-    opts = {
-        ...config,
-        ...opts,
-        path: opts.path ?? (config.path ? relativePaths(config.path, path.dirname(configPath)) : process.cwd()),
-    };
+    const searchPath =
+        opts.path ??
+        (config?.path && configPath ? relativePaths(config.path, path.dirname(configPath)) : process.cwd());
 
     logger.trace(`resolved options: \n${JSON.stringify(opts, null, '  ')}`);
 
-    const runProcess = opts.process;
-    const runAddSources = opts['add-sources'];
-    const runUpload = opts.upload;
+    const runProcess = runOptions.process ?? false;
+    const runAddSources = runOptions['add-sources'] ?? false;
+    const runUpload = runOptions.upload ?? false;
     if (!runAddSources && !runUpload && !runProcess) {
         logger.info(getHelpMessage());
         return Err('--process, --add-sources and/or --upload must be specified');
     }
 
-    const searchPaths = normalizePaths(opts.path, process.cwd());
+    const searchPaths = normalizePaths(searchPath, process.cwd());
     if (!searchPaths.length) {
         logger.info(getHelpMessage());
         return Err('path must be specified');
@@ -150,9 +183,12 @@ export async function runSourcemapCommands({ opts, logger, getHelpMessage }: Com
     const logInfo = log(logger, 'info');
     const logDebug = log(logger, 'debug');
     const logTrace = log(logger, 'trace');
+    const logDebugAsset = logAsset(logger, 'trace');
     const logTraceAsset = logAsset(logger, 'trace');
+    const logDebugAssets = logAssets(logger, 'debug');
+    const logTraceAssets = logAssets(logger, 'trace');
 
-    const assetErrorBehaviorResult = getErrorBehavior(opts['asset-error-behavior'] ?? 'exit');
+    const assetErrorBehaviorResult = getErrorBehavior(runOptions['asset-error-behavior'] ?? 'exit');
     if (assetErrorBehaviorResult.isErr()) {
         logger.info(getHelpMessage());
         return assetErrorBehaviorResult;
@@ -165,97 +201,138 @@ export async function runSourcemapCommands({ opts, logger, getHelpMessage }: Com
     const logAssetBehaviorError = (asset: Asset) => (err: string, level: LogLevel) =>
         logAsset(logger, level)(err)(asset);
 
-    const getSourceMapPathCommand = (asset: Asset) =>
-        AsyncResult.fromValue<Asset, string>(asset)
-            .then(logTraceAsset('reading sourcemap path'))
-            .then(getSourceMapPath(sourceProcessor))
-            .then<AssetWithSourceMapPath>((sourceMapPath) => ({ ...asset, sourceMapPath }))
-            .then(logTraceAsset('read sourcemap path'))
-            .thenErr(handleFailedAsset<AssetWithSourceMapPath>(logAssetBehaviorError(asset))).inner;
+    const handleAssetCommand = (process: boolean, addSources: boolean) => (asset: Asset) =>
+        pipe(
+            asset,
+            logTraceAsset('reading source and sourcemap'),
+            readSourceAndSourceMap(sourceProcessor),
+            R.map(logDebugAssets('read source and sourcemap')),
+            R.map(printAssetInfo(logger)),
+            R.map(
+                process
+                    ? flow(
+                          logTraceAssets('processing source and sourcemap'),
+                          processSource(processOptions.force ?? false),
+                          logDebugAssets('processed source and sourcemap'),
+                      )
+                    : pass,
+            ),
+            R.map(
+                addSources
+                    ? (assets) =>
+                          pipe(
+                              assets.sourceMap,
+                              logTraceAsset('adding sources to sourcemap'),
+                              addSourceToSourceMap(addSourcsOptions.force ?? false),
+                              R.map(logDebugAsset('source added to sourcemap')),
+                              R.map(() => assets),
+                          )
+                    : Ok,
+            ),
+            R.map(
+                runOptions['dry-run']
+                    ? Ok
+                    : flow(
+                          logTraceAssets('writing source and sourcemap'),
+                          writeSourceAndSourceMap,
+                          R.map(logDebugAssets('wrote source and sourcemap')),
+                      ),
+            ),
+            R.mapErr((err) => `${asset.name}: ${err}`),
+            handleFailedAsset(logAssetBehaviorError(asset)),
+        );
 
-    const processCommand = (assets: AssetWithSourceMapPath[]) =>
-        AsyncResult.fromValue<AssetWithSourceMapPath[], string>(assets)
-            .then(logDebug(`running process...`))
-            .then((assets) =>
-                assets.length
-                    ? processSources({
-                          opts: { ...opts, 'pass-with-no-files': true, path: assets.map((a) => a.path) },
-                          getHelpMessage,
-                          logger: logger.clone({ prefix: 'process:' }),
-                      })
-                    : Ok([]),
-            )
-            .then(logInfo((results) => `processed ${results.length} files`))
-            .then(() => assets).inner;
+    const saveArchiveCommandResult = runOptions.upload
+        ? await uploadOrSaveAssets(
+              uploadOptions.url,
+              uploadOptions.output,
+              (url) =>
+                  uploadAssets(
+                      url,
+                      { ignoreSsl: uploadOptions.insecure ?? false },
+                      uploadOptions['include-sources'] ?? false,
+                  ),
+              (path) => flow(saveAssets(path, uploadOptions['include-sources'] ?? false), Ok),
+          )
+        : Ok(undefined);
 
-    const addSourcesCommand = (assets: AssetWithSourceMapPath[]) =>
-        AsyncResult.fromValue<AssetWithSourceMapPath[], string>(assets)
-            .then(logDebug(`running add-sources...`))
-            .then((assets) =>
-                assets.length
-                    ? addSourcesToSourcemaps({
-                          opts: { ...opts, 'pass-with-no-files': true, path: assets.map((a) => a.sourceMapPath) },
-                          getHelpMessage,
-                          logger: logger.clone({ prefix: 'add-sources:' }),
-                      })
-                    : Ok([]),
-            )
-            .then(logInfo((results) => `added sources to ${results.length} files`))
-            .then(() => assets).inner;
+    if (saveArchiveCommandResult.isErr()) {
+        return saveArchiveCommandResult;
+    }
 
-    const uploadCommand = (assets: AssetWithSourceMapPath[]) =>
-        AsyncResult.fromValue<AssetWithSourceMapPath[], string>(assets)
-            .then(logDebug(`running upload...`))
-            .then((assets) =>
-                assets.length
-                    ? uploadSourcemaps({
-                          opts: { ...opts, path: assets.map((a) => a.sourceMapPath) },
-                          getHelpMessage,
-                          logger: logger.clone({ prefix: 'upload:' }),
-                      })
-                    : Ok(null),
-            )
-            .then(
-                logInfo((result) =>
-                    result ? `uploaded ${result.assets.length} files: ${result.rxid}` : `no files uploaded`,
-                ),
-            )
-            .then(() => assets).inner;
+    const saveArchiveCommand = saveArchiveCommandResult.data;
 
-    const includePaths = normalizePaths(opts.include);
-    const excludePaths = normalizePaths(opts.exclude);
+    const isAssetProcessedCommand = (asset: AssetWithContent<RawSourceMap>) =>
+        pipe(
+            asset,
+            logTraceAsset('checking if asset is processed'),
+            isAssetProcessed(sourceProcessor),
+            logDebug(
+                ({ asset, result }) => `${asset.name}: ` + (result ? 'asset is processed' : 'asset is not processed'),
+            ),
+        );
+
+    const filterProcessedAssetsCommand = (assets: AssetWithContent<RawSourceMap>[]) =>
+        pipe(
+            assets,
+            mapAsync(isAssetProcessedCommand),
+            filter((f) => f.result),
+            map((f) => f.asset as AssetWithContent<RawSourceMapWithDebugId>),
+        );
+
+    const uploadCommand = saveArchiveCommand
+        ? (assets: SourceAndSourceMap[]) =>
+              pipe(
+                  assets,
+                  logDebug(`running upload...`),
+                  map((t) => t.sourceMap),
+                  filterProcessedAssetsCommand,
+                  opts['pass-with-no-files']
+                      ? Ok
+                      : failIfEmpty('no processed sourcemaps found, make sure to run process'),
+                  R.map((assets) =>
+                      opts['dry-run']
+                          ? Ok({ rxid: '<dry-run>' })
+                          : assets.length
+                          ? saveArchiveCommand(assets)
+                          : Ok(null),
+                  ),
+                  R.map(
+                      logInfo((result: UploadResult | null) =>
+                          result ? `uploaded ${assets.length} files: ${result.rxid}` : `no files uploaded`,
+                      ),
+                  ),
+                  R.map(() => assets),
+              )
+        : undefined;
+
+    const includePaths = normalizePaths(runOptions.include);
+    const excludePaths = normalizePaths(runOptions.exclude);
     const { isIncluded, isExcluded } = await buildIncludeExclude(includePaths, excludePaths, logDebug);
 
-    return AsyncResult.fromValue<string[], string>(searchPaths)
-        .then(find)
-        .then(logTrace((r) => `found ${r.length} files`))
-        .then(map(logTrace((result) => `found file: ${result.path}`)))
-        .then(isIncluded ? filter(isIncluded) : pass)
-        .then(isExcluded ? filter(flow(isExcluded, not)) : pass)
-        .then(filter((t) => t.direct || matchSourceExtension(t.path)))
-        .then(map((t) => t.path))
-        .then(logDebug((r) => `found ${r.length} source files`))
-        .then(map(logTrace((path) => `found source file: ${path}`)))
-        .then(opts['pass-with-no-files'] ? Ok : failIfEmpty('no source files found'))
-        .then(map(toAsset))
-        .then(map(getSourceMapPathCommand))
-        .then(filterBehaviorSkippedElements)
-        .then(map(printAssetInfo(logger)))
-        .then(runProcess ? processCommand : Ok)
-        .then(runAddSources ? addSourcesCommand : Ok)
-        .then(runUpload ? uploadCommand : Ok).inner;
-}
-
-function getSourceMapPath(sourceProcessor: SourceProcessor) {
-    return function getSourceMapPath(asset: Asset) {
-        return sourceProcessor.getSourceMapPathFromSourceFile(asset.path);
-    };
+    return pipe(
+        searchPaths,
+        find,
+        logTrace((r) => `found ${r.length} files`),
+        map(logTrace((result) => `found file: ${result.path}`)),
+        isIncluded ? filterAsync(isIncluded) : pass,
+        isExcluded ? filterAsync(flow(isExcluded, not)) : pass,
+        filter((t) => t.direct || matchSourceExtension(t.path)),
+        map((t) => t.path),
+        logDebug((r) => `found ${r.length} source files`),
+        map(logTrace((path) => `found source file: ${path}`)),
+        map(toAsset),
+        opts['pass-with-no-files'] ? Ok : failIfEmpty('no source files found'),
+        R.map(flow(mapAsync(handleAssetCommand(runProcess, runAddSources)), R.flatMap)),
+        R.map(filterBehaviorSkippedElements),
+        R.map(uploadCommand ?? Ok),
+    );
 }
 
 function printAssetInfo(logger: CliLogger) {
-    return function printAssetInfo(asset: AssetWithSourceMapPath) {
-        logger.debug(`${asset.path}`);
-        logger.debug(`└── ${asset.sourceMapPath}`);
+    return function printAssetInfo<T extends SourceAndSourceMap>(asset: T) {
+        logger.debug(`${asset.source.path}`);
+        logger.debug(`└── ${asset.sourceMap.path}`);
         return asset;
     };
 }

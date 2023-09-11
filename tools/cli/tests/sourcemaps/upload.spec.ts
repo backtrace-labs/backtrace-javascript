@@ -99,7 +99,7 @@ describe('upload', () => {
         );
 
         it(
-            'should call upload with archive',
+            'should call upload',
             withWorkingCopy('processed', async (workingDir) => {
                 const uploadSpy = mockUploader();
                 uploadSpy.mockClear();
@@ -114,7 +114,7 @@ describe('upload', () => {
                 });
 
                 assert(result.isOk(), result.data as string);
-                expect(uploadSpy).toHaveBeenCalledWith(expect.any(ZipArchive));
+                expect(uploadSpy).toBeCalled();
             }),
         );
 
