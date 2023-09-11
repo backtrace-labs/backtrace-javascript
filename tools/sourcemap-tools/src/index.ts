@@ -9,7 +9,6 @@ export * from './helpers/common';
 export * from './helpers/flow';
 export * from './helpers/match';
 export * from './models/Asset';
-export * from './models/AsyncResult';
 export * from './models/ProcessAssetResult';
 export * from './models/RawSourceMap';
 export * from './models/Result';

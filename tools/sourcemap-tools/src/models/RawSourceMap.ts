@@ -7,3 +7,7 @@ export interface RawSourceMap {
     mappings: string;
     file: string;
 }
+
+export interface RawSourceMapWithDebugId extends RawSourceMap {
+    readonly debugId: string;
+}

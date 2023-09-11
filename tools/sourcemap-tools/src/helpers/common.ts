@@ -1,8 +1,7 @@
 import fs from 'fs';
 import { Readable, Writable } from 'stream';
 import { LogLevel, Logger } from '../Logger';
-import { ResultPromise } from '../models/AsyncResult';
-import { Err, Ok, Result } from '../models/Result';
+import { Err, Ok, Result, ResultPromise } from '../models/Result';
 
 export type ContentFile = readonly [content: string, path: string];
 export type StreamFile = readonly [stream: Readable, path: string];
@@ -15,14 +14,15 @@ export async function readFile(file: string): ResultPromise<string, string> {
     }
 }
 
-export async function writeFile(file: ContentFile) {
-    const [content, path] = file;
-    try {
-        await fs.promises.writeFile(path, content);
-        return Ok(file);
-    } catch (err) {
-        return Err(`failed to write file: ${err instanceof Error ? err.message : 'unknown error'}`);
-    }
+export function writeFile(path: string) {
+    return async function writeFile(content: string) {
+        try {
+            await fs.promises.writeFile(path, content);
+            return Ok(content);
+        } catch (err) {
+            return Err(`failed to write file: ${err instanceof Error ? err.message : 'unknown error'}`);
+        }
+    };
 }
 
 export function createWriteStream(path: string) {
@@ -77,6 +77,12 @@ export function failIfEmpty<E>(error: E) {
 export function map<T, B>(fn: (t: T) => B) {
     return function map(t: T[]) {
         return t.map(fn);
+    };
+}
+
+export function mapAsync<T, B>(fn: (t: T) => B | Promise<B>) {
+    return async function map(t: T[]) {
+        return await Promise.all(t.map(fn));
     };
 }
 

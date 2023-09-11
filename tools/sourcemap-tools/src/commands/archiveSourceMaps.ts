@@ -3,7 +3,7 @@ import { RawSourceMap } from 'source-map';
 import { SourceProcessor } from '../SourceProcessor';
 import { ZipArchive } from '../ZipArchive';
 import { AssetWithContent, AssetWithDebugId } from '../models/Asset';
-import { Ok, Result, flatMap } from '../models/Result';
+import { Err, Ok, R, Result } from '../models/Result';
 
 type AssetWithDebugIdAndSourceMap = AssetWithContent<RawSourceMap> & AssetWithDebugId;
 
@@ -18,7 +18,7 @@ export function createArchive(sourceProcessor: SourceProcessor) {
     ): Result<ArchiveWithSourceMapsAndDebugIds, string> {
         const archive = new ZipArchive();
 
-        const readResult = flatMap(assets.map(readDebugId(sourceProcessor)));
+        const readResult = R.flatMap(assets.map(readDebugId(sourceProcessor)));
         if (readResult.isErr()) {
             return readResult;
         }
@@ -42,9 +42,14 @@ export async function finalizeArchive(archive: ArchiveWithSourceMapsAndDebugIds)
 
 export function readDebugId(sourceProcessor: SourceProcessor) {
     return function readDebugId(asset: AssetWithContent<RawSourceMap>): Result<AssetWithDebugIdAndSourceMap, string> {
-        return sourceProcessor
-            .getSourceMapDebugId(asset.content)
-            .map((debugId) => ({ ...asset, debugId }))
-            .mapErr((err) => `${asset.name}: ${err}`);
+        const debugId = sourceProcessor.getSourceMapDebugId(asset.content);
+        if (!debugId) {
+            return Err('sourcemap has no debug id');
+        }
+
+        return Ok({
+            ...asset,
+            debugId,
+        });
     };
 }

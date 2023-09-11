@@ -1,8 +1,7 @@
 import http from 'http';
 import https from 'https';
-import { Readable } from 'stream';
-import { ResultPromise } from './models/AsyncResult';
-import { Err, Ok, Result } from './models/Result';
+import { Readable, Writable } from 'stream';
+import { Err, Ok, Result, ResultPromise } from './models/Result';
 
 interface CoronerUploadResponse {
     response: 'ok' | string;
