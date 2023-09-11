@@ -143,6 +143,11 @@ export const runCmd = new Command<RunOptions>({
     })
     .execute(runSourcemapCommands);
 
+interface AssetResult {
+    readonly processed?: boolean;
+    readonly sourceAdded?: boolean;
+}
+
 export async function runSourcemapCommands({ opts, logger, getHelpMessage }: CommandContext<RunOptions>) {
     const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
     const configPath = opts.config ?? (await findConfig());
@@ -201,34 +206,41 @@ export async function runSourcemapCommands({ opts, logger, getHelpMessage }: Com
     const logAssetBehaviorError = (asset: Asset) => (err: string, level: LogLevel) =>
         logAsset(logger, level)(err)(asset);
 
-    const handleAssetCommand = (process: boolean, addSources: boolean) => (asset: Asset) =>
+    const readAssetCommand = (asset: Asset) =>
         pipe(
             asset,
             logTraceAsset('reading source and sourcemap'),
             readSourceAndSourceMap(sourceProcessor),
             R.map(logDebugAssets('read source and sourcemap')),
-            R.map(printAssetInfo(logger)),
-            R.map(
-                process
-                    ? flow(
-                          logTraceAssets('processing source and sourcemap'),
-                          processSource(processOptions.force ?? false),
-                          logDebugAssets('processed source and sourcemap'),
+            R.mapErr((err) => `${asset.name}: ${err}`),
+            handleFailedAsset(logAssetBehaviorError(asset)),
+        );
+
+    const handleAssetCommand = (process: boolean, addSources: boolean) => (asset: SourceAndSourceMap) =>
+        pipe(
+            asset,
+            process
+                ? flow(
+                      logTraceAssets('processing source and sourcemap'),
+                      processSource(processOptions.force ?? false),
+                      logDebugAssets('processed source and sourcemap'),
+                      (result) => ({ ...result, processed: true } as SourceAndSourceMap & AssetResult),
+                  )
+                : pass,
+            addSources
+                ? (assets) =>
+                      pipe(
+                          assets.sourceMap,
+                          logTraceAsset('adding sources to sourcemap'),
+                          addSourceToSourceMap(addSourcsOptions.force ?? false),
+                          R.map(logDebugAsset('source added to sourcemap')),
+                          R.map(
+                              ({ content }) =>
+                                  ({ ...assets, sourceMap: { ...assets.sourceMap, content } } as SourceAndSourceMap),
+                          ),
+                          R.map((result) => ({ ...result, sourceAdded: true } as SourceAndSourceMap & AssetResult)),
                       )
-                    : pass,
-            ),
-            R.map(
-                addSources
-                    ? (assets) =>
-                          pipe(
-                              assets.sourceMap,
-                              logTraceAsset('adding sources to sourcemap'),
-                              addSourceToSourceMap(addSourcsOptions.force ?? false),
-                              R.map(logDebugAsset('source added to sourcemap')),
-                              R.map(() => assets),
-                          )
-                    : Ok,
-            ),
+                : Ok,
             R.map(
                 runOptions['dry-run']
                     ? Ok
@@ -238,8 +250,8 @@ export async function runSourcemapCommands({ opts, logger, getHelpMessage }: Com
                           R.map(logDebugAssets('wrote source and sourcemap')),
                       ),
             ),
-            R.mapErr((err) => `${asset.name}: ${err}`),
-            handleFailedAsset(logAssetBehaviorError(asset)),
+            R.mapErr((err) => `${asset.source.name}: ${err}`),
+            handleFailedAsset(logAssetBehaviorError(asset.source)),
         );
 
     const saveArchiveCommandResult = runOptions.upload
@@ -308,12 +320,12 @@ export async function runSourcemapCommands({ opts, logger, getHelpMessage }: Com
 
     const includePaths = normalizePaths(runOptions.include);
     const excludePaths = normalizePaths(runOptions.exclude);
-    const { isIncluded, isExcluded } = await buildIncludeExclude(includePaths, excludePaths, logDebug);
+    const { isIncluded, isExcluded } = await buildIncludeExclude(includePaths, excludePaths, logTrace);
 
     return pipe(
         searchPaths,
         find,
-        logTrace((r) => `found ${r.length} files`),
+        logDebug((r) => `found ${r.length} files`),
         map(logTrace((result) => `found file: ${result.path}`)),
         isIncluded ? filterAsync(isIncluded) : pass,
         isExcluded ? filterAsync(flow(isExcluded, not)) : pass,
@@ -323,8 +335,23 @@ export async function runSourcemapCommands({ opts, logger, getHelpMessage }: Com
         map(logTrace((path) => `found source file: ${path}`)),
         map(toAsset),
         opts['pass-with-no-files'] ? Ok : failIfEmpty('no source files found'),
+        R.map(flow(mapAsync(readAssetCommand), R.flatMap)),
+        R.map(filterBehaviorSkippedElements),
+        R.map(map(printAssetInfo(logger))),
         R.map(flow(mapAsync(handleAssetCommand(runProcess, runAddSources)), R.flatMap)),
         R.map(filterBehaviorSkippedElements),
+        R.map(
+            logInfo(
+                (assets) =>
+                    `processed ${assets.reduce((sum, r) => sum + (r.processed ? 1 : 0), 0)} source and sourcemaps`,
+            ),
+        ),
+        R.map(
+            logInfo(
+                (assets) =>
+                    `added sources to ${assets.reduce((sum, r) => sum + (r.sourceAdded ? 1 : 0), 0)} sourcemaps`,
+            ),
+        ),
         R.map(uploadCommand ?? Ok),
     );
 }
