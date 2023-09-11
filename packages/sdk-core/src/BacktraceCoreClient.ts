@@ -177,19 +177,12 @@ export abstract class BacktraceCoreClient {
 
     /**
      * Asynchronously sends error data to Backtrace.
-     * @param error Backtrace Report or error or message
-     * @param attributes Report attributes
-     * @param attachments Report attachments
-     */
-    public send(error: Error, attributes?: Record<string, unknown>, attachments?: BacktraceAttachment[]): Promise<void>;
-    /**
-     * Asynchronously sends a message report to Backtrace
-     * @param message Report message
+     * @param error Error or message
      * @param attributes Report attributes
      * @param attachments Report attachments
      */
     public send(
-        message: string,
+        error: Error | string,
         attributes?: Record<string, unknown>,
         attachments?: BacktraceAttachment[],
     ): Promise<void>;
