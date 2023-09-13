@@ -18,7 +18,8 @@
         "clean": "rimraf \"build\"",
         "format": "prettier --write '**/*.ts'",
         "lint": "eslint . --ext .ts",
-        "serve": "npm run build && serve -s build"
+        "upload-source": "backtrace-js run",
+        "serve": "npm run build && npm run upload-source && serve -s build"
     },
     "browserslist": {
         "production": [

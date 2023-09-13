@@ -1,8 +1,9 @@
 ## Running the Example
 
 1. Add your universe and token to the SUBMISSION_URL in src/consts.ts
-2. `npm install`
-3. `npm run serve` (this will create and serve a production build as you can't see the fallback component in
+2. Update the upload url in the .backtracejsrc file. Your Symbol access token can be found in Project Settings > Symbols > Access tokens
+3. `npm install`
+4. `npm run serve` (this will create and serve a production build as you can't see the fallback component in
    development)
 
 ## Available Scripts
@@ -11,8 +12,7 @@ In the project directory, you can run:
 
 ### `npm run serve`
 
-Creates a production build and serves the demo app for testing purposes. The ErrorBoundary will not display the fallback
-component in development mode and that's why this command is useful.
+Creates a production build, uploads sourcemaps & source code, and serves the demo app for testing purposes. The ErrorBoundary will not display the fallback component in development mode and that's why this command is useful.
 
 ### `npm start`
 
