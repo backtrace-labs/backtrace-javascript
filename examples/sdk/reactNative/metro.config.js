@@ -13,13 +13,9 @@ const reactNativeNodeModulePath = path.join(reactNativePath, 'node_modules');
  */
 const config = {
     resolver: {
-        // unstable_enableSymlinks: true,
+        unstable_enableSymlinks: true,
     },
-    watchFolders: [
-        // reactNativePath,
-        // reactNativeNodeModulePath,
-        // , reactPath, sdkCore
-    ],
+    watchFolders: [reactNativePath, reactNativeNodeModulePath],
 };
 
 module.exports = mergeConfig(getDefaultConfig(__dirname), config);
