@@ -14,9 +14,19 @@ import {
     readFile,
     writeFile,
 } from '@backtrace-labs/sourcemap-tools';
+import fs from 'fs';
 
 export function toAsset(file: string): Asset {
     return { name: file, path: file };
+}
+
+export async function pathIfExists(file: string): Promise<string | undefined> {
+    try {
+        await fs.promises.stat(file);
+        return file;
+    } catch (err) {
+        return undefined;
+    }
 }
 
 export function readSource<T extends Asset>(asset: T): ResultPromise<AssetWithContent<string>, string> {
@@ -45,6 +55,8 @@ export function readSourceAndSourceMap(sourceProcessor: SourceProcessor) {
                 pipe(
                     source.content,
                     (content) => sourceProcessor.getSourceMapPathFromSource(content, sourceAsset.path),
+                    (result) => result ?? pathIfExists(`${source.path}.map`),
+                    (path) => (path ? Ok(path) : Err('could not find source map for source')),
                     R.map((path) => ({ name: path, path } as Asset)),
                     R.map(readSourceMap),
                     R.map((sourceMap) => ({ source, sourceMap } as SourceAndSourceMap)),
@@ -77,16 +89,18 @@ export function readSourceMapFromPathOrFromSource(sourceProcessor: SourceProcess
         return pipe(
             asset,
             loadSourceMap,
-            R.mapErr(() => pipe(asset, resolveSourceMapPathFromSource(sourceProcessor), R.map(loadSourceMap))),
+            R.mapErr(() => pipe(asset, resolveSourceMapPath(sourceProcessor), R.map(loadSourceMap))),
         );
     };
 }
 
-function resolveSourceMapPathFromSource(sourceProcessor: SourceProcessor) {
+function resolveSourceMapPath(sourceProcessor: SourceProcessor) {
     return function resolveSourceMapFromSource(asset: Asset) {
         return pipe(
             asset.path,
             (path) => sourceProcessor.getSourceMapPathFromSourceFile(path),
+            R.map((result) => result ?? pathIfExists(`${asset.path}.map`)),
+            R.map((path) => (path ? Ok(path) : Err('could not find source map for source'))),
             R.map((path) => ({
                 ...asset,
                 name: path,
