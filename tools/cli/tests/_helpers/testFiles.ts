@@ -6,6 +6,8 @@ import path from 'path';
 
 export type TestFiles =
     | 'no-sourcemaps'
+    | 'not-linked-sourcemaps'
+    | 'processed-not-linked-sourcemaps'
     | 'original'
     | 'processed'
     | 'processed-with-sources'

@@ -463,4 +463,38 @@ describe('run', () => {
             }),
         );
     });
+
+    describe('not linked sourcemaps', () => {
+        it(
+            'should return processed sources and sourcemap paths',
+            withWorkingCopy('not-linked-sourcemaps', async (workingDir) => {
+                const config = await mockOptions(workingDir, {
+                    run: {
+                        'add-sources': true,
+                        process: true,
+                        upload: true,
+                    },
+                    upload: {
+                        url: 'https://test',
+                    },
+                });
+
+                const result = await runSourcemapCommands({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: workingDir,
+                        config,
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+
+                const expected = [...(await glob(`${workingDir}/*.js`)), ...(await glob(`${workingDir}/*.js.map`))];
+                expect(result.data.flatMap((d) => [d.source.path, d.sourceMap.path])).toEqual(
+                    expect.arrayContaining(expected),
+                );
+            }),
+        );
+    });
 });

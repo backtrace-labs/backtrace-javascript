@@ -117,12 +117,12 @@ export class SourceProcessor {
 
         const source = sourceReadResult.data;
         if (!sourceMapPath) {
-            const sourceMapPathResult = this.getSourceMapPathFromSource(source, sourcePath);
-            if (sourceMapPathResult.isErr()) {
-                return sourceMapPathResult;
+            const pathFromSource = this.getSourceMapPathFromSource(source, sourcePath);
+            if (!pathFromSource) {
+                return Err('could not find source map for source');
             }
 
-            sourceMapPath = sourceMapPathResult.data;
+            sourceMapPath = pathFromSource;
         }
 
         const sourceMapReadResult = await readFile(sourceMapPath);
@@ -152,16 +152,16 @@ export class SourceProcessor {
             return sourceReadResult;
         }
 
-        return this.getSourceMapPathFromSource(sourceReadResult.data, sourcePath);
+        return Ok(this.getSourceMapPathFromSource(sourceReadResult.data, sourcePath));
     }
 
     public getSourceMapPathFromSource(source: string, sourcePath: string) {
         const match = source.match(/^\/\/# sourceMappingURL=(.+)$/m);
         if (!match || !match[1]) {
-            return Err('could not find source map for source');
+            return undefined;
         }
 
-        return Ok(path.resolve(path.dirname(sourcePath), match[1]));
+        return path.resolve(path.dirname(sourcePath), match[1]);
     }
 
     public async addSourcesToSourceMap(

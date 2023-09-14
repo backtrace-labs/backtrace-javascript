@@ -339,4 +339,85 @@ describe('process', () => {
             }),
         );
     });
+
+    describe('not linked sourcemaps', () => {
+        it(
+            'should not fail',
+            withWorkingCopy('not-linked-sourcemaps', async (workingDir) => {
+                const result = await processSources({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: workingDir,
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+            }),
+        );
+
+        it(
+            'should call SourceProcessor with sources',
+            withWorkingCopy('not-linked-sourcemaps', async (workingDir) => {
+                const spy = jest.spyOn(SourceProcessor.prototype, 'processSourceAndSourceMap');
+
+                const files = await glob(`${workingDir}/*.js`);
+                const originalSources = await readEachFile(files);
+
+                const result = await processSources({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: workingDir,
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+
+                for (const source of Object.values(originalSources)) {
+                    expect(spy).toBeCalledWith(source, expect.anything());
+                }
+            }),
+        );
+
+        it(
+            'should modify sources in place',
+            withWorkingCopy('not-linked-sourcemaps', async (workingDir) => {
+                const preHashes = await hashEachFile(await glob(`${workingDir}/*.js`));
+
+                const result = await processSources({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: workingDir,
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+                const postHashes = await hashEachFile(await glob(`${workingDir}/*.js`));
+
+                expectHashesToChange(preHashes, postHashes);
+            }),
+        );
+
+        it(
+            'should modify sourcemaps in place',
+            withWorkingCopy('not-linked-sourcemaps', async (workingDir) => {
+                const preHashes = await hashEachFile(await glob(`${workingDir}/*.js.map`));
+
+                const result = await processSources({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: workingDir,
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+                const postHashes = await hashEachFile(await glob(`${workingDir}/*.js.map`));
+
+                expectHashesToChange(preHashes, postHashes);
+            }),
+        );
+    });
 });
