@@ -31,6 +31,22 @@ export class SubmissionUrlInformation {
     }
 
     /**
+     * Converts full submission JSON URL to PlCrashReporter submission URL
+     * @param submissionUrl Backtrace Submission URL
+     */
+    public static toPlCrashReporterSubmissionUrl(submissionUrl: string): string {
+        return this.changeSubmissionFormat(submissionUrl, 'minidump');
+    }
+
+    /**
+     * Converts full submission JSON URL to minidump submission URL
+     * @param submissionUrl Backtrace Submission URL
+     */
+    public static toMinidumpSubmissionUrl(submissionUrl: string): string {
+        return this.changeSubmissionFormat(submissionUrl, 'minidump');
+    }
+
+    /**
      * Find the universe based on the submission URL
      * @param submissionUrl submission URL
      * @returns universe name
@@ -70,5 +86,16 @@ export class SubmissionUrlInformation {
         const url = new URL(submissionUrl);
 
         return url.searchParams.get('token');
+    }
+
+    public static changeSubmissionFormat(submissionUrl: string, desiredFormat: 'json' | 'plcrash' | 'minidump') {
+        const submitIndex = submissionUrl.indexOf(this.SUBMIT_PREFIX);
+        const url = new URL(submissionUrl);
+        if (submitIndex !== -1) {
+            url.pathname = url.pathname.replace('/json', `/${desiredFormat}`);
+        } else {
+            url.searchParams.set('format', desiredFormat);
+        }
+        return url.href;
     }
 }
