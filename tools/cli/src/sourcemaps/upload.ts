@@ -34,7 +34,7 @@ import path from 'path';
 import { Writable } from 'stream';
 import { GlobalOptions } from '..';
 import { Command, CommandContext } from '../commands/Command';
-import { isAssetProcessed, readSourceMapFromPathOrFromSource, toAsset, validateUrl } from '../helpers/common';
+import { isAssetProcessed, readSourceMapFromPathOrFromSource, toAsset, uniqueBy, validateUrl } from '../helpers/common';
 import { ErrorBehaviors, filterBehaviorSkippedElements, getErrorBehavior, handleError } from '../helpers/errorBehavior';
 import { buildIncludeExclude, find } from '../helpers/find';
 import { logAsset } from '../helpers/logs';
@@ -264,6 +264,7 @@ export async function uploadSourcemaps({ opts, logger, getHelpMessage }: Command
                 ? Ok
                 : failIfEmpty('no processed sourcemaps found, make sure to run process first'),
         ),
+        R.map(uniqueBy((asset) => asset.content.debugId)),
         R.map((assets) =>
             opts['dry-run']
                 ? Ok<UploadResultWithAssets>({

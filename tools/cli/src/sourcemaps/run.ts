@@ -26,7 +26,13 @@ import {
 import path from 'path';
 import { GlobalOptions } from '..';
 import { Command, CommandContext } from '../commands/Command';
-import { isAssetProcessed, readSourceAndSourceMap, toAsset, writeSourceAndSourceMap } from '../helpers/common';
+import {
+    isAssetProcessed,
+    readSourceAndSourceMap,
+    toAsset,
+    uniqueBy,
+    writeSourceAndSourceMap,
+} from '../helpers/common';
 import { ErrorBehaviors, filterBehaviorSkippedElements, getErrorBehavior, handleError } from '../helpers/errorBehavior';
 import { buildIncludeExclude, find } from '../helpers/find';
 import { logAsset, logAssets } from '../helpers/logs';
@@ -302,6 +308,7 @@ export async function runSourcemapCommands({ opts, logger, getHelpMessage }: Com
                   opts['pass-with-no-files']
                       ? Ok
                       : failIfEmpty('no processed sourcemaps found, make sure to run process'),
+                  R.map(uniqueBy((asset) => asset.content.debugId)),
                   R.map((assets) =>
                       opts['dry-run']
                           ? Ok({ rxid: '<dry-run>' })

@@ -112,3 +112,17 @@ export function isAssetProcessed(sourceProcessor: SourceProcessor) {
         return { asset, result } as const;
     };
 }
+
+export function uniqueBy<T, U>(fn: (t: T) => U) {
+    return function uniqueBy(array: T[]): T[] {
+        const keys = new Set<U>();
+        return array.filter((t) => {
+            const key = fn(t);
+            if (keys.has(key)) {
+                return false;
+            }
+            keys.add(key);
+            return true;
+        });
+    };
+}
