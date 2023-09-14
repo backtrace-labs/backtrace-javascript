@@ -25,6 +25,11 @@ import { SingleSessionProvider } from './modules/metrics/SingleSessionProvider';
 import { RateLimitWatcher } from './modules/rateLimiter/RateLimitWatcher';
 export abstract class BacktraceCoreClient {
     /**
+     * Backtrace client instance
+     */
+    protected static _instance?: BacktraceCoreClient;
+
+    /**
      * Determines if the client is enabled.
      */
     public get enabled() {

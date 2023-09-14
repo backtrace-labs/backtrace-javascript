@@ -11,8 +11,6 @@ import { AGENT } from './agentDefinition';
 import { BacktraceReactClientBuilder } from './builder/BacktraceReactClientBuilder';
 
 export class BacktraceClient extends BrowserClient {
-    protected static _instance?: BacktraceClient;
-
     constructor(
         options: BacktraceConfiguration,
         requestHandler: BacktraceRequestHandler,
@@ -43,14 +41,17 @@ export class BacktraceClient extends BrowserClient {
      * @param build builder
      * @returns backtrace client
      */
-    public static initialize(options: BacktraceConfiguration, build?: (builder: BacktraceReactClientBuilder) => void) {
-        if (this._instance) {
-            return this._instance;
+    public static initialize(
+        options: BacktraceConfiguration,
+        build?: (builder: BacktraceReactClientBuilder) => void,
+    ): BacktraceClient {
+        if (this.instance) {
+            return this.instance;
         }
         const builder = this.builder(options);
         build && build(builder);
         this._instance = builder.build();
-        return this._instance;
+        return this._instance as BacktraceClient;
     }
 
     /**
@@ -58,6 +59,6 @@ export class BacktraceClient extends BrowserClient {
      * Otherwise undefined.
      */
     public static get instance(): BacktraceClient | undefined {
-        return this._instance;
+        return this._instance as BacktraceClient;
     }
 }
