@@ -18,7 +18,6 @@ import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 export class BacktraceClient extends BacktraceCoreClient {
     private readonly _disposeController: AbortController = new AbortController();
 
-    protected static _instance?: BacktraceClient;
     constructor(
         options: BacktraceConfiguration,
         requestHandler: BacktraceRequestHandler,
@@ -59,13 +58,13 @@ export class BacktraceClient extends BacktraceCoreClient {
         options: BacktraceConfiguration,
         build?: (builder: BacktraceClientBuilder) => void,
     ): BacktraceClient {
-        if (this._instance) {
-            return this._instance;
+        if (this.instance) {
+            return this.instance;
         }
         const builder = this.builder(options);
         build && build(builder);
         this._instance = builder.build();
-        return this._instance;
+        return this._instance as BacktraceClient;
     }
 
     /**
@@ -73,7 +72,7 @@ export class BacktraceClient extends BacktraceCoreClient {
      * Otherwise undefined.
      */
     public static get instance(): BacktraceClient | undefined {
-        return this._instance;
+        return this._instance as BacktraceClient;
     }
 
     /**

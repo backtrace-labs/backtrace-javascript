@@ -6,15 +6,6 @@
 	objectVersion = 46;
 	objects = {
 
-/* Begin PBXBuildFile section */
-		5BFCFD002AA9FE6000EBFD38 /* BacktraceApplicationAttributeProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BFCFCFF2AA9FE6000EBFD38 /* BacktraceApplicationAttributeProvider.swift */; };
-		5BFCFD022AA9FED900EBFD38 /* BacktraceDeviceAttributeProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BFCFD012AA9FED900EBFD38 /* BacktraceDeviceAttributeProvider.swift */; };
-		5BFCFD042AA9FF1300EBFD38 /* BacktraceSystemAttributeProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BFCFD032AA9FF1300EBFD38 /* BacktraceSystemAttributeProvider.swift */; };
-		5BFCFD062AAA11AA00EBFD38 /* BacktraceApplicationAttributeProvider.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5BFCFD052AAA11AA00EBFD38 /* BacktraceApplicationAttributeProvider.mm */; };
-		5BFCFD092AAA125300EBFD38 /* BacktraceSystemAttributeProvider.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5BFCFD082AAA125300EBFD38 /* BacktraceSystemAttributeProvider.mm */; };
-		F4FF95D7245B92E800C19C63 /* ReactNative.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4FF95D6245B92E800C19C63 /* ReactNative.swift */; };
-/* End PBXBuildFile section */
-
 /* Begin PBXCopyFilesBuildPhase section */
 		58B511D91A9E6C8500147676 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -28,15 +19,28 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		134814201AA4EA6300B7C361 /* libReactNative.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libReactNative.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		5BFCFCFF2AA9FE6000EBFD38 /* BacktraceApplicationAttributeProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BacktraceApplicationAttributeProvider.swift; sourceTree = "<group>"; };
-		5BFCFD012AA9FED900EBFD38 /* BacktraceDeviceAttributeProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BacktraceDeviceAttributeProvider.swift; sourceTree = "<group>"; };
-		5BFCFD032AA9FF1300EBFD38 /* BacktraceSystemAttributeProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BacktraceSystemAttributeProvider.swift; sourceTree = "<group>"; };
-		5BFCFD052AAA11AA00EBFD38 /* BacktraceApplicationAttributeProvider.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = BacktraceApplicationAttributeProvider.mm; sourceTree = "<group>"; };
-		5BFCFD082AAA125300EBFD38 /* BacktraceSystemAttributeProvider.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = BacktraceSystemAttributeProvider.mm; sourceTree = "<group>"; };
-		B3E7B5891CC2AC0600A0062D /* ReactNative.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ReactNative.mm; sourceTree = "<group>"; };
-		F4FF95D5245B92E700C19C63 /* ReactNative-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ReactNative-Bridging-Header.h"; sourceTree = "<group>"; };
-		F4FF95D6245B92E800C19C63 /* ReactNative.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactNative.swift; sourceTree = "<group>"; };
+		134814201AA4EA6300B7C361 /* libBacktraceReactNative.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libBacktraceReactNative.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		5B861DA92AB0A51E00C25F05 /* BacktraceMemoryUsageAttributeProvider.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = BacktraceMemoryUsageAttributeProvider.mm; sourceTree = "<group>"; };
+		5B861DAA2AB0A51E00C25F05 /* BacktraceMemoryUsageAttributeProvider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BacktraceMemoryUsageAttributeProvider.h; sourceTree = "<group>"; };
+		5B861DAB2AB0ADA300C25F05 /* BacktraceDeviceAttributeProvider.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = BacktraceDeviceAttributeProvider.mm; sourceTree = "<group>"; };
+		5B861DAC2AB0ADA300C25F05 /* BacktraceDeviceAttributeProvider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BacktraceDeviceAttributeProvider.h; sourceTree = "<group>"; };
+		5B861DAD2AB0BA3200C25F05 /* BacktraceSystemAttributeProvider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BacktraceSystemAttributeProvider.h; sourceTree = "<group>"; };
+		5B861DAE2AB0BA3200C25F05 /* BacktraceSystemAttributeProvider.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = BacktraceSystemAttributeProvider.mm; sourceTree = "<group>"; };
+		5B861DAF2AB1CBE100C25F05 /* BacktraceCpuAttributeProvider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BacktraceCpuAttributeProvider.h; sourceTree = "<group>"; };
+		5B861DB02AB1CBE100C25F05 /* BacktraceCpuAttributeProvider.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = BacktraceCpuAttributeProvider.mm; sourceTree = "<group>"; };
+		5BCA76562AAF16840066D745 /* libBacktrace-Unity-Cocoa.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = "libBacktrace-Unity-Cocoa.a"; sourceTree = "<group>"; };
+		5BCA76592AAF2B650066D745 /* BacktraceApi.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = BacktraceApi.mm; sourceTree = "<group>"; };
+		5BCA765A2AAF2B650066D745 /* BacktraceApi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BacktraceApi.h; sourceTree = "<group>"; };
+		5BCA765B2AAF2C570066D745 /* OomWatcher.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = OomWatcher.mm; sourceTree = "<group>"; };
+		5BCA765C2AAF2C680066D745 /* OomWatcher.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OomWatcher.h; sourceTree = "<group>"; };
+		5BCA765D2AAF2CE60066D745 /* CrashUtils.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = CrashUtils.mm; sourceTree = "<group>"; };
+		5BCA765E2AAF2CE60066D745 /* CrashUtils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CrashUtils.h; sourceTree = "<group>"; };
+		5BD713EB2AAB80190029E295 /* BacktraceApplicationAttributeProvider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BacktraceApplicationAttributeProvider.h; sourceTree = "<group>"; };
+		5BD713EC2AAB80230029E295 /* BacktraceApplicationAttributeProvider.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = BacktraceApplicationAttributeProvider.mm; sourceTree = "<group>"; };
+		5BD713EE2AAB803A0029E295 /* BacktraceCrashReporter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BacktraceCrashReporter.h; sourceTree = "<group>"; };
+		5BD713EF2AAB80400029E295 /* BacktraceCrashReporter.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = BacktraceCrashReporter.mm; sourceTree = "<group>"; };
+		B3E7B5881CC2AC0600A0062D /* BacktraceReactNative.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BacktraceReactNative.h; sourceTree = "<group>"; };
+		B3E7B5891CC2AC0600A0062D /* BacktraceReactNative.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BacktraceReactNative.mm; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -53,7 +57,7 @@
 		134814211AA4EA7D00B7C361 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				134814201AA4EA6300B7C361 /* libReactNative.a */,
+				134814201AA4EA6300B7C361 /* libBacktraceReactNative.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -61,24 +65,45 @@
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
-				5BFCFD082AAA125300EBFD38 /* BacktraceSystemAttributeProvider.mm */,
-				5BFCFD052AAA11AA00EBFD38 /* BacktraceApplicationAttributeProvider.mm */,
-				5BFCFD032AA9FF1300EBFD38 /* BacktraceSystemAttributeProvider.swift */,
-				5BFCFD012AA9FED900EBFD38 /* BacktraceDeviceAttributeProvider.swift */,
-				5BFCFCFF2AA9FE6000EBFD38 /* BacktraceApplicationAttributeProvider.swift */,
-				F4FF95D6245B92E800C19C63 /* ReactNative.swift */,
-				B3E7B5891CC2AC0600A0062D /* ReactNative.mm */,
-				F4FF95D5245B92E700C19C63 /* ReactNative-Bridging-Header.h */,
+				5B861DAF2AB1CBE100C25F05 /* BacktraceCpuAttributeProvider.h */,
+				5B861DB02AB1CBE100C25F05 /* BacktraceCpuAttributeProvider.mm */,
+				5B861DAD2AB0BA3200C25F05 /* BacktraceSystemAttributeProvider.h */,
+				5B861DAE2AB0BA3200C25F05 /* BacktraceSystemAttributeProvider.mm */,
+				5B861DAB2AB0ADA300C25F05 /* BacktraceDeviceAttributeProvider.mm */,
+				5B861DAC2AB0ADA300C25F05 /* BacktraceDeviceAttributeProvider.h */,
+				5B861DA92AB0A51E00C25F05 /* BacktraceMemoryUsageAttributeProvider.mm */,
+				5B861DAA2AB0A51E00C25F05 /* BacktraceMemoryUsageAttributeProvider.h */,
+				5BCA765D2AAF2CE60066D745 /* CrashUtils.mm */,
+				5BCA765E2AAF2CE60066D745 /* CrashUtils.h */,
+				5BCA765C2AAF2C680066D745 /* OomWatcher.h */,
+				5BCA765B2AAF2C570066D745 /* OomWatcher.mm */,
+				5BCA76592AAF2B650066D745 /* BacktraceApi.mm */,
+				5BCA765A2AAF2B650066D745 /* BacktraceApi.h */,
+				B3E7B5881CC2AC0600A0062D /* BacktraceReactNative.h */,
+				5BD713EF2AAB80400029E295 /* BacktraceCrashReporter.mm */,
+				5BD713EC2AAB80230029E295 /* BacktraceApplicationAttributeProvider.mm */,
+				5BD713EE2AAB803A0029E295 /* BacktraceCrashReporter.h */,
+				5BD713EB2AAB80190029E295 /* BacktraceApplicationAttributeProvider.h */,
+				B3E7B5891CC2AC0600A0062D /* BacktraceReactNative.mm */,
 				134814211AA4EA7D00B7C361 /* Products */,
+				5BCA76552AAF16840066D745 /* Frameworks */,
 			);
+			sourceTree = "<group>";
+		};
+		5BCA76552AAF16840066D745 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				5BCA76562AAF16840066D745 /* libBacktrace-Unity-Cocoa.a */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		58B511DA1A9E6C8500147676 /* ReactNative */ = {
+		58B511DA1A9E6C8500147676 /* BacktraceReactNative */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 58B511EF1A9E6C8500147676 /* Build configuration list for PBXNativeTarget "ReactNative" */;
+			buildConfigurationList = 58B511EF1A9E6C8500147676 /* Build configuration list for PBXNativeTarget "BacktraceReactNative" */;
 			buildPhases = (
 				58B511D71A9E6C8500147676 /* Sources */,
 				58B511D81A9E6C8500147676 /* Frameworks */,
@@ -88,9 +113,9 @@
 			);
 			dependencies = (
 			);
-			name = ReactNative;
+			name = BacktraceReactNative;
 			productName = RCTDataManager;
-			productReference = 134814201AA4EA6300B7C361 /* libReactNative.a */;
+			productReference = 134814201AA4EA6300B7C361 /* libBacktraceReactNative.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 /* End PBXNativeTarget section */
@@ -107,7 +132,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 58B511D61A9E6C8500147676 /* Build configuration list for PBXProject "ReactNative" */;
+			buildConfigurationList = 58B511D61A9E6C8500147676 /* Build configuration list for PBXProject "BacktraceReactNative" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -120,7 +145,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				58B511DA1A9E6C8500147676 /* ReactNative */,
+				58B511DA1A9E6C8500147676 /* BacktraceReactNative */,
 			);
 		};
 /* End PBXProject section */
@@ -130,12 +155,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5BFCFD022AA9FED900EBFD38 /* BacktraceDeviceAttributeProvider.swift in Sources */,
-				5BFCFD042AA9FF1300EBFD38 /* BacktraceSystemAttributeProvider.swift in Sources */,
-				F4FF95D7245B92E800C19C63 /* ReactNative.swift in Sources */,
-				5BFCFD062AAA11AA00EBFD38 /* BacktraceApplicationAttributeProvider.mm in Sources */,
-				5BFCFD002AA9FE6000EBFD38 /* BacktraceApplicationAttributeProvider.swift in Sources */,
-				5BFCFD092AAA125300EBFD38 /* BacktraceSystemAttributeProvider.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -246,13 +265,16 @@
 					"$(SRCROOT)/../../../React/**",
 					"$(SRCROOT)/../../react-native/React/**",
 				);
-				LIBRARY_SEARCH_PATHS = "$(inherited)";
-				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_NAME = ReactNative;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
+				OTHER_LDFLAGS = (
+					"-ObjC",
+					"$(inherited)",
+				);
+				PRODUCT_NAME = BacktraceReactNative;
 				SKIP_INSTALL = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = "ReactNative-Bridging-Header.h";
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
 		};
@@ -265,19 +287,23 @@
 					"$(SRCROOT)/../../../React/**",
 					"$(SRCROOT)/../../react-native/React/**",
 				);
-				LIBRARY_SEARCH_PATHS = "$(inherited)";
-				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_NAME = ReactNative;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
+				OTHER_LDFLAGS = (
+					"-ObjC",
+					"$(inherited)",
+				);
+				PRODUCT_NAME = BacktraceReactNative;
 				SKIP_INSTALL = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = "ReactNative-Bridging-Header.h";
-				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		58B511D61A9E6C8500147676 /* Build configuration list for PBXProject "ReactNative" */ = {
+		58B511D61A9E6C8500147676 /* Build configuration list for PBXProject "BacktraceReactNative" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				58B511ED1A9E6C8500147676 /* Debug */,
@@ -286,7 +312,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		58B511EF1A9E6C8500147676 /* Build configuration list for PBXNativeTarget "ReactNative" */ = {
+		58B511EF1A9E6C8500147676 /* Build configuration list for PBXNativeTarget "BacktraceReactNative" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				58B511F01A9E6C8500147676 /* Debug */,

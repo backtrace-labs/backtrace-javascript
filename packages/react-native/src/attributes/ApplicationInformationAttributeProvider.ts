@@ -6,15 +6,14 @@ export class ApplicationInformationAttributeProvider implements BacktraceAttribu
         return 'scoped';
     }
     public get(): Record<string, unknown> {
-        if (!NativeModules.BacktraceApplicationAttributeProvider) {
-            console.log('BacktraceApplicationAttributeProvider is null');
+        const attributeProvider = NativeModules.BacktraceApplicationAttributeProvider;
+        if (!attributeProvider) {
             return {};
         }
-        const BacktraceApplicationAttributeProvider = NativeModules.BacktraceApplicationAttributeProvider;
 
         return {
-            application: BacktraceApplicationAttributeProvider.readApplicationName(),
-            'application.version': BacktraceApplicationAttributeProvider.readApplicationVersion(),
+            application: attributeProvider.readApplicationName(),
+            'application.version': attributeProvider.readApplicationVersion(),
         };
     }
 }

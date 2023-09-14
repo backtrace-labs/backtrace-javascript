@@ -21,7 +21,6 @@ import { BacktraceDatabaseFileStorageProvider } from './database/BacktraceDataba
 export class BacktraceClient extends BacktraceCoreClient {
     private _listeners: Record<string, NodeJS.UnhandledRejectionListener | NodeJS.UncaughtExceptionListener> = {};
 
-    private static _instance?: BacktraceClient;
     constructor(
         options: CoreConfiguration,
         requestHandler: BacktraceRequestHandler,
@@ -61,14 +60,17 @@ export class BacktraceClient extends BacktraceCoreClient {
      * @param build builder
      * @returns backtrace client
      */
-    public static initialize(options: BacktraceConfiguration, build?: (builder: BacktraceClientBuilder) => void) {
-        if (this._instance) {
-            return this._instance;
+    public static initialize(
+        options: BacktraceConfiguration,
+        build?: (builder: BacktraceClientBuilder) => void,
+    ): BacktraceClient {
+        if (this.instance) {
+            return this.instance;
         }
         const builder = this.builder(options);
         build && build(builder);
         this._instance = builder.build();
-        return this._instance;
+        return this._instance as BacktraceClient;
     }
 
     /**
@@ -76,7 +78,7 @@ export class BacktraceClient extends BacktraceCoreClient {
      * Otherwise undefined.
      */
     public static get instance(): BacktraceClient | undefined {
-        return this._instance;
+        return this._instance as BacktraceClient;
     }
 
     /**

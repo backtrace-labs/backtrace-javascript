@@ -1,9 +1,11 @@
 import { BacktraceBrowserRequestHandler } from '@backtrace-labs/react';
 import { BacktraceCoreClientBuilder, SingleSessionProvider } from '@backtrace-labs/sdk-core';
 import { Platform } from 'react-native';
-import { DeviceAttributeProvider } from './attributes/android/DeviceAttributeProvider';
-import { SystemAttributeProvider } from './attributes/android/SystemAttributeProvider';
 import { ApplicationInformationAttributeProvider } from './attributes/ApplicationInformationAttributeProvider';
+import { DeviceAttributeProvider } from './attributes/DeviceAttributeProvider';
+import { CpuAttributeProvider } from './attributes/ios/CpuAttributeProvider';
+import { MemoryInformationAttributeProvider } from './attributes/ios/MemoryInformationAttributeProvider';
+import { SystemAttributeProvider } from './attributes/SystemAttributeProvider';
 import { BacktraceClient } from './BacktraceClient';
 import { type BacktraceConfiguration } from './BacktraceConfiguration';
 
@@ -12,7 +14,13 @@ export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<Backtrace
         super(
             new BacktraceBrowserRequestHandler(options),
             Platform.select({
-                ios: [new ApplicationInformationAttributeProvider()],
+                ios: [
+                    new ApplicationInformationAttributeProvider(),
+                    new DeviceAttributeProvider(),
+                    new SystemAttributeProvider(),
+                    new MemoryInformationAttributeProvider(),
+                    new CpuAttributeProvider(),
+                ],
                 android: [
                     new ApplicationInformationAttributeProvider(),
                     new DeviceAttributeProvider(),

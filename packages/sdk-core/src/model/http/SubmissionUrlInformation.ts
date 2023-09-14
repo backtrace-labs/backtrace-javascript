@@ -31,6 +31,14 @@ export class SubmissionUrlInformation {
     }
 
     /**
+     * Converts full submission JSON URL to PlCrashReporter submission URL
+     * @param url Backtrace Submission URL
+     */
+    public static toPlCrashReporterSubmissionUrl(url: string): string {
+        return url.replace('/json', '/plcrash');
+    }
+
+    /**
      * Find the universe based on the submission URL
      * @param submissionUrl submission URL
      * @returns universe name
