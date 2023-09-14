@@ -122,6 +122,7 @@ export async function addSourcesToSourcemaps({ opts, logger, getHelpMessage }: C
             .then(logTraceAsset('loading sourcemap'))
             .then(loadSourceMapFromPathOrFromSource(sourceProcessor))
             .then(logDebugAsset('loaded sourcemap'))
+            .thenErr((err) => `${asset.name}: ${err}`)
             .thenErr(handleFailedAsset<AssetWithContent<RawSourceMap>>(logAssetBehaviorError(asset))).inner;
 
     const doesSourceMapHaveSourcesCommand = (asset: AssetWithContent<RawSourceMap>) =>
