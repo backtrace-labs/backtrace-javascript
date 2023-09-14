@@ -4,30 +4,29 @@ import { BacktraceClient } from './BacktraceClient';
 
 type RenderFallback = (error: Error) => ReactElement;
 
-export interface Props {
+export interface BacktraceErrorBoundaryProps {
     children: ReactNode;
     fallback?: ReactElement | RenderFallback;
     name?: string;
 }
 
-export interface State {
+export interface BacktraceErrorBoundaryState {
     error?: Error;
 }
 
-export class ErrorBoundary extends Component<Props, State> {
-    private _client: BacktraceClient;
+export class ErrorBoundary extends Component<BacktraceErrorBoundaryProps, BacktraceErrorBoundaryState> {
     private COMPONENT_THREAD_NAME = 'component-stack';
-    constructor(props: Props) {
+    constructor(
+        props: BacktraceErrorBoundaryProps,
+        private readonly _client: BacktraceClient = BacktraceClient.instance as BacktraceClient,
+    ) {
         super(props);
+        if (!this._client) {
+            throw new Error('BacktraceClient is uninitialized. Call "BacktraceClient.initialize" function first.');
+        }
         this.state = {
             error: undefined,
         };
-        // grabbing here so it will fail fast if BacktraceClient is uninitialized
-        const client = BacktraceClient.instance;
-        if (!client) {
-            throw new Error('BacktraceClient is uninitialized. Call "BacktraceClient.initialize" function first.');
-        }
-        this._client = client;
     }
 
     public static getDerivedStateFromError(error: Error) {
