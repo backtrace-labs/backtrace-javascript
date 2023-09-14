@@ -1,4 +1,4 @@
-import { Ok, SymbolUploader } from '@backtrace-labs/sourcemap-tools';
+import { Ok, Result, SymbolUploader, UploadResult } from '@backtrace-labs/sourcemap-tools';
 import { Transform } from 'stream';
 
 export function getHelpMessage() {
@@ -6,13 +6,34 @@ export function getHelpMessage() {
 }
 
 export function mockUploader(rxid = 'rxid') {
-    const blackhole = new Transform({
-        transform(_, __, callback) {
-            callback();
-        },
-    });
+    return jest.spyOn(SymbolUploader.prototype, 'createUploadRequest').mockImplementation(() => {
+        const request = new Transform({
+            transform(_, __, callback) {
+                callback();
+            },
+        });
 
-    return jest.spyOn(SymbolUploader.prototype, 'uploadSymbol').mockImplementation(async (readable) => {
-        return new Promise((resolve) => readable.pipe(blackhole).on('finish', () => resolve(Ok({ rxid }))));
+        const promise = new Promise<Result<UploadResult, string>>((resolve) => {
+            request.on('finish', () => resolve(Ok({ rxid })));
+        });
+
+        return { request, promise };
     });
+}
+
+export function filterKeys<T extends Record<string, unknown>>(obj: T, predicate: (key: string) => boolean) {
+    return Object.fromEntries(
+        Object.keys(obj)
+            .filter(predicate)
+            .map((k) => [k, obj[k]]),
+    );
+}
+
+export function expectAllKeysToChange<T extends Record<string, unknown>>(obj1: T, obj2: T) {
+    for (const key in obj1) {
+        const value1 = obj1[key];
+        const value2 = obj2[key];
+
+        expect(value1).not.toEqual(value2);
+    }
 }

@@ -1,16 +1,16 @@
 import path from 'path';
 import { DebugIdGenerator } from './DebugIdGenerator';
 import { parseJSON, readFile } from './helpers/common';
+import { pipe } from './helpers/flow';
 import { appendBeforeWhitespaces } from './helpers/stringHelpers';
 import { stringToUuid } from './helpers/stringToUuid';
-import { AsyncResult, ResultPromise } from './models/AsyncResult';
-import { RawSourceMap } from './models/RawSourceMap';
-import { Err, Ok, Result } from './models/Result';
+import { RawSourceMap, RawSourceMapWithDebugId } from './models/RawSourceMap';
+import { Err, Ok, R, ResultPromise } from './models/Result';
 
 export interface ProcessResult {
     readonly debugId: string;
     readonly source: string;
-    readonly sourceMap: RawSourceMap;
+    readonly sourceMap: RawSourceMapWithDebugId;
 }
 
 export interface ProcessResultWithPaths extends ProcessResult {
@@ -30,28 +30,33 @@ export class SourceProcessor {
     }
 
     public async isSourceFileProcessed(sourcePath: string): ResultPromise<boolean, string> {
-        return AsyncResult.equip(readFile(sourcePath)).then((v) => this.isSourceProcessed(v)).inner;
+        return pipe(
+            sourcePath,
+            readFile,
+            R.map((v) => this.isSourceProcessed(v)),
+        );
     }
 
     public async isSourceMapFileProcessed(sourceMapPath: string): ResultPromise<boolean, string> {
-        return AsyncResult.equip(readFile(sourceMapPath))
-            .then(parseJSON<RawSourceMap>)
-            .then((v) => this.isSourceMapProcessed(v)).inner;
+        return pipe(
+            sourceMapPath,
+            readFile,
+            R.map(parseJSON<RawSourceMap>),
+            R.map((v) => this.isSourceMapProcessed(v)),
+        );
     }
 
-    public getSourceMapDebugId(sourceMap: RawSourceMap): Result<string, string> {
-        const debugId = this._debugIdGenerator.getSourceMapDebugId(sourceMap);
-        if (!debugId) {
-            return Err('sourcemap does not have a debug ID');
-        }
-
-        return Ok(debugId);
+    public getSourceMapDebugId(sourceMap: RawSourceMap): string | undefined {
+        return this._debugIdGenerator.getSourceMapDebugId(sourceMap);
     }
 
-    public async getSourceMapFileDebugId(sourceMapPath: string): ResultPromise<string, string> {
-        return AsyncResult.equip(readFile(sourceMapPath))
-            .then(parseJSON<RawSourceMap>)
-            .then((sourceMap) => this.getSourceMapDebugId(sourceMap)).inner;
+    public async getSourceMapFileDebugId(sourceMapPath: string): ResultPromise<string | undefined, string> {
+        return pipe(
+            sourceMapPath,
+            readFile,
+            R.map(parseJSON<RawSourceMap>),
+            R.map((sourceMap) => this.getSourceMapDebugId(sourceMap)),
+        );
     }
 
     /**
@@ -63,19 +68,11 @@ export class SourceProcessor {
      */
     public async processSourceAndSourceMap(
         source: string,
-        sourceMap: string | RawSourceMap,
+        sourceMap: RawSourceMap,
         debugId?: string,
-    ): ResultPromise<ProcessResult, string> {
+    ): Promise<ProcessResult> {
         if (!debugId) {
             debugId = stringToUuid(source);
-        }
-
-        if (typeof sourceMap === 'string') {
-            const parseResult = parseJSON<RawSourceMap>(sourceMap);
-            if (parseResult.isErr()) {
-                return parseResult;
-            }
-            sourceMap = parseResult.data;
         }
 
         const sourceSnippet = this._debugIdGenerator.generateSourceSnippet(debugId);
@@ -97,7 +94,7 @@ export class SourceProcessor {
         const sourceSnippetNewlineCount = sourceSnippet.match(/\n/g)?.length ?? 0;
         const offsetSourceMap = await this.offsetSourceMap(sourceMap, sourceSnippetNewlineCount + 1);
         const newSourceMap = this._debugIdGenerator.addSourceMapDebugId(offsetSourceMap, debugId);
-        return Ok({ debugId, source: newSource, sourceMap: newSourceMap });
+        return { debugId, source: newSource, sourceMap: newSourceMap };
     }
 
     /**
@@ -133,15 +130,17 @@ export class SourceProcessor {
             return sourceMapReadResult;
         }
 
-        const sourceMap = sourceMapReadResult.data;
+        const sourceMapJson = sourceMapReadResult.data;
+
+        const parseResult = parseJSON<RawSourceMap>(sourceMapJson);
+        if (parseResult.isErr()) {
+            return parseResult;
+        }
+        const sourceMap = parseResult.data;
 
         const processResult = await this.processSourceAndSourceMap(source, sourceMap, debugId);
-        if (processResult.isErr()) {
-            return processResult;
-        }
-
         return Ok({
-            ...processResult.data,
+            ...processResult,
             sourcePath,
             sourceMapPath,
         } as ProcessResultWithPaths);

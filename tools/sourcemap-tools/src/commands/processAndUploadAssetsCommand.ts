@@ -3,11 +3,11 @@ import { RawSourceMap } from 'source-map';
 import { DebugIdGenerator } from '../DebugIdGenerator';
 import { SourceProcessor } from '../SourceProcessor';
 import { SymbolUploader, SymbolUploaderOptions, UploadResult } from '../SymbolUploader';
-import { inspect, map, pass } from '../helpers/common';
+import { inspect, mapAsync, pass } from '../helpers/common';
+import { flow, pipe } from '../helpers/flow';
 import { Asset, AssetWithContent } from '../models/Asset';
-import { AsyncResult } from '../models/AsyncResult';
 import { ProcessAssetError, ProcessAssetResult } from '../models/ProcessAssetResult';
-import { Result, flatMap, isErr } from '../models/Result';
+import { R, Result } from '../models/Result';
 import { createArchive, finalizeArchive } from './archiveSourceMaps';
 import { loadSourceMap, stripSourcesContent } from './loadSourceMaps';
 import { processAsset } from './processAsset';
@@ -74,22 +74,23 @@ export function processAndUploadAssetsCommand(
         options?.beforeAll && options.beforeAll(assets);
 
         const assetResults = await Promise.all(
-            assets.map(
-                (asset) =>
-                    AsyncResult.fromValue<Asset, ProcessAssetError>(asset)
-                        .then(options?.beforeProcess ? inspect(options.beforeProcess) : pass)
-                        .then(processCommand)
-                        .then(options?.afterProcess ? inspect(options.afterProcess) : pass)
-                        .then(options?.beforeWrite ? inspect(options.beforeWrite) : pass)
-                        .then(writeAsset)
-                        .then(options?.afterWrite ? inspect(options.afterWrite) : pass)
-                        .then(options?.assetFinished ? inspect(options.assetFinished) : pass)
-                        .thenErr(options?.assetError ? inspect(options.assetError) : pass).inner,
+            assets.map((asset) =>
+                pipe(
+                    asset,
+                    options?.beforeProcess ? inspect(options.beforeProcess) : pass,
+                    processCommand,
+                    R.map(options?.afterProcess ? inspect(options.afterProcess) : pass),
+                    R.map(options?.beforeWrite ? inspect(options.beforeWrite) : pass),
+                    R.map(writeAsset),
+                    R.map(options?.afterWrite ? inspect(options.afterWrite) : pass),
+                    R.map(options?.assetFinished ? inspect(options.assetFinished) : pass),
+                    R.mapErr(options?.assetError ? inspect(options.assetError) : pass),
+                ),
             ),
         );
 
-        const assetsResult = flatMap(assetResults);
-        if (isErr(assetsResult)) {
+        const assetsResult = R.flatMap(assetResults);
+        if (assetsResult.isErr()) {
             const result: ProcessResult = { assetResults };
             options?.afterAll && options.afterAll(result);
             return result;
@@ -108,20 +109,22 @@ export function processAndUploadAssetsCommand(
 
         const includeSources = pluginOptions?.uploadOptions?.includeSources;
 
-        const uploadResult = await AsyncResult.fromValue<Asset[], string>(sourceMapAssets)
-            .then(
-                map(
-                    (asset) =>
-                        AsyncResult.fromValue<Asset, string>(asset)
-                            .then(options?.beforeLoad ? inspect(options?.beforeLoad) : pass)
-                            .then(loadSourceMap)
-                            .then(options?.afterLoad ? inspect(options?.afterLoad) : pass)
-                            .then(includeSources ? pass : stripSourcesContent).inner,
+        const uploadResult = await pipe(
+            sourceMapAssets,
+            flow(
+                mapAsync(
+                    flow(
+                        options?.beforeLoad ? inspect(options?.beforeLoad) : pass,
+                        loadSourceMap,
+                        R.map(options?.afterLoad ? inspect(options?.afterLoad) : pass),
+                        R.map(includeSources ? pass : stripSourcesContent),
+                    ),
                 ),
-            )
-            .then(options?.beforeUpload ? inspect(options.beforeUpload) : pass)
-            .then(createArchive(sourceProcessor))
-            .then(async ({ assets, archive }) => {
+                R.flatMap,
+            ),
+            R.map(options?.beforeUpload ? inspect(options.beforeUpload) : pass),
+            R.map(createArchive(sourceProcessor)),
+            R.map(async ({ assets, archive }) => {
                 // We first create the upload request, which pipes the archive to itself
                 const promise = uploadCommand(archive);
 
@@ -130,9 +133,10 @@ export function processAndUploadAssetsCommand(
 
                 // Finally, we return the upload request promise
                 return promise;
-            })
-            .then(options?.afterUpload ? inspect(options.afterUpload) : pass)
-            .thenErr(options?.uploadError ? inspect(options.uploadError) : pass).inner;
+            }),
+            R.map(options?.afterUpload ? inspect(options.afterUpload) : pass),
+            R.mapErr(options?.uploadError ? inspect(options.uploadError) : pass),
+        );
 
         const result: ProcessResult = { assetResults, uploadResult };
         options?.afterAll && options.afterAll(result);

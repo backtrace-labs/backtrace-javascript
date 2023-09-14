@@ -2,7 +2,7 @@ import assert from 'assert';
 import fs from 'fs';
 import path from 'path';
 import { RawSourceMap, SourceMapConsumer } from 'source-map';
-import { DebugIdGenerator, Ok, SOURCEMAP_DEBUG_ID_KEY, SourceProcessor } from '../src';
+import { DebugIdGenerator, SOURCEMAP_DEBUG_ID_KEY, SourceProcessor } from '../src';
 
 describe('SourceProcessor', () => {
     const source = `function foo(){console.log("Hello World!")}foo();`;
@@ -44,8 +44,7 @@ function foo(){console.log("Hello World!")}foo();`;
             const sourceProcessor = new SourceProcessor(debugIdGenerator);
             const result = await sourceProcessor.processSourceAndSourceMap(source, sourceMap);
 
-            assert(result.isOk());
-            expect(result.data.source).toMatch(new RegExp(`^${expected}\n`));
+            expect(result.source).toMatch(new RegExp(`^${expected}\n`));
         });
 
         it('should append source snippet to the source on the first line with source having shebang not on the first line', async () => {
@@ -60,8 +59,7 @@ function foo(){console.log("Hello World!")}foo();`;
                 sourceWithShebangElsewhereMap,
             );
 
-            assert(result.isOk());
-            expect(result.data.source).toMatch(new RegExp(`^${expected}\n`));
+            expect(result.source).toMatch(new RegExp(`^${expected}\n`));
         });
 
         it('should append source snippet to the source after shebang', async () => {
@@ -73,8 +71,7 @@ function foo(){console.log("Hello World!")}foo();`;
             const sourceProcessor = new SourceProcessor(debugIdGenerator);
             const result = await sourceProcessor.processSourceAndSourceMap(sourceWithShebang, sourceWithShebangMap);
 
-            assert(result.isOk());
-            expect(result.data.source).toMatch(new RegExp(`^(#!.+\n)${expected}\n`));
+            expect(result.source).toMatch(new RegExp(`^(#!.+\n)${expected}\n`));
         });
 
         it('should append comment snippet to the source on the last line', async () => {
@@ -86,8 +83,7 @@ function foo(){console.log("Hello World!")}foo();`;
             const sourceProcessor = new SourceProcessor(debugIdGenerator);
             const result = await sourceProcessor.processSourceAndSourceMap(source, sourceMap);
 
-            assert(result.isOk());
-            expect(result.data.source).toMatch(new RegExp(`\n${expected}$`));
+            expect(result.source).toMatch(new RegExp(`\n${expected}$`));
         });
 
         it('should not add any whitespaces at end if there were none before when appending comment snippet', async () => {
@@ -100,8 +96,7 @@ function foo(){console.log("Hello World!")}foo();`;
             const sourceProcessor = new SourceProcessor(debugIdGenerator);
             const result = await sourceProcessor.processSourceAndSourceMap(source, sourceMap);
 
-            assert(result.isOk());
-            expect(result.data.source).not.toMatch(/\s+$/);
+            expect(result.source).not.toMatch(/\s+$/);
         });
 
         it('should leave end whitespaces as they are when appending comment snippet', async () => {
@@ -115,8 +110,7 @@ function foo(){console.log("Hello World!")}foo();`;
             const sourceProcessor = new SourceProcessor(debugIdGenerator);
             const result = await sourceProcessor.processSourceAndSourceMap(source, sourceMap);
 
-            assert(result.isOk());
-            expect(result.data.source).toMatch(new RegExp(`${whitespaces}$`));
+            expect(result.source).toMatch(new RegExp(`${whitespaces}$`));
         });
 
         it('should not touch the original source', async () => {
@@ -127,8 +121,7 @@ function foo(){console.log("Hello World!")}foo();`;
             const sourceProcessor = new SourceProcessor(debugIdGenerator);
             const result = await sourceProcessor.processSourceAndSourceMap(source, sourceMap);
 
-            assert(result.isOk());
-            expect(result.data.source).toContain(source);
+            expect(result.source).toContain(source);
         });
 
         it('should not touch the original sourcemap keys apart from mappings', async () => {
@@ -139,8 +132,7 @@ function foo(){console.log("Hello World!")}foo();`;
             const sourceProcessor = new SourceProcessor(debugIdGenerator);
             const result = await sourceProcessor.processSourceAndSourceMap(source, sourceMap);
 
-            assert(result.isOk());
-            expect(result.data.sourceMap).toMatchObject({ ...sourceMap, mappings: result.data.sourceMap.mappings });
+            expect(result.sourceMap).toMatchObject({ ...sourceMap, mappings: result.sourceMap.mappings });
         });
 
         it('should return sourcemap from DebugIdGenerator', async () => {
@@ -152,8 +144,7 @@ function foo(){console.log("Hello World!")}foo();`;
             const sourceProcessor = new SourceProcessor(debugIdGenerator);
             const result = await sourceProcessor.processSourceAndSourceMap(source, sourceMap);
 
-            assert(result.isOk());
-            expect(result.data.sourceMap).toStrictEqual(expected);
+            expect(result.sourceMap).toStrictEqual(expected);
         });
 
         it('should offset sourcemap lines by number of newlines in source snippet + 1', async () => {
@@ -165,8 +156,7 @@ function foo(){console.log("Hello World!")}foo();`;
             jest.spyOn(debugIdGenerator, 'generateSourceSnippet').mockReturnValue(snippet);
             const offsetSpy = jest.spyOn(sourceProcessor, 'offsetSourceMap');
 
-            const result = await sourceProcessor.processSourceAndSourceMap(source, sourceMap);
-            assert(result.isOk());
+            await sourceProcessor.processSourceAndSourceMap(source, sourceMap);
 
             expect(offsetSpy).toBeCalledWith(expect.anything(), expectedNewLineCount);
         });
@@ -180,11 +170,7 @@ function foo(){console.log("Hello World!")}foo();`;
             jest.spyOn(debugIdGenerator, 'generateSourceSnippet').mockReturnValue(snippet);
             const offsetSpy = jest.spyOn(sourceProcessor, 'offsetSourceMap');
 
-            const result = await sourceProcessor.processSourceAndSourceMap(
-                sourceWithShebangElsewhere,
-                sourceWithShebangElsewhereMap,
-            );
-            assert(result.isOk());
+            await sourceProcessor.processSourceAndSourceMap(sourceWithShebangElsewhere, sourceWithShebangElsewhereMap);
 
             expect(offsetSpy).toBeCalledWith(expect.anything(), expectedNewLineCount);
         });
@@ -198,8 +184,7 @@ function foo(){console.log("Hello World!")}foo();`;
             jest.spyOn(debugIdGenerator, 'generateSourceSnippet').mockReturnValue(snippet);
             const offsetSpy = jest.spyOn(sourceProcessor, 'offsetSourceMap');
 
-            const result = await sourceProcessor.processSourceAndSourceMap(sourceWithShebang, sourceWithShebangMap);
-            assert(result.isOk());
+            await sourceProcessor.processSourceAndSourceMap(sourceWithShebang, sourceWithShebangMap);
 
             expect(offsetSpy).toBeCalledWith(expect.anything(), expectedNewLineCount);
         });
@@ -208,19 +193,17 @@ function foo(){console.log("Hello World!")}foo();`;
             const sourcePath = path.join(__dirname, './testFiles/source.js');
             const sourceMapPath = path.join(__dirname, './testFiles/source.js.map');
             const sourceContent = await fs.promises.readFile(sourcePath, 'utf-8');
-            const sourceMapContent = await fs.promises.readFile(sourceMapPath, 'utf-8');
+            const sourceMapContent = JSON.parse(await fs.promises.readFile(sourceMapPath, 'utf-8'));
             const debugId = 'DEBUG_ID';
 
             const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
             const processFn = jest
                 .spyOn(sourceProcessor, 'processSourceAndSourceMap')
-                .mockImplementation(async (_, __, debugId) =>
-                    Ok({
-                        source: sourceContent,
-                        sourceMap: JSON.parse(sourceMapContent),
-                        debugId: debugId ?? 'debugId',
-                    }),
-                );
+                .mockImplementation(async (_, __, debugId) => ({
+                    source: sourceContent,
+                    sourceMap: sourceMapContent,
+                    debugId: debugId ?? 'debugId',
+                }));
 
             await sourceProcessor.processSourceAndSourceMapFiles(sourcePath, sourceMapPath, debugId);
 
@@ -231,19 +214,17 @@ function foo(){console.log("Hello World!")}foo();`;
             const sourcePath = path.join(__dirname, './testFiles/source.js');
             const sourceMapPath = path.join(__dirname, './testFiles/source.js.map');
             const sourceContent = await fs.promises.readFile(sourcePath, 'utf-8');
-            const sourceMapContent = await fs.promises.readFile(sourceMapPath, 'utf-8');
+            const sourceMapContent = JSON.parse(await fs.promises.readFile(sourceMapPath, 'utf-8'));
             const debugId = 'DEBUG_ID';
 
             const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
             const processFn = jest
                 .spyOn(sourceProcessor, 'processSourceAndSourceMap')
-                .mockImplementation(async (_, __, debugId) =>
-                    Ok({
-                        source: sourceContent,
-                        sourceMap: JSON.parse(sourceMapContent),
-                        debugId: debugId ?? 'debugId',
-                    }),
-                );
+                .mockImplementation(async (_, __, debugId) => ({
+                    source: sourceContent,
+                    sourceMap: sourceMapContent,
+                    debugId: debugId ?? 'debugId',
+                }));
 
             await sourceProcessor.processSourceAndSourceMapFiles(sourcePath, undefined, debugId);
 

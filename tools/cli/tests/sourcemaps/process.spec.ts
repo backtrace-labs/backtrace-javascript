@@ -3,8 +3,8 @@ import assert from 'assert';
 import { glob } from 'glob';
 import { CliLogger } from '../../src/logger';
 import { processSources } from '../../src/sourcemaps/process';
-import { getHelpMessage } from '../_helpers/common';
-import { expectHashesToChange, hashEachFile, hashFiles, withWorkingCopy } from '../_helpers/testFiles';
+import { expectAllKeysToChange, filterKeys, getHelpMessage } from '../_helpers/common';
+import { expectHashesToChange, hashEachFile, hashFiles, readEachFile, withWorkingCopy } from '../_helpers/testFiles';
 
 describe('process', () => {
     describe('returning value', () => {
@@ -22,7 +22,7 @@ describe('process', () => {
                 assert(result.isOk(), result.data as string);
 
                 const expected = await glob(`${workingDir}/*.js`);
-                expect(result.data.map((d) => d.asset.path)).toEqual(expect.arrayContaining(expected));
+                expect(result.data.map((d) => d.source.path)).toEqual(expect.arrayContaining(expected));
             }),
         );
 
@@ -41,7 +41,7 @@ describe('process', () => {
                 assert(result.isOk(), result.data as string);
 
                 const expected = await glob(`${workingDir}/entry*.js`);
-                expect(result.data.map((d) => d.asset.path)).toEqual(expect.arrayContaining(expected));
+                expect(result.data.map((d) => d.source.path)).toEqual(expect.arrayContaining(expected));
             }),
         );
     });
@@ -65,7 +65,10 @@ describe('process', () => {
         it(
             'should call SourceProcessor with sources',
             withWorkingCopy('original', async (workingDir) => {
-                const spy = jest.spyOn(SourceProcessor.prototype, 'processSourceAndSourceMapFiles');
+                const spy = jest.spyOn(SourceProcessor.prototype, 'processSourceAndSourceMap');
+
+                const files = await glob(`${workingDir}/*.js`);
+                const originalSources = await readEachFile(files);
 
                 const result = await processSources({
                     logger: new CliLogger({ level: 'output', silent: true }),
@@ -76,10 +79,9 @@ describe('process', () => {
                 });
 
                 assert(result.isOk(), result.data as string);
-                const files = await glob(`${workingDir}/*.js`);
 
-                for (const file of files) {
-                    expect(spy).toBeCalledWith(file);
+                for (const source of Object.values(originalSources)) {
+                    expect(spy).toBeCalledWith(source, expect.anything());
                 }
             }),
         );
@@ -155,30 +157,13 @@ describe('process', () => {
 
     describe('already processed sources', () => {
         it(
-            'should fail with no sources found',
+            'should not fail',
             withWorkingCopy('processed', async (workingDir) => {
                 const result = await processSources({
                     logger: new CliLogger({ level: 'output', silent: true }),
                     getHelpMessage,
                     opts: {
                         path: workingDir,
-                    },
-                });
-
-                assert(result.isErr(), 'result should be an error');
-                expect(result.data).toEqual('no files for processing found, they may be already processed');
-            }),
-        );
-
-        it(
-            'should not fail with force',
-            withWorkingCopy('processed', async (workingDir) => {
-                const result = await processSources({
-                    logger: new CliLogger({ level: 'output', silent: true }),
-                    getHelpMessage,
-                    opts: {
-                        path: workingDir,
-                        force: true,
                     },
                 });
 
@@ -189,7 +174,10 @@ describe('process', () => {
         it(
             'should call SourceProcessor with sources with force',
             withWorkingCopy('processed', async (workingDir) => {
-                const spy = jest.spyOn(SourceProcessor.prototype, 'processSourceAndSourceMapFiles');
+                const spy = jest.spyOn(SourceProcessor.prototype, 'processSourceAndSourceMap');
+
+                const files = await glob(`${workingDir}/*.js`);
+                const originalSources = await readEachFile(files);
 
                 const result = await processSources({
                     logger: new CliLogger({ level: 'output', silent: true }),
@@ -201,10 +189,9 @@ describe('process', () => {
                 });
 
                 assert(result.isOk(), result.data as string);
-                const files = await glob(`${workingDir}/*.js`);
 
-                for (const file of files) {
-                    expect(spy).toBeCalledWith(file);
+                for (const source of Object.values(originalSources)) {
+                    expect(spy).toBeCalledWith(source, expect.anything());
                 }
             }),
         );
@@ -246,7 +233,7 @@ describe('process', () => {
                     },
                 });
 
-                assert(result.isOk(), 'add-sources failed');
+                assert(result.isOk(), result.data as string);
 
                 const actual = await hashFiles(files);
                 expect(actual).toEqual(expected);
@@ -273,8 +260,8 @@ describe('process', () => {
         );
 
         it(
-            'should not change anything with invalid files',
-            withWorkingCopy(['invalid', 'original'], async (workingDir) => {
+            'should not modify invalid files',
+            withWorkingCopy('invalid', async (workingDir) => {
                 const files = await glob(`${workingDir}/*`);
                 const expected = await hashFiles(files);
 
@@ -290,6 +277,29 @@ describe('process', () => {
 
                 const actual = await hashFiles(files);
                 expect(actual).toEqual(expected);
+            }),
+        );
+
+        it(
+            'should modify other than invalid files',
+            withWorkingCopy(['invalid', 'original'], async (workingDir) => {
+                const files = await glob(`${workingDir}/*`);
+                const preHash = await hashEachFile(files);
+                const expected = filterKeys(preHash, (k) => !k.includes('invalid'));
+
+                const result = await processSources({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: [workingDir],
+                    },
+                });
+
+                assert(result.isErr(), 'result should be an error');
+
+                const postHash = await hashEachFile(files);
+                const actual = filterKeys(postHash, (k) => !k.includes('invalid'));
+                expectAllKeysToChange(actual, expected);
             }),
         );
 

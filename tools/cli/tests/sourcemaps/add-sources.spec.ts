@@ -3,7 +3,7 @@ import assert from 'assert';
 import { glob } from 'glob';
 import { CliLogger } from '../../src/logger';
 import { addSourcesToSourcemaps } from '../../src/sourcemaps/add-sources';
-import { getHelpMessage } from '../_helpers/common';
+import { expectAllKeysToChange, filterKeys, getHelpMessage } from '../_helpers/common';
 import { expectHashesToChange, hashEachFile, hashFiles, withWorkingCopy } from '../_helpers/testFiles';
 
 describe('add-sources', () => {
@@ -135,30 +135,13 @@ describe('add-sources', () => {
 
     describe('sourcemaps with sourcesContent', () => {
         it(
-            'should fail with no sourcemaps found',
+            'should not fail',
             withWorkingCopy('with-sources', async (workingDir) => {
                 const result = await addSourcesToSourcemaps({
                     logger: new CliLogger({ level: 'output', silent: true }),
                     getHelpMessage,
                     opts: {
                         path: workingDir,
-                    },
-                });
-
-                assert(result.isErr(), 'result should be an error');
-                expect(result.data).toEqual('no sourcemaps without sources found, use --force to overwrite sources');
-            }),
-        );
-
-        it(
-            'should not fail with force',
-            withWorkingCopy('with-sources', async (workingDir) => {
-                const result = await addSourcesToSourcemaps({
-                    logger: new CliLogger({ level: 'output', silent: true }),
-                    getHelpMessage,
-                    opts: {
-                        path: workingDir,
-                        force: true,
                     },
                 });
 
@@ -292,10 +275,11 @@ describe('add-sources', () => {
         );
 
         it(
-            'should not change anything with invalid files',
+            'should not modify invalid files',
             withWorkingCopy(['invalid', 'original'], async (workingDir) => {
-                const files = await glob(`${workingDir}/*`);
-                const expected = await hashFiles(files);
+                const files = await glob(`${workingDir}/*.js.map`);
+                const preHash = await hashEachFile(files);
+                const expected = filterKeys(preHash, (k) => k.includes('invalid'));
 
                 const result = await addSourcesToSourcemaps({
                     logger: new CliLogger({ level: 'output', silent: true }),
@@ -307,8 +291,32 @@ describe('add-sources', () => {
 
                 assert(result.isErr(), 'result should be an error');
 
-                const actual = await hashFiles(files);
-                expect(actual).toEqual(expected);
+                const postHash = await hashEachFile(files);
+                const actual = filterKeys(postHash, (k) => k.includes('invalid'));
+                expect(expected).toEqual(actual);
+            }),
+        );
+
+        it(
+            'should modify other than invalid files',
+            withWorkingCopy(['invalid', 'original'], async (workingDir) => {
+                const files = await glob(`${workingDir}/*.js.map`);
+                const preHash = await hashEachFile(files);
+                const expected = filterKeys(preHash, (k) => !k.includes('invalid'));
+
+                const result = await addSourcesToSourcemaps({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: [workingDir],
+                    },
+                });
+
+                assert(result.isErr(), 'result should be an error');
+
+                const postHash = await hashEachFile(files);
+                const actual = filterKeys(postHash, (k) => !k.includes('invalid'));
+                expectAllKeysToChange(actual, expected);
             }),
         );
 

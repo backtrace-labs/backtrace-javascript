@@ -68,3 +68,9 @@ export function expectHashesToChange(hashes1: Record<string, string>, hashes2: R
         expect(hashes2[key]).not.toEqual(hashes1[key]);
     }
 }
+
+export async function readEachFile(files: string[]): Promise<Record<string, string>> {
+    return Object.fromEntries(
+        await Promise.all(files.map(async (file) => [file, await fs.promises.readFile(file, 'utf-8')] as const)),
+    );
+}

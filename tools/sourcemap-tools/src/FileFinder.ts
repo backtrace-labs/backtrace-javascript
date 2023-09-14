@@ -1,7 +1,5 @@
 import fs from 'fs';
 import path from 'path';
-import { ResultPromise } from './models/AsyncResult';
-import { Ok } from './models/Result';
 
 interface SearchOptions {
     readonly recursive?: boolean;
@@ -9,7 +7,7 @@ interface SearchOptions {
 }
 
 export class FileFinder {
-    public async find(dir: string, options?: SearchOptions): ResultPromise<string[], string> {
+    public async find(dir: string, options?: SearchOptions): Promise<string[]> {
         const result: string[] = [];
         const files = await fs.promises.readdir(dir);
 
@@ -19,10 +17,7 @@ export class FileFinder {
             if (stat.isDirectory()) {
                 if (options?.recursive) {
                     const innerFindResult = await this.find(fullPath, options);
-                    if (innerFindResult.isErr()) {
-                        return innerFindResult;
-                    }
-                    files.push(...innerFindResult.data);
+                    files.push(...innerFindResult);
                 }
 
                 continue;
@@ -33,6 +28,6 @@ export class FileFinder {
             }
         }
 
-        return Ok(result);
+        return result;
     }
 }

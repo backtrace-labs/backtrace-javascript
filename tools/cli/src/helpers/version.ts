@@ -1,4 +1,4 @@
-import { AsyncResult, parseJSON, readFile } from '@backtrace-labs/sourcemap-tools';
+import { R, parseJSON, pipe, readFile } from '@backtrace-labs/sourcemap-tools';
 import path from 'path';
 
 interface PackageJson {
@@ -10,7 +10,10 @@ export function loadVersion() {
         ? path.join(require.main?.path, '..', 'package.json')
         : path.join(__dirname, '../../package.json');
 
-    return AsyncResult.equip(readFile(packageJsonPath))
-        .then(parseJSON<PackageJson>)
-        .then((p) => p.version).inner;
+    return pipe(
+        packageJsonPath,
+        readFile,
+        R.map(parseJSON<PackageJson>),
+        R.map((p) => p.version),
+    );
 }

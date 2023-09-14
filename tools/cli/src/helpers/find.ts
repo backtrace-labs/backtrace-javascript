@@ -1,4 +1,4 @@
-import { FileFinder, Ok, ResultPromise } from '@backtrace-labs/sourcemap-tools';
+import { FileFinder, log, pipe } from '@backtrace-labs/sourcemap-tools';
 import fs from 'fs';
 import { glob } from 'glob';
 import path from 'path';
@@ -19,7 +19,7 @@ export interface FindResult {
  * @param paths Paths to search in.
  * @returns Result with file paths.
  */
-export async function find(...paths: string[]): ResultPromise<FindResult[], string> {
+export async function find(paths: string[]): Promise<FindResult[]> {
     const finder = new FileFinder();
     const results = new Map<string, FindResult>();
 
@@ -39,12 +39,8 @@ export async function find(...paths: string[]): ResultPromise<FindResult[], stri
                 continue;
             }
 
-            const findResult = await finder.find(findPath, { recursive: true });
-            if (findResult.isErr()) {
-                return findResult;
-            }
-
-            for (const result of findResult.data) {
+            const findResults = await finder.find(findPath, { recursive: true });
+            for (const result of findResults) {
                 const fullPath = path.resolve(result);
                 if (!results.has(fullPath)) {
                     results.set(fullPath, {
@@ -57,5 +53,40 @@ export async function find(...paths: string[]): ResultPromise<FindResult[], stri
         }
     }
 
-    return Ok([...results.values()]);
+    return [...results.values()];
+}
+
+export function includesFindResult(includes: FindResult[]) {
+    const pathSet = new Set(includes.map((i) => i.path));
+    return function _includesFindResult(result: FindResult) {
+        return pathSet.has(result.path);
+    };
+}
+
+export async function buildIncludeExclude(
+    includePaths: string[] | undefined,
+    excludePaths: string[] | undefined,
+    logger: ReturnType<typeof log>,
+) {
+    const resolvedIncludePaths = includePaths ? await find(includePaths) : undefined;
+    const isIncluded = resolvedIncludePaths
+        ? (result: FindResult) =>
+              pipe(
+                  result,
+                  includesFindResult(resolvedIncludePaths),
+                  logger((t) => (t ? `result included: ${result.path}` : `result not included: ${result.path}`)),
+              )
+        : undefined;
+
+    const resolvedExcludePaths = excludePaths ? await find(excludePaths) : undefined;
+    const isExcluded = resolvedExcludePaths
+        ? (result: FindResult) =>
+              pipe(
+                  result,
+                  includesFindResult(resolvedExcludePaths),
+                  logger((t) => (t ? `result excluded: ${result.path}` : `result not excluded: ${result.path}`)),
+              )
+        : undefined;
+
+    return { isIncluded, isExcluded } as const;
 }

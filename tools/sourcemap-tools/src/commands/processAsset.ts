@@ -1,13 +1,16 @@
 import { SourceProcessor } from '../SourceProcessor';
+import { pipe } from '../helpers/flow';
 import { Asset } from '../models/Asset';
-import { AsyncResult } from '../models/AsyncResult';
 import { ProcessAssetError, ProcessAssetResult } from '../models/ProcessAssetResult';
-import { Result } from '../models/Result';
+import { R, Result } from '../models/Result';
 
 export function processAsset(sourceProcessor: SourceProcessor) {
     return function processAsset(asset: Asset): Promise<Result<ProcessAssetResult, ProcessAssetError>> {
-        return AsyncResult.equip(sourceProcessor.processSourceAndSourceMapFiles(asset.path))
-            .then<ProcessAssetResult>((result) => ({ asset, result }))
-            .thenErr<ProcessAssetError>((error) => ({ asset, error })).inner;
+        return pipe(
+            asset.path,
+            (path) => sourceProcessor.processSourceAndSourceMapFiles(path),
+            R.map((result) => ({ asset, result })),
+            R.mapErr((error) => ({ asset, error })),
+        );
     };
 }
