@@ -25,10 +25,20 @@ describe('Submission Url generation tests', () => {
                     );
                 });
 
-                it(`Should convert submission URL to the minidump ${submissionType} URL and ignore query parameters`, () => {
+                it(`Should convert submission URL to the ${submissionType} URL and ignore query parameters`, () => {
                     const queryParameters = '?foo=bar&baz=123';
                     const expectedUrl = createSubmissionUrl(submissionType) + queryParameters;
                     const submissionUrl = createSubmissionUrl() + queryParameters;
+
+                    expect(SubmissionUrlInformation.changeSubmissionFormat(submissionUrl, submissionType)).toBe(
+                        expectedUrl,
+                    );
+                });
+
+                it(`Should convert submission URL to the ${submissionType} with multiple empty path parts`, () => {
+                    const emptyPathParts = '//////';
+                    const expectedUrl = createSubmissionUrl(submissionType) + emptyPathParts;
+                    const submissionUrl = createSubmissionUrl() + emptyPathParts;
 
                     expect(SubmissionUrlInformation.changeSubmissionFormat(submissionUrl, submissionType)).toBe(
                         expectedUrl,
