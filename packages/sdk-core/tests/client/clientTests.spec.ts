@@ -81,7 +81,7 @@ describe('Client tests', () => {
                 },
             };
 
-            client.attachments.push(inMemoryAttachment);
+            client.addAttachment(inMemoryAttachment);
 
             expect(client.attachments).toBeDefined();
             expect(client.attachments.length).toEqual(1);
@@ -92,7 +92,7 @@ describe('Client tests', () => {
             const expectedAttachmentContent = 'test';
             const testedAttachment = new BacktraceStringAttachment('client-add-test', expectedAttachmentContent);
             const client = BacktraceTestClient.buildFakeClient(disabledBreadcrumbsConfiguration);
-            client.attachments.push(testedAttachment);
+            client.addAttachment(testedAttachment);
 
             expect(client.attachments).toBeDefined();
             expect(client.attachments.length).toEqual(1);

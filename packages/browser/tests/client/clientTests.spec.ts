@@ -65,10 +65,19 @@ describe('Client tests', () => {
             const testedAttachment = new BacktraceUint8ArrayAttachment('client-add-test', new Uint8Array(0));
             client = BacktraceClient.builder(defaultClientOptions).useRequestHandler(requestHandler).build();
 
-            client.attachments.push(testedAttachment);
+            client.addAttachment(testedAttachment);
             expect(client.attachments).toBeDefined();
             expect(client.attachments.length).toEqual(1);
             expect(client.attachments[0]).toEqual(testedAttachment);
+        });
+
+        it(`Should not allow to add attachments via attachments getter`, async () => {
+            const testedAttachment = new BacktraceUint8ArrayAttachment('client-add-test', new Uint8Array(0));
+            client = BacktraceClient.builder(defaultClientOptions).useRequestHandler(requestHandler).build();
+
+            client.attachments.push(testedAttachment);
+            expect(client.attachments).toBeDefined();
+            expect(client.attachments.length).toEqual(0);
         });
     });
 });
