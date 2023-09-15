@@ -16,7 +16,7 @@ import { hashFiles, withWorkingCopy } from '../_helpers/testFiles';
 async function mockOptions(workingDir: string, options: CliOptions) {
     const configName = `${randomUUID()}.backtracejsrc`;
     const fullPath = path.join(workingDir, configName);
-    fs.promises.writeFile(fullPath, JSON.stringify(options));
+    await fs.promises.writeFile(fullPath, JSON.stringify(options));
     return fullPath;
 }
 
