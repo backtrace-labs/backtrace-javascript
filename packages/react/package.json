@@ -1,6 +1,6 @@
 {
     "name": "@backtrace-labs/react",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "description": "Backtrace-Javascript React integration",
     "main": "lib/index.js",
     "scripts": {
