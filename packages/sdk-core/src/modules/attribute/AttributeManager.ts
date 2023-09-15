@@ -45,13 +45,16 @@ export class AttributeManager {
      * Gets client attributes
      * @returns Report attribute - client attributes and annotations
      */
-    public get(): ReportData {
+    public get(attributeType?: 'scoped' | 'dynamic'): ReportData {
         const result = {
             annotations: {},
             attributes: {},
         };
 
         for (const attributeProvider of this._attributeProviders) {
+            if (attributeType && attributeProvider.type != attributeType) {
+                continue;
+            }
             const providerResult = ReportDataBuilder.build(attributeProvider.get());
 
             result.attributes = {

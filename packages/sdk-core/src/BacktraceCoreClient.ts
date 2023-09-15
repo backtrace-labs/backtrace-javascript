@@ -60,14 +60,14 @@ export abstract class BacktraceCoreClient {
      * Available cached client attributes
      */
     public get attributes(): Record<string, AttributeType> {
-        return this._attributeManager.get().attributes;
+        return this.attributeManager.get().attributes;
     }
 
     /**
      * Available cached client annotatations
      */
     public get annotations(): Record<string, unknown> {
-        return this._attributeManager.get().annotations;
+        return this.attributeManager.get().annotations;
     }
 
     public get metrics(): BacktraceMetrics | undefined {
@@ -91,10 +91,10 @@ export abstract class BacktraceCoreClient {
     public readonly attachments: BacktraceAttachment[];
 
     protected readonly breadcrumbsManager?: BreadcrumbsManager;
+    protected readonly attributeManager: AttributeManager;
     private readonly _dataBuilder: BacktraceDataBuilder;
     private readonly _reportSubmission: BacktraceReportSubmission;
     private readonly _rateLimitWatcher: RateLimitWatcher;
-    private readonly _attributeManager: AttributeManager;
     private readonly _metrics?: BacktraceMetrics;
     private readonly _database?: BacktraceDatabase;
     private readonly _sessionProvider: BacktraceSessionProvider;
@@ -124,12 +124,12 @@ export abstract class BacktraceCoreClient {
             attributeProviders.push(new UserAttributeProvider(this._setup.options.userAttributes));
         }
 
-        this._attributeManager = new AttributeManager(attributeProviders);
+        this.attributeManager = new AttributeManager(attributeProviders);
 
         this._dataBuilder = new BacktraceDataBuilder(
             this._sdkOptions,
             stackTraceConverter,
-            this._attributeManager,
+            this.attributeManager,
             new DebugIdProvider(stackTraceConverter, this._setup.debugIdMapProvider),
         );
 
@@ -148,7 +148,7 @@ export abstract class BacktraceCoreClient {
         const metrics = new MetricsBuilder(
             this.options,
             this._sessionProvider,
-            this._attributeManager,
+            this.attributeManager,
             this._setup.requestHandler,
         ).build();
 
@@ -158,7 +158,7 @@ export abstract class BacktraceCoreClient {
 
         if (this.options.breadcrumbs?.enable !== false) {
             this.breadcrumbsManager = new BreadcrumbsManager(this.options?.breadcrumbs, this._setup.breadcrumbsSetup);
-            this._attributeManager.addProvider(this.breadcrumbsManager);
+            this.attributeManager.addProvider(this.breadcrumbsManager);
             this.attachments.push(this.breadcrumbsManager.breadcrumbsStorage);
         }
 
@@ -177,7 +177,7 @@ export abstract class BacktraceCoreClient {
      */
     public addAttribute(attributes: () => Record<string, unknown>): void;
     public addAttribute(attributes: Record<string, unknown> | (() => Record<string, unknown>)) {
-        this._attributeManager.add(attributes);
+        this.attributeManager.add(attributes);
     }
 
     /**
