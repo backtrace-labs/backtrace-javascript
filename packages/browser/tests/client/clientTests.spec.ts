@@ -1,4 +1,9 @@
-import { BacktraceReport, BacktraceRequestHandler, BacktraceUint8ArrayAttachment } from '@backtrace-labs/sdk-core';
+import {
+    BacktraceAttachment,
+    BacktraceReport,
+    BacktraceRequestHandler,
+    BacktraceUint8ArrayAttachment,
+} from '@backtrace-labs/sdk-core';
 import { BacktraceClient } from '../../src/';
 
 describe('Client tests', () => {
@@ -75,7 +80,7 @@ describe('Client tests', () => {
             const testedAttachment = new BacktraceUint8ArrayAttachment('client-add-test', new Uint8Array(0));
             client = BacktraceClient.builder(defaultClientOptions).useRequestHandler(requestHandler).build();
 
-            client.attachments.push(testedAttachment);
+            (client.attachments as BacktraceAttachment[]).push(testedAttachment);
             expect(client.attachments).toBeDefined();
             expect(client.attachments.length).toEqual(0);
         });
