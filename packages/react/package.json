@@ -47,7 +47,8 @@
         "webpack-cli": "^5.1.4"
     },
     "dependencies": {
-        "@backtrace-labs/browser": "^0.0.3"
+        "@backtrace-labs/browser": "^0.0.3",
+        "@backtrace-labs/sdk-core": "^0.0.3"
     },
     "peerDependencies": {
         "react": ">=16.8.0"
