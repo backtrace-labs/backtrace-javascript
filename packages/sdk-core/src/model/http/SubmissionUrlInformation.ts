@@ -92,7 +92,17 @@ export class SubmissionUrlInformation {
         const submitIndex = submissionUrl.indexOf(this.SUBMIT_PREFIX);
         const url = new URL(submissionUrl);
         if (submitIndex !== -1) {
-            url.pathname = url.pathname.substring(0, url.pathname.lastIndexOf('/')) + `/${desiredFormat}`;
+            const pathParts = url.pathname.split('/');
+            // path parts are prefixed with '/' character. Expected and valid submit format is:
+            // /universe/token/format
+            // splitting pathname should generate at least 4 elements ('', universe, token, format)
+            // if pathParts length is not equal to 4 then the invalid were passed.
+            const expectedMinimalPathParts = 4;
+            if (pathParts.length < expectedMinimalPathParts) {
+                return submissionUrl;
+            }
+            pathParts[3] = desiredFormat;
+            url.pathname = pathParts.join('/');
         } else {
             url.searchParams.set('format', desiredFormat);
         }
