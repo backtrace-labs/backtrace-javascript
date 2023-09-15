@@ -35,7 +35,7 @@ export class SubmissionUrlInformation {
      * @param submissionUrl Backtrace Submission URL
      */
     public static toPlCrashReporterSubmissionUrl(submissionUrl: string): string {
-        return this.changeSubmissionFormat(submissionUrl, 'minidump');
+        return this.changeSubmissionFormat(submissionUrl, 'plcrash');
     }
 
     /**
@@ -92,7 +92,7 @@ export class SubmissionUrlInformation {
         const submitIndex = submissionUrl.indexOf(this.SUBMIT_PREFIX);
         const url = new URL(submissionUrl);
         if (submitIndex !== -1) {
-            url.pathname = url.pathname.replace('/json', `/${desiredFormat}`);
+            url.pathname = url.pathname.substring(0, url.pathname.lastIndexOf('/')) + `/${desiredFormat}`;
         } else {
             url.searchParams.set('format', desiredFormat);
         }
