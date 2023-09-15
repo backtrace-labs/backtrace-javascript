@@ -10,7 +10,7 @@ export async function readFile(file: string): ResultPromise<string, string> {
     try {
         return Ok(await fs.promises.readFile(file, 'utf-8'));
     } catch (err) {
-        return Err(`failed to read file: ${err instanceof Error ? err.message : 'unknown error'}`);
+        return Err(`failed to read file: ${err}`);
     }
 }
 
@@ -20,7 +20,7 @@ export function writeFile(path: string) {
             await fs.promises.writeFile(path, content);
             return Ok(content);
         } catch (err) {
-            return Err(`failed to write file: ${err instanceof Error ? err.message : 'unknown error'}`);
+            return Err(`failed to write file: ${err}`);
         }
     };
 }
@@ -29,7 +29,7 @@ export function createWriteStream(path: string) {
     try {
         return Ok(fs.createWriteStream(path));
     } catch (err) {
-        return Err(`failed to create write stream to file: ${err instanceof Error ? err.message : 'unknown error'}`);
+        return Err(`failed to create write stream to file: ${err}`);
     }
 }
 
@@ -52,7 +52,7 @@ export async function writeStream(file: StreamFile) {
             output.on('finish', () => resolve(Ok(file)));
         });
     } catch (err) {
-        return Err(`failed to write file: ${err instanceof Error ? err.message : 'unknown error'}`);
+        return Err(`failed to write file: ${err}`);
     }
 }
 
@@ -60,7 +60,7 @@ export function parseJSON<T>(content: string): Result<T, string> {
     try {
         return Ok(JSON.parse(content));
     } catch (err) {
-        return Err(`failed to parse content: ${err instanceof Error ? err.message : 'unknown error'}`);
+        return Err(`failed to parse content: ${err}`);
     }
 }
 
