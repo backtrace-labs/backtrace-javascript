@@ -81,7 +81,7 @@ describe('Client tests', () => {
             const testedAttachment = new BacktraceFileAttachment(sampleFile);
             client = BacktraceClient.builder(defaultClientOptions).useRequestHandler(requestHandler).build();
 
-            client.attachments.push(testedAttachment);
+            client.addAttachment(testedAttachment);
             expect(client.attachments).toBeDefined();
             expect(client.attachments.length).toEqual(1);
             expect(client.attachments[0]).toEqual(testedAttachment);
