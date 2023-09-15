@@ -1,6 +1,6 @@
 {
     "name": "@backtrace-labs/rollup-plugin",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "Backtrace Rollup plugin",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
@@ -49,7 +49,7 @@
         "typescript": "^5.0.4"
     },
     "dependencies": {
-        "@backtrace-labs/sourcemap-tools": "^0.0.2"
+        "@backtrace-labs/sourcemap-tools": "^0.1.0"
     },
     "peerDependencies": {
         "rollup": "^3.26.3"

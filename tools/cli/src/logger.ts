@@ -57,7 +57,7 @@ export class CliLogger implements Logger {
     public log(level: CliLogLevel, value: unknown | Error, ...args: unknown[]) {
         const isOutput = level === 'output';
 
-        if (this.options.silent && !isOutput) {
+        if (this.options.silent) {
             return;
         }
 
