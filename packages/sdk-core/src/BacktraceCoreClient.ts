@@ -79,18 +79,22 @@ export abstract class BacktraceCoreClient {
     }
 
     /**
+     * Client cached attachments
+     */
+    public get attachments(): BacktraceAttachment[] {
+        return this._attachments;
+    }
+
+    /**
      * Report database used by the client
      */
     public get database(): BacktraceDatabase | undefined {
         return this._database;
     }
 
-    /**
-     * Client cached attachments
-     */
-    public readonly attachments: BacktraceAttachment[];
-
     protected readonly breadcrumbsManager?: BreadcrumbsManager;
+
+    private readonly _attachments: BacktraceAttachment[];
     private readonly _dataBuilder: BacktraceDataBuilder;
     private readonly _reportSubmission: BacktraceReportSubmission;
     private readonly _rateLimitWatcher: RateLimitWatcher;
@@ -133,7 +137,7 @@ export abstract class BacktraceCoreClient {
             new DebugIdProvider(stackTraceConverter, this._setup.debugIdMapProvider),
         );
 
-        this.attachments = this.options.attachments ?? [];
+        this._attachments = this.options.attachments ?? [];
 
         if (this._setup.databaseStorageProvider && this.options?.database?.enable === true) {
             this._database = new BacktraceDatabase(
@@ -159,7 +163,7 @@ export abstract class BacktraceCoreClient {
         if (this.options.breadcrumbs?.enable !== false) {
             this.breadcrumbsManager = new BreadcrumbsManager(this.options?.breadcrumbs, this._setup.breadcrumbsSetup);
             this._attributeManager.addProvider(this.breadcrumbsManager);
-            this.attachments.push(this.breadcrumbsManager.breadcrumbsStorage);
+            this._attachments.push(this.breadcrumbsManager.breadcrumbsStorage);
         }
 
         this.initialize();
@@ -178,6 +182,14 @@ export abstract class BacktraceCoreClient {
     public addAttribute(attributes: () => Record<string, unknown>): void;
     public addAttribute(attributes: Record<string, unknown> | (() => Record<string, unknown>)) {
         this._attributeManager.add(attributes);
+    }
+
+    /**
+     * Add attachment to the client
+     * @param attachment attachment
+     */
+    public addAttachment(attachment: BacktraceAttachment): void {
+        this._attachments.push(attachment);
     }
 
     /**
@@ -286,7 +298,7 @@ export abstract class BacktraceCoreClient {
         report: BacktraceReport,
         reportAttachments: BacktraceAttachment[],
     ): BacktraceAttachment[] {
-        return [...this.attachments, ...(report.attachments ?? []), ...(reportAttachments ?? [])];
+        return [...this._attachments, ...(report.attachments ?? []), ...(reportAttachments ?? [])];
     }
 
     private skipFrameOnMessage(data: Error | string): number {
