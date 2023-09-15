@@ -1,6 +1,6 @@
-<p style="background-color:#132322; padding:20px;">
+<p align="center">
     <a href="https://backtrace.io/" target="_blank">
-        <img src="./sl.bt.png" alt="Backtrace" style="display: block; width: auto; height: 50px; margin-left: auto; margin-right: auto;">
+        <img src="./sl.bt.png" alt="Backtrace">
     </a>
 </p>
 
