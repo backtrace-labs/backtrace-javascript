@@ -81,7 +81,7 @@ export abstract class BacktraceCoreClient {
     /**
      * Client cached attachments
      */
-    public get attachments(): BacktraceAttachment[] {
+    public get attachments(): readonly BacktraceAttachment[] {
         // always return a copy of attachments
         return [...this._attachments];
     }
