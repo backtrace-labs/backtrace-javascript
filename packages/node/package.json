@@ -1,6 +1,6 @@
 {
     "name": "@backtrace-labs/node",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "description": "Backtrace-JavaScript Node.JS integration",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
