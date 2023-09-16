@@ -1,6 +1,6 @@
 <p align="center">
     <a href="https://backtrace.io/" target="_blank">
-        <img src="./sl.bt.png" alt="Backtrace">
+        <img src="./sl.bt.png" alt="Backtrace" width="512">
     </a>
 </p>
 
