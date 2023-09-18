@@ -27,7 +27,7 @@ import {
     SymbolUploader,
     SymbolUploaderOptions,
     UploadResult,
-    ZipArchive
+    ZipArchive,
 } from '@backtrace-labs/sourcemap-tools';
 import fs from 'fs';
 import path from 'path';
