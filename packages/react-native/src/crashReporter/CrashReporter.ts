@@ -15,7 +15,7 @@ export class CrashReporter {
     public initialize(
         submissionUrl: string,
         attributes: Record<string, AttributeType>,
-        attachments: BacktraceAttachment[],
+        attachments: readonly BacktraceAttachment[],
     ): boolean {
         if (this._enable) {
             console.warn('Native crash reporter is already initialized');

@@ -24,7 +24,6 @@ import { MetricsBuilder } from './modules/metrics/MetricsBuilder';
 import { SingleSessionProvider } from './modules/metrics/SingleSessionProvider';
 import { RateLimitWatcher } from './modules/rateLimiter/RateLimitWatcher';
 export abstract class BacktraceCoreClient {
-    protected static _instance?: BacktraceCoreClient;
     /**
      * Backtrace client instance
      */

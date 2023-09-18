@@ -1,3 +1,4 @@
+export { ErrorBoundary } from '@backtrace-labs/react';
 export { BacktraceClient } from './BacktraceClient';
 export { BacktraceClientBuilder } from './BacktraceClientBuilder';
-export { ErrorBoundary } from './ErrorBoundary';
+export { type BacktraceConfiguration } from './BacktraceConfiguration';

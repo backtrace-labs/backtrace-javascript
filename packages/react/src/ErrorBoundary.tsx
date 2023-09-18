@@ -15,7 +15,7 @@ export interface State {
     error?: Error;
 }
 
-export class ErrorBoundary extends Component<BacktraceErrorBoundaryProps, BacktraceErrorBoundaryState> {
+export class ErrorBoundary extends Component<BacktraceErrorBoundaryProps, State> {
     private _client: BacktraceCoreClient;
     private COMPONENT_THREAD_NAME = 'component-stack';
     constructor(
