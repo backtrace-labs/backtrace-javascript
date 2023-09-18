@@ -15,6 +15,44 @@ export class UnwrapError<E> extends Error {
 }
 
 export type Result<T, E> = ResultOk<T> | ResultErr<E>;
+export type ResultPromise<T, E> = Promise<Result<T, E>>;
+
+export class R {
+    public static map<T, E, NT>(
+        transform: (data: T) => Result<NT, E> | Promise<Result<NT, E>>,
+    ): (result: Result<T, E>) => Promise<Result<NT, E>>;
+    public static map<T, E, N>(transform: (data: T) => N | Promise<N>): (result: Result<T, E>) => Promise<Result<N, E>>;
+    public static map<T, E, N>(
+        transform: (data: T) => N | Promise<N>,
+    ): (result: Result<T, E>) => Promise<Result<N, E>> {
+        return async (result) => (result.isErr() ? result : wrapOk(await transform(result.data)));
+    }
+
+    public static mapErr<T, E, NT, NE>(
+        transform: (data: E) => Result<NT, NE> | Promise<Result<NT, NE>>,
+    ): (result: Result<T, E>) => Promise<Result<NT, NE>>;
+    public static mapErr<T, E, N>(
+        transform: (data: E) => N | Promise<N>,
+    ): (result: Result<T, E>) => Promise<Result<T, N>>;
+    public static mapErr<T, E, N>(
+        transform: (data: E) => N | Promise<N>,
+    ): (result: Result<T, E>) => Promise<Result<T, N>> {
+        return async (result) => (result.isOk() ? result : wrapErr(await transform(result.data)));
+    }
+
+    public static flatMap<T, E>(results: Result<T, E>[]): Result<T[], E> {
+        const data: T[] = [];
+        for (const result of results) {
+            if (result.isErr()) {
+                return result;
+            }
+
+            data.push(result.data);
+        }
+
+        return Ok(data);
+    }
+}
 
 export class ResultOk<T> implements BaseResult<T, never> {
     constructor(public readonly data: T) {}
@@ -86,25 +124,4 @@ export function wrapErr<T, E>(data: E | Result<T, E>): Result<T, E> {
     }
 
     return Err(data);
-}
-
-export function isOk<T, E>(result: Result<T, E>): result is ResultOk<T> {
-    return result.isOk();
-}
-
-export function isErr<T, E>(result: Result<T, E>): result is ResultErr<E> {
-    return result.isErr();
-}
-
-export function flatMap<T, E>(results: Result<T, E>[]): Result<T[], E> {
-    const data: T[] = [];
-    for (const result of results) {
-        if (result.isErr()) {
-            return result;
-        }
-
-        data.push(result.data);
-    }
-
-    return Ok(data);
 }

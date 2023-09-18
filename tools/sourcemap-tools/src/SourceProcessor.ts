@@ -1,16 +1,16 @@
 import path from 'path';
-import { BasicSourceMapConsumer, Position, RawSourceMap, SourceMapConsumer, SourceMapGenerator } from 'source-map';
 import { DebugIdGenerator } from './DebugIdGenerator';
 import { parseJSON, readFile } from './helpers/common';
+import { pipe } from './helpers/flow';
 import { appendBeforeWhitespaces } from './helpers/stringHelpers';
 import { stringToUuid } from './helpers/stringToUuid';
-import { AsyncResult, ResultPromise } from './models/AsyncResult';
-import { Err, Ok, Result } from './models/Result';
+import { RawSourceMap, RawSourceMapWithDebugId } from './models/RawSourceMap';
+import { Err, Ok, R, ResultPromise } from './models/Result';
 
 export interface ProcessResult {
     readonly debugId: string;
     readonly source: string;
-    readonly sourceMap: RawSourceMap;
+    readonly sourceMap: RawSourceMapWithDebugId;
 }
 
 export interface ProcessResultWithPaths extends ProcessResult {
@@ -30,28 +30,33 @@ export class SourceProcessor {
     }
 
     public async isSourceFileProcessed(sourcePath: string): ResultPromise<boolean, string> {
-        return AsyncResult.equip(readFile(sourcePath)).then((v) => this.isSourceProcessed(v)).inner;
+        return pipe(
+            sourcePath,
+            readFile,
+            R.map((v) => this.isSourceProcessed(v)),
+        );
     }
 
     public async isSourceMapFileProcessed(sourceMapPath: string): ResultPromise<boolean, string> {
-        return AsyncResult.equip(readFile(sourceMapPath))
-            .then(parseJSON<RawSourceMap>)
-            .then((v) => this.isSourceMapProcessed(v)).inner;
+        return pipe(
+            sourceMapPath,
+            readFile,
+            R.map(parseJSON<RawSourceMap>),
+            R.map((v) => this.isSourceMapProcessed(v)),
+        );
     }
 
-    public getSourceMapDebugId(sourceMap: RawSourceMap): Result<string, string> {
-        const debugId = this._debugIdGenerator.getSourceMapDebugId(sourceMap);
-        if (!debugId) {
-            return Err('sourcemap does not have a debug ID');
-        }
-
-        return Ok(debugId);
+    public getSourceMapDebugId(sourceMap: RawSourceMap): string | undefined {
+        return this._debugIdGenerator.getSourceMapDebugId(sourceMap);
     }
 
-    public async getSourceMapFileDebugId(sourceMapPath: string): ResultPromise<string, string> {
-        return AsyncResult.equip(readFile(sourceMapPath))
-            .then(parseJSON<RawSourceMap>)
-            .then((sourceMap) => this.getSourceMapDebugId(sourceMap)).inner;
+    public async getSourceMapFileDebugId(sourceMapPath: string): ResultPromise<string | undefined, string> {
+        return pipe(
+            sourceMapPath,
+            readFile,
+            R.map(parseJSON<RawSourceMap>),
+            R.map((sourceMap) => this.getSourceMapDebugId(sourceMap)),
+        );
     }
 
     /**
@@ -63,9 +68,9 @@ export class SourceProcessor {
      */
     public async processSourceAndSourceMap(
         source: string,
-        sourceMap: string | RawSourceMap,
+        sourceMap: RawSourceMap,
         debugId?: string,
-    ): ResultPromise<ProcessResult, string> {
+    ): Promise<ProcessResult> {
         if (!debugId) {
             debugId = stringToUuid(source);
         }
@@ -86,14 +91,10 @@ export class SourceProcessor {
         // So if we add any code to generated code, mappings after that code will become invalid
         // We need to offset the mapping lines by sourceSnippetNewlineCount:
         // original code X:Y => generated code (A + sourceSnippetNewlineCount):B
-        const sourceSnippetNewlineCount = (sourceSnippet.match(/\n/g)?.length ?? 0) + (shebang ? 1 : 0);
-        const offsetSourceMapResult = await this.offsetSourceMap(sourceMap, 0, sourceSnippetNewlineCount + 1);
-        if (offsetSourceMapResult.isErr()) {
-            return offsetSourceMapResult;
-        }
-
-        const newSourceMap = this._debugIdGenerator.addSourceMapDebugId(offsetSourceMapResult.data, debugId);
-        return Ok({ debugId, source: newSource, sourceMap: newSourceMap });
+        const sourceSnippetNewlineCount = sourceSnippet.match(/\n/g)?.length ?? 0;
+        const offsetSourceMap = await this.offsetSourceMap(sourceMap, sourceSnippetNewlineCount + 1);
+        const newSourceMap = this._debugIdGenerator.addSourceMapDebugId(offsetSourceMap, debugId);
+        return { debugId, source: newSource, sourceMap: newSourceMap };
     }
 
     /**
@@ -116,12 +117,12 @@ export class SourceProcessor {
 
         const source = sourceReadResult.data;
         if (!sourceMapPath) {
-            const sourceMapPathResult = this.getSourceMapPathFromSource(source, sourcePath);
-            if (sourceMapPathResult.isErr()) {
-                return sourceMapPathResult;
+            const pathFromSource = this.getSourceMapPathFromSource(source, sourcePath);
+            if (!pathFromSource) {
+                return Err('could not find source map for source');
             }
 
-            sourceMapPath = sourceMapPathResult.data;
+            sourceMapPath = pathFromSource;
         }
 
         const sourceMapReadResult = await readFile(sourceMapPath);
@@ -129,15 +130,17 @@ export class SourceProcessor {
             return sourceMapReadResult;
         }
 
-        const sourceMap = sourceMapReadResult.data;
+        const sourceMapJson = sourceMapReadResult.data;
+
+        const parseResult = parseJSON<RawSourceMap>(sourceMapJson);
+        if (parseResult.isErr()) {
+            return parseResult;
+        }
+        const sourceMap = parseResult.data;
 
         const processResult = await this.processSourceAndSourceMap(source, sourceMap, debugId);
-        if (processResult.isErr()) {
-            return processResult;
-        }
-
         return Ok({
-            ...processResult.data,
+            ...processResult,
             sourcePath,
             sourceMapPath,
         } as ProcessResultWithPaths);
@@ -149,16 +152,16 @@ export class SourceProcessor {
             return sourceReadResult;
         }
 
-        return this.getSourceMapPathFromSource(sourceReadResult.data, sourcePath);
+        return Ok(this.getSourceMapPathFromSource(sourceReadResult.data, sourcePath));
     }
 
     public getSourceMapPathFromSource(source: string, sourcePath: string) {
         const match = source.match(/^\/\/# sourceMappingURL=(.+)$/m);
         if (!match || !match[1]) {
-            return Err('could not find source map for source.');
+            return undefined;
         }
 
-        return Ok(path.resolve(path.dirname(sourcePath), match[1]));
+        return path.resolve(path.dirname(sourcePath), match[1]);
     }
 
     public async addSourcesToSourceMap(
@@ -197,46 +200,11 @@ export class SourceProcessor {
         return sourceMap.sources?.length === sourceMap.sourcesContent?.length;
     }
 
-    private async offsetSourceMap(
-        sourceMap: string | RawSourceMap,
-        fromLine: number,
-        count: number,
-    ): ResultPromise<RawSourceMap, string> {
-        if (typeof sourceMap === 'string') {
-            const parseResult = parseJSON<RawSourceMap>(sourceMap);
-            if (parseResult.isErr()) {
-                return parseResult;
-            }
-            sourceMap = parseResult.data;
-        }
-
-        const consumer = (await new SourceMapConsumer(sourceMap)) as BasicSourceMapConsumer;
-        const newSourceMap = new SourceMapGenerator({
-            file: consumer.file,
-            sourceRoot: consumer.sourceRoot,
-        });
-
-        consumer.eachMapping((m) => {
-            if (m.generatedLine < fromLine) {
-                return;
-            }
-
-            // Despite how the mappings are written, addMapping expects here a null value if the column/line is not set
-            newSourceMap.addMapping({
-                source: m.source,
-                name: m.name,
-                generated:
-                    m?.generatedColumn != null && m?.generatedLine != null
-                        ? { column: m.generatedColumn, line: m.generatedLine + count }
-                        : (null as unknown as Position),
-                original:
-                    m?.originalColumn != null && m?.originalLine != null
-                        ? { column: m.originalColumn, line: m.originalLine }
-                        : (null as unknown as Position),
-            });
-        });
-
-        const newSourceMapJson = newSourceMap.toJSON();
-        return Ok({ ...sourceMap, ...newSourceMapJson });
+    public async offsetSourceMap(sourceMap: RawSourceMap, count: number): Promise<RawSourceMap> {
+        // Each line in sourcemap is separated by a semicolon.
+        // Offsetting source map lines is just done by prepending semicolons
+        const offset = ';'.repeat(count);
+        const mappings = offset + sourceMap.mappings;
+        return { ...sourceMap, mappings };
     }
 }

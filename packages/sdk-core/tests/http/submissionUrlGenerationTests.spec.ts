@@ -1,7 +1,11 @@
 import { SubmissionUrlInformation } from '../../src/model/http';
 describe('Submission Url generation tests', () => {
+    const submissionTypes: Array<'plcrash' | 'minidump'> = ['minidump', 'plcrash'];
     describe('Submit', () => {
-        const sampleSubmitUrl = `https://submit.backtrace.io/name/000000000000a1eb7ae344f6e002de2e20c81fbdedf6991c2f3bb45b11111111/json`;
+        function createSubmissionUrl(format = 'json') {
+            return `https://submit.backtrace.io/name/000000000000a1eb7ae344f6e002de2e20c81fbdedf6991c2f3bb45b11111111/${format}`;
+        }
+        const sampleSubmitUrl = createSubmissionUrl();
         it('Should use submit url from the configuration options', () => {
             expect(SubmissionUrlInformation.toJsonReportSubmissionUrl(sampleSubmitUrl)).toBe(sampleSubmitUrl);
         });
@@ -9,12 +13,49 @@ describe('Submission Url generation tests', () => {
         it(`Shouldnt mix token with the submission url`, () => {
             expect(SubmissionUrlInformation.toJsonReportSubmissionUrl(sampleSubmitUrl, '123')).toBe(sampleSubmitUrl);
         });
+
+        for (const submissionType of submissionTypes) {
+            describe(`${submissionType} submission url`, () => {
+                it(`Should convert submission URL to the ${submissionType} submission URL`, () => {
+                    const expectedUrl = createSubmissionUrl(submissionType);
+                    const submissionUrl = createSubmissionUrl();
+
+                    expect(SubmissionUrlInformation.changeSubmissionFormat(submissionUrl, submissionType)).toBe(
+                        expectedUrl,
+                    );
+                });
+
+                it(`Should convert submission URL to the ${submissionType} URL and ignore query parameters`, () => {
+                    const queryParameters = '?foo=bar&baz=123';
+                    const expectedUrl = createSubmissionUrl(submissionType) + queryParameters;
+                    const submissionUrl = createSubmissionUrl() + queryParameters;
+
+                    expect(SubmissionUrlInformation.changeSubmissionFormat(submissionUrl, submissionType)).toBe(
+                        expectedUrl,
+                    );
+                });
+
+                it(`Should convert submission URL to the ${submissionType} with multiple empty path parts`, () => {
+                    const emptyPathParts = '//////';
+                    const expectedUrl = createSubmissionUrl(submissionType) + emptyPathParts;
+                    const submissionUrl = createSubmissionUrl() + emptyPathParts;
+
+                    expect(SubmissionUrlInformation.changeSubmissionFormat(submissionUrl, submissionType)).toBe(
+                        expectedUrl,
+                    );
+                });
+            });
+        }
     });
 
     describe('Direct URL', () => {
+        function createDirectUrl(format = 'json') {
+            return `${hostname}/post?format=${format}&token=${token}`;
+        }
+
         const hostname = `https://instance.sp.backtrace.io`;
         const token = `000000000000a1eb7ae344f6e002de2e20c81fbdedf6991c2f3bb45b11111111`;
-        const fullUrl = `${hostname}/post?format=json&token=${token}`;
+        const fullUrl = createDirectUrl();
         it('Should use the direct url if the token is not available', () => {
             expect(SubmissionUrlInformation.toJsonReportSubmissionUrl(fullUrl)).toBe(fullUrl);
         });
@@ -33,5 +74,28 @@ describe('Submission Url generation tests', () => {
 
             expect(SubmissionUrlInformation.toJsonReportSubmissionUrl(fullUrl, testedToken)).toBe(expectedUrl);
         });
+
+        for (const submissionType of submissionTypes) {
+            describe(`${submissionType} submission url`, () => {
+                it(`Should convert submission URL to the ${submissionType} submission URL`, () => {
+                    const expectedUrl = createDirectUrl(submissionType);
+                    const submissionUrl = createDirectUrl();
+
+                    expect(SubmissionUrlInformation.changeSubmissionFormat(submissionUrl, submissionType)).toBe(
+                        expectedUrl,
+                    );
+                });
+
+                it(`Should convert submission URL to the minidump ${submissionType} URL and ignore query parameters`, () => {
+                    const queryParameters = '&foo=bar&baz=123';
+                    const expectedUrl = createDirectUrl(submissionType) + queryParameters;
+                    const submissionUrl = createDirectUrl() + queryParameters;
+
+                    expect(SubmissionUrlInformation.changeSubmissionFormat(submissionUrl, submissionType)).toBe(
+                        expectedUrl,
+                    );
+                });
+            });
+        }
     });
 });

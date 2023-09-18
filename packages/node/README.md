@@ -191,7 +191,7 @@ const options = {
 const client = BacktraceClient.initialize(options);
 
 // Later decide to add an attachment to all reports
-client.attachments.push(bufferAttachment)
+client.addAttachment(bufferAttachment)
 
 // After catching an exception and generating a report
 try {
@@ -399,6 +399,7 @@ The following options are available for the BacktraceClientOptions passed when i
 | Name                                                                                                                                            | Return Type     | Description                                                                       |
 | ----------------------------------------------------------------------------------------------------------------------------------------------- | --------------- | --------------------------------------------------------------------------------- |
 | `addAttribute(attributes: Record<string, unknown>)`                                                                                             | void            | Add attributes to the BacktraceClient reports                                     |
+| `addAttachment(attachment: BacktraceAttachment)`                                                                                                | void            | Add an attachment to the BacktraceClient reports                                  |
 | `initialize(options: BacktraceClientOptions)`                                                                                                   | BacktraceClient | Initializes a new BacktraceClient (returns the same instance on subsequent calls) |
 | `builder(options: BacktraceClientOptions).build()`                                                                                              | BacktraceClient | (Advanced) Sets up a new BacktraceClient for reporting                            |
 | `send(data: BacktraceReport \| Error \| string, reportAttributes: Record<string, unknown> = {}, reportAttachments: BacktraceAttachment[] = [])` | Promise<void>   | Asynchronously sends error data to Backtrace                                      |

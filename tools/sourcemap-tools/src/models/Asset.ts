@@ -1,3 +1,16 @@
+import { RawSourceMap, RawSourceMapWithDebugId } from './RawSourceMap';
+
+export interface SourceAndSourceMap {
+    readonly source: AssetWithContent<string>;
+    readonly sourceMap: AssetWithContent<RawSourceMap>;
+}
+
+export interface ProcessedSourceAndSourceMap {
+    readonly source: AssetWithContent<string>;
+    readonly sourceMap: AssetWithContent<RawSourceMapWithDebugId>;
+    readonly debugId: string;
+}
+
 export interface Asset {
     readonly name: string;
     readonly path: string;

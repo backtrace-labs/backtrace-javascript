@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { AsyncResult, Err } from '@backtrace-labs/sourcemap-tools';
+import { Err, R, pipe } from '@backtrace-labs/sourcemap-tools';
 import commandLineArgs from 'command-line-args';
 import { Command } from './commands/Command';
 import { loadVersion } from './helpers/version';
@@ -66,12 +66,13 @@ const mainCommand = new Command<GlobalOptions & MainOptions>({
         type: Boolean,
         description: 'Displays the version of backtrace-js',
     })
-    .execute(function ({ opts, getHelpMessage }) {
+    .execute(async function ({ opts, getHelpMessage }) {
         const logger = createLogger(opts);
         if (opts.version) {
-            return AsyncResult.equip(loadVersion())
-                .then((version) => logger.output(version))
-                .then(() => 0).inner;
+            return pipe(
+                await loadVersion(),
+                R.map((version) => logger.output(version)),
+            );
         } else {
             logger.info(getHelpMessage());
 
@@ -95,7 +96,7 @@ const mainCommand = new Command<GlobalOptions & MainOptions>({
     } else {
         const loggerOptions = commandLineArgs(mainCommand.options, { partial: true }) as Partial<CreateLoggerOptions>;
         const logger = createLogger(loggerOptions);
-        logger.error(result.data.error);
+        logger.fatal(result.data.error);
         process.exit(1);
     }
 })();

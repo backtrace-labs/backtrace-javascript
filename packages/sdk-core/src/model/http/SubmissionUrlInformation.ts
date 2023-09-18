@@ -32,10 +32,18 @@ export class SubmissionUrlInformation {
 
     /**
      * Converts full submission JSON URL to PlCrashReporter submission URL
-     * @param url Backtrace Submission URL
+     * @param submissionUrl Backtrace Submission URL
      */
-    public static toPlCrashReporterSubmissionUrl(url: string): string {
-        return url.replace('/json', '/plcrash');
+    public static toPlCrashReporterSubmissionUrl(submissionUrl: string): string {
+        return this.changeSubmissionFormat(submissionUrl, 'plcrash');
+    }
+
+    /**
+     * Converts full submission JSON URL to minidump submission URL
+     * @param submissionUrl Backtrace Submission URL
+     */
+    public static toMinidumpSubmissionUrl(submissionUrl: string): string {
+        return this.changeSubmissionFormat(submissionUrl, 'minidump');
     }
 
     /**
@@ -78,5 +86,26 @@ export class SubmissionUrlInformation {
         const url = new URL(submissionUrl);
 
         return url.searchParams.get('token');
+    }
+
+    public static changeSubmissionFormat(submissionUrl: string, desiredFormat: 'json' | 'plcrash' | 'minidump') {
+        const submitIndex = submissionUrl.indexOf(this.SUBMIT_PREFIX);
+        const url = new URL(submissionUrl);
+        if (submitIndex !== -1) {
+            const pathParts = url.pathname.split('/');
+            // path parts are prefixed with '/' character. Expected and valid submit format is:
+            // /universe/token/format
+            // splitting pathname should generate at least 4 elements ('', universe, token, format)
+            // if pathParts length is not equal to 4 then the invalid were passed.
+            const expectedMinimalPathParts = 4;
+            if (pathParts.length < expectedMinimalPathParts) {
+                return submissionUrl;
+            }
+            pathParts[3] = desiredFormat;
+            url.pathname = pathParts.join('/');
+        } else {
+            url.searchParams.set('format', desiredFormat);
+        }
+        return url.href;
     }
 }

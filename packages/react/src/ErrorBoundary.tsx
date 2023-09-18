@@ -11,7 +11,7 @@ export interface BacktraceErrorBoundaryProps {
     name?: string;
 }
 
-export interface BacktraceErrorBoundaryState {
+export interface State {
     error?: Error;
 }
 

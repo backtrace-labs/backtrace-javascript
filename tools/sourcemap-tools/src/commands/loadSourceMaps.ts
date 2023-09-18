@@ -1,13 +1,16 @@
 import { RawSourceMap } from 'source-map';
 import { parseJSON, readFile } from '../helpers/common';
+import { pipe } from '../helpers/flow';
 import { Asset, AssetWithContent } from '../models/Asset';
-import { AsyncResult } from '../models/AsyncResult';
+import { R } from '../models/Result';
 
 export function loadSourceMap(asset: Asset) {
-    return AsyncResult.fromValue<string, string>(asset.path)
-        .then(readFile)
-        .then(parseJSON<RawSourceMap>)
-        .then<AssetWithContent<RawSourceMap>>((content) => ({ ...asset, content })).inner;
+    return pipe(
+        asset.path,
+        readFile,
+        R.map(parseJSON<RawSourceMap>),
+        R.map((content) => ({ ...asset, content })),
+    );
 }
 
 export function stripSourcesContent(asset: AssetWithContent<RawSourceMap>): AssetWithContent<RawSourceMap> {

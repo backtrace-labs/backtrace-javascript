@@ -1,6 +1,6 @@
 {
     "name": "@backtrace-labs/javascript-cli",
-    "version": "0.0.3",
+    "version": "0.1.2",
     "description": "Backtrace CLI for working with Javascript files.",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
@@ -17,7 +17,8 @@
         "lint": "eslint . --ext .ts",
         "prepublishOnly": "NODE_ENV=production npm run build",
         "watch": "tsc -w",
-        "start": "node lib/index.js"
+        "start": "node lib/index.js",
+        "test": "NODE_ENV=test jest"
     },
     "repository": {
         "type": "git",
@@ -44,7 +45,7 @@
         "/lib"
     ],
     "dependencies": {
-        "@backtrace-labs/sourcemap-tools": "^0.0.3",
+        "@backtrace-labs/sourcemap-tools": "^0.1.0",
         "command-line-args": "^5.2.1",
         "command-line-usage": "^7.0.1",
         "glob": "^10.3.3",
@@ -52,6 +53,11 @@
     },
     "devDependencies": {
         "@types/command-line-args": "^5.2.0",
-        "@types/command-line-usage": "^5.0.2"
+        "@types/command-line-usage": "^5.0.2",
+        "@types/fs-extra": "^11.0.1",
+        "fs-extra": "^11.1.1",
+        "jest": "^29.5.0",
+        "ts-jest": "^29.1.0",
+        "typescript": "^5.0.4"
     }
 }
