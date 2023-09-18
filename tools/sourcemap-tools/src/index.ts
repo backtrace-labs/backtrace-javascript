@@ -1,4 +1,3 @@
-export { RawSourceMap } from 'source-map';
 export * from './DebugIdGenerator';
 export * from './FileFinder';
 export * from './Logger';
@@ -7,8 +6,9 @@ export * from './SymbolUploader';
 export * from './ZipArchive';
 export * from './commands';
 export * from './helpers/common';
+export * from './helpers/flow';
 export * from './helpers/match';
 export * from './models/Asset';
-export * from './models/AsyncResult';
 export * from './models/ProcessAssetResult';
+export * from './models/RawSourceMap';
 export * from './models/Result';

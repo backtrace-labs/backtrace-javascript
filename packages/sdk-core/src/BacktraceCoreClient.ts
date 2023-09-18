@@ -25,6 +25,11 @@ import { SingleSessionProvider } from './modules/metrics/SingleSessionProvider';
 import { RateLimitWatcher } from './modules/rateLimiter/RateLimitWatcher';
 export abstract class BacktraceCoreClient {
     /**
+     * Backtrace client instance
+     */
+    protected static _instance?: BacktraceCoreClient;
+
+    /**
      * Determines if the client is enabled.
      */
     public get enabled() {
@@ -55,14 +60,14 @@ export abstract class BacktraceCoreClient {
      * Available cached client attributes
      */
     public get attributes(): Record<string, AttributeType> {
-        return this._attributeManager.get().attributes;
+        return this.attributeManager.get().attributes;
     }
 
     /**
      * Available cached client annotatations
      */
     public get annotations(): Record<string, unknown> {
-        return this._attributeManager.get().annotations;
+        return this.attributeManager.get().annotations;
     }
 
     public get metrics(): BacktraceMetrics | undefined {
@@ -74,22 +79,27 @@ export abstract class BacktraceCoreClient {
     }
 
     /**
+     * Client cached attachments
+     */
+    public get attachments(): readonly BacktraceAttachment[] {
+        // always return a copy of attachments
+        return [...this._attachments];
+    }
+
+    /**
      * Report database used by the client
      */
     public get database(): BacktraceDatabase | undefined {
         return this._database;
     }
 
-    /**
-     * Client cached attachments
-     */
-    public readonly attachments: BacktraceAttachment[];
-
     protected readonly breadcrumbsManager?: BreadcrumbsManager;
+    protected readonly attributeManager: AttributeManager;
+
+    private readonly _attachments: BacktraceAttachment[];
     private readonly _dataBuilder: BacktraceDataBuilder;
     private readonly _reportSubmission: BacktraceReportSubmission;
     private readonly _rateLimitWatcher: RateLimitWatcher;
-    private readonly _attributeManager: AttributeManager;
     private readonly _metrics?: BacktraceMetrics;
     private readonly _database?: BacktraceDatabase;
     private readonly _sessionProvider: BacktraceSessionProvider;
@@ -119,16 +129,16 @@ export abstract class BacktraceCoreClient {
             attributeProviders.push(new UserAttributeProvider(this._setup.options.userAttributes));
         }
 
-        this._attributeManager = new AttributeManager(attributeProviders);
+        this.attributeManager = new AttributeManager(attributeProviders);
 
         this._dataBuilder = new BacktraceDataBuilder(
             this._sdkOptions,
             stackTraceConverter,
-            this._attributeManager,
+            this.attributeManager,
             new DebugIdProvider(stackTraceConverter, this._setup.debugIdMapProvider),
         );
 
-        this.attachments = this.options.attachments ?? [];
+        this._attachments = this.options.attachments ?? [];
 
         if (this._setup.databaseStorageProvider && this.options?.database?.enable === true) {
             this._database = new BacktraceDatabase(
@@ -143,7 +153,7 @@ export abstract class BacktraceCoreClient {
         const metrics = new MetricsBuilder(
             this.options,
             this._sessionProvider,
-            this._attributeManager,
+            this.attributeManager,
             this._setup.requestHandler,
         ).build();
 
@@ -153,8 +163,8 @@ export abstract class BacktraceCoreClient {
 
         if (this.options.breadcrumbs?.enable !== false) {
             this.breadcrumbsManager = new BreadcrumbsManager(this.options?.breadcrumbs, this._setup.breadcrumbsSetup);
-            this._attributeManager.addProvider(this.breadcrumbsManager);
-            this.attachments.push(this.breadcrumbsManager.breadcrumbsStorage);
+            this._attachments.push(this.breadcrumbsManager.breadcrumbsStorage);
+            this.attributeManager.addProvider(this.breadcrumbsManager);
         }
 
         this.initialize();
@@ -172,24 +182,25 @@ export abstract class BacktraceCoreClient {
      */
     public addAttribute(attributes: () => Record<string, unknown>): void;
     public addAttribute(attributes: Record<string, unknown> | (() => Record<string, unknown>)) {
-        this._attributeManager.add(attributes);
+        this.attributeManager.add(attributes);
+    }
+
+    /**
+     * Add attachment to the client
+     * @param attachment attachment
+     */
+    public addAttachment(attachment: BacktraceAttachment): void {
+        this._attachments.push(attachment);
     }
 
     /**
      * Asynchronously sends error data to Backtrace.
-     * @param error Backtrace Report or error or message
-     * @param attributes Report attributes
-     * @param attachments Report attachments
-     */
-    public send(error: Error, attributes?: Record<string, unknown>, attachments?: BacktraceAttachment[]): Promise<void>;
-    /**
-     * Asynchronously sends a message report to Backtrace
-     * @param message Report message
+     * @param error Error or message
      * @param attributes Report attributes
      * @param attachments Report attachments
      */
     public send(
-        message: string,
+        error: Error | string,
         attributes?: Record<string, unknown>,
         attachments?: BacktraceAttachment[],
     ): Promise<void>;
@@ -288,7 +299,7 @@ export abstract class BacktraceCoreClient {
         report: BacktraceReport,
         reportAttachments: BacktraceAttachment[],
     ): BacktraceAttachment[] {
-        return [...this.attachments, ...(report.attachments ?? []), ...(reportAttachments ?? [])];
+        return [...this._attachments, ...(report.attachments ?? []), ...(reportAttachments ?? [])];
     }
 
     private skipFrameOnMessage(data: Error | string): number {

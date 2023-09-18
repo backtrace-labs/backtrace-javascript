@@ -15,7 +15,11 @@
         "test": "npm run test --ws --if-present"
     },
     "workspaces": [
-        "packages/*",
+        "packages/sdk-core",
+        "packages/browser",
+        "packages/react",
+        "packages/node",
+        "packages/react-native",
         "tools/*"
     ],
     "repository": {

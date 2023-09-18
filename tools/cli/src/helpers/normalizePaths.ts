@@ -1,8 +1,10 @@
 import path from 'path';
 
-export function normalizePaths(paths: string | string[] | undefined, defaults: string | string[]) {
+export function normalizePaths(paths: string | string[] | undefined): string[] | undefined;
+export function normalizePaths(paths: string | string[] | undefined, defaults: string | string[]): string[];
+export function normalizePaths(paths: string | string[] | undefined, defaults?: string | string[]) {
     if (!paths || !paths.length) {
-        return toArray(defaults);
+        return defaults ? toArray(defaults) : undefined;
     }
 
     return toArray(paths);

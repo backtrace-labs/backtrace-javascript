@@ -2,7 +2,7 @@ import assert from 'assert';
 import fs from 'fs';
 import path from 'path';
 import { RawSourceMap, SourceMapConsumer } from 'source-map';
-import { DebugIdGenerator, Ok, SOURCEMAP_DEBUG_ID_KEY, SourceProcessor } from '../src';
+import { DebugIdGenerator, SOURCEMAP_DEBUG_ID_KEY, SourceProcessor } from '../src';
 
 describe('SourceProcessor', () => {
     const source = `function foo(){console.log("Hello World!")}foo();`;
@@ -44,8 +44,7 @@ function foo(){console.log("Hello World!")}foo();`;
             const sourceProcessor = new SourceProcessor(debugIdGenerator);
             const result = await sourceProcessor.processSourceAndSourceMap(source, sourceMap);
 
-            assert(result.isOk());
-            expect(result.data.source).toMatch(new RegExp(`^${expected}\n`));
+            expect(result.source).toMatch(new RegExp(`^${expected}\n`));
         });
 
         it('should append source snippet to the source on the first line with source having shebang not on the first line', async () => {
@@ -60,8 +59,7 @@ function foo(){console.log("Hello World!")}foo();`;
                 sourceWithShebangElsewhereMap,
             );
 
-            assert(result.isOk());
-            expect(result.data.source).toMatch(new RegExp(`^${expected}\n`));
+            expect(result.source).toMatch(new RegExp(`^${expected}\n`));
         });
 
         it('should append source snippet to the source after shebang', async () => {
@@ -73,8 +71,7 @@ function foo(){console.log("Hello World!")}foo();`;
             const sourceProcessor = new SourceProcessor(debugIdGenerator);
             const result = await sourceProcessor.processSourceAndSourceMap(sourceWithShebang, sourceWithShebangMap);
 
-            assert(result.isOk());
-            expect(result.data.source).toMatch(new RegExp(`^(#!.+\n)${expected}\n`));
+            expect(result.source).toMatch(new RegExp(`^(#!.+\n)${expected}\n`));
         });
 
         it('should append comment snippet to the source on the last line', async () => {
@@ -86,8 +83,7 @@ function foo(){console.log("Hello World!")}foo();`;
             const sourceProcessor = new SourceProcessor(debugIdGenerator);
             const result = await sourceProcessor.processSourceAndSourceMap(source, sourceMap);
 
-            assert(result.isOk());
-            expect(result.data.source).toMatch(new RegExp(`\n${expected}$`));
+            expect(result.source).toMatch(new RegExp(`\n${expected}$`));
         });
 
         it('should not add any whitespaces at end if there were none before when appending comment snippet', async () => {
@@ -100,8 +96,7 @@ function foo(){console.log("Hello World!")}foo();`;
             const sourceProcessor = new SourceProcessor(debugIdGenerator);
             const result = await sourceProcessor.processSourceAndSourceMap(source, sourceMap);
 
-            assert(result.isOk());
-            expect(result.data.source).not.toMatch(/\s+$/);
+            expect(result.source).not.toMatch(/\s+$/);
         });
 
         it('should leave end whitespaces as they are when appending comment snippet', async () => {
@@ -115,8 +110,7 @@ function foo(){console.log("Hello World!")}foo();`;
             const sourceProcessor = new SourceProcessor(debugIdGenerator);
             const result = await sourceProcessor.processSourceAndSourceMap(source, sourceMap);
 
-            assert(result.isOk());
-            expect(result.data.source).toMatch(new RegExp(`${whitespaces}$`));
+            expect(result.source).toMatch(new RegExp(`${whitespaces}$`));
         });
 
         it('should not touch the original source', async () => {
@@ -127,8 +121,7 @@ function foo(){console.log("Hello World!")}foo();`;
             const sourceProcessor = new SourceProcessor(debugIdGenerator);
             const result = await sourceProcessor.processSourceAndSourceMap(source, sourceMap);
 
-            assert(result.isOk());
-            expect(result.data.source).toContain(source);
+            expect(result.source).toContain(source);
         });
 
         it('should not touch the original sourcemap keys apart from mappings', async () => {
@@ -139,8 +132,7 @@ function foo(){console.log("Hello World!")}foo();`;
             const sourceProcessor = new SourceProcessor(debugIdGenerator);
             const result = await sourceProcessor.processSourceAndSourceMap(source, sourceMap);
 
-            assert(result.isOk());
-            expect(result.data.sourceMap).toMatchObject({ ...sourceMap, mappings: result.data.sourceMap.mappings });
+            expect(result.sourceMap).toMatchObject({ ...sourceMap, mappings: result.sourceMap.mappings });
         });
 
         it('should return sourcemap from DebugIdGenerator', async () => {
@@ -152,8 +144,7 @@ function foo(){console.log("Hello World!")}foo();`;
             const sourceProcessor = new SourceProcessor(debugIdGenerator);
             const result = await sourceProcessor.processSourceAndSourceMap(source, sourceMap);
 
-            assert(result.isOk());
-            expect(result.data.sourceMap).toStrictEqual(expected);
+            expect(result.sourceMap).toStrictEqual(expected);
         });
 
         it('should offset sourcemap lines by number of newlines in source snippet + 1', async () => {
@@ -163,23 +154,11 @@ function foo(){console.log("Hello World!")}foo();`;
             const expectedNewLineCount = (snippet.match(/\n/g)?.length ?? 0) + 1;
 
             jest.spyOn(debugIdGenerator, 'generateSourceSnippet').mockReturnValue(snippet);
+            const offsetSpy = jest.spyOn(sourceProcessor, 'offsetSourceMap');
 
-            const unmodifiedConsumer = await new SourceMapConsumer(sourceMap);
-            const expectedPosition = unmodifiedConsumer.originalPositionFor({
-                line: 1,
-                column: source.indexOf('foo();'),
-            });
+            await sourceProcessor.processSourceAndSourceMap(source, sourceMap);
 
-            const result = await sourceProcessor.processSourceAndSourceMap(source, sourceMap);
-            assert(result.isOk());
-
-            const modifiedConsumer = await new SourceMapConsumer(result.data.sourceMap);
-            const actualPosition = modifiedConsumer.originalPositionFor({
-                line: 1 + expectedNewLineCount,
-                column: source.indexOf('foo();'),
-            });
-
-            expect(actualPosition).toEqual(expectedPosition);
+            expect(offsetSpy).toBeCalledWith(expect.anything(), expectedNewLineCount);
         });
 
         it('should offset sourcemap lines by number of newlines in source snippet + 1 with source having shebang not on the first line', async () => {
@@ -189,71 +168,42 @@ function foo(){console.log("Hello World!")}foo();`;
             const expectedNewLineCount = (snippet.match(/\n/g)?.length ?? 0) + 1;
 
             jest.spyOn(debugIdGenerator, 'generateSourceSnippet').mockReturnValue(snippet);
+            const offsetSpy = jest.spyOn(sourceProcessor, 'offsetSourceMap');
 
-            const unmodifiedConsumer = await new SourceMapConsumer(sourceMap);
-            const expectedPosition = unmodifiedConsumer.originalPositionFor({
-                line: 1,
-                column: source.indexOf('foo();'),
-            });
+            await sourceProcessor.processSourceAndSourceMap(sourceWithShebangElsewhere, sourceWithShebangElsewhereMap);
 
-            const result = await sourceProcessor.processSourceAndSourceMap(
-                sourceWithShebangElsewhere,
-                sourceWithShebangElsewhereMap,
-            );
-            assert(result.isOk());
-
-            const modifiedConsumer = await new SourceMapConsumer(result.data.sourceMap);
-            const actualPosition = modifiedConsumer.originalPositionFor({
-                line: 1 + expectedNewLineCount,
-                column: source.indexOf('foo();'),
-            });
-
-            expect(actualPosition).toEqual(expectedPosition);
+            expect(offsetSpy).toBeCalledWith(expect.anything(), expectedNewLineCount);
         });
 
-        it('should offset sourcemap lines by number of newlines in source with shebang with snippet + 3', async () => {
+        it('should offset sourcemap lines by number of newlines in source with shebang with snippet + 1', async () => {
             const debugIdGenerator = new DebugIdGenerator();
             const sourceProcessor = new SourceProcessor(debugIdGenerator);
             const snippet = 'a\nb\nc\nd';
-            const expectedNewLineCount = (snippet.match(/\n/g)?.length ?? 0) + 3;
+            const expectedNewLineCount = (snippet.match(/\n/g)?.length ?? 0) + 1;
 
             jest.spyOn(debugIdGenerator, 'generateSourceSnippet').mockReturnValue(snippet);
+            const offsetSpy = jest.spyOn(sourceProcessor, 'offsetSourceMap');
 
-            const unmodifiedConsumer = await new SourceMapConsumer(sourceMap);
-            const expectedPosition = unmodifiedConsumer.originalPositionFor({
-                line: 1,
-                column: source.indexOf('foo();'),
-            });
+            await sourceProcessor.processSourceAndSourceMap(sourceWithShebang, sourceWithShebangMap);
 
-            const result = await sourceProcessor.processSourceAndSourceMap(sourceWithShebang, sourceWithShebangMap);
-            assert(result.isOk());
-
-            const modifiedConsumer = await new SourceMapConsumer(result.data.sourceMap);
-            const actualPosition = modifiedConsumer.originalPositionFor({
-                line: 1 + expectedNewLineCount,
-                column: source.indexOf('foo();'),
-            });
-
-            expect(actualPosition).toEqual(expectedPosition);
+            expect(offsetSpy).toBeCalledWith(expect.anything(), expectedNewLineCount);
         });
 
         it('should call process function with content from files', async () => {
             const sourcePath = path.join(__dirname, './testFiles/source.js');
             const sourceMapPath = path.join(__dirname, './testFiles/source.js.map');
             const sourceContent = await fs.promises.readFile(sourcePath, 'utf-8');
-            const sourceMapContent = await fs.promises.readFile(sourceMapPath, 'utf-8');
+            const sourceMapContent = JSON.parse(await fs.promises.readFile(sourceMapPath, 'utf-8'));
             const debugId = 'DEBUG_ID';
 
             const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
             const processFn = jest
                 .spyOn(sourceProcessor, 'processSourceAndSourceMap')
-                .mockImplementation(async (_, __, debugId) =>
-                    Ok({
-                        source: sourceContent,
-                        sourceMap: JSON.parse(sourceMapContent),
-                        debugId: debugId ?? 'debugId',
-                    }),
-                );
+                .mockImplementation(async (_, __, debugId) => ({
+                    source: sourceContent,
+                    sourceMap: sourceMapContent,
+                    debugId: debugId ?? 'debugId',
+                }));
 
             await sourceProcessor.processSourceAndSourceMapFiles(sourcePath, sourceMapPath, debugId);
 
@@ -264,19 +214,17 @@ function foo(){console.log("Hello World!")}foo();`;
             const sourcePath = path.join(__dirname, './testFiles/source.js');
             const sourceMapPath = path.join(__dirname, './testFiles/source.js.map');
             const sourceContent = await fs.promises.readFile(sourcePath, 'utf-8');
-            const sourceMapContent = await fs.promises.readFile(sourceMapPath, 'utf-8');
+            const sourceMapContent = JSON.parse(await fs.promises.readFile(sourceMapPath, 'utf-8'));
             const debugId = 'DEBUG_ID';
 
             const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
             const processFn = jest
                 .spyOn(sourceProcessor, 'processSourceAndSourceMap')
-                .mockImplementation(async (_, __, debugId) =>
-                    Ok({
-                        source: sourceContent,
-                        sourceMap: JSON.parse(sourceMapContent),
-                        debugId: debugId ?? 'debugId',
-                    }),
-                );
+                .mockImplementation(async (_, __, debugId) => ({
+                    source: sourceContent,
+                    sourceMap: sourceMapContent,
+                    debugId: debugId ?? 'debugId',
+                }));
 
             await sourceProcessor.processSourceAndSourceMapFiles(sourcePath, undefined, debugId);
 
@@ -312,6 +260,49 @@ function foo(){console.log("Hello World!")}foo();`;
             assert(result.isOk());
 
             expect(result.data.sourcesContent).toEqual([sourceContent]);
+        });
+    });
+
+    describe('offsetSourceMap', () => {
+        it('should offset sourcemap lines by count', async () => {
+            const debugIdGenerator = new DebugIdGenerator();
+            const sourceProcessor = new SourceProcessor(debugIdGenerator);
+            const count = 3;
+
+            const unmodifiedConsumer = await new SourceMapConsumer(sourceWithShebangMap);
+            const expectedPosition = unmodifiedConsumer.originalPositionFor({
+                line: 2,
+                column: source.indexOf('foo();'),
+            });
+
+            const result = await sourceProcessor.offsetSourceMap(sourceWithShebangMap, count);
+
+            const modifiedConsumer = await new SourceMapConsumer(result);
+            const actualPosition = modifiedConsumer.originalPositionFor({
+                line: 2 + count,
+                column: source.indexOf('foo();'),
+            });
+
+            expect(actualPosition).toEqual(expectedPosition);
+        });
+
+        it('should modify only mappings', async () => {
+            const debugIdGenerator = new DebugIdGenerator();
+            const sourceProcessor = new SourceProcessor(debugIdGenerator);
+            const count = 3;
+
+            const sourceMap = {
+                version: 3,
+                file: Math.random().toString(),
+                sources: [new Array(100)].map(() => Math.random().toString()),
+                names: [new Array(100)].map(() => Math.random().toString()),
+                mappings: 'AACA,SAASA,MACLC,QAAQC,IAAI,cAAc,CAC9B,CACAF,IAAI',
+                foo: 'bar',
+            };
+
+            const result = await sourceProcessor.offsetSourceMap(sourceMap, count);
+            expect(result).toEqual({ ...sourceMap, mappings: expect.any(String) });
+            expect(result.mappings).not.toEqual(sourceMap.mappings);
         });
     });
 });

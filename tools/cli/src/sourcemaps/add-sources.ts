@@ -1,24 +1,32 @@
 import {
     Asset,
     AssetWithContent,
-    AsyncResult,
     DebugIdGenerator,
     Err,
     failIfEmpty,
     filter,
+    filterAsync,
+    flow,
     log,
+    LogLevel,
     map,
+    mapAsync,
     matchSourceMapExtension,
+    not,
     Ok,
+    pass,
+    pipe,
+    R,
     RawSourceMap,
+    ResultPromise,
     SourceProcessor,
-    writeFile,
 } from '@backtrace-labs/sourcemap-tools';
 import path from 'path';
 import { GlobalOptions } from '..';
 import { Command, CommandContext } from '../commands/Command';
-import { loadSourceMapFromPathOrFromSource, toAsset } from '../helpers/common';
-import { find } from '../helpers/find';
+import { readSourceMapFromPathOrFromSource, toAsset, writeAsset } from '../helpers/common';
+import { ErrorBehaviors, filterBehaviorSkippedElements, getErrorBehavior, handleError } from '../helpers/errorBehavior';
+import { buildIncludeExclude, find } from '../helpers/find';
 import { logAsset } from '../helpers/logs';
 import { normalizePaths, relativePaths } from '../helpers/normalizePaths';
 import { CliLogger } from '../logger';
@@ -26,10 +34,13 @@ import { findConfig, loadOptionsForCommand } from '../options/loadOptions';
 
 export interface AddSourcesOptions extends GlobalOptions {
     readonly path: string | string[];
+    readonly include: string | string[];
+    readonly exclude: string | string[];
     readonly 'dry-run': boolean;
     readonly force: boolean;
     readonly skipFailing: boolean;
     readonly 'pass-with-no-files': boolean;
+    readonly 'asset-error-behavior': string;
 }
 
 export const addSourcesCmd = new Command<AddSourcesOptions>({
@@ -44,6 +55,20 @@ export const addSourcesCmd = new Command<AddSourcesOptions>({
         alias: 'p',
     })
     .option({
+        name: 'include',
+        description: 'Includes specified paths.',
+        type: String,
+        multiple: true,
+        alias: 'i',
+    })
+    .option({
+        name: 'exclude',
+        description: 'Excludes specified paths.',
+        type: String,
+        multiple: true,
+        alias: 'x',
+    })
+    .option({
         name: 'dry-run',
         alias: 'n',
         type: Boolean,
@@ -56,11 +81,17 @@ export const addSourcesCmd = new Command<AddSourcesOptions>({
         description: 'Processes files even if sourcesContent is not empty. Will overwrite existing sources.',
     })
     .option({
+        name: 'asset-error-behavior',
+        alias: 'e',
+        type: String,
+        description: `What to do when an asset fails. Can be one of: ${Object.keys(ErrorBehaviors).join(', ')}.`,
+    })
+    .option({
         name: 'pass-with-no-files',
         type: Boolean,
         description: 'Exits with zero exit code if no sourcemaps are found.',
     })
-    .execute((context) => AsyncResult.equip(addSourcesToSourcemaps(context)).then(map(output(context.logger))).inner);
+    .execute(addSourcesToSourcemaps);
 
 /**
  * Adds sources to sourcemaps found in path(s).
@@ -95,86 +126,81 @@ export async function addSourcesToSourcemaps({ opts, logger, getHelpMessage }: C
     const logDebugAsset = logAsset(logger, 'debug');
     const logTraceAsset = logAsset(logger, 'trace');
 
-    const loadSourceMapCommand = (asset: Asset) =>
-        AsyncResult.fromValue<Asset, string>(asset)
-            .then(logTraceAsset('loading sourcemap'))
-            .then(loadSourceMapFromPathOrFromSource(sourceProcessor))
-            .then(logDebugAsset('loaded sourcemap')).inner;
+    const assetErrorBehaviorResult = getErrorBehavior(opts['asset-error-behavior'] ?? 'exit');
+    if (assetErrorBehaviorResult.isErr()) {
+        logger.info(getHelpMessage());
+        return assetErrorBehaviorResult;
+    }
 
-    const doesSourceMapHaveSourcesCommand = (asset: AssetWithContent<RawSourceMap>) =>
-        AsyncResult.fromValue<AssetWithContent<RawSourceMap>, string>(asset)
-            .then(logTraceAsset('checking if sourcemap has sources'))
-            .then(doesSourceMapHaveSources(sourceProcessor))
-            .then(
-                logDebug(
-                    ({ asset, result }) =>
-                        `${asset.name}: ` + (result ? 'sourcemap has sources' : 'sourcemap does not have sources'),
-                ),
-            )
-            .thenErr((error) => `${asset.name}: ${error}`).inner;
+    const assetErrorBehavior = assetErrorBehaviorResult.data;
 
-    const filterAssetsCommand = (assets: AssetWithContent<RawSourceMap>[]) =>
-        AsyncResult.fromValue<AssetWithContent<RawSourceMap>[], string>(assets)
-            .then(map(doesSourceMapHaveSourcesCommand))
-            .then(filter((f) => !f.result))
-            .then(map((f) => f.asset)).inner;
+    const handleFailedAsset = handleError(assetErrorBehavior);
 
-    const addSourceCommand = (asset: AssetWithContent<RawSourceMap>) =>
-        AsyncResult.fromValue<AssetWithContent<RawSourceMap>, string>(asset)
-            .then(logTraceAsset('adding source'))
-            .then(addSource(sourceProcessor))
-            .then(logDebugAsset('source added'))
-            .thenErr((error) => `${asset.name}: ${error}`).inner;
+    const logAssetBehaviorError = (asset: Asset) => (err: string, level: LogLevel) =>
+        logAsset(logger, level)(err)(asset);
 
-    const writeSourceMapCommand = (asset: AssetWithContent<RawSourceMap>) =>
-        AsyncResult.fromValue<AssetWithContent<RawSourceMap>, string>(asset)
-            .then(logTraceAsset('writing sourcemap'))
-            .then(writeSourceMap)
-            .then(logDebugAsset('sourcemap written'))
-            .thenErr((error) => `${asset.name}: ${error}`).inner;
-
-    return AsyncResult.equip(find(...searchPaths))
-        .then(logDebug((r) => `found ${r.length} files`))
-        .then(map(logTrace((result) => `found file: ${result.path}`)))
-        .then(filter((t) => t.direct || matchSourceMapExtension(t.path)))
-        .then(map((t) => t.path))
-        .then(logDebug((r) => `found ${r.length} files for adding sources`))
-        .then(map(logTrace((path) => `file to add sources to: ${path}`)))
-        .then(opts['pass-with-no-files'] ? Ok : failIfEmpty('no sourcemaps found'))
-        .then(map(toAsset))
-        .then(map(loadSourceMapCommand))
-        .then(opts.force ? Ok : filterAssetsCommand)
-        .then(logDebug((r) => `adding sources to ${r.length} files`))
-        .then(map(logTrace(({ path }) => `file to add sources to: ${path}`)))
-        .then(
-            opts['pass-with-no-files']
-                ? Ok
-                : failIfEmpty('no sourcemaps without sources found, use --force to overwrite sources'),
-        )
-        .then(map(addSourceCommand))
-        .then(opts['dry-run'] ? Ok : map(writeSourceMapCommand)).inner;
-}
-
-function doesSourceMapHaveSources(sourceProcessor: SourceProcessor) {
-    return function doesSourceMapHaveSources(asset: AssetWithContent<RawSourceMap>) {
-        return {
+    const addSourcesCommand = (asset: Asset) =>
+        pipe(
             asset,
-            result: sourceProcessor.doesSourceMapHaveSources(asset.content),
-        };
-    };
+            logTraceAsset('reading sourcemap'),
+            readSourceMapFromPathOrFromSource(sourceProcessor),
+            R.map(logDebugAsset('read sourcemap')),
+            R.map(logTraceAsset('adding source')),
+            R.map(addSourceToSourceMap(opts.force ?? false)),
+            R.map(logDebugAsset('source added')),
+            R.map(
+                opts['dry-run']
+                    ? Ok
+                    : flow(
+                          logTraceAsset('writing source and sourcemap'),
+                          writeAsset,
+                          R.map(logDebugAsset('wrote source and sourcemap')),
+                      ),
+            ),
+            R.mapErr((error) => `${asset.name}: ${error}`),
+            handleFailedAsset(logAssetBehaviorError(asset)),
+        );
+
+    const includePaths = normalizePaths(opts.include);
+    const excludePaths = normalizePaths(opts.exclude);
+    const { isIncluded, isExcluded } = await buildIncludeExclude(includePaths, excludePaths, logTrace);
+
+    return pipe(
+        searchPaths,
+        find,
+        logDebug((r) => `found ${r.length} files`),
+        map(logTrace((result) => `found file: ${result.path}`)),
+        isIncluded ? filterAsync(isIncluded) : pass,
+        isExcluded ? filterAsync(flow(isExcluded, not)) : pass,
+        filter((t) => t.direct || matchSourceMapExtension(t.path)),
+        map((t) => t.path),
+        logDebug((r) => `found ${r.length} files for adding sources`),
+        map(logTrace((path) => `file to add sources to: ${path}`)),
+        map(toAsset),
+        opts['pass-with-no-files'] ? Ok : failIfEmpty('no sourcemaps found'),
+        R.map(flow(mapAsync(addSourcesCommand), R.flatMap)),
+        R.map(filterBehaviorSkippedElements),
+        R.map(map(output(logger))),
+    );
 }
 
-function addSource(sourceProcessor: SourceProcessor) {
-    return function addSource(asset: AssetWithContent<RawSourceMap>) {
-        return AsyncResult.equip(sourceProcessor.addSourcesToSourceMap(asset.content, asset.path)).then<
-            AssetWithContent<RawSourceMap>
-        >((newSourceMap) => ({ ...asset, content: newSourceMap })).inner;
-    };
-}
+export function addSourceToSourceMap(force: boolean) {
+    const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
 
-function writeSourceMap(asset: AssetWithContent<RawSourceMap>) {
-    const { content, path } = asset;
-    return AsyncResult.equip(writeFile([JSON.stringify(content), path])).then(() => asset).inner;
+    const hasSources = (asset: AssetWithContent<RawSourceMap>): asset is AssetWithContent<RawSourceMap> =>
+        sourceProcessor.doesSourceMapHaveSources(asset.content);
+
+    return async function addSourceToSourceMap(
+        asset: AssetWithContent<RawSourceMap>,
+    ): ResultPromise<AssetWithContent<RawSourceMap>, string> {
+        return !hasSources(asset) || force
+            ? pipe(
+                  asset,
+                  (asset) => sourceProcessor.addSourcesToSourceMap(asset.content, asset.path),
+                  R.map((content) => ({ ...asset, content } as AssetWithContent<RawSourceMap>)),
+              )
+            : Ok(asset);
+    };
 }
 
 function output(logger: CliLogger) {

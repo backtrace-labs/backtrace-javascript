@@ -30,7 +30,6 @@
         "build": "bob build",
         "clean": "rimraf \"lib\"",
         "format:check": "eslint \"**/*.{js,ts,tsx}\"",
-        "prepack": "bob build",
         "prepublishOnly": "bob build"
     },
     "keywords": [
@@ -93,7 +92,7 @@
         "typescript": "^5.0.2"
     },
     "dependencies": {
-        "@backtrace-labs/react": "^0.0.3",
-        "@backtrace-labs/sdk-core": "^0.0.3"
+        "@backtrace-labs/react": "^0.0.4",
+        "@backtrace-labs/sdk-core": "^0.0.4"
     }
 }

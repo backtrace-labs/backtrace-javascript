@@ -1,4 +1,4 @@
-import { AsyncResult, Ok, readFile, ResultPromise } from '@backtrace-labs/sourcemap-tools';
+import { Err, Ok, pipe, R, readFile, ResultPromise } from '@backtrace-labs/sourcemap-tools';
 import fs from 'fs';
 import path from 'path';
 import { parseJSONC } from '../helpers/jsonc';
@@ -13,40 +13,33 @@ export function loadOptionsForCommand(path?: string) {
         key: K,
         defaults?: Partial<CommandCliOptions[K]>,
     ): ResultPromise<Partial<CommandCliOptions[K]>, string> {
-        if (readOptions) {
-            return Ok(joinOptions(key, defaults)(readOptions));
-        }
-
-        const readResult = await readFile(path ?? DEFAULT_OPTIONS_FILENAME);
-        if (readResult.isErr()) {
-            return path ? readResult : Ok({});
-        }
-
-        return AsyncResult.equip(readResult)
-            .then(parseJSONC<CliOptions>)
-            .then((opts) => (readOptions = opts))
-            .then(joinOptions(key, defaults)).inner;
+        return pipe(
+            path,
+            (path) => (!readOptions ? loadOptions(path) : Ok(readOptions)),
+            R.map((data) => (data ? (readOptions = data) : data)),
+            R.map((data) => (data ? joinOptions(key, defaults) : {})),
+        );
     };
 }
 
 export async function loadOptions(path?: string): ResultPromise<CliOptions | undefined, string> {
-    const readResult = await readFile(path ?? DEFAULT_OPTIONS_FILENAME);
-    if (readResult.isErr()) {
-        return path ? readResult : Ok(undefined);
-    }
-
-    return AsyncResult.equip(readResult).then(parseJSONC<CliOptions>).inner;
+    return pipe(
+        path ?? DEFAULT_OPTIONS_FILENAME,
+        readFile,
+        R.mapErr((r) => (path ? Err(r) : Ok(undefined))),
+        R.map((data) => (data ? parseJSONC<CliOptions>(data) : Ok(undefined))),
+    );
 }
 
 export function joinOptions<K extends keyof CommandCliOptions>(key: K, defaults?: Partial<CommandCliOptions[K]>) {
-    return function joinOptions(loadedOptions: CliOptions): Partial<CommandCliOptions[K] & CliOptions> {
+    return function joinOptions(loadedOptions: CliOptions): Partial<CommandCliOptions[K]> {
         return {
             ...defaults,
             ...loadedOptions,
-            ...loadedOptions[key],
             'add-sources': undefined,
             upload: undefined,
             process: undefined,
+            ...loadedOptions[key],
         };
     };
 }
