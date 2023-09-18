@@ -23,8 +23,4 @@ export interface CommandCliOptions {
     readonly process: Partial<ProcessOptions>;
 }
 
-export interface RunCliOptions {
-    readonly run: (keyof CommandCliOptions)[] | Partial<Record<keyof CommandCliOptions, boolean>>;
-}
-
-export type CliOptions = Partial<CommonCliOptions & CommandCliOptions & RunCliOptions>;
+export type CliOptions = Partial<CommonCliOptions & CommandCliOptions>;

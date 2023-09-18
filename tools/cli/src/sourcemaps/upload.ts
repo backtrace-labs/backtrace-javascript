@@ -27,7 +27,7 @@ import {
     SymbolUploader,
     SymbolUploaderOptions,
     UploadResult,
-    ZipArchive,
+    ZipArchive
 } from '@backtrace-labs/sourcemap-tools';
 import fs from 'fs';
 import path from 'path';
@@ -54,10 +54,6 @@ export interface UploadOptions extends GlobalOptions {
     readonly 'pass-with-no-files': boolean;
     readonly output: string;
     readonly 'asset-error-behavior': string;
-}
-
-export interface UploadResultWithAssets extends UploadResult {
-    readonly assets: Asset[];
 }
 
 export interface UploadResultWithAssets extends UploadResult {
