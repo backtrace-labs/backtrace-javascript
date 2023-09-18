@@ -17,4 +17,5 @@ export * from './modules/converter/V8StackTraceConverter';
 export * from './modules/database';
 export * from './modules/metrics/BacktraceSessionProvider';
 export * from './modules/metrics/SingleSessionProvider';
+export * from './modules/storage';
 export * from './sourcemaps/index';
