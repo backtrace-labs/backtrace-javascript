@@ -5,7 +5,7 @@
     "author": "Backtrace <team@backtrace.io>",
     "license": "MIT",
     "scripts": {
-        "build": "tsc -b ./tsconfig.packages.json && npm run build --ws --if-present && npm run prepare --ws --if-present",
+        "build": "tsc -b ./tsconfig.packages.json && npm run build --ws --if-present",
         "clean": "tsc -b --clean && rimraf \"lib\" && npm run clean --ws --if-present",
         "format": "prettier --write '**/*.ts'",
         "format:check": "prettier --check '**/*.ts'",
@@ -15,7 +15,11 @@
         "test": "npm run test --ws --if-present"
     },
     "workspaces": [
-        "packages/*",
+        "packages/sdk-core",
+        "packages/browser",
+        "packages/react",
+        "packages/node",
+        "packages/react-native",
         "tools/*"
     ],
     "repository": {
