@@ -68,12 +68,14 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
         };
     }
 
-    public initialize(client: BacktraceCoreClient) {
+    public bind(client: BacktraceCoreClient): void {
+        client.reportEvents.on('before-skip', (report) => this.logReport(report));
+    }
+
+    public initialize() {
         for (const subscriber of this._eventSubscribers) {
             subscriber.start(this);
         }
-
-        client.reportEvents.on('before-skip', (report) => this.logReport(report));
     }
 
     public verbose(message: string, attributes?: Record<string, AttributeType> | undefined): boolean {

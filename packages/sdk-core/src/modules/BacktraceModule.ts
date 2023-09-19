@@ -1,6 +1,7 @@
 import { BacktraceCoreClient } from '..';
 
 export interface BacktraceModule {
-    initialize(client: BacktraceCoreClient): void;
+    bind?(client: BacktraceCoreClient): void;
+    initialize(): void;
     dispose?(): void;
 }

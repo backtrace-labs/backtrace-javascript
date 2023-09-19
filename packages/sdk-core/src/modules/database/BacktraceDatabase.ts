@@ -41,7 +41,7 @@ export class BacktraceDatabase implements BacktraceModule {
      * Starts database integration.
      * @returns true if the database started successfully. Otherwise false.
      */
-    public initialize(client: BacktraceCoreClient): boolean {
+    public initialize(): boolean {
         if (this._enabled) {
             return this._enabled;
         }
@@ -53,6 +53,22 @@ export class BacktraceDatabase implements BacktraceModule {
         const startResult = this._storageProvider.start();
         if (!startResult) {
             return false;
+        }
+
+        this.loadReports().then(async () => {
+            await this.setupDatabaseAutoSend();
+        });
+        this._enabled = true;
+        return true;
+    }
+
+    public bind(client: BacktraceCoreClient): void {
+        if (this._enabled) {
+            return;
+        }
+
+        if (this._options?.enable === false) {
+            return;
         }
 
         client.reportEvents.on('before-send', (_, data, attachments) => {
@@ -75,12 +91,6 @@ export class BacktraceDatabase implements BacktraceModule {
                 this.remove(record);
             }
         });
-
-        this.loadReports().then(async () => {
-            await this.setupDatabaseAutoSend();
-        });
-        this._enabled = true;
-        return true;
     }
 
     /**

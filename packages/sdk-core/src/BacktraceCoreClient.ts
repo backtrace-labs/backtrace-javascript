@@ -106,7 +106,7 @@ export abstract class BacktraceCoreClient {
     }
 
     /**
-     * Modules used by client
+     * Modules used by the client
      */
     public get modules(): ReadonlyBacktraceModules {
         return this._modules;
@@ -192,7 +192,10 @@ export abstract class BacktraceCoreClient {
 
     public initialize() {
         for (const module of this._modules.values()) {
-            module.initialize(this);
+            if (module.bind) {
+                module.bind(this);
+            }
+            module.initialize();
         }
 
         return this;
