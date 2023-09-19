@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 interface EventCallback {
     callback: (...args: any[]) => unknown;
     once?: boolean;

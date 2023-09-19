@@ -3,14 +3,13 @@ import {
     BacktraceAttributeProvider,
     BacktraceBreadcrumbs,
     BacktraceConfiguration,
-    BacktraceReportSubmissionResult,
     BacktraceSessionProvider,
-    BacktraceSubmissionResponse,
     DebugIdProvider,
     SdkOptions,
 } from '.';
 import { CoreClientSetup } from './builder/CoreClientSetup';
 import { Events } from './common/Events';
+import { ReportEvents } from './events/ReportEvents';
 import { AttributeType, BacktraceData } from './model/data/BacktraceData';
 import { BacktraceReportSubmission } from './model/http/BacktraceReportSubmission';
 import { BacktraceReport } from './model/report/BacktraceReport';
@@ -26,17 +25,6 @@ import { BacktraceMetrics } from './modules/metrics/BacktraceMetrics';
 import { MetricsBuilder } from './modules/metrics/MetricsBuilder';
 import { SingleSessionProvider } from './modules/metrics/SingleSessionProvider';
 import { RateLimitWatcher } from './modules/rateLimiter/RateLimitWatcher';
-
-export type ReportEvents = {
-    'before-skip'(report: BacktraceReport): void;
-    'before-send'(report: BacktraceReport, data: BacktraceData, attachments: BacktraceAttachment[]): void;
-    'after-send'(
-        report: BacktraceReport,
-        data: BacktraceData,
-        attachments: BacktraceAttachment[],
-        result: BacktraceReportSubmissionResult<BacktraceSubmissionResponse>,
-    ): void;
-};
 
 export abstract class BacktraceCoreClient {
     /**
@@ -108,7 +96,7 @@ export abstract class BacktraceCoreClient {
     /**
      * Modules used by the client
      */
-    public get modules(): ReadonlyBacktraceModules {
+    protected get modules(): ReadonlyBacktraceModules {
         return this._modules;
     }
 
