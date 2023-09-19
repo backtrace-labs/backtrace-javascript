@@ -82,7 +82,7 @@ export class BacktraceDatabase implements BacktraceModule {
         });
 
         client.reportEvents.on('after-send', (_, data, __, submissionResult) => {
-            const record = this._databaseRecordContext.find((record) => record.data === data);
+            const record = this._databaseRecordContext.find((record) => record.data.uuid === data.uuid);
             if (!record) {
                 return;
             }
