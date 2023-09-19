@@ -1,13 +1,16 @@
+import { BacktraceCoreClient } from '../..';
 import { IdGenerator } from '../../common/IdGenerator';
 import { TimeHelper } from '../../common/TimeHelper';
 import { BacktraceAttachment } from '../../model/attachment';
 import { BacktraceDatabaseConfiguration } from '../../model/configuration/BacktraceDatabaseConfiguration';
 import { BacktraceData } from '../../model/data/BacktraceData';
 import { BacktraceReportSubmission } from '../../model/http/BacktraceReportSubmission';
+import { BacktraceModule } from '../BacktraceModule';
 import { BacktraceDatabaseContext } from './BacktraceDatabaseContext';
 import { BacktraceDatabaseStorageProvider } from './BacktraceDatabaseStorageProvider';
 import { BacktraceDatabaseRecord } from './model/BacktraceDatabaseRecord';
-export class BacktraceDatabase {
+
+export class BacktraceDatabase implements BacktraceModule {
     /**
      * Determines if the database is enabled.
      */
@@ -38,7 +41,7 @@ export class BacktraceDatabase {
      * Starts database integration.
      * @returns true if the database started successfully. Otherwise false.
      */
-    public start(): boolean {
+    public initialize(client: BacktraceCoreClient): boolean {
         if (this._enabled) {
             return this._enabled;
         }
@@ -51,6 +54,27 @@ export class BacktraceDatabase {
         if (!startResult) {
             return false;
         }
+
+        client.reportEvents.on('before-send', (_, data, attachments) => {
+            const record = this.add(data, attachments);
+
+            if (!record || record.locked || record.count !== 1) {
+                return undefined;
+            }
+
+            record.locked = true;
+        });
+
+        client.reportEvents.on('after-send', (_, data, __, submissionResult) => {
+            const record = this._databaseRecordContext.find((record) => record.data === data);
+            if (!record) {
+                return;
+            }
+            record.locked = false;
+            if (submissionResult.status === 'Ok') {
+                this.remove(record);
+            }
+        });
 
         this.loadReports().then(async () => {
             await this.setupDatabaseAutoSend();

@@ -1,6 +1,7 @@
 import { TimeHelper } from '../../common/TimeHelper';
 import { BacktraceMetricsOptions } from '../../model/configuration/BacktraceConfiguration';
 import { AttributeType } from '../../model/data/BacktraceData';
+import { BacktraceModule } from '../BacktraceModule';
 import { AttributeManager } from '../attribute/AttributeManager';
 import { ReportDataBuilder } from '../attribute/ReportDataBuilder';
 import { BacktraceSessionProvider } from './BacktraceSessionProvider';
@@ -8,7 +9,7 @@ import { MetricsQueue } from './MetricsQueue';
 import { SummedEvent } from './model/SummedEvent';
 import { UniqueEvent } from './model/UniqueEvent';
 
-export class BacktraceMetrics {
+export class BacktraceMetrics implements BacktraceModule {
     /**
      * Returns current session id.
      */
@@ -38,7 +39,7 @@ export class BacktraceMetrics {
     /**
      * Starts metrics submission.
      */
-    public start() {
+    public initialize() {
         if (!this._sessionProvider.newSession) {
             return;
         }

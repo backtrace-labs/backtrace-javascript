@@ -59,7 +59,7 @@ describe('Unique events tests', () => {
             },
         };
 
-        metrics.start();
+        metrics.initialize();
 
         expect(testHttpClient.post).toBeCalledWith(uniqueEventsSubmissionUrl, JSON.stringify(expectedJson));
     });
@@ -88,7 +88,7 @@ describe('Unique events tests', () => {
             TEST_SUBMISSION_URL,
         );
 
-        metrics.start();
+        metrics.initialize();
 
         expect(testHttpClient.post).toBeCalledWith(uniqueEventsSubmissionUrl, expect.anything());
     });
@@ -164,7 +164,7 @@ describe('Unique events tests', () => {
             },
         };
 
-        metrics.start();
+        metrics.initialize();
 
         expect(attributeManager.get().attributes).toMatchObject(customAttributes);
         expect(testHttpClient.post).toBeCalledWith(uniqueEventsSubmissionUrl, JSON.stringify(expectedJson));

@@ -1,7 +1,7 @@
 import { BacktraceData } from '../../src';
 import { BacktraceReportSubmission } from '../../src/model/http/BacktraceReportSubmission';
 import { BacktraceDatabase } from '../../src/modules/database/BacktraceDatabase';
-import { TEST_SUBMISSION_URL } from '../mocks/BacktraceTestClient';
+import { BacktraceTestClient, TEST_SUBMISSION_URL } from '../mocks/BacktraceTestClient';
 import { testHttpClient } from '../mocks/testHttpClient';
 import { testStorageProvider } from '../mocks/testStorageProvider';
 
@@ -35,7 +35,7 @@ describe('Database setup tests', () => {
             ),
         );
 
-        const databaseStartResult = database.start();
+        const databaseStartResult = database.initialize(BacktraceTestClient.buildFakeClient());
 
         expect(databaseStartResult).toBeTruthy();
         expect(database.enabled).toBeTruthy();
@@ -53,7 +53,7 @@ describe('Database setup tests', () => {
             ),
         );
 
-        const databaseStartResult = database.start();
+        const databaseStartResult = database.initialize(BacktraceTestClient.buildFakeClient());
 
         expect(databaseStartResult).toBeFalsy();
         expect(database.enabled).toBeFalsy();
@@ -75,7 +75,7 @@ describe('Database setup tests', () => {
         );
         jest.spyOn(testStorageProvider, 'start').mockReturnValue(false);
 
-        const databaseStartResult = database.start();
+        const databaseStartResult = database.initialize(BacktraceTestClient.buildFakeClient());
 
         expect(databaseStartResult).toBeFalsy();
         expect(database.enabled).toBeFalsy();
@@ -93,7 +93,7 @@ describe('Database setup tests', () => {
             ),
         );
 
-        database.start();
+        database.initialize(BacktraceTestClient.buildFakeClient());
         database.dispose();
 
         expect(database.enabled).toBeFalsy();

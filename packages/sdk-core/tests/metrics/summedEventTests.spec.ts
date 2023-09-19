@@ -58,7 +58,7 @@ describe('Summed events tests', () => {
             },
         };
 
-        metrics.start();
+        metrics.initialize();
 
         expect(testHttpClient.post).toBeCalledWith(summedEventsSubmissionUrl, JSON.stringify(expectedJson));
     });
@@ -96,7 +96,7 @@ describe('Summed events tests', () => {
             },
         };
 
-        metrics.start();
+        metrics.initialize();
 
         expect(testHttpClient.post).toBeCalledWith(summedEventsSubmissionUrl, JSON.stringify(expectedJson));
     });
@@ -132,7 +132,7 @@ describe('Summed events tests', () => {
             },
         };
 
-        metrics.start();
+        metrics.initialize();
 
         expect(attributeManager.get().attributes).toMatchObject(customAttributes);
         expect(testHttpClient.post).toBeCalledWith(expect.anything(), JSON.stringify(expectedJson));
@@ -154,7 +154,7 @@ describe('Summed events tests', () => {
         if (!metrics) {
             fail('Metrics are not defined');
         }
-        metrics.start();
+        metrics.initialize();
         const addResult = metrics.addSummedEvent('test-metric');
 
         expect(addResult).toBeTruthy();
@@ -181,7 +181,7 @@ describe('Summed events tests', () => {
             fail('Metrics are not defined');
         }
 
-        metrics.start();
+        metrics.initialize();
 
         for (let index = 0; index < maximumNumberOfEvents; index++) {
             const addResult = metrics.addSummedEvent('test-metric');

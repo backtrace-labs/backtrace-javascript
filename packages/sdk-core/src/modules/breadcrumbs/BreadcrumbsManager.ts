@@ -2,20 +2,22 @@ import {
     BacktraceBreadcrumbs,
     BreadcrumbLogLevel,
     BreadcrumbType,
+    BreadcrumbsSetup,
     defaultBreadcrumbsLogLevel,
     defaultBreadcurmbType,
 } from '.';
+import { BacktraceCoreClient } from '../..';
 import { BacktraceBreadcrumbsSettings } from '../../model/configuration/BacktraceConfiguration';
 import { AttributeType } from '../../model/data/BacktraceData';
 import { BacktraceReport } from '../../model/report/BacktraceReport';
-import { BreadcrumbsSetup } from './BreadcrumbsSetup';
+import { BacktraceModule } from '../BacktraceModule';
 import { BreadcrumbsEventSubscriber } from './events/BreadcrurmbsEventSubscriber';
 import { ConsoleEventSubscriber } from './events/ConsoleEventSubscriber';
 import { RawBreadcrumb } from './model/RawBreadcrumb';
 import { BreadcrumbsStorage } from './storage/BreadcrumbsStorage';
 import { InMemoryBreadcrumbsStorage } from './storage/InMemoryBreadcrumbsStorage';
 
-export class BreadcrumbsManager implements BacktraceBreadcrumbs {
+export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule {
     /**
      * Breadcrumbs type
      */
@@ -66,10 +68,12 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs {
         };
     }
 
-    public start() {
+    public initialize(client: BacktraceCoreClient) {
         for (const subscriber of this._eventSubscribers) {
             subscriber.start(this);
         }
+
+        client.reportEvents.on('before-skip', (report) => this.logReport(report));
     }
 
     public verbose(message: string, attributes?: Record<string, AttributeType> | undefined): boolean {

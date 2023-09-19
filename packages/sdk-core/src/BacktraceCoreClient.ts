@@ -1,20 +1,23 @@
 import {
     BacktraceAttachment,
     BacktraceAttributeProvider,
+    BacktraceBreadcrumbs,
     BacktraceConfiguration,
-    BacktraceDatabaseRecord,
+    BacktraceReportSubmissionResult,
     BacktraceSessionProvider,
+    BacktraceSubmissionResponse,
     DebugIdProvider,
     SdkOptions,
 } from '.';
 import { CoreClientSetup } from './builder/CoreClientSetup';
+import { Events } from './common/Events';
 import { AttributeType, BacktraceData } from './model/data/BacktraceData';
 import { BacktraceReportSubmission } from './model/http/BacktraceReportSubmission';
 import { BacktraceReport } from './model/report/BacktraceReport';
+import { BacktraceModules, ReadonlyBacktraceModules } from './modules/BacktraceModules';
 import { AttributeManager } from './modules/attribute/AttributeManager';
 import { ClientAttributeProvider } from './modules/attribute/ClientAttributeProvider';
 import { UserAttributeProvider } from './modules/attribute/UserAttributeProvider';
-import { BacktraceBreadcrumbs } from './modules/breadcrumbs';
 import { BreadcrumbsManager } from './modules/breadcrumbs/BreadcrumbsManager';
 import { V8StackTraceConverter } from './modules/converter/V8StackTraceConverter';
 import { BacktraceDataBuilder } from './modules/data/BacktraceDataBuilder';
@@ -23,6 +26,18 @@ import { BacktraceMetrics } from './modules/metrics/BacktraceMetrics';
 import { MetricsBuilder } from './modules/metrics/MetricsBuilder';
 import { SingleSessionProvider } from './modules/metrics/SingleSessionProvider';
 import { RateLimitWatcher } from './modules/rateLimiter/RateLimitWatcher';
+
+export type ReportEvents = {
+    'before-skip'(report: BacktraceReport): void;
+    'before-send'(report: BacktraceReport, data: BacktraceData, attachments: BacktraceAttachment[]): void;
+    'after-send'(
+        report: BacktraceReport,
+        data: BacktraceData,
+        attachments: BacktraceAttachment[],
+        result: BacktraceReportSubmissionResult<BacktraceSubmissionResponse>,
+    ): void;
+};
+
 export abstract class BacktraceCoreClient {
     /**
      * Backtrace client instance
@@ -71,11 +86,15 @@ export abstract class BacktraceCoreClient {
     }
 
     public get metrics(): BacktraceMetrics | undefined {
-        return this._metrics;
+        return this._modules.get(BacktraceMetrics);
     }
 
     public get breadcrumbs(): BacktraceBreadcrumbs | undefined {
-        return this.breadcrumbsManager;
+        return this._modules.get(BreadcrumbsManager);
+    }
+
+    public get database(): BacktraceDatabase | undefined {
+        return this._modules.get(BacktraceDatabase);
     }
 
     /**
@@ -87,35 +106,36 @@ export abstract class BacktraceCoreClient {
     }
 
     /**
-     * Report database used by the client
+     * Modules used by client
      */
-    public get database(): BacktraceDatabase | undefined {
-        return this._database;
+    public get modules(): ReadonlyBacktraceModules {
+        return this._modules;
     }
 
-    protected readonly breadcrumbsManager?: BreadcrumbsManager;
-    protected readonly attributeManager: AttributeManager;
+    public readonly reportEvents: Events<ReportEvents>;
 
+    protected readonly attributeManager: AttributeManager;
+    protected readonly options: BacktraceConfiguration;
+
+    private readonly _modules: BacktraceModules = new Map();
     private readonly _attachments: BacktraceAttachment[];
     private readonly _dataBuilder: BacktraceDataBuilder;
     private readonly _reportSubmission: BacktraceReportSubmission;
     private readonly _rateLimitWatcher: RateLimitWatcher;
-    private readonly _metrics?: BacktraceMetrics;
-    private readonly _database?: BacktraceDatabase;
     private readonly _sessionProvider: BacktraceSessionProvider;
     private readonly _sdkOptions: SdkOptions;
-    protected readonly options: BacktraceConfiguration;
 
     private _enabled = false;
 
     protected constructor(private readonly _setup: CoreClientSetup) {
+        this.reportEvents = new Events();
+
         this.options = _setup.options;
         this._sdkOptions = _setup.sdkOptions;
+        this._attachments = this.options.attachments ?? [];
         this._sessionProvider = this._setup.sessionProvider ?? new SingleSessionProvider();
-
-        const stackTraceConverter = this._setup.stackTraceConverter ?? new V8StackTraceConverter();
-
         this._reportSubmission = new BacktraceReportSubmission(this.options, this._setup.requestHandler);
+        this._rateLimitWatcher = new RateLimitWatcher(this.options.rateLimit);
 
         const attributeProviders: BacktraceAttributeProvider[] = [
             new ClientAttributeProvider(this.agent, this.agentVersion, this._sessionProvider.sessionId),
@@ -131,6 +151,7 @@ export abstract class BacktraceCoreClient {
 
         this.attributeManager = new AttributeManager(attributeProviders);
 
+        const stackTraceConverter = this._setup.stackTraceConverter ?? new V8StackTraceConverter();
         this._dataBuilder = new BacktraceDataBuilder(
             this._sdkOptions,
             stackTraceConverter,
@@ -138,17 +159,15 @@ export abstract class BacktraceCoreClient {
             new DebugIdProvider(stackTraceConverter, this._setup.debugIdMapProvider),
         );
 
-        this._attachments = this.options.attachments ?? [];
-
         if (this._setup.databaseStorageProvider && this.options?.database?.enable === true) {
-            this._database = new BacktraceDatabase(
+            const database = new BacktraceDatabase(
                 this.options.database,
                 this._setup.databaseStorageProvider,
                 this._reportSubmission,
             );
-        }
 
-        this._rateLimitWatcher = new RateLimitWatcher(this.options.rateLimit);
+            this._modules.set(BacktraceDatabase, database);
+        }
 
         const metrics = new MetricsBuilder(
             this.options,
@@ -158,17 +177,26 @@ export abstract class BacktraceCoreClient {
         ).build();
 
         if (metrics) {
-            this._metrics = metrics;
+            this._modules.set(BacktraceMetrics, metrics);
         }
 
         if (this.options.breadcrumbs?.enable !== false) {
-            this.breadcrumbsManager = new BreadcrumbsManager(this.options?.breadcrumbs, this._setup.breadcrumbsSetup);
-            this._attachments.push(this.breadcrumbsManager.breadcrumbsStorage);
-            this.attributeManager.addProvider(this.breadcrumbsManager);
+            const breadcrumbsManager = new BreadcrumbsManager(this.options?.breadcrumbs, this._setup.breadcrumbsSetup);
+            this._attachments.push(breadcrumbsManager.breadcrumbsStorage);
+            this.attributeManager.addProvider(breadcrumbsManager);
+            this._modules.set(BreadcrumbsManager, breadcrumbsManager);
         }
 
         this.initialize();
         this._enabled = true;
+    }
+
+    public initialize() {
+        for (const module of this._modules.values()) {
+            module.initialize(this);
+        }
+
+        return this;
     }
 
     /**
@@ -228,7 +256,8 @@ export abstract class BacktraceCoreClient {
                   skipFrames: this.skipFrameOnMessage(data),
               });
 
-        this.breadcrumbsManager?.logReport(report);
+        this.reportEvents.emit('before-skip', report);
+
         if (this.options.skipReport && this.options.skipReport(report)) {
             return Promise.resolve();
         }
@@ -239,16 +268,11 @@ export abstract class BacktraceCoreClient {
         }
 
         const submissionAttachments = this.generateSubmissionAttachments(report, reportAttachments);
-        const record = this.addToDatabase(backtraceData, submissionAttachments);
+
+        this.reportEvents.emit('before-send', report, backtraceData, submissionAttachments);
 
         return this._reportSubmission.send(backtraceData, submissionAttachments).then((submissionResult) => {
-            if (!record) {
-                return;
-            }
-            record.locked = false;
-            if (submissionResult.status === 'Ok') {
-                this._database?.remove(record);
-            }
+            this.reportEvents.emit('after-send', report, backtraceData, submissionAttachments, submissionResult);
         });
     }
 
@@ -257,34 +281,11 @@ export abstract class BacktraceCoreClient {
      */
     public dispose() {
         this._enabled = false;
-        this.database?.dispose();
-        this.breadcrumbsManager?.dispose();
-        this._metrics?.dispose();
-    }
-
-    private addToDatabase(
-        data: BacktraceData,
-        attachments: BacktraceAttachment[],
-    ): BacktraceDatabaseRecord | undefined {
-        if (!this._database) {
-            return undefined;
+        for (const module of this._modules.values()) {
+            if (module.dispose) {
+                module.dispose();
+            }
         }
-
-        const record = this._database.add(data, attachments);
-
-        if (!record || record.locked || record.count !== 1) {
-            return undefined;
-        }
-
-        record.locked = true;
-        return record;
-    }
-
-    private initialize() {
-        this._database?.start();
-        this._metrics?.start();
-        this.breadcrumbsManager?.start();
-        return this;
     }
 
     private generateSubmissionData(report: BacktraceReport): BacktraceData | undefined {
