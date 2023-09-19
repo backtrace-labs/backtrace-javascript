@@ -46,11 +46,13 @@ export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<Backtrace
     }
 
     public build(): BacktraceClient {
-        return new BacktraceClient(
+        const instance = new BacktraceClient(
             { ...this._options, attachments: this.transformAttachments() },
             this.handler,
             this.attributeProviders,
             this.breadcrumbsSubscribers,
-        ).initialize();
+        );
+        instance.initialize();
+        return instance;
     }
 }

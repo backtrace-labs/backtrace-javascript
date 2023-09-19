@@ -185,8 +185,6 @@ export abstract class BacktraceCoreClient {
             }
             module.initialize();
         }
-
-        return this;
     }
 
     /**

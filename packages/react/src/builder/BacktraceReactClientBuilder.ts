@@ -14,13 +14,15 @@ export class BacktraceReactClientBuilder extends BacktraceClientBuilder {
     }
 
     public build(): BacktraceClient {
-        return new BacktraceClient(
+        const instance = new BacktraceClient(
             this.options,
             this.handler,
             this.attributeProviders,
             this.stackTraceConverter ?? new ReactStackTraceConverter(this.generateStackTraceConverter()),
             this.breadcrumbsSubscribers,
             this.sessionProvider,
-        ).initialize();
+        );
+        instance.initialize();
+        return instance;
     }
 }
