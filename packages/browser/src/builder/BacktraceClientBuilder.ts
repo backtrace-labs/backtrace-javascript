@@ -50,7 +50,7 @@ export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<Backtrace
             this.stackTraceConverter ?? this.generateStackTraceConverter(),
             this.breadcrumbsSubscribers,
             this.sessionProvider,
-        );
+        ).initialize();
     }
 
     protected generateStackTraceConverter(): BacktraceStackTraceConverter {

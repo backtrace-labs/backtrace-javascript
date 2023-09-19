@@ -21,6 +21,6 @@ export class BacktraceReactClientBuilder extends BacktraceClientBuilder {
             this.stackTraceConverter ?? new ReactStackTraceConverter(this.generateStackTraceConverter()),
             this.breadcrumbsSubscribers,
             this.sessionProvider,
-        );
+        ).initialize();
     }
 }

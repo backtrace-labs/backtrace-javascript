@@ -51,6 +51,6 @@ export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<Backtrace
             this.handler,
             this.attributeProviders,
             this.breadcrumbsSubscribers,
-        );
+        ).initialize();
     }
 }

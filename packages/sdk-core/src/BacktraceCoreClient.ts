@@ -187,7 +187,6 @@ export abstract class BacktraceCoreClient {
             this._modules.set(BreadcrumbsManager, breadcrumbsManager);
         }
 
-        this.initialize();
         this._enabled = true;
     }
 
