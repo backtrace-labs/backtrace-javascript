@@ -1,5 +1,7 @@
-import { BacktraceData, BacktraceDatabaseRecord } from '@backtrace-labs/sdk-core';
-import { BacktraceFileAttachment } from '../attachment';
+import { BacktraceAttachment, BacktraceFileAttachment } from '../../model/attachment';
+import { BacktraceData } from '../../model/data';
+import { FileSystem } from '../storage';
+import { BacktraceDatabaseRecord } from './model/BacktraceDatabaseRecord';
 
 export class BacktraceDatabaseFileRecord implements BacktraceDatabaseRecord {
     public readonly data: BacktraceData;
@@ -9,7 +11,7 @@ export class BacktraceDatabaseFileRecord implements BacktraceDatabaseRecord {
     public readonly timestamp: number;
     public locked: boolean;
 
-    private constructor(record: BacktraceDatabaseRecord, public readonly attachments: BacktraceFileAttachment[]) {
+    private constructor(record: BacktraceDatabaseRecord, public readonly attachments: BacktraceAttachment[]) {
         this.data = record.data;
         this.id = record.id;
         this.count = record.count;
@@ -24,19 +26,25 @@ export class BacktraceDatabaseFileRecord implements BacktraceDatabaseRecord {
     public static fromRecord(record: BacktraceDatabaseRecord) {
         return new BacktraceDatabaseFileRecord(
             record,
-            record.attachments.filter((n) => n instanceof BacktraceFileAttachment) as BacktraceFileAttachment[],
+            record.attachments.filter(BacktraceDatabaseFileRecord.isFileAttachment),
         );
     }
 
-    public static fromJson(json: string): BacktraceDatabaseFileRecord | undefined {
+    public static fromJson(json: string, fileSystem: FileSystem): BacktraceDatabaseFileRecord | undefined {
         try {
             const record = JSON.parse(json) as BacktraceDatabaseFileRecord;
             const attachments = record.attachments
-                ? record.attachments.map((n) => new BacktraceFileAttachment(n.filePath))
+                ? record.attachments
+                      .filter(BacktraceDatabaseFileRecord.isFileAttachment)
+                      .map((n) => fileSystem.createAttachment(n.filePath, n.name))
                 : [];
             return new BacktraceDatabaseFileRecord(record, attachments);
         } catch {
             return undefined;
         }
+    }
+
+    private static isFileAttachment(attachment: BacktraceAttachment): attachment is BacktraceFileAttachment {
+        return 'filePath' in attachment && typeof attachment.filePath === 'string';
     }
 }

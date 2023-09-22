@@ -5,6 +5,7 @@ import {
     BacktraceConfiguration,
     BacktraceSessionProvider,
     DebugIdProvider,
+    FileSystem,
     SdkOptions,
 } from '.';
 import { CoreClientSetup } from './builder/CoreClientSetup';
@@ -22,6 +23,7 @@ import { BreadcrumbsManager } from './modules/breadcrumbs/BreadcrumbsManager';
 import { V8StackTraceConverter } from './modules/converter/V8StackTraceConverter';
 import { BacktraceDataBuilder } from './modules/data/BacktraceDataBuilder';
 import { BacktraceDatabase } from './modules/database/BacktraceDatabase';
+import { BacktraceDatabaseFileStorageProvider } from './modules/database/BacktraceDatabaseFileStorageProvider';
 import { BacktraceMetrics } from './modules/metrics/BacktraceMetrics';
 import { MetricsBuilder } from './modules/metrics/MetricsBuilder';
 import { SingleSessionProvider } from './modules/metrics/SingleSessionProvider';
@@ -104,6 +106,7 @@ export abstract class BacktraceCoreClient {
     protected readonly reportEvents: Events<ReportEvents>;
     protected readonly attributeManager: AttributeManager;
     protected readonly options: BacktraceConfiguration;
+    protected readonly fileSystem?: FileSystem;
 
     private readonly _modules: BacktraceModules = new Map();
     private readonly _attachments: BacktraceAttachment[];
@@ -119,6 +122,7 @@ export abstract class BacktraceCoreClient {
         this.reportEvents = new Events();
 
         this.options = _setup.options;
+        this.fileSystem = _setup.fileSystem;
         this._sdkOptions = _setup.sdkOptions;
         this._attachments = this.options.attachments ?? [];
         this._sessionProvider = this._setup.sessionProvider ?? new SingleSessionProvider();
@@ -147,14 +151,17 @@ export abstract class BacktraceCoreClient {
             new DebugIdProvider(stackTraceConverter, this._setup.debugIdMapProvider),
         );
 
-        if (this._setup.databaseStorageProvider && this.options?.database?.enable === true) {
-            const database = new BacktraceDatabase(
-                this.options.database,
-                this._setup.databaseStorageProvider,
-                this._reportSubmission,
-            );
+        if (this.options?.database?.enable === true) {
+            const provider =
+                this._setup.databaseStorageProvider ??
+                (this._setup.fileSystem
+                    ? BacktraceDatabaseFileStorageProvider.createIfValid(this._setup.fileSystem, this.options.database)
+                    : undefined);
 
-            this._modules.set(BacktraceDatabase, database);
+            if (provider) {
+                const database = new BacktraceDatabase(this.options.database, provider, this._reportSubmission);
+                this._modules.set(BacktraceDatabase, database);
+            }
         }
 
         const metrics = new MetricsBuilder(
@@ -179,6 +186,16 @@ export abstract class BacktraceCoreClient {
     }
 
     public initialize() {
+        if (this.fileSystem && this.options.database?.createDatabaseDirectory) {
+            if (!this.options.database.path) {
+                throw new Error(
+                    'Missing mandatory path to the database. Please define the database.path option in the configuration.',
+                );
+            }
+
+            this.fileSystem.createDirSync(this.options.database?.path);
+        }
+
         for (const module of this._modules.values()) {
             if (module.bind) {
                 module.bind(this.getModuleBindData());

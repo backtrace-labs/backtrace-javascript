@@ -1,22 +1,22 @@
 import {
     BacktraceAttributeProvider,
-    BacktraceConfiguration as CoreConfiguration,
     BacktraceCoreClient,
     BacktraceReport,
     BacktraceRequestHandler,
     BreadcrumbsEventSubscriber,
+    BacktraceConfiguration as CoreConfiguration,
     DebugIdContainer,
     VariableDebugIdMapProvider,
 } from '@backtrace-labs/sdk-core';
 import fs from 'fs';
 import * as fsPromise from 'fs/promises';
 import path from 'path';
-import { AGENT } from './agentDefinition';
 import { BacktraceConfiguration } from './BacktraceConfiguration';
+import { AGENT } from './agentDefinition';
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 import { NodeOptionReader } from './common/NodeOptionReader';
 import { NodeDiagnosticReportConverter } from './converter/NodeDiagnosticReportConverter';
-import { BacktraceDatabaseFileStorageProvider } from './database/BacktraceDatabaseFileStorageProvider';
+import { NodeFileSystem } from './storage/NodeFileSystem';
 
 export class BacktraceClient extends BacktraceCoreClient {
     private _listeners: Record<string, NodeJS.UnhandledRejectionListener | NodeJS.UncaughtExceptionListener> = {};
@@ -36,7 +36,7 @@ export class BacktraceClient extends BacktraceCoreClient {
             breadcrumbsSetup: {
                 subscribers: breadcrumbsEventSubscribers,
             },
-            databaseStorageProvider: BacktraceDatabaseFileStorageProvider.createIfValid(options.database),
+            fileSystem: new NodeFileSystem(),
         });
 
         this.loadNodeCrashes();

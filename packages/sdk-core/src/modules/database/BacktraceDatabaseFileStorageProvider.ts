@@ -1,18 +1,15 @@
-import {
-    BacktraceDatabaseConfiguration,
-    BacktraceDatabaseRecord,
-    BacktraceDatabaseStorageProvider,
-    jsonEscaper,
-} from '@backtrace-labs/sdk-core';
-import fs from 'fs';
-import * as fsPromise from 'fs/promises';
-import path from 'path';
+import { jsonEscaper } from '../../common/jsonEscaper';
+import { BacktraceDatabaseConfiguration } from '../../model/configuration/BacktraceDatabaseConfiguration';
+import { FileSystem } from '../storage';
 import { BacktraceDatabaseFileRecord } from './BacktraceDatabaseFileRecord';
+import { BacktraceDatabaseStorageProvider } from './BacktraceDatabaseStorageProvider';
+import { BacktraceDatabaseRecord } from './model/BacktraceDatabaseRecord';
+
 export class BacktraceDatabaseFileStorageProvider implements BacktraceDatabaseStorageProvider {
     private _enabled = true;
 
     private readonly RECORD_SUFFIX = '-record.json';
-    private constructor(private readonly _path: string, private readonly _createDatabaseDirectory: boolean = false) {}
+    private constructor(private readonly _fileSystem: FileSystem, private readonly _path: string) {}
 
     /**
      * Create a provider if provided options are valid
@@ -20,11 +17,13 @@ export class BacktraceDatabaseFileStorageProvider implements BacktraceDatabaseSt
      * @returns database file storage provider
      */
     public static createIfValid(
+        fileSystem: FileSystem,
         options?: BacktraceDatabaseConfiguration,
     ): BacktraceDatabaseFileStorageProvider | undefined {
         if (!options) {
             return undefined;
         }
+
         if (!options.enable) {
             return undefined;
         }
@@ -34,7 +33,8 @@ export class BacktraceDatabaseFileStorageProvider implements BacktraceDatabaseSt
                 'Missing mandatory path to the database. Please define the database.path option in the configuration.',
             );
         }
-        return new BacktraceDatabaseFileStorageProvider(options.path, options.createDatabaseDirectory);
+
+        return new BacktraceDatabaseFileStorageProvider(fileSystem, options.path);
     }
 
     public start(): boolean {
@@ -43,14 +43,6 @@ export class BacktraceDatabaseFileStorageProvider implements BacktraceDatabaseSt
             return false;
         }
 
-        const databaseDirectoryExists = fs.existsSync(this._path);
-        if (this._createDatabaseDirectory === false) {
-            return databaseDirectoryExists;
-        }
-        if (databaseDirectoryExists) {
-            return true;
-        }
-        fs.mkdirSync(this._path, { recursive: true });
         return true;
     }
 
@@ -62,12 +54,9 @@ export class BacktraceDatabaseFileStorageProvider implements BacktraceDatabaseSt
     public add(record: BacktraceDatabaseRecord): boolean {
         const recordPath = this.getRecordPath(record.id);
         try {
-            fs.writeFileSync(
+            this._fileSystem.writeFileSync(
                 recordPath,
                 JSON.stringify(BacktraceDatabaseFileRecord.fromRecord(record), jsonEscaper()),
-                {
-                    encoding: 'utf8',
-                },
             );
             return true;
         } catch {
@@ -76,28 +65,24 @@ export class BacktraceDatabaseFileStorageProvider implements BacktraceDatabaseSt
     }
 
     public async get(): Promise<BacktraceDatabaseRecord[]> {
-        const databaseFiles = await fsPromise.readdir(this._path, {
-            encoding: 'utf8',
-            withFileTypes: true,
-        });
+        const databaseFiles = await this._fileSystem.readDir(this._path);
 
         const recordNames = databaseFiles
-            .filter((file) => file.isFile() && file.name.endsWith(this.RECORD_SUFFIX))
-            .map((n) => n.name);
+            .filter((file) => file.endsWith(this.RECORD_SUFFIX))
+            .map((f) => this._path + '/' + f);
 
         const records: BacktraceDatabaseRecord[] = [];
         for (const recordName of recordNames) {
-            const recordPath = path.join(this._path, recordName);
             try {
-                const recordJson = await fsPromise.readFile(recordPath, 'utf8');
-                const record = BacktraceDatabaseFileRecord.fromJson(recordJson);
+                const recordJson = await this._fileSystem.readFile(recordName);
+                const record = BacktraceDatabaseFileRecord.fromJson(recordJson, this._fileSystem);
                 if (!record) {
-                    await fsPromise.unlink(recordPath);
+                    await this._fileSystem.unlink(recordName);
                     continue;
                 }
                 records.push(record);
             } catch {
-                this.unlinkRecord(recordPath);
+                await this._fileSystem.unlink(recordName);
             }
         }
 
@@ -105,12 +90,12 @@ export class BacktraceDatabaseFileStorageProvider implements BacktraceDatabaseSt
     }
 
     private unlinkRecord(recordPath: string): boolean {
-        if (!fs.existsSync(recordPath)) {
+        if (!this._fileSystem.existsSync(recordPath)) {
             return false;
         }
 
         try {
-            fs.unlinkSync(recordPath);
+            this._fileSystem.unlinkSync(recordPath);
             return true;
         } catch {
             return false;
@@ -118,6 +103,6 @@ export class BacktraceDatabaseFileStorageProvider implements BacktraceDatabaseSt
     }
 
     private getRecordPath(id: string): string {
-        return path.join(this._path, `${id}${this.RECORD_SUFFIX}`);
+        return this._path + '/' + `${id}${this.RECORD_SUFFIX}`;
     }
 }
