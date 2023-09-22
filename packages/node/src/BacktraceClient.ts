@@ -8,6 +8,7 @@ import {
     BacktraceConfiguration as CoreConfiguration,
     DebugIdContainer,
     FileSystem,
+    SessionFiles,
     VariableDebugIdMapProvider,
 } from '@backtrace-labs/sdk-core';
 import path from 'path';
@@ -49,16 +50,23 @@ export class BacktraceClient extends BacktraceCoreClient {
     }
 
     public initialize(): void {
-        super.initialize();
+        const previousSession = this.sessionFiles?.getPreviousSession();
+        const lockId = previousSession?.lock();
 
-        this.loadNodeCrashes();
+        try {
+            super.initialize();
+            this.captureUnhandledErrors(
+                this.options.captureUnhandledErrors,
+                this.options.captureUnhandledPromiseRejections,
+            );
 
-        this.captureUnhandledErrors(
-            this.options.captureUnhandledErrors,
-            this.options.captureUnhandledPromiseRejections,
-        );
+            this.captureNodeCrashes();
+        } catch (err) {
+            lockId && previousSession?.unlock(lockId);
+            throw err;
+        }
 
-        this.captureNodeCrashes();
+        this.loadNodeCrashes(previousSession).finally(() => lockId && previousSession?.unlock(lockId));
     }
 
     public static builder(options: BacktraceConfiguration): BacktraceClientBuilder {
@@ -230,8 +238,8 @@ export class BacktraceClient extends BacktraceCoreClient {
         }
     }
 
-    private async loadNodeCrashes() {
-        if (!this.fileSystem || !this.options.database?.captureNativeCrashes) {
+    private async loadNodeCrashes(sessionFiles?: SessionFiles) {
+        if (!this.database || !this.fileSystem || !this.options.database?.captureNativeCrashes) {
             return;
         }
 
@@ -254,17 +262,38 @@ export class BacktraceClient extends BacktraceCoreClient {
             reportName ? file === reportName : file.startsWith('report.') && file.endsWith('.json'),
         );
 
+        if (!recordNames.length) {
+            return;
+        }
+
         for (const recordName of recordNames) {
             const recordPath = path.join(databasePath, recordName);
             try {
                 const recordJson = await this.fileSystem.readFile(recordPath);
-                const data = converter.convert(JSON.parse(recordJson));
-                await this.send(data);
+                const report = converter.convert(JSON.parse(recordJson));
+
+                if (sessionFiles) {
+                    const breadcrumbsStorage = FileBreadcrumbsStorage.createFromSession(sessionFiles);
+                    if (breadcrumbsStorage) {
+                        report.attachments.push(...breadcrumbsStorage.getAttachments());
+                    }
+                }
+
+                const data = this.generateSubmissionData(report);
+                if (data) {
+                    this.database.add(data, report.attachments);
+                }
             } catch {
                 // Do nothing, skip the report
             } finally {
-                await this.fileSystem.unlink(recordPath);
+                try {
+                    await this.fileSystem.unlink(recordPath);
+                } catch {
+                    // Do nothing
+                }
             }
         }
+
+        await this.database.send();
     }
 }
