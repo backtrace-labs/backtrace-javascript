@@ -4,6 +4,7 @@ import {
     BacktraceReport,
     BacktraceRequestHandler,
     BreadcrumbsEventSubscriber,
+    BreadcrumbsManager,
     BacktraceConfiguration as CoreConfiguration,
     DebugIdContainer,
     FileSystem,
@@ -12,6 +13,7 @@ import {
 import path from 'path';
 import { BacktraceConfiguration } from './BacktraceConfiguration';
 import { AGENT } from './agentDefinition';
+import { FileBreadcrumbsStorage } from './breadcrumbs/FileBreadcrumbsStorage';
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 import { NodeOptionReader } from './common/NodeOptionReader';
 import { NodeDiagnosticReportConverter } from './converter/NodeDiagnosticReportConverter';
@@ -37,6 +39,13 @@ export class BacktraceClient extends BacktraceCoreClient {
             },
             fileSystem,
         });
+
+        const breadcrumbsManager = this.modules.get(BreadcrumbsManager);
+        if (breadcrumbsManager && this.sessionFiles) {
+            breadcrumbsManager.setStorage(
+                FileBreadcrumbsStorage.create(this.sessionFiles, options.breadcrumbs?.maximumBreadcrumbs ?? 100),
+            );
+        }
     }
 
     public initialize(): void {
