@@ -307,7 +307,7 @@ export abstract class BacktraceCoreClient {
         }
     }
 
-    private generateSubmissionData(report: BacktraceReport): BacktraceData | undefined {
+    protected generateSubmissionData(report: BacktraceReport): BacktraceData | undefined {
         const backtraceData = this._dataBuilder.build(report);
         if (!this.options.beforeSend) {
             return backtraceData;
