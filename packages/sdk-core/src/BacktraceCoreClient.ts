@@ -7,6 +7,7 @@ import {
     DebugIdProvider,
     FileSystem,
     SdkOptions,
+    SessionFiles,
 } from '.';
 import { CoreClientSetup } from './builder/CoreClientSetup';
 import { Events } from './common/Events';
@@ -103,6 +104,10 @@ export abstract class BacktraceCoreClient {
         return this._modules;
     }
 
+    protected get sessionFiles() {
+        return this._modules.get(SessionFiles);
+    }
+
     protected readonly reportEvents: Events<ReportEvents>;
     protected readonly attributeManager: AttributeManager;
     protected readonly options: BacktraceConfiguration;
@@ -161,6 +166,11 @@ export abstract class BacktraceCoreClient {
                 const database = new BacktraceDatabase(this.options.database, provider, this._reportSubmission);
                 this._modules.set(BacktraceDatabase, database);
             }
+
+            if (this.fileSystem) {
+                const sessionFiles = new SessionFiles(this.fileSystem, this.options.database.path, this.sessionId);
+                this._modules.set(SessionFiles, sessionFiles);
+            }
         }
 
         const metrics = new MetricsBuilder(
@@ -197,8 +207,11 @@ export abstract class BacktraceCoreClient {
             if (module.bind) {
                 module.bind(this.getModuleBindData());
             }
+
             module.initialize();
         }
+
+        this.sessionFiles?.clearPreviousSessions();
     }
 
     /**
