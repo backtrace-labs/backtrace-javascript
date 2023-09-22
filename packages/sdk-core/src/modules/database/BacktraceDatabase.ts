@@ -1,11 +1,10 @@
-import { BacktraceCoreClient } from '../..';
 import { IdGenerator } from '../../common/IdGenerator';
 import { TimeHelper } from '../../common/TimeHelper';
 import { BacktraceAttachment } from '../../model/attachment';
 import { BacktraceDatabaseConfiguration } from '../../model/configuration/BacktraceDatabaseConfiguration';
 import { BacktraceData } from '../../model/data/BacktraceData';
 import { BacktraceReportSubmission } from '../../model/http/BacktraceReportSubmission';
-import { BacktraceModule } from '../BacktraceModule';
+import { BacktraceModule, BacktraceModuleBindData } from '../BacktraceModule';
 import { BacktraceDatabaseContext } from './BacktraceDatabaseContext';
 import { BacktraceDatabaseStorageProvider } from './BacktraceDatabaseStorageProvider';
 import { BacktraceDatabaseRecord } from './model/BacktraceDatabaseRecord';
@@ -62,7 +61,7 @@ export class BacktraceDatabase implements BacktraceModule {
         return true;
     }
 
-    public bind(client: BacktraceCoreClient): void {
+    public bind({ reportEvents }: BacktraceModuleBindData): void {
         if (this._enabled) {
             return;
         }
@@ -71,7 +70,7 @@ export class BacktraceDatabase implements BacktraceModule {
             return;
         }
 
-        client.reportEvents.on('before-send', (_, data, attachments) => {
+        reportEvents.on('before-send', (_, data, attachments) => {
             const record = this.add(data, attachments);
 
             if (!record || record.locked || record.count !== 1) {
@@ -81,7 +80,7 @@ export class BacktraceDatabase implements BacktraceModule {
             record.locked = true;
         });
 
-        client.reportEvents.on('after-send', (_, data, __, submissionResult) => {
+        reportEvents.on('after-send', (_, data, __, submissionResult) => {
             const record = this._databaseRecordContext.find((record) => record.data.uuid === data.uuid);
             if (!record) {
                 return;

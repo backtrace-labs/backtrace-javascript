@@ -6,11 +6,10 @@ import {
     defaultBreadcrumbsLogLevel,
     defaultBreadcurmbType,
 } from '.';
-import { BacktraceCoreClient } from '../..';
 import { BacktraceBreadcrumbsSettings } from '../../model/configuration/BacktraceConfiguration';
 import { AttributeType } from '../../model/data/BacktraceData';
 import { BacktraceReport } from '../../model/report/BacktraceReport';
-import { BacktraceModule } from '../BacktraceModule';
+import { BacktraceModule, BacktraceModuleBindData } from '../BacktraceModule';
 import { BreadcrumbsEventSubscriber } from './events/BreadcrurmbsEventSubscriber';
 import { ConsoleEventSubscriber } from './events/ConsoleEventSubscriber';
 import { RawBreadcrumb } from './model/RawBreadcrumb';
@@ -68,8 +67,8 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
         };
     }
 
-    public bind(client: BacktraceCoreClient): void {
-        client.reportEvents.on('before-skip', (report) => this.logReport(report));
+    public bind({ reportEvents }: BacktraceModuleBindData): void {
+        reportEvents.on('before-skip', (report) => this.logReport(report));
     }
 
     public initialize() {

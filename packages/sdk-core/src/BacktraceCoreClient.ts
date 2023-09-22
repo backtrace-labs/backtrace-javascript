@@ -13,6 +13,7 @@ import { ReportEvents } from './events/ReportEvents';
 import { AttributeType, BacktraceData } from './model/data/BacktraceData';
 import { BacktraceReportSubmission } from './model/http/BacktraceReportSubmission';
 import { BacktraceReport } from './model/report/BacktraceReport';
+import { BacktraceModuleBindData } from './modules/BacktraceModule';
 import { BacktraceModules, ReadonlyBacktraceModules } from './modules/BacktraceModules';
 import { AttributeManager } from './modules/attribute/AttributeManager';
 import { ClientAttributeProvider } from './modules/attribute/ClientAttributeProvider';
@@ -100,8 +101,7 @@ export abstract class BacktraceCoreClient {
         return this._modules;
     }
 
-    public readonly reportEvents: Events<ReportEvents>;
-
+    protected readonly reportEvents: Events<ReportEvents>;
     protected readonly attributeManager: AttributeManager;
     protected readonly options: BacktraceConfiguration;
 
@@ -181,7 +181,7 @@ export abstract class BacktraceCoreClient {
     public initialize() {
         for (const module of this._modules.values()) {
             if (module.bind) {
-                module.bind(this);
+                module.bind(this.getModuleBindData());
             }
             module.initialize();
         }
@@ -297,5 +297,12 @@ export abstract class BacktraceCoreClient {
 
     private isReport(data: BacktraceReport | Error | string): data is BacktraceReport {
         return data instanceof BacktraceReport;
+    }
+
+    private getModuleBindData(): BacktraceModuleBindData {
+        return {
+            client: this,
+            reportEvents: this.reportEvents,
+        };
     }
 }
