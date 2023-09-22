@@ -176,8 +176,6 @@ export abstract class BacktraceCoreClient {
 
         if (this.options.breadcrumbs?.enable !== false) {
             const breadcrumbsManager = new BreadcrumbsManager(this.options?.breadcrumbs, this._setup.breadcrumbsSetup);
-            this._attachments.push(breadcrumbsManager.breadcrumbsStorage);
-            this.attributeManager.addProvider(breadcrumbsManager);
             this._modules.set(BreadcrumbsManager, breadcrumbsManager);
         }
 
@@ -215,6 +213,10 @@ export abstract class BacktraceCoreClient {
     public addAttribute(attributes: () => Record<string, unknown>): void;
     public addAttribute(attributes: Record<string, unknown> | (() => Record<string, unknown>)) {
         this.attributeManager.add(attributes);
+    }
+
+    public addAttributeProvider(attributeProvider: BacktraceAttributeProvider) {
+        this.attributeManager.addProvider(attributeProvider);
     }
 
     /**

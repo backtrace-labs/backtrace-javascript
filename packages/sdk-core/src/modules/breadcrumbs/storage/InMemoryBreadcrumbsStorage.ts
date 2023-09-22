@@ -1,13 +1,14 @@
 import { jsonEscaper } from '../../../common/jsonEscaper';
 import { TimeHelper } from '../../../common/TimeHelper';
 import { OverwritingArray } from '../../../dataStructures/OverwritingArray';
+import { BacktraceAttachment } from '../../../model/attachment';
 import { Breadcrumb } from '../model/Breadcrumb';
 import { BreadcrumbLogLevel } from '../model/BreadcrumbLogLevel';
 import { BreadcrumbType } from '../model/BreadcrumbType';
 import { RawBreadcrumb } from '../model/RawBreadcrumb';
 import { BreadcrumbsStorage } from './BreadcrumbsStorage';
 
-export class InMemoryBreadcrumbsStorage implements BreadcrumbsStorage {
+export class InMemoryBreadcrumbsStorage implements BreadcrumbsStorage, BacktraceAttachment {
     public get lastBreadcrumbId(): number {
         return this._lastBreadcrumbId;
     }
@@ -21,6 +22,10 @@ export class InMemoryBreadcrumbsStorage implements BreadcrumbsStorage {
 
     constructor(maximumBreadcrumbs = 100) {
         this._breadcrumbs = new OverwritingArray<Breadcrumb>(maximumBreadcrumbs);
+    }
+
+    public getAttachments(): BacktraceAttachment<unknown>[] {
+        return [this];
     }
 
     /**
