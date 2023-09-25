@@ -19,6 +19,8 @@ const SESSION_MARKER_PREFIX = 'bt-session';
 const isDefined = <T>(t: T | undefined): t is T => !!t;
 
 export class SessionFiles implements BacktraceModule {
+    public readonly marker: string;
+
     private readonly _timestamp: number;
     private readonly _events = new Events<SessionEvents>();
     private readonly _escapedSessionId: string;
@@ -36,6 +38,8 @@ export class SessionFiles implements BacktraceModule {
     ) {
         this._timestamp = timestamp ?? Date.now();
         this._escapedSessionId = SessionFiles.escapeFileName(sessionId);
+
+        this.marker = this.getFileName(SESSION_MARKER_PREFIX);
     }
 
     public initialize(): void {
@@ -143,9 +147,9 @@ export class SessionFiles implements BacktraceModule {
             .map(({ file }) => this._directory + '/' + file);
     }
 
-    public clearSession(deleteMarker = true) {
+    public clearSession() {
         if (this._locks.size > 0) {
-            this._events.once('unlocked', () => this.clearSession(deleteMarker));
+            this._events.once('unlocked', () => this.clearSession());
             return;
         }
 
@@ -156,10 +160,6 @@ export class SessionFiles implements BacktraceModule {
         try {
             const sessionFiles = this.getSessionFiles();
             for (const file of sessionFiles) {
-                if (!deleteMarker && file.startsWith(SESSION_MARKER_PREFIX)) {
-                    continue;
-                }
-
                 this._fileSystem.unlinkSync(file);
             }
         } catch {
@@ -205,8 +205,7 @@ export class SessionFiles implements BacktraceModule {
     }
 
     private createSessionMarker() {
-        const fileName = this.getFileName(SESSION_MARKER_PREFIX);
-        this._fileSystem.writeFileSync(fileName, '');
+        this._fileSystem.writeFileSync(this.marker, '');
     }
 
     private static escapeFileName(name: string) {
