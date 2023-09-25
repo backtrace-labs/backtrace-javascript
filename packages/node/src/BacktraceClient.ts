@@ -50,8 +50,7 @@ export class BacktraceClient extends BacktraceCoreClient {
     }
 
     public initialize(): void {
-        const previousSession = this.sessionFiles?.getPreviousSession();
-        const lockId = previousSession?.lock();
+        const lockId = this.sessionFiles?.lockPreviousSessions();
 
         try {
             super.initialize();
@@ -62,11 +61,11 @@ export class BacktraceClient extends BacktraceCoreClient {
 
             this.captureNodeCrashes();
         } catch (err) {
-            lockId && previousSession?.unlock(lockId);
+            lockId && this.sessionFiles?.unlockPreviousSessions(lockId);
             throw err;
         }
 
-        this.loadNodeCrashes(previousSession).finally(() => lockId && previousSession?.unlock(lockId));
+        this.loadNodeCrashes().finally(() => lockId && this.sessionFiles?.unlockPreviousSessions(lockId));
     }
 
     public static builder(options: BacktraceConfiguration): BacktraceClientBuilder {
@@ -238,7 +237,7 @@ export class BacktraceClient extends BacktraceCoreClient {
         }
     }
 
-    private async loadNodeCrashes(sessionFiles?: SessionFiles) {
+    private async loadNodeCrashes() {
         if (!this.database || !this.fileSystem || !this.options.database?.captureNativeCrashes) {
             return;
         }
@@ -266,17 +265,40 @@ export class BacktraceClient extends BacktraceCoreClient {
             return;
         }
 
+        const reports: [path: string, report: BacktraceReport, sessionFiles?: SessionFiles][] = [];
         for (const recordName of recordNames) {
             const recordPath = path.join(databasePath, recordName);
             try {
                 const recordJson = await this.fileSystem.readFile(recordPath);
                 const report = converter.convert(JSON.parse(recordJson));
+                reports.push([recordPath, report]);
+            } catch {
+                // Do nothing, skip the report
+            }
+        }
 
-                if (sessionFiles) {
-                    const breadcrumbsStorage = FileBreadcrumbsStorage.createFromSession(sessionFiles);
+        // Sort reports by timestamp descending
+        reports.sort((a, b) => b[1].timestamp - a[1].timestamp);
+
+        // Map reports to sessions
+        // When the sessions are sorted by timestamp, we can assume that each previous session maps to the next report
+        let currentSession = this.sessionFiles?.getPreviousSession();
+        for (const tuple of reports) {
+            tuple[2] = currentSession;
+            currentSession = currentSession?.getPreviousSession();
+        }
+
+        for (const [recordPath, report, session] of reports) {
+            try {
+                if (session) {
+                    const breadcrumbsStorage = FileBreadcrumbsStorage.createFromSession(session);
                     if (breadcrumbsStorage) {
                         report.attachments.push(...breadcrumbsStorage.getAttachments());
                     }
+
+                    report.attributes['application.session'] = session.sessionId;
+                } else {
+                    report.attributes['application.session'] = null;
                 }
 
                 const data = this.generateSubmissionData(report);
