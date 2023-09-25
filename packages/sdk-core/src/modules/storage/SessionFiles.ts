@@ -22,18 +22,20 @@ export class SessionFiles implements BacktraceModule {
     private readonly _timestamp: number;
     private readonly _events = new Events<SessionEvents>();
     private readonly _escapedSessionId: string;
-    private readonly _locks: string[] = [];
+    private readonly _locks = new Set<string>();
     private _previousSession?: SessionFiles;
     private _cleared = false;
 
     constructor(
         private readonly _fileSystem: FileSystem,
         private readonly _directory: string,
-        private readonly _sessionId: string,
+        public readonly sessionId: string,
+        private readonly _maxPreviousLockedSessions = 1,
         timestamp?: number,
+        private readonly _lockable = true,
     ) {
         this._timestamp = timestamp ?? Date.now();
-        this._escapedSessionId = SessionFiles.escapeFileName(_sessionId);
+        this._escapedSessionId = SessionFiles.escapeFileName(sessionId);
     }
 
     public initialize(): void {
@@ -55,7 +57,7 @@ export class SessionFiles implements BacktraceModule {
             .map((f) => SessionFiles.getFileSession(f))
             .filter(isDefined);
 
-        const currentSessionMarker = sessionMarkers.find((s) => s.sessionId === this._sessionId);
+        const currentSessionMarker = sessionMarkers.find((s) => s.sessionId === this.sessionId);
 
         const lastSessionMarker = directoryFiles
             .filter((f) => f.startsWith(SESSION_MARKER_PREFIX))
@@ -72,38 +74,44 @@ export class SessionFiles implements BacktraceModule {
             this._fileSystem,
             this._directory,
             lastSessionMarker.sessionId,
+            this._maxPreviousLockedSessions - 1,
             lastSessionMarker.timestamp,
+            this._maxPreviousLockedSessions > 0,
         ));
     }
 
     public getSessionWithId(sessionId: string) {
         // eslint-disable-next-line @typescript-eslint/no-this-alias
         let session: SessionFiles | undefined = this;
-        while (session && session._sessionId !== sessionId) {
+        while (session && session.sessionId !== sessionId) {
             session = session.getPreviousSession();
         }
 
         return session;
     }
 
-    public *getPreviousSessions() {
+    public getPreviousSessions(count = Infinity) {
+        const result: SessionFiles[] = [];
         let current = this.getPreviousSession();
-        while (current) {
-            yield current;
+        while (current && count > 0) {
+            result.push(current);
+            count--;
             current = current.getPreviousSession();
         }
+
+        return result;
     }
 
     public lockPreviousSessions(lockId?: string) {
         lockId = lockId ?? IdGenerator.uuid();
-        for (const session of this.getPreviousSessions()) {
+        for (const session of this.getPreviousSessions(this._maxPreviousLockedSessions)) {
             session.lock(lockId);
         }
         return lockId;
     }
 
     public unlockPreviousSessions(lockId: string) {
-        for (const session of this.getPreviousSessions()) {
+        for (const session of this.getPreviousSessions(this._maxPreviousLockedSessions)) {
             session.unlock(lockId);
         }
     }
@@ -131,12 +139,12 @@ export class SessionFiles implements BacktraceModule {
         return files
             .map((file) => SessionFiles.getFileSession(file))
             .filter(isDefined)
-            .filter(({ sessionId }) => sessionId === this._sessionId)
+            .filter(({ sessionId }) => sessionId === this.sessionId)
             .map(({ file }) => this._directory + '/' + file);
     }
 
     public clearSession(deleteMarker = true) {
-        if (this._locks.length > 0) {
+        if (this._locks.size > 0) {
             this._events.once('unlocked', () => this.clearSession(deleteMarker));
             return;
         }
@@ -162,23 +170,18 @@ export class SessionFiles implements BacktraceModule {
     }
 
     public lock(lockId?: string) {
-        if (this._cleared) {
+        if (this._cleared || !this._lockable) {
             return;
         }
 
         lockId = lockId ?? IdGenerator.uuid();
-        this._locks.push(lockId);
+        this._locks.add(lockId);
         return lockId;
     }
 
     public unlock(lockId: string) {
-        const index = this._locks.indexOf(lockId);
-        if (index === -1) {
-            return;
-        }
-
-        this._locks.splice(index, 1);
-        if (this._locks.length === 0) {
+        this._locks.delete(lockId);
+        if (this._locks.size === 0) {
             this._events.emit('unlocked');
         }
     }
