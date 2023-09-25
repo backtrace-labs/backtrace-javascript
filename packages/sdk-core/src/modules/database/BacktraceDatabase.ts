@@ -170,6 +170,7 @@ export class BacktraceDatabase implements BacktraceModule {
         }
         this._databaseRecordContext.remove(record);
         this._storageProvider.delete(record);
+        this._sessionFiles?.unlockPreviousSessions(record.id);
     }
 
     public addStorageProvider(storageProvider: BacktraceDatabaseStorageProvider) {
@@ -206,7 +207,6 @@ export class BacktraceDatabase implements BacktraceModule {
                     const result = await this._requestHandler.send(record.data, record.attachments);
                     if (result.status === 'Ok') {
                         this.remove(record);
-                        this._sessionFiles?.unlockPreviousSessions(record.id);
                         continue;
                     }
                     this._databaseRecordContext.increaseBucket(bucketIndex);
