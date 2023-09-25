@@ -43,6 +43,12 @@ export interface EnabledBacktraceDatabaseConfiguration {
      * A crash report is generated, stored locally, and uploaded upon next start.
      */
     captureNativeCrashes?: boolean;
+
+    /**
+     * Controls how much previous session caches to preserve before sending data from previous sessions.
+     * The default value is 1
+     */
+    maximumOldSessions?: number;
 }
 
 export interface DisabledBacktraceDatabaseConfiguration

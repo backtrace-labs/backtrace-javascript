@@ -163,7 +163,12 @@ export abstract class BacktraceCoreClient {
             );
 
             if (this.fileSystem) {
-                const sessionFiles = new SessionFiles(this.fileSystem, this.options.database.path, this.sessionId);
+                const sessionFiles = new SessionFiles(
+                    this.fileSystem,
+                    this.options.database.path,
+                    this.sessionId,
+                    this.options.database.maximumOldSessions ?? 1,
+                );
                 this._modules.set(SessionFiles, sessionFiles);
             }
 
