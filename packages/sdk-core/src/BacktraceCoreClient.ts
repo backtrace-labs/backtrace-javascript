@@ -162,14 +162,19 @@ export abstract class BacktraceCoreClient {
                 this.options.database,
             );
 
-            if (provider) {
-                const database = new BacktraceDatabase(this.options.database, provider, this._reportSubmission);
-                this._modules.set(BacktraceDatabase, database);
-            }
-
             if (this.fileSystem) {
                 const sessionFiles = new SessionFiles(this.fileSystem, this.options.database.path, this.sessionId);
                 this._modules.set(SessionFiles, sessionFiles);
+            }
+
+            if (provider) {
+                const database = new BacktraceDatabase(
+                    this.options.database,
+                    provider,
+                    this._reportSubmission,
+                    this.sessionFiles,
+                );
+                this._modules.set(BacktraceDatabase, database);
             }
         }
 
@@ -334,6 +339,7 @@ export abstract class BacktraceCoreClient {
         return {
             client: this,
             reportEvents: this.reportEvents,
+            sessionFiles: this.sessionFiles,
         };
     }
 }

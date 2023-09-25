@@ -40,11 +40,6 @@ export class SessionFiles implements BacktraceModule {
         this.createSessionMarker();
     }
 
-    public static create(fileSystem: FileSystem, directory: string, sessionId: string, timestamp?: number) {
-        const sessionFiles = new SessionFiles(fileSystem, directory, sessionId, timestamp);
-        return sessionFiles;
-    }
-
     public getPreviousSession() {
         if (this._previousSession) {
             return this._previousSession;
@@ -81,11 +76,41 @@ export class SessionFiles implements BacktraceModule {
         ));
     }
 
-    public clearPreviousSessions() {
+    public getSessionWithId(sessionId: string) {
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
+        let session: SessionFiles | undefined = this;
+        while (session && session._sessionId !== sessionId) {
+            session = session.getPreviousSession();
+        }
+
+        return session;
+    }
+
+    public *getPreviousSessions() {
         let current = this.getPreviousSession();
         while (current) {
-            current.clearSession();
+            yield current;
             current = current.getPreviousSession();
+        }
+    }
+
+    public lockPreviousSessions(lockId?: string) {
+        lockId = lockId ?? IdGenerator.uuid();
+        for (const session of this.getPreviousSessions()) {
+            session.lock(lockId);
+        }
+        return lockId;
+    }
+
+    public unlockPreviousSessions(lockId: string) {
+        for (const session of this.getPreviousSessions()) {
+            session.unlock(lockId);
+        }
+    }
+
+    public clearPreviousSessions() {
+        for (const session of this.getPreviousSessions()) {
+            session.clearSession();
         }
     }
 
@@ -136,8 +161,12 @@ export class SessionFiles implements BacktraceModule {
         }
     }
 
-    public lock() {
-        const lockId = IdGenerator.uuid();
+    public lock(lockId?: string) {
+        if (this._cleared) {
+            return;
+        }
+
+        lockId = lockId ?? IdGenerator.uuid();
         this._locks.push(lockId);
         return lockId;
     }

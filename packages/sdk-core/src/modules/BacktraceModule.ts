@@ -1,10 +1,11 @@
-import { BacktraceCoreClient } from '..';
+import { BacktraceCoreClient, SessionFiles } from '..';
 import { Events } from '../common/Events';
 import { ReportEvents } from '../events/ReportEvents';
 
 export interface BacktraceModuleBindData {
     readonly client: BacktraceCoreClient;
     readonly reportEvents: Events<ReportEvents>;
+    readonly sessionFiles?: SessionFiles;
 }
 
 export interface BacktraceModule {
