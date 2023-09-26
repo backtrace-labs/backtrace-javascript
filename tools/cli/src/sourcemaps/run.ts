@@ -369,16 +369,23 @@ export async function runSourcemapCommands({ opts, logger, getHelpMessage }: Com
         R.map(flow(mapAsync(handleAssetCommand(runProcess, runAddSources)), R.flatMap)),
         R.map(filterBehaviorSkippedElements),
         R.map(
-            logInfo(
-                (assets) =>
-                    `processed ${assets.reduce((sum, r) => sum + (r.processed ? 1 : 0), 0)} source and sourcemaps`,
-            ),
+            runProcess
+                ? logInfo(
+                      (assets) =>
+                          `processed ${assets.reduce(
+                              (sum, r) => sum + (r.processed ? 1 : 0),
+                              0,
+                          )} source and sourcemaps`,
+                  )
+                : pass,
         ),
         R.map(
-            logInfo(
-                (assets) =>
-                    `added sources to ${assets.reduce((sum, r) => sum + (r.sourceAdded ? 1 : 0), 0)} sourcemaps`,
-            ),
+            runAddSources
+                ? logInfo(
+                      (assets) =>
+                          `added sources to ${assets.reduce((sum, r) => sum + (r.sourceAdded ? 1 : 0), 0)} sourcemaps`,
+                  )
+                : pass,
         ),
         R.map(uploadCommand ?? Ok),
     );
