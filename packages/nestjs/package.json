@@ -41,8 +41,13 @@
         "/lib"
     ],
     "devDependencies": {
+        "@nestjs/core": "^9",
+        "@nestjs/platform-express": "^9",
+        "@nestjs/testing": "^9",
         "@types/jest": "^29.5.1",
+        "@types/supertest": "^2.0.13",
         "jest": "^29.5.0",
+        "supertest": "^6.3.3",
         "ts-jest": "^29.1.0",
         "ts-loader": "^9.4.3",
         "typescript": "^5.0.4",
@@ -54,6 +59,6 @@
         "@backtrace-labs/node": "^0.0.4"
     },
     "peerDependencies": {
-        "@nestjs/core": "^9"
+        "@nestjs/common": "^9"
     }
 }
