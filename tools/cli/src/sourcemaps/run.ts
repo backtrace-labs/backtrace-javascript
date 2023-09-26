@@ -41,7 +41,7 @@ import { CliLogger } from '../logger';
 import { findConfig, joinOptions, loadOptions } from '../options/loadOptions';
 import { addSourceToSourceMap } from './add-sources';
 import { processSource } from './process';
-import { saveAssets, uploadAssets, uploadOrSaveAssets } from './upload';
+import { getUploadUrl, saveAssets, uploadAssets, uploadOrSaveAssets } from './upload';
 
 export interface RunOptions extends GlobalOptions {
     readonly 'add-sources': boolean;
@@ -52,6 +52,8 @@ export interface RunOptions extends GlobalOptions {
     readonly exclude: string | string[];
     readonly 'dry-run': boolean;
     readonly url: string;
+    readonly subdomain: string;
+    readonly token: string;
     readonly 'include-sources': boolean;
     readonly output: string;
     readonly insecure: boolean;
@@ -106,6 +108,18 @@ export const runCmd = new Command<RunOptions>({
         type: String,
         description: 'URL to upload to.',
         alias: 'u',
+    })
+    .option({
+        name: 'subdomain',
+        type: String,
+        description: 'Subdomain to upload to.',
+        alias: 's',
+    })
+    .option({
+        name: 'token',
+        type: String,
+        description: 'Symbol submission token. Required when subdomain is provided.',
+        alias: 't',
     })
     .option({
         name: 'output',
@@ -191,6 +205,13 @@ export async function runSourcemapCommands({ opts, logger, getHelpMessage }: Com
         return Err('path must be specified');
     }
 
+    const uploadUrlResult = getUploadUrl(uploadOptions);
+    if (uploadUrlResult.isErr()) {
+        logger.info(getHelpMessage());
+        return uploadUrlResult;
+    }
+    const uploadUrl = uploadUrlResult.data;
+
     const logInfo = log(logger, 'info');
     const logDebug = log(logger, 'debug');
     const logTrace = log(logger, 'trace');
@@ -262,7 +283,7 @@ export async function runSourcemapCommands({ opts, logger, getHelpMessage }: Com
 
     const saveArchiveCommandResult = runOptions.upload
         ? await uploadOrSaveAssets(
-              uploadOptions.url,
+              uploadUrl,
               uploadOptions.output,
               (url) =>
                   uploadAssets(
