@@ -11,10 +11,13 @@ function unlinkSafe(file: string) {
 }
 
 describe('AlternatingFileWriter', () => {
-    const file1 = path.join(__dirname, '../_testOutput', 'alternating_file1');
-    const file2 = path.join(__dirname, '../_testOutput', 'alternating_file2');
+    const dir = path.join(__dirname, '../_testOutput');
+    const file1 = path.join(dir, 'alternating_file1');
+    const file2 = path.join(dir, 'alternating_file2');
 
     beforeAll(() => {
+        fs.mkdirSync(dir, { recursive: true });
+
         unlinkSafe(file1);
         unlinkSafe(file2);
     });
