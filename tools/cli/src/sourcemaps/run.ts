@@ -326,7 +326,7 @@ export async function runSourcemapCommands({ opts, logger, getHelpMessage }: Com
                   logDebug(`running upload...`),
                   map((t) => t.sourceMap),
                   filterProcessedAssetsCommand,
-                  opts['pass-with-no-files']
+                  uploadOptions['pass-with-no-files']
                       ? Ok
                       : failIfEmpty('no processed sourcemaps found, make sure to run process'),
                   R.map(uniqueBy((asset) => asset.content.debugId)),
