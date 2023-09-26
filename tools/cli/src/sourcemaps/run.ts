@@ -331,7 +331,7 @@ export async function runSourcemapCommands({ opts, logger, getHelpMessage }: Com
                       : failIfEmpty('no processed sourcemaps found, make sure to run process'),
                   R.map(uniqueBy((asset) => asset.content.debugId)),
                   R.map((assets) =>
-                      opts['dry-run']
+                      uploadOptions['dry-run']
                           ? Ok({ rxid: '<dry-run>' })
                           : assets.length
                           ? saveArchiveCommand(assets)
