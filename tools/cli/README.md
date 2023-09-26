@@ -51,9 +51,6 @@ A handy shortcut for executing all commands. Executes commands in order:
 1. [`add-sources`](#add-sources)
 1. [`upload`](#upload)
 
-Requires the config file to function. `run` accepts some common options, but command-specific options are taken from the
-config.
-
 ### Options
 
 #### `--process`
@@ -68,6 +65,10 @@ Runs the [`add-sources`](#add-sources) command.
 
 Runs the [`upload`](#upload) command.
 
+#### `--dry-run`, `-n`
+
+Will not modify the files and not upload them.
+
 #### `<path>`, `--path <string>`, `-p <string>`
 
 Searches for files within provided paths. This is the default positional argument. If not provided, will search in the
@@ -80,6 +81,31 @@ Forces processing of already processed files. May result in duplicate appended d
 #### `--pass-with-no-files`
 
 By default, `run` will return a non-zero exit code when no files are found. Pass this to return 0.
+
+#### `--output <string>`, `-o <string>`
+
+Specify this to output the archive to a file instead of uploading it to Backtrace. Cannot be used with uploading.
+
+#### `--url <string>`, `-u <string>`
+
+URL to upload the sourcemaps to. Cannot be used with `--subdomain`.
+
+#### `--subdomain <string>`, `-s <string>`
+
+Subdomain to use for upload. You must also specify the `--token`. Cannot be used with `--url`.
+
+#### `--token <string>`, `-t <string>`
+
+Token to use with the upload. Usable only with `--subdomain`.
+
+#### `--include-sources`
+
+By default, the sources in sourcemap file will NOT be uploaded to Backtrace. Specify this to include `sourcesContent`
+key in sourcemaps.
+
+#### `--insecure`, `-k`
+
+Disables HTTPS certificate checking.
 
 ## `process`
 
@@ -180,8 +206,7 @@ current directory.
 
 #### `--url <string>`, `-u <string>`
 
-URL to upload the sourcemaps to. You can use also `BACKTRACE_JS_UPLOAD_URL` environment variable. Cannot be used with
-`--subdomain`.
+URL to upload the sourcemaps to. Cannot be used with `--subdomain`.
 
 #### `--subdomain <string>`, `-s <string>`
 
