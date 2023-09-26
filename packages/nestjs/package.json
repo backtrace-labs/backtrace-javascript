@@ -52,5 +52,8 @@
     },
     "dependencies": {
         "@backtrace-labs/node": "^0.0.4"
+    },
+    "peerDependencies": {
+        "@nestjs/core": "^9"
     }
 }
