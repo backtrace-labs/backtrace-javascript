@@ -1,11 +1,11 @@
 const path = require('path');
-const { webpackTypescriptConfig } = require('../../build/common');
+const { getWebpackTypescriptConfig } = require('../../build/common');
 const agentDefinitionPlugin = require('../../build/agentDefinitionPlugin');
 const nodeExternals = require('webpack-node-externals');
 
 /** @type {import('webpack').Configuration} */
 module.exports = {
-    ...webpackTypescriptConfig,
+    ...getWebpackTypescriptConfig({ configFile: 'tsconfig.build.json' }),
     mode: process.env.NODE_ENV ?? 'production',
     devtool: 'nosources-source-map',
     entry: './src/index.ts',
