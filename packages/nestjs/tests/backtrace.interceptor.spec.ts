@@ -1,5 +1,14 @@
 import { BacktraceClient } from '@backtrace-labs/node';
-import { BadRequestException, Controller, Get, NotFoundException, Req, Type } from '@nestjs/common';
+import {
+    BadRequestException,
+    Controller,
+    Get,
+    HttpException,
+    InternalServerErrorException,
+    NotFoundException,
+    Req,
+    Type,
+} from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { BacktraceInterceptor, BacktraceInterceptorOptions } from '../src/backtrace.interceptor';
@@ -11,7 +20,7 @@ describe('BacktraceInterceptor', () => {
         return { client, send };
     }
 
-    function createInterceptor(options: BacktraceInterceptorOptions) {
+    function createInterceptor(options?: BacktraceInterceptorOptions) {
         const { client, send } = createMockClient();
         const interceptor = new BacktraceInterceptor(options, client);
 
@@ -346,6 +355,98 @@ describe('BacktraceInterceptor', () => {
             await request(app.getHttpServer()).get('/error').expect(400);
 
             expect(send).toBeCalled();
+        });
+    });
+
+    describe('default behavior', () => {
+        it('should by default send Error exceptions', async () => {
+            @Controller()
+            class TestController {
+                @Get('error')
+                public error() {
+                    throw new Error('foo');
+                }
+            }
+
+            const { send, interceptor } = createInterceptor();
+            const { app } = await createAppWithInterceptor(interceptor, TestController);
+
+            await app.init();
+            await request(app.getHttpServer()).get('/error').expect(500);
+
+            expect(send).toBeCalled();
+        });
+
+        it('should by default send InternalServerErrorException exceptions', async () => {
+            @Controller()
+            class TestController {
+                @Get('error')
+                public error() {
+                    throw new InternalServerErrorException('foo');
+                }
+            }
+
+            const { send, interceptor } = createInterceptor();
+            const { app } = await createAppWithInterceptor(interceptor, TestController);
+
+            await app.init();
+            await request(app.getHttpServer()).get('/error').expect(500);
+
+            expect(send).toBeCalled();
+        });
+
+        it('should by default send HttpException exceptions with 500 status', async () => {
+            @Controller()
+            class TestController {
+                @Get('error')
+                public error() {
+                    throw new HttpException('foo', 500);
+                }
+            }
+
+            const { send, interceptor } = createInterceptor();
+            const { app } = await createAppWithInterceptor(interceptor, TestController);
+
+            await app.init();
+            await request(app.getHttpServer()).get('/error').expect(500);
+
+            expect(send).toBeCalled();
+        });
+
+        it('should by default not send HttpException exceptions with 400 status', async () => {
+            @Controller()
+            class TestController {
+                @Get('error')
+                public error() {
+                    throw new HttpException('foo', 400);
+                }
+            }
+
+            const { send, interceptor } = createInterceptor();
+            const { app } = await createAppWithInterceptor(interceptor, TestController);
+
+            await app.init();
+            await request(app.getHttpServer()).get('/error').expect(400);
+
+            expect(send).not.toBeCalled();
+        });
+
+        it('should by default not send BadRequestException exceptions', async () => {
+            @Controller()
+            class TestController {
+                @Get('error')
+                public error() {
+                    throw new BadRequestException('foo');
+                }
+            }
+
+            const { send, interceptor } = createInterceptor();
+            const { app } = await createAppWithInterceptor(interceptor, TestController);
+
+            await app.init();
+            await request(app.getHttpServer()).get('/error').expect(400);
+
+            expect(send).not.toBeCalled();
         });
     });
 });

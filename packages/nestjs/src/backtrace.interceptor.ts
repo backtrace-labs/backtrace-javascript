@@ -1,5 +1,5 @@
 import { BacktraceClient } from '@backtrace-labs/node';
-import { CallHandler, ExecutionContext, Injectable, NestInterceptor, Optional } from '@nestjs/common';
+import { CallHandler, ExecutionContext, HttpException, Injectable, NestInterceptor, Optional } from '@nestjs/common';
 import { HttpArgumentsHost, RpcArgumentsHost, WsArgumentsHost } from '@nestjs/common/interfaces';
 import { Observable, catchError, throwError } from 'rxjs';
 
@@ -62,7 +62,10 @@ export class BacktraceInterceptor implements NestInterceptor {
      * Creates an interceptor with the provided client instance.
      */
     constructor(options: BacktraceInterceptorOptions | undefined, client: BacktraceClient);
-    constructor(private readonly _options?: BacktraceInterceptorOptions, @Optional() client?: BacktraceClient) {
+    constructor(
+        private readonly _options = BacktraceInterceptor.getDefaultOptions(),
+        @Optional() client?: BacktraceClient,
+    ) {
         this._client = client;
     }
 
@@ -92,10 +95,6 @@ export class BacktraceInterceptor implements NestInterceptor {
     }
 
     private shouldSend(error: unknown) {
-        if (!this._options) {
-            return true;
-        }
-
         if (this._options.includeExceptionTypes && !this.filterException(error, this._options.includeExceptionTypes)) {
             return false;
         }
@@ -145,5 +144,12 @@ export class BacktraceInterceptor implements NestInterceptor {
         }
 
         return filter(exception);
+    }
+
+    private static getDefaultOptions(): BacktraceInterceptorOptions {
+        return {
+            includeExceptionTypes: [Error],
+            excludeExceptionTypes: (error) => error instanceof HttpException && error.getStatus() < 500,
+        };
     }
 }
