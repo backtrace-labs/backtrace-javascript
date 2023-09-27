@@ -1,5 +1,5 @@
 import { BacktraceClient } from '@backtrace-labs/node';
-import { BadRequestException, Controller, Get, NotFoundException, Type } from '@nestjs/common';
+import { BadRequestException, Controller, Get, NotFoundException, Req, Type } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { BacktraceInterceptor, BacktraceInterceptorOptions } from '../src/backtrace.interceptor';
@@ -55,7 +55,28 @@ describe('BacktraceInterceptor', () => {
         await app.init();
         await request(app.getHttpServer()).get('/error').expect(500);
 
-        expect(send).toBeCalledWith(error);
+        expect(send).toBeCalledWith(error, expect.anything());
+    });
+
+    it('should add http request as attribute to error', async () => {
+        let expectedRequest: unknown;
+
+        @Controller()
+        class TestController {
+            @Get('error')
+            public error(@Req() request: unknown) {
+                expectedRequest = request;
+                throw new Error('foo');
+            }
+        }
+
+        const { send, interceptor } = createInterceptor({});
+        const { app } = await createAppWithInterceptor(interceptor, TestController);
+
+        await app.init();
+        await request(app.getHttpServer()).get('/error').expect(500);
+
+        expect(send).toBeCalledWith(expect.anything(), { request: expectedRequest });
     });
 
     it('should not change the error', async () => {
