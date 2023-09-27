@@ -1,19 +1,67 @@
 import { BacktraceClient } from '@backtrace-labs/node';
-import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
+import { CallHandler, ExecutionContext, Injectable, NestInterceptor, Optional } from '@nestjs/common';
 import { HttpArgumentsHost, RpcArgumentsHost, WsArgumentsHost } from '@nestjs/common/interfaces';
 import { Observable, catchError, throwError } from 'rxjs';
 
 type ExceptionTypeFilter = (new (...args: never[]) => unknown)[] | ((err: unknown) => boolean);
 
 export interface BacktraceInterceptorOptions {
+    /**
+     * If specified, only matching errors will be sent.
+     *
+     * Can be an array of error types, or a function returning `boolean`.
+     * The error is passed to the function as first parameter.
+     *
+     * @example
+     * // Include only InternalServerErrorException or errors deriving from it
+     * {
+     *   includeExceptionTypes: [InternalServerErrorException]
+     * }
+     *
+     * // Include only errors that are instanceof InternalServerErrorException
+     * {
+     *   includeExceptionTypes: (error) => error instanceof InternalServerErrorException
+     * }
+     */
     readonly includeExceptionTypes?: ExceptionTypeFilter;
+
+    /**
+     * If specified, matching errors will not be sent.
+     * Can be an array of error types, or a function returning `boolean`.
+     * The error is passed to the function as first parameter.
+     *
+     * @example
+     * // Exclude BadRequestException or errors deriving from it
+     * {
+     *   excludeExceptionTypes: [BadRequestException]
+     * }
+     *
+     * // Exclude errors that are instanceof BadRequestException
+     * {
+     *   excludeExceptionTypes: (error) => error instanceof BadRequestException
+     * }
+     */
     readonly excludeExceptionTypes?: ExceptionTypeFilter;
 }
 
+/**
+ * Intercepts errors and sends them to Backtrace.
+ */
 @Injectable()
 export class BacktraceInterceptor implements NestInterceptor {
     private readonly _client?: BacktraceClient;
 
+    /**
+     * Creates an interceptor with the global client instance.
+     *
+     * The instance will be resolved while intercepting the request.
+     * If the instance is not available, an error will be thrown.
+     */
+    constructor(options?: BacktraceInterceptorOptions);
+    /**
+     * Creates an interceptor with the provided client instance.
+     */
+    constructor(options: BacktraceInterceptorOptions | undefined, client: BacktraceClient);
     constructor(private readonly _options?: BacktraceInterceptorOptions, @Optional() client?: BacktraceClient) {
         this._client = client;
     }

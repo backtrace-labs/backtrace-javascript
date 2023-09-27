@@ -7,6 +7,12 @@ const { ConfigurableModuleClass, MODULE_OPTIONS_TOKEN, OPTIONS_TYPE } = new Conf
     .setClassMethodName('forRoot')
     .build();
 
+/**
+ * Registers `BacktraceClient` and exports it.
+ *
+ * This module is global, you need to register it only once in your application.
+ * The registered `BacktraceClient` will be used as a global instance.
+ */
 @Global()
 @Module({
     providers: [
