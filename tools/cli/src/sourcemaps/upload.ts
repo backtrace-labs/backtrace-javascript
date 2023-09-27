@@ -44,6 +44,8 @@ import { findConfig, loadOptionsForCommand } from '../options/loadOptions';
 
 export interface UploadOptions extends GlobalOptions {
     readonly url: string;
+    readonly subdomain: string;
+    readonly token: string;
     readonly path: string | string[];
     readonly include: string | string[];
     readonly exclude: string | string[];
@@ -91,6 +93,18 @@ export const uploadCmd = new Command<UploadOptions>({
         type: String,
         description: 'URL to upload to.',
         alias: 'u',
+    })
+    .option({
+        name: 'subdomain',
+        type: String,
+        description: 'Subdomain to upload to. Do not use on on-premise environments.',
+        alias: 's',
+    })
+    .option({
+        name: 'token',
+        type: String,
+        description: 'Symbol submission token. Required when subdomain is provided.',
+        alias: 't',
     })
     .option({
         name: 'include-sources',
@@ -227,7 +241,7 @@ export async function uploadSourcemaps({ opts, logger, getHelpMessage }: Command
         );
 
     const saveArchiveCommandResult = await uploadOrSaveAssets(
-        opts.url,
+        uploadUrl,
         opts.output,
         (url) => uploadAssets(url, { ignoreSsl: opts.insecure ?? false }, opts['include-sources'] ?? false),
         (path) => flow(saveAssets(path, opts['include-sources'] ?? false), Ok),
@@ -346,9 +360,21 @@ function pipeAssets(assets: AssetWithContent<RawSourceMapWithDebugId>[], include
     };
 }
 
-function getUploadUrl(opts: Partial<UploadOptions>): Result<string | undefined, string> {
+export function getUploadUrl(opts: Partial<UploadOptions>): Result<string | undefined, string> {
+    if (opts.url && opts.subdomain) {
+        return Err('--url and --subdomain are exclusive');
+    }
+
     if (opts.url) {
         return validateUrl(opts.url);
+    }
+
+    if (opts.subdomain) {
+        if (!opts.token) {
+            return Err('token is required with subdomain');
+        }
+
+        return Ok(`https://submit.backtrace.io/${opts.subdomain}/${opts.token}/sourcemap`);
     }
 
     return Ok(undefined);

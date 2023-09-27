@@ -17,7 +17,7 @@ export function loadOptionsForCommand(path?: string) {
             path,
             (path) => (!readOptions ? loadOptions(path) : Ok(readOptions)),
             R.map((data) => (data ? (readOptions = data) : data)),
-            R.map((data) => (data ? joinOptions(key, defaults) : {})),
+            R.map((data) => (data ? joinOptions(key, defaults)(data) : {})),
         );
     };
 }
