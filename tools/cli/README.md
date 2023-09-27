@@ -94,6 +94,9 @@ URL to upload the sourcemaps to. Cannot be used with `--subdomain`.
 
 Subdomain to use for upload. You must also specify the `--token`. Cannot be used with `--url`.
 
+**Warning**: this will most likely not work on on-premise environments, due to the URL having format of
+`https://submit.backtrace.io/{{subdomain}}/{{token}}/sourcemap`.
+
 #### `--token <string>`, `-t <string>`
 
 Token to use with the upload. Usable only with `--subdomain`.
@@ -211,6 +214,9 @@ URL to upload the sourcemaps to. Cannot be used with `--subdomain`.
 #### `--subdomain <string>`, `-s <string>`
 
 Subdomain to use for upload. You must also specify the `--token`. Cannot be used with `--url`.
+
+**Warning**: this will most likely not work on on-premise environments, due to the URL having format of
+`https://submit.backtrace.io/{{subdomain}}/{{token}}/sourcemap`.
 
 #### `--token <string>`, `-t <string>`
 

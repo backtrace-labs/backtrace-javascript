@@ -112,7 +112,7 @@ export const runCmd = new Command<RunOptions>({
     .option({
         name: 'subdomain',
         type: String,
-        description: 'Subdomain to upload to.',
+        description: 'Subdomain to upload to. Do not use on on-premise environments.',
         alias: 's',
     })
     .option({
