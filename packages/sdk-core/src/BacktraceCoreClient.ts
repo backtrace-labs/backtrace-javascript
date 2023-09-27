@@ -202,6 +202,13 @@ export abstract class BacktraceCoreClient {
         this._enabled = true;
     }
 
+    /**
+     * Uses client as the global client.
+     */
+    public static use(client: BacktraceCoreClient) {
+        this._instance = client;
+    }
+
     public initialize() {
         if (this.fileSystem && this.options.database?.createDatabaseDirectory) {
             if (!this.options.database.path) {
