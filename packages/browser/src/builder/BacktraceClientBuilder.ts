@@ -43,7 +43,7 @@ export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<Backtrace
     }
 
     public build(): BacktraceClient {
-        return new BacktraceClient(
+        const instance = new BacktraceClient(
             this.options,
             this.handler,
             this.attributeProviders,
@@ -51,6 +51,8 @@ export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<Backtrace
             this.breadcrumbsSubscribers,
             this.sessionProvider,
         );
+        instance.initialize();
+        return instance;
     }
 
     protected generateStackTraceConverter(): BacktraceStackTraceConverter {

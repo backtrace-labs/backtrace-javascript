@@ -63,6 +63,14 @@ export class BacktraceTestClient extends BacktraceCoreClient {
                 };
             },
         });
-        return new BacktraceTestClient(options, testHttpClient, attributeProviders, attachments, storageProvider);
+        const instance = new BacktraceTestClient(
+            options,
+            testHttpClient,
+            attributeProviders,
+            attachments,
+            storageProvider,
+        );
+        instance.initialize();
+        return instance;
     }
 }
