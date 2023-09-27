@@ -13,19 +13,13 @@ describe('BacktraceInterceptor', () => {
 
     function createInterceptor(options: BacktraceInterceptorOptions) {
         const { client, send } = createMockClient();
-        const interceptor = new BacktraceInterceptor(client, options);
+        const interceptor = new BacktraceInterceptor(options, client);
 
         return { client, send, interceptor };
     }
 
     async function createAppWithInterceptor(interceptor: BacktraceInterceptor, controller: Type) {
         const module = await Test.createTestingModule({
-            providers: [
-                {
-                    provide: BacktraceInterceptor,
-                    useValue: interceptor,
-                },
-            ],
             controllers: [controller],
         }).compile();
 

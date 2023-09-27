@@ -12,10 +12,16 @@ const { ConfigurableModuleClass, MODULE_OPTIONS_TOKEN, OPTIONS_TYPE } = new Conf
     providers: [
         {
             provide: BacktraceClient,
-            useFactory: (optionsOrBuilder: typeof OPTIONS_TYPE) =>
-                optionsOrBuilder instanceof BacktraceClientBuilder
-                    ? optionsOrBuilder.build()
-                    : BacktraceClient.builder(optionsOrBuilder).build(),
+            useFactory: (optionsOrBuilder: typeof OPTIONS_TYPE) => {
+                const instance =
+                    optionsOrBuilder instanceof BacktraceClientBuilder
+                        ? optionsOrBuilder.build()
+                        : BacktraceClient.builder(optionsOrBuilder).build();
+
+                BacktraceClient.use(instance);
+
+                return instance;
+            },
             inject: [MODULE_OPTIONS_TOKEN],
         },
     ],

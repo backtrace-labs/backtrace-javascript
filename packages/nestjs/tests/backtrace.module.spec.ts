@@ -60,4 +60,20 @@ describe('BacktraceModule', () => {
         const client = module.get(BacktraceClient);
         expect(client).toBeInstanceOf(BacktraceClient);
     });
+
+    it('should register BacktraceClient global instance', async () => {
+        const module = await Test.createTestingModule({
+            imports: [
+                BacktraceModule.forRootAsync({
+                    useFactory: () =>
+                        BacktraceClient.builder({
+                            url: 'https://test',
+                        }),
+                }),
+            ],
+        }).compile();
+
+        const client = module.get(BacktraceClient);
+        expect(BacktraceClient.instance).toBe(client);
+    });
 });

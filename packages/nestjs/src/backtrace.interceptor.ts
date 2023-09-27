@@ -12,9 +12,18 @@ export interface BacktraceInterceptorOptions {
 
 @Injectable()
 export class BacktraceInterceptor implements NestInterceptor {
-    constructor(private readonly _client: BacktraceClient, private readonly _options: BacktraceInterceptorOptions) {}
+    private readonly _client?: BacktraceClient;
+
+    constructor(private readonly _options?: BacktraceInterceptorOptions, @Optional() client?: BacktraceClient) {
+        this._client = client;
+    }
 
     public intercept(context: ExecutionContext, next: CallHandler<unknown>): Observable<unknown> {
+        const client = this._client ?? BacktraceClient.instance;
+        if (!client) {
+            throw new Error('Backtrace instance is unavailable. Initialize the client first.');
+        }
+
         return next.handle().pipe(
             catchError((err) => {
                 if (!this.shouldSend(err)) {
@@ -24,9 +33,9 @@ export class BacktraceInterceptor implements NestInterceptor {
                 const attributes = this.getAttributes(context);
 
                 if (typeof err !== 'string' && !(err instanceof Error)) {
-                    this._client.send(String(err), attributes);
+                    client.send(String(err), attributes);
                 } else {
-                    this._client.send(err, attributes);
+                    client.send(err, attributes);
                 }
 
                 return throwError(() => err);
@@ -35,6 +44,10 @@ export class BacktraceInterceptor implements NestInterceptor {
     }
 
     private shouldSend(error: unknown) {
+        if (!this._options) {
+            return true;
+        }
+
         if (this._options.includeExceptionTypes && !this.filterException(error, this._options.includeExceptionTypes)) {
             return false;
         }
