@@ -1,7 +1,7 @@
 {
     "name": "@backtrace-labs/nestjs",
     "version": "0.0.1",
-    "description": "Backtrace-JavaScript Nest.JS integration",
+    "description": "Backtrace-JavaScript NestJS integration",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
     "scripts": {
