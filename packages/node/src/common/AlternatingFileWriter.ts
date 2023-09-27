@@ -26,7 +26,7 @@ export class AlternatingFileWriter {
             this._fileStream.close();
             await fs.promises.rename(this._mainFile, this._fallbackFile);
             this._count = 0;
-            this._fileStream = fs.createWriteStream(this._mainFile);
+            this._fileStream = fs.createWriteStream(this._mainFile, 'utf-8');
         }
 
         await this.writeAsync(this._fileStream, value + '\n');

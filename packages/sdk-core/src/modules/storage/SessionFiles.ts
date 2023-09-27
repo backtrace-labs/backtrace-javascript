@@ -21,7 +21,6 @@ const isDefined = <T>(t: T | undefined): t is T => !!t;
 export class SessionFiles implements BacktraceModule {
     public readonly marker: string;
 
-    private readonly _timestamp: number;
     private readonly _events = new Events<SessionEvents>();
     private readonly _escapedSessionId: string;
     private readonly _locks = new Set<string>();
@@ -33,12 +32,10 @@ export class SessionFiles implements BacktraceModule {
         private readonly _directory: string,
         public readonly sessionId: string,
         private readonly _maxPreviousLockedSessions = 1,
-        timestamp?: number,
+        private readonly _timestamp = Date.now(),
         private readonly _lockable = true,
     ) {
-        this._timestamp = timestamp ?? Date.now();
-        this._escapedSessionId = SessionFiles.escapeFileName(sessionId);
-
+        this._escapedSessionId = this.escapeFileName(sessionId);
         this.marker = this.getFileName(SESSION_MARKER_PREFIX);
     }
 
@@ -58,15 +55,12 @@ export class SessionFiles implements BacktraceModule {
 
         const sessionMarkers = directoryFiles
             .filter((f) => f.startsWith(SESSION_MARKER_PREFIX))
-            .map((f) => SessionFiles.getFileSession(f))
+            .map((f) => this.getFileSession(f))
             .filter(isDefined);
 
         const currentSessionMarker = sessionMarkers.find((s) => s.sessionId === this.sessionId);
 
-        const lastSessionMarker = directoryFiles
-            .filter((f) => f.startsWith(SESSION_MARKER_PREFIX))
-            .map((file) => SessionFiles.getFileSession(file))
-            .filter(isDefined)
+        const lastSessionMarker = sessionMarkers
             .sort((a, b) => b.timestamp - a.timestamp)
             .filter(({ timestamp }) => !currentSessionMarker || currentSessionMarker.timestamp > timestamp)[0];
 
@@ -129,11 +123,7 @@ export class SessionFiles implements BacktraceModule {
     public getFileName(prefix: string) {
         this.throwIfCleared();
 
-        return (
-            this._directory +
-            '/' +
-            `${SessionFiles.escapeFileName(prefix)}_${this._escapedSessionId}_${this._timestamp}`
-        );
+        return this._directory + '/' + `${this.escapeFileName(prefix)}_${this._escapedSessionId}_${this._timestamp}`;
     }
 
     public getSessionFiles() {
@@ -141,7 +131,7 @@ export class SessionFiles implements BacktraceModule {
 
         const files = this.readDirectoryFiles();
         return files
-            .map((file) => SessionFiles.getFileSession(file))
+            .map((file) => this.getFileSession(file))
             .filter(isDefined)
             .filter(({ sessionId }) => sessionId === this.sessionId)
             .map(({ file }) => this._directory + '/' + file);
@@ -186,7 +176,7 @@ export class SessionFiles implements BacktraceModule {
         }
     }
 
-    private static getFileSession(file: string): FileSession | undefined {
+    private getFileSession(file: string): FileSession | undefined {
         const [escapedSessionId, rawTimestamp] = this.splitByOneChar(file, '_').slice(-2);
         const timestamp = parseInt(rawTimestamp);
         if (isNaN(timestamp)) {
@@ -208,15 +198,15 @@ export class SessionFiles implements BacktraceModule {
         this._fileSystem.writeFileSync(this.marker, '');
     }
 
-    private static escapeFileName(name: string) {
+    private escapeFileName(name: string) {
         return name.replace(/_/g, '__');
     }
 
-    private static unescapeFileName(name: string) {
+    private unescapeFileName(name: string) {
         return name.replace(/__/g, '_');
     }
 
-    private static splitByOneChar(str: string, char: string) {
+    private splitByOneChar(str: string, char: string) {
         const result: string[] = [];
         let start = 0;
         let index = str.indexOf(char);

@@ -24,8 +24,12 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
 
     private readonly _writer: AlternatingFileWriter;
 
-    constructor(private readonly _file1: string, private readonly _file2: string, maximumBreadcrumbs: number) {
-        this._writer = new AlternatingFileWriter(_file1, _file2, maximumBreadcrumbs);
+    constructor(
+        private readonly _mainFile: string,
+        private readonly _fallbackFile: string,
+        maximumBreadcrumbs: number,
+    ) {
+        this._writer = new AlternatingFileWriter(_mainFile, _fallbackFile, maximumBreadcrumbs);
     }
 
     public static createFromSession(session: SessionFiles): FileBreadcrumbsStorage | undefined {
@@ -49,8 +53,8 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
 
     public getAttachments(): BacktraceAttachment<unknown>[] {
         return [
-            new BacktraceFileAttachment(this._file1, 'bt-breadcrumbs-0'),
-            new BacktraceFileAttachment(this._file2, 'bt-breadcrumbs-1'),
+            new BacktraceFileAttachment(this._mainFile, 'bt-breadcrumbs-0'),
+            new BacktraceFileAttachment(this._fallbackFile, 'bt-breadcrumbs-1'),
         ];
     }
 
