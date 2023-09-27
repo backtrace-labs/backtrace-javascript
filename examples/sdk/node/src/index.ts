@@ -1,4 +1,4 @@
-import { BacktraceClient } from '@backtrace-labs/node';
+import { BacktraceClient, BreadcrumbLogLevel } from '@backtrace-labs/node';
 import fs from 'fs';
 import path from 'path';
 import { exit } from 'process';
@@ -65,6 +65,13 @@ function sendMetrics() {
     }
     client.metrics.send();
 }
+function addBreadcrumb(message: string, attributes: Record<string, number>) {
+    if (!client.breadcrumbs) {
+        console.log('breadcrumbs are not available');
+        return;
+    }
+    client.breadcrumbs.log(message, BreadcrumbLogLevel.Info, attributes);
+}
 
 function oom() {
     function allocateMemory(size: number) {
@@ -100,6 +107,7 @@ function showMenu() {
         ['Throw rejected promise', () => rejectPromise('Rejected promise')],
         ['OOM', oom],
         ['Add a new summed event', (attributes: Record<string, number>) => addEvent('Option clicked', attributes)],
+        ['Add a breadcrumb', (attributes: Record<string, number>) => addBreadcrumb('Breadcrumb added', attributes)],
         ['Send all metrics', sendMetrics],
     ] as const;
 
