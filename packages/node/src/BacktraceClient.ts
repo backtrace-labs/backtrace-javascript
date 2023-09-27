@@ -6,6 +6,7 @@ import {
     BreadcrumbsEventSubscriber,
     BacktraceConfiguration as CoreConfiguration,
     DebugIdContainer,
+    FileSystem,
     VariableDebugIdMapProvider,
 } from '@backtrace-labs/sdk-core';
 import path from 'path';
@@ -14,7 +15,6 @@ import { AGENT } from './agentDefinition';
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 import { NodeOptionReader } from './common/NodeOptionReader';
 import { NodeDiagnosticReportConverter } from './converter/NodeDiagnosticReportConverter';
-import { NodeFileSystem } from './storage/NodeFileSystem';
 
 export class BacktraceClient extends BacktraceCoreClient {
     private _listeners: Record<string, NodeJS.UnhandledRejectionListener | NodeJS.UncaughtExceptionListener> = {};
@@ -24,6 +24,7 @@ export class BacktraceClient extends BacktraceCoreClient {
         requestHandler: BacktraceRequestHandler,
         attributeProviders: BacktraceAttributeProvider[],
         breadcrumbsEventSubscribers: BreadcrumbsEventSubscriber[],
+        fileSystem?: FileSystem,
     ) {
         super({
             options,
@@ -34,7 +35,7 @@ export class BacktraceClient extends BacktraceCoreClient {
             breadcrumbsSetup: {
                 subscribers: breadcrumbsEventSubscribers,
             },
-            fileSystem: new NodeFileSystem(),
+            fileSystem,
         });
     }
 
