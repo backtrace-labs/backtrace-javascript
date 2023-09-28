@@ -3,7 +3,6 @@ import { BacktraceRequestHandler } from '../model/http';
 import { BacktraceAttributeProvider } from '../modules/attribute/BacktraceAttributeProvider';
 import { BreadcrumbsSetup } from '../modules/breadcrumbs';
 import { BacktraceStackTraceConverter } from '../modules/converter';
-import { BacktraceDatabaseStorageProvider } from '../modules/database';
 import { BacktraceSessionProvider } from '../modules/metrics/BacktraceSessionProvider';
 import { FileSystem } from '../modules/storage';
 import { DebugIdMapProvider } from '../sourcemaps';
@@ -19,5 +18,4 @@ export interface CoreClientSetup {
     readonly debugIdMapProvider?: DebugIdMapProvider;
     readonly breadcrumbsSetup?: BreadcrumbsSetup;
     readonly fileSystem?: FileSystem;
-    readonly databaseStorageProvider?: BacktraceDatabaseStorageProvider;
 }

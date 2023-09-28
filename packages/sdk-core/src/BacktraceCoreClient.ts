@@ -151,12 +151,11 @@ export abstract class BacktraceCoreClient {
             new DebugIdProvider(stackTraceConverter, this._setup.debugIdMapProvider),
         );
 
-        if (this.options?.database?.enable === true) {
-            const provider =
-                this._setup.databaseStorageProvider ??
-                (this._setup.fileSystem
-                    ? BacktraceDatabaseFileStorageProvider.createIfValid(this._setup.fileSystem, this.options.database)
-                    : undefined);
+        if (this.options?.database?.enable === true && this._setup.fileSystem) {
+            const provider = BacktraceDatabaseFileStorageProvider.createIfValid(
+                this._setup.fileSystem,
+                this.options.database,
+            );
 
             if (provider) {
                 const database = new BacktraceDatabase(this.options.database, provider, this._reportSubmission);
