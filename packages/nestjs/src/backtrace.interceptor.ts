@@ -1,6 +1,7 @@
 import { BacktraceClient } from '@backtrace-labs/node';
 import { CallHandler, ExecutionContext, HttpException, Injectable, NestInterceptor, Optional } from '@nestjs/common';
 import { HttpArgumentsHost, RpcArgumentsHost, WsArgumentsHost } from '@nestjs/common/interfaces';
+import { type Request as ExpressRequest } from 'express';
 import { Observable, catchError, throwError } from 'rxjs';
 
 type ExceptionTypeFilter = (new (...args: never[]) => unknown)[] | ((err: unknown) => boolean);
@@ -81,7 +82,10 @@ export class BacktraceInterceptor implements NestInterceptor {
                     return throwError(() => err);
                 }
 
-                const attributes = this.getAttributes(context);
+                const attributes = {
+                    ...this.getBaseAttributes(context),
+                    ...this.getTypeAttributes(context),
+                };
 
                 if (typeof err !== 'string' && !(err instanceof Error)) {
                     client.send(String(err), attributes);
@@ -106,7 +110,17 @@ export class BacktraceInterceptor implements NestInterceptor {
         return true;
     }
 
-    private getAttributes(context: ExecutionContext) {
+    private getBaseAttributes(context: ExecutionContext) {
+        const controller = context.getClass().name;
+        const contextType = context.getType();
+
+        return {
+            controller,
+            contextType,
+        };
+    }
+
+    private getTypeAttributes(context: ExecutionContext) {
         const type = context.getType();
         switch (type) {
             case 'http':
@@ -121,8 +135,17 @@ export class BacktraceInterceptor implements NestInterceptor {
     }
 
     private getHttpAttributes(http: HttpArgumentsHost) {
+        const request = http.getRequest();
+        const expressRequest = request as ExpressRequest;
         return {
-            request: http.getRequest(),
+            'request.body': expressRequest.body,
+            'request.url': expressRequest.url,
+            'request.baseUrl': expressRequest.baseUrl,
+            'request.method': expressRequest.method,
+            'request.originalUrl': expressRequest.originalUrl,
+            'request.protocol': expressRequest.protocol,
+            'request.hostname': expressRequest.hostname,
+            'request.httpVersion': expressRequest.httpVersion,
         };
     }
 
