@@ -1,4 +1,5 @@
 import { jsonEscaper } from '../../common/jsonEscaper';
+import { AttributeType } from '../../model/data';
 import { BacktraceModule, BacktraceModuleBindData } from '../BacktraceModule';
 import { FileSystem, SessionFiles } from '../storage';
 import { AttributeManager } from './AttributeManager';
@@ -23,7 +24,7 @@ export class FileAttributeManager implements BacktraceModule {
         this.saveAttributes();
     }
 
-    public bind?({ attributeManager, sessionFiles }: BacktraceModuleBindData): void {
+    public bind({ attributeManager, sessionFiles }: BacktraceModuleBindData): void {
         if (this._fileName) {
             throw new Error('This instance is already bound.');
         }
@@ -37,11 +38,11 @@ export class FileAttributeManager implements BacktraceModule {
         attributeManager.attributeEvents.on('scoped-attributes-updated', () => this.saveAttributes());
     }
 
-    public dispose?(): void {
+    public dispose(): void {
         this._fileName = undefined;
     }
 
-    public async get(): Promise<Record<string, unknown>> {
+    public async get(): Promise<Record<string, AttributeType>> {
         if (!this._fileName) {
             return {};
         }
