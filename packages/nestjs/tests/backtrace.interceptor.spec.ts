@@ -6,7 +6,6 @@ import {
     HttpException,
     InternalServerErrorException,
     NotFoundException,
-    Req,
     Type,
 } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
@@ -59,27 +58,6 @@ describe('BacktraceInterceptor', () => {
         await request(app.getHttpServer()).get('/error').expect(500);
 
         expect(send).toBeCalledWith(error, expect.anything());
-    });
-
-    it('should add http request as attribute to error', async () => {
-        let expectedRequest: unknown;
-
-        @Controller()
-        class TestController {
-            @Get('error')
-            public error(@Req() request: unknown) {
-                expectedRequest = request;
-                throw new Error('foo');
-            }
-        }
-
-        const { send, interceptor } = createInterceptor({});
-        const { app } = await createAppWithInterceptor(interceptor, TestController);
-
-        await app.init();
-        await request(app.getHttpServer()).get('/error').expect(500);
-
-        expect(send).toBeCalledWith(expect.anything(), { request: expectedRequest });
     });
 
     it('should not change the error', async () => {
@@ -358,7 +336,90 @@ describe('BacktraceInterceptor', () => {
         });
     });
 
-    describe('default behavior', () => {
+    describe('attributes', () => {
+        it('should by default add request attributes for class and contextType', async () => {
+            @Controller()
+            class TestController {
+                @Get('error')
+                public error() {
+                    throw new Error('foo');
+                }
+            }
+
+            const { send, interceptor } = createInterceptor();
+            const { app } = await createAppWithInterceptor(interceptor, TestController);
+
+            await app.init();
+            await request(app.getHttpServer()).get('/error').expect(500);
+
+            const actual = send.mock.calls[0][1];
+            expect(actual).toMatchObject({
+                'request.controller': TestController.name,
+                'request.contextType': 'http',
+            });
+        });
+
+        it('should use attributes from buildAttributes if available', async () => {
+            @Controller()
+            class TestController {
+                @Get('error')
+                public error() {
+                    throw new Error('foo');
+                }
+            }
+
+            const attributes = {
+                foo: 'bar',
+                xyz: 'abc',
+            };
+
+            const { send, interceptor } = createInterceptor({
+                buildAttributes: () => attributes,
+            });
+
+            const { app } = await createAppWithInterceptor(interceptor, TestController);
+
+            await app.init();
+            await request(app.getHttpServer()).get('/error').expect(500);
+
+            const actual = send.mock.calls[0][1];
+            expect(actual).toEqual(attributes);
+        });
+
+        it('should pass default attributes to buildAttributes', async () => {
+            @Controller()
+            class TestController {
+                @Get('error')
+                public error() {
+                    throw new Error('foo');
+                }
+            }
+
+            const buildAttributes = jest.fn().mockReturnValue({
+                foo: 'bar',
+                xyz: 'abc',
+            });
+
+            const { interceptor } = createInterceptor({
+                buildAttributes,
+            });
+
+            const { app } = await createAppWithInterceptor(interceptor, TestController);
+
+            await app.init();
+            await request(app.getHttpServer()).get('/error').expect(500);
+
+            expect(buildAttributes).toBeCalledWith(
+                expect.anything(),
+                expect.objectContaining({
+                    'request.controller': TestController.name,
+                    'request.contextType': 'http',
+                }),
+            );
+        });
+    });
+
+    describe('include and exclude default behavior', () => {
         it('should by default send Error exceptions', async () => {
             @Controller()
             class TestController {

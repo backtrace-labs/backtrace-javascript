@@ -43,6 +43,26 @@ export interface BacktraceInterceptorOptions {
      * }
      */
     readonly excludeExceptionTypes?: ExceptionTypeFilter;
+
+    /**
+     * This method will be called before sending the report.
+     * Use this to build attributes that will be attached to the report.
+     *
+     * Note that this will overwrite the attributes. To add you own and keep the defaults, use `defaultAttributes`.
+     * @param context Execution context.
+     * @param defaultAttributes Attributes created by default by the interceptor.
+     * @returns Attribute dictionary.
+     *
+     * @example
+     * buildAttributes: (context, defaultAttributes) => ({
+     *   ...defaultAttributes,
+     *   'request.body': context.switchToHttp().getRequest().body
+     * })
+     */
+    readonly buildAttributes?: (
+        context: ExecutionContext,
+        defaultAttributes: Record<string, unknown>,
+    ) => Record<string, unknown>;
 }
 
 /**
@@ -82,10 +102,14 @@ export class BacktraceInterceptor implements NestInterceptor {
                     return throwError(() => err);
                 }
 
-                const attributes = {
+                let attributes: Record<string, unknown> = {
                     ...this.getBaseAttributes(context),
                     ...this.getTypeAttributes(context),
                 };
+
+                if (this._options.buildAttributes) {
+                    attributes = this._options.buildAttributes(context, attributes);
+                }
 
                 if (typeof err !== 'string' && !(err instanceof Error)) {
                     client.send(String(err), attributes);
@@ -115,8 +139,8 @@ export class BacktraceInterceptor implements NestInterceptor {
         const contextType = context.getType();
 
         return {
-            controller,
-            contextType,
+            'request.controller': controller,
+            'request.contextType': contextType,
         };
     }
 
@@ -138,7 +162,6 @@ export class BacktraceInterceptor implements NestInterceptor {
         const request = http.getRequest();
         const expressRequest = request as ExpressRequest;
         return {
-            'request.body': expressRequest.body,
             'request.url': expressRequest.url,
             'request.baseUrl': expressRequest.baseUrl,
             'request.method': expressRequest.method,
