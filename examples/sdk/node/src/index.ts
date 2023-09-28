@@ -108,6 +108,7 @@ function showMenu() {
         ['OOM', oom],
         ['Add a new summed event', (attributes: Record<string, number>) => addEvent('Option clicked', attributes)],
         ['Add a breadcrumb', (attributes: Record<string, number>) => addBreadcrumb('Breadcrumb added', attributes)],
+        ['Add random attribute', () => client.addAttribute({ random: Math.random() })],
         ['Send all metrics', sendMetrics],
     ] as const;
 
