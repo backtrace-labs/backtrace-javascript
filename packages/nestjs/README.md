@@ -45,8 +45,8 @@ $ npm install @backtrace-labs/nestjs
 Add the following code to your application before all other scripts to report NestJS errors to Backtrace.
 
 ```ts
-// Import the BacktraceClient from @backtrace-labs/nestjs with your favorite package manager.
-import { BacktraceClient, BacktraceConfiguration } from '@backtrace-labs/nestjs';
+// Import the BacktraceClient from @backtrace-labs/nestjs
+import { BacktraceClient, BacktraceConfiguration, BacktraceModule } from '@backtrace-labs/nestjs';
 
 // Configure client options
 const options: BacktraceConfiguration = {
@@ -57,12 +57,29 @@ const options: BacktraceConfiguration = {
 };
 
 // Initialize the client with the options
-const client = BacktraceClient.initialize(options);
+BacktraceClient.initialize(options);
 
 // By default, Backtrace will send an error for Uncaught Exceptions and Unhandled Promise Rejections
+// For capturing NestJS errors, see "Add a Backtrace error interceptor" in this README
 
-// Manually send an error
-client.send(new Error('Something broke!'));
+// Register BacktraceModule in your base module
+@Module({
+    imports: [BacktraceModule],
+    controllers: [AppController],
+})
+class AppModule {}
+
+@Controller()
+class AppController {
+    // Inject BacktraceClient into your services or controllers
+    constructor(private readonly _client: BacktraceClient) {}
+
+    @Post()
+    public endpoint() {
+        // Manually send an error
+        this._cclient.send(new Error('Something broke!'));
+    }
+}
 ```
 
 ### Upload source maps
@@ -80,23 +97,27 @@ While processing requests, NestJS will handle all exceptions thrown by controlle
 means that the exceptions will not be unhandled, and thus not captured by Backtrace. To capture these errors, you can
 use the `BacktraceInterceptor` class.
 
-To add the interceptor globally, you can register it as `APP_INTERCEPTOR` or use `app.useGlobalInterceptors`:
+To add the interceptor globally, you can register it as `APP_INTERCEPTOR`:
 
 ```ts
 import { Module } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { BacktraceInterceptor } from '@backtrace-labs/nestjs';
+import { BacktraceModule, BacktraceInterceptor } from '@backtrace-labs/nestjs';
 
 @Module({
+    imports: [BacktraceModule],
     providers: [
         {
             provide: APP_INTERCEPTOR,
             useValue: new BacktraceInterceptor(),
         },
     ],
+    controllers: [CatsController],
 })
 export class AppModule {}
 ```
+
+Or, use `app.useGlobalInterceptors`:
 
 ```ts
 const app = await NestFactory.create(AppModule);
