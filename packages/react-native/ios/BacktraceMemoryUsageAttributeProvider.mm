@@ -3,7 +3,7 @@
 
 @implementation BacktraceMemoryUsageAttributeProvider
     RCT_EXPORT_MODULE()
-    RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(readMemoryUsage) {
+    RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(get) {
         NSMutableDictionary *dictionary = [NSMutableDictionary dictionary];
         
         //read process info

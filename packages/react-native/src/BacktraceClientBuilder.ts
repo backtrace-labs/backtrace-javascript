@@ -1,33 +1,38 @@
 import { BacktraceBrowserRequestHandler } from '@backtrace-labs/react';
 import { BacktraceCoreClientBuilder, SingleSessionProvider } from '@backtrace-labs/sdk-core';
 import { Platform } from 'react-native';
-import { ApplicationInformationAttributeProvider } from './attributes/ApplicationInformationAttributeProvider';
-import { DeviceAttributeProvider } from './attributes/DeviceAttributeProvider';
-import { CpuAttributeProvider } from './attributes/ios/CpuAttributeProvider';
-import { MemoryInformationAttributeProvider } from './attributes/ios/MemoryInformationAttributeProvider';
-import { SystemAttributeProvider } from './attributes/SystemAttributeProvider';
+import { NativeAttributeProvider } from './attributes/NativeAttributeProvider';
+import { ReactNativeAttributeProvider } from './attributes/ReactNativeAttributeProvider';
 import { BacktraceClient } from './BacktraceClient';
 import { type BacktraceConfiguration } from './BacktraceConfiguration';
+import { DebuggerHelper } from './common/DebuggerHelper';
 
 export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<BacktraceClient> {
     constructor(private readonly options: BacktraceConfiguration) {
         super(
             new BacktraceBrowserRequestHandler(options),
-            Platform.select({
-                ios: [
-                    new ApplicationInformationAttributeProvider(),
-                    new DeviceAttributeProvider(),
-                    new SystemAttributeProvider(),
-                    new MemoryInformationAttributeProvider(),
-                    new CpuAttributeProvider(),
-                ],
-                android: [
-                    new ApplicationInformationAttributeProvider(),
-                    new DeviceAttributeProvider(),
-                    new SystemAttributeProvider(),
-                ],
-                default: [],
-            }),
+            [
+                new ReactNativeAttributeProvider(),
+                ...(DebuggerHelper.isConnected()
+                    ? []
+                    : Platform.select({
+                          ios: [
+                              new NativeAttributeProvider('BacktraceApplicationAttributeProvider', 'scoped'),
+                              new NativeAttributeProvider('BacktraceDeviceAttributeProvider', 'scoped'),
+                              new NativeAttributeProvider('BacktraceSystemAttributeProvider', 'scoped'),
+                              new NativeAttributeProvider('BacktraceMemoryUsageAttributeProvider', 'dynamic'),
+                              new NativeAttributeProvider('BacktraceCpuAttributeProvider', 'dynamic'),
+                          ],
+                          android: [
+                              new NativeAttributeProvider('BacktraceApplicationAttributeProvider', 'scoped'),
+                              new NativeAttributeProvider('BacktraceDeviceAttributeProvider', 'scoped'),
+                              new NativeAttributeProvider('BacktraceSystemAttributeProvider', 'scoped'),
+                              new NativeAttributeProvider('MemoryInformationAttributeProvider', 'dynamic'),
+                              new NativeAttributeProvider('ProcessAttributeProvider', 'dynamic'),
+                          ],
+                          default: [],
+                      })),
+            ],
             [],
             new SingleSessionProvider(),
         );

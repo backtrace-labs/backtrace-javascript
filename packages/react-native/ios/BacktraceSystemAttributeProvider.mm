@@ -2,8 +2,7 @@
 #include <sys/sysctl.h>
 
 @implementation BacktraceSystemAttributeProvider
-RCT_EXPORT_MODULE()
-RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(readMachineId) {
++ (NSString*) readMachineId {
     NSString* cacheKey = @"backtrace-react.unique.user.identifier";
     NSUserDefaults *prefs = [NSUserDefaults standardUserDefaults];
     NSString* guid = [prefs stringForKey:cacheKey];
@@ -13,13 +12,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(readMachineId) {
     }
     return guid;
 }
-
-
-RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(readSystemName) {
-    return [[UIDevice currentDevice] systemName];
-}
-
-RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(readSystemArchitecture) {
++ (NSString*) readSystemArchitecture {
     size_t size;
     cpu_type_t type;
     size = sizeof(type);
@@ -43,8 +36,14 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(readSystemArchitecture) {
     }
 }
 
-RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(readSystemVersion) {
-    return [[UIDevice currentDevice] systemVersion];
+RCT_EXPORT_MODULE()
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(get) {
+    NSMutableDictionary *dictionary = [NSMutableDictionary dictionary];
+    [dictionary setObject: [BacktraceSystemAttributeProvider readMachineId] forKey:@"guid"];
+    [dictionary setObject: [[UIDevice currentDevice] systemName] forKey:@"uname.sysname"];
+    [dictionary setObject: [BacktraceSystemAttributeProvider readSystemArchitecture] forKey:@"uname.machine"];
+    [dictionary setObject: [[UIDevice currentDevice] systemVersion] forKey:@"uname.version"];
+    return dictionary;
 }
 
 @end

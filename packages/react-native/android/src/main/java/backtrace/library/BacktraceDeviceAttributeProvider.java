@@ -1,10 +1,12 @@
-package com.backtrace.reactnative;
+package backtraceio.library;
 
 import androidx.annotation.NonNull;
 
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.WritableNativeMap;
 import com.facebook.react.module.annotations.ReactModule;
 
 import android.content.Context;
@@ -29,34 +31,42 @@ public class BacktraceDeviceAttributeProvider extends ReactContextBaseJavaModule
         return NAME;
     }
 
-
     @ReactMethod(isBlockingSynchronousMethod = true)
-    public String readCulture() {
+    public WritableMap get() {
+        WritableMap map = new WritableNativeMap();
+        map.putString("culture", this.readCulture());
+        map.putString("device.model", this.getDeviceModel());
+        map.putString("device.brand", this.getDeviceBrand());
+        map.putString("device.product", this.getDeviceProduct());
+        map.putString("device.sdk", this.getDeviceSdk());
+        map.putString("device.manufacturer", this.getDeviceManufacturer());
+        map.putString("cpu.boottime", String.valueOf(java.lang.System.currentTimeMillis() - android.os.SystemClock
+                .elapsedRealtime()));
+        return map;
+    }
+
+
+    private String readCulture() {
         return Locale.getDefault().getDisplayLanguage();
     }
 
-    @ReactMethod(isBlockingSynchronousMethod = true)
-    public String getDeviceModel() {
+    private String getDeviceModel() {
         return Build.MODEL;
     }
 
-    @ReactMethod(isBlockingSynchronousMethod = true)
-    public String getDeviceBrand() {
+    private String getDeviceBrand() {
         return Build.BRAND;
     }
 
-    @ReactMethod(isBlockingSynchronousMethod = true)
-    public String getDeviceProduct() {
+    private String getDeviceProduct() {
         return Build.PRODUCT;
     }
 
-    @ReactMethod(isBlockingSynchronousMethod = true)
-    public String getDeviceSdk() {
+    private String getDeviceSdk() {
         return String.valueOf(Build.VERSION.SDK_INT);
     }
 
-    @ReactMethod(isBlockingSynchronousMethod = true)
-    public String getDeviceManufacturer() {
+    private String getDeviceManufacturer() {
         return Build.MANUFACTURER;
     }
 }

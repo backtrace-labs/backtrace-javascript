@@ -99,10 +99,10 @@ static void onCrash(siginfo_t *info, ucontext_t *uap, void *context) {
 }
 
 -(void)setAttributes:(NSDictionary*) attributes {
-    _attributes = [attributes mutableCopy];
+    [_attributes addEntriesFromDictionary:attributes];
     [self saveReportData];
     if(_oomWatcher != nil) {
-        [_oomWatcher updateAttributes: attributes];
+        [_oomWatcher updateAttributes: _attributes];
     }
 }
 
