@@ -56,13 +56,14 @@ export class SessionFiles implements BacktraceModule {
         const sessionMarkers = directoryFiles
             .filter((f) => f.startsWith(SESSION_MARKER_PREFIX))
             .map((f) => this.getFileSession(f))
-            .filter(isDefined);
+            .filter(isDefined)
+            .sort((a, b) => b.timestamp - a.timestamp);
 
         const currentSessionMarker = sessionMarkers.find((s) => s.sessionId === this.sessionId);
 
-        const lastSessionMarker = sessionMarkers
-            .sort((a, b) => b.timestamp - a.timestamp)
-            .filter(({ timestamp }) => !currentSessionMarker || currentSessionMarker.timestamp > timestamp)[0];
+        const lastSessionMarker = currentSessionMarker
+            ? sessionMarkers.filter(({ timestamp }) => currentSessionMarker.timestamp > timestamp)[0]
+            : sessionMarkers[0];
 
         if (!lastSessionMarker) {
             return undefined;
