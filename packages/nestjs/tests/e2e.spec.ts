@@ -6,6 +6,10 @@ import request from 'supertest';
 import { BacktraceClient, BacktraceInterceptor, BacktraceModule } from '../src';
 
 describe('e2e', () => {
+    beforeEach(() => {
+        BacktraceClient.instance?.dispose();
+    });
+
     it('should send an error when interceptor is added to controller', async () => {
         @Controller()
         @UseInterceptors(new BacktraceInterceptor())
@@ -18,18 +22,20 @@ describe('e2e', () => {
 
         const postError = jest.fn().mockResolvedValue(BacktraceReportSubmissionResult.Ok({}));
 
+        BacktraceClient.initialize(
+            {
+                url: 'https://test',
+            },
+            (builder) =>
+                builder.useRequestHandler({
+                    postError,
+                    post: jest.fn().mockResolvedValue(BacktraceReportSubmissionResult.Ok({})),
+                }),
+        );
+
         const module = await Test.createTestingModule({
             controllers: [TestController],
-            imports: [
-                BacktraceModule.forRoot(
-                    BacktraceClient.builder({
-                        url: 'https://test',
-                    }).useRequestHandler({
-                        postError,
-                        post: jest.fn().mockResolvedValue(BacktraceReportSubmissionResult.Ok({})),
-                    }),
-                ),
-            ],
+            imports: [BacktraceModule],
         }).compile();
 
         const app = module.createNestApplication({
@@ -53,18 +59,20 @@ describe('e2e', () => {
 
         const postError = jest.fn().mockResolvedValue(BacktraceReportSubmissionResult.Ok({}));
 
+        BacktraceClient.initialize(
+            {
+                url: 'https://test',
+            },
+            (builder) =>
+                builder.useRequestHandler({
+                    postError,
+                    post: jest.fn().mockResolvedValue(BacktraceReportSubmissionResult.Ok({})),
+                }),
+        );
+
         const module = await Test.createTestingModule({
             controllers: [TestController],
-            imports: [
-                BacktraceModule.forRoot(
-                    BacktraceClient.builder({
-                        url: 'https://test',
-                    }).useRequestHandler({
-                        postError,
-                        post: jest.fn().mockResolvedValue(BacktraceReportSubmissionResult.Ok({})),
-                    }),
-                ),
-            ],
+            imports: [BacktraceModule],
         }).compile();
 
         const app = module.createNestApplication({
@@ -89,6 +97,17 @@ describe('e2e', () => {
 
         const postError = jest.fn().mockResolvedValue(BacktraceReportSubmissionResult.Ok({}));
 
+        BacktraceClient.initialize(
+            {
+                url: 'https://test',
+            },
+            (builder) =>
+                builder.useRequestHandler({
+                    postError,
+                    post: jest.fn().mockResolvedValue(BacktraceReportSubmissionResult.Ok({})),
+                }),
+        );
+
         const module = await Test.createTestingModule({
             controllers: [TestController],
             providers: [
@@ -97,16 +116,7 @@ describe('e2e', () => {
                     useValue: new BacktraceInterceptor(),
                 },
             ],
-            imports: [
-                BacktraceModule.forRoot(
-                    BacktraceClient.builder({
-                        url: 'https://test',
-                    }).useRequestHandler({
-                        postError,
-                        post: jest.fn().mockResolvedValue(BacktraceReportSubmissionResult.Ok({})),
-                    }),
-                ),
-            ],
+            imports: [BacktraceModule],
         }).compile();
 
         const app = module.createNestApplication({

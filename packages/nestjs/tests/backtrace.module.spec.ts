@@ -2,78 +2,58 @@ import { Test } from '@nestjs/testing';
 import { BacktraceClient, BacktraceModule } from '../src';
 
 describe('BacktraceModule', () => {
-    it('should export BacktraceClient using options', async () => {
+    beforeEach(() => {
+        BacktraceClient.instance?.dispose();
+    });
+
+    it('should export global BacktraceClient instance', async () => {
+        const instance = BacktraceClient.initialize({
+            url: 'https://test',
+        });
+
         const module = await Test.createTestingModule({
-            imports: [
-                BacktraceModule.forRoot({
-                    url: 'https://test',
-                }),
-            ],
+            imports: [BacktraceModule],
         }).compile();
 
         const client = module.get(BacktraceClient);
-        expect(client).toBeInstanceOf(BacktraceClient);
+        expect(client).toBe(instance);
+    });
+
+    it('should export passed BacktraceClient instance', async () => {
+        const instance = BacktraceClient.builder({
+            url: 'https://test',
+        }).build();
+
+        const module = await Test.createTestingModule({
+            imports: [BacktraceModule.register(instance)],
+        }).compile();
+
+        const client = module.get(BacktraceClient);
+        expect(client).toBe(instance);
     });
 
     it('should export BacktraceClient using options asynchronously', async () => {
+        const instance = BacktraceClient.builder({
+            url: 'https://test',
+        }).build();
+
         const module = await Test.createTestingModule({
             imports: [
-                BacktraceModule.forRootAsync({
-                    useFactory: () => ({
-                        url: 'https://test',
-                    }),
+                BacktraceModule.registerAsync({
+                    useFactory: () => instance,
                 }),
             ],
         }).compile();
 
         const client = module.get(BacktraceClient);
-        expect(client).toBeInstanceOf(BacktraceClient);
+        expect(client).toBe(instance);
     });
 
-    it('should export BacktraceClient using builder', async () => {
-        const module = await Test.createTestingModule({
-            imports: [
-                BacktraceModule.forRoot(
-                    BacktraceClient.builder({
-                        url: 'https://test',
-                    }),
-                ),
-            ],
-        }).compile();
-
-        const client = module.get(BacktraceClient);
-        expect(client).toBeInstanceOf(BacktraceClient);
-    });
-
-    it('should export BacktraceClient using builder asynchronously', async () => {
-        const module = await Test.createTestingModule({
-            imports: [
-                BacktraceModule.forRootAsync({
-                    useFactory: () =>
-                        BacktraceClient.builder({
-                            url: 'https://test',
-                        }),
-                }),
-            ],
-        }).compile();
-
-        const client = module.get(BacktraceClient);
-        expect(client).toBeInstanceOf(BacktraceClient);
-    });
-
-    it('should register BacktraceClient global instance', async () => {
-        const module = await Test.createTestingModule({
-            imports: [
-                BacktraceModule.forRootAsync({
-                    useFactory: () =>
-                        BacktraceClient.builder({
-                            url: 'https://test',
-                        }),
-                }),
-            ],
-        }).compile();
-
-        const client = module.get(BacktraceClient);
-        expect(BacktraceClient.instance).toBe(client);
+    it('should throw an error when instance is not initialized', async () => {
+        await expect(
+            Test.createTestingModule({
+                imports: [BacktraceModule],
+            }).compile(),
+        ).rejects.toThrowError(/Backtrace instance is not available\./);
     });
 });
