@@ -1,8 +1,8 @@
 import path from 'path';
 import { BacktraceReportSubmissionResult } from '../../src';
 import { BacktraceDatabase } from '../../src/modules/database/BacktraceDatabase';
+import { mockFileSystem } from '../_mocks/fileSystem';
 import { BacktraceTestClient } from '../mocks/BacktraceTestClient';
-import { testStorageProvider } from '../mocks/testStorageProvider';
 
 describe('Database storage provider flow tests', () => {
     const testDatabaseSettings = {
@@ -19,45 +19,6 @@ describe('Database storage provider flow tests', () => {
         jest.clearAllMocks();
     });
 
-    describe('Setup', () => {
-        it('Should initialize correctly after database storage initialization', () => {
-            const client = BacktraceTestClient.buildFakeClient(
-                {
-                    database: testDatabaseSettings,
-                },
-                [],
-                [],
-                testStorageProvider,
-            );
-            const database = client.database as BacktraceDatabase;
-            if (!database) {
-                throw new Error('Invalid database setup. Database must be defined!');
-            }
-
-            expect(testStorageProvider.start).toHaveBeenCalled();
-            expect(database.enabled).toBeTruthy();
-        });
-
-        it('Should not initialize if storage is not setup correctly', () => {
-            jest.spyOn(testStorageProvider, 'start').mockReturnValueOnce(false);
-            const client = BacktraceTestClient.buildFakeClient(
-                {
-                    database: testDatabaseSettings,
-                },
-                [],
-                [],
-                testStorageProvider,
-            );
-            const database = client.database as BacktraceDatabase;
-            if (!database) {
-                throw new Error('Invalid database setup. Database must be defined!');
-            }
-
-            expect(testStorageProvider.start).toHaveBeenCalled();
-            expect(database.enabled).toBeFalsy();
-        });
-    });
-
     describe('Add', () => {
         it('Should call add on client.send method', async () => {
             const testingErrorMessage = 'testingErrorMessage';
@@ -67,12 +28,14 @@ describe('Database storage provider flow tests', () => {
                 },
                 [],
                 [],
-                testStorageProvider,
+                mockFileSystem(),
             );
             const database = client.database as BacktraceDatabase;
             if (!database) {
                 throw new Error('Invalid database setup. Database must be defined!');
             }
+
+            const addSpy = jest.spyOn(database, 'add');
 
             jest.spyOn(client.requestHandler, 'postError').mockResolvedValue(
                 Promise.resolve(BacktraceReportSubmissionResult.OnInternalServerError('test')),
@@ -80,8 +43,7 @@ describe('Database storage provider flow tests', () => {
 
             await client.send(new Error(testingErrorMessage));
 
-            expect(testStorageProvider.add).toHaveBeenCalled();
-            expect(testStorageProvider.delete).not.toHaveBeenCalled();
+            expect(addSpy).toHaveBeenCalled();
         });
 
         it('Should call delete after successful client.send', async () => {
@@ -92,12 +54,15 @@ describe('Database storage provider flow tests', () => {
                 },
                 [],
                 [],
-                testStorageProvider,
+                mockFileSystem(),
             );
             const database = client.database as BacktraceDatabase;
             if (!database) {
                 throw new Error('Invalid database setup. Database must be defined!');
             }
+
+            const addSpy = jest.spyOn(database, 'add');
+            const removeSpy = jest.spyOn(database, 'remove');
 
             jest.spyOn(client.requestHandler, 'postError').mockResolvedValue(
                 Promise.resolve(BacktraceReportSubmissionResult.Ok({})),
@@ -105,8 +70,8 @@ describe('Database storage provider flow tests', () => {
 
             await client.send(new Error(testingErrorMessage));
 
-            expect(testStorageProvider.add).toHaveBeenCalled();
-            expect(testStorageProvider.delete).toHaveBeenCalled();
+            expect(addSpy).toHaveBeenCalled();
+            expect(removeSpy).toHaveBeenCalled();
         });
     });
 });

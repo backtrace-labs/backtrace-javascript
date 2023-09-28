@@ -2,8 +2,8 @@ import path from 'path';
 import { BacktraceData, BacktraceDatabaseRecord, BacktraceReportSubmissionResult } from '../../src';
 import { TimeHelper } from '../../src/common/TimeHelper';
 import { BacktraceDatabase } from '../../src/modules/database/BacktraceDatabase';
+import { mockFileSystem } from '../_mocks/fileSystem';
 import { BacktraceTestClient } from '../mocks/BacktraceTestClient';
-import { testStorageProvider } from '../mocks/testStorageProvider';
 
 describe('Database context memory storage tests', () => {
     const testDatabaseSettings = {
@@ -29,7 +29,7 @@ describe('Database context memory storage tests', () => {
                 },
                 [],
                 [],
-                testStorageProvider,
+                mockFileSystem(),
             );
             const database = client.database as BacktraceDatabase;
             if (!database) {
@@ -56,12 +56,14 @@ describe('Database context memory storage tests', () => {
                 },
                 [],
                 [],
-                testStorageProvider,
+                mockFileSystem(),
             );
             const database = client.database as BacktraceDatabase;
             if (!database) {
                 throw new Error('Invalid database setup. Database must be defined!');
             }
+
+            const removeSpy = jest.spyOn(database, 'remove');
 
             jest.spyOn(client.requestHandler, 'postError').mockResolvedValue(
                 Promise.resolve(BacktraceReportSubmissionResult.Ok({})),
@@ -72,21 +74,21 @@ describe('Database context memory storage tests', () => {
             const records = database.get();
 
             expect(records.length).toBe(0);
-            expect(testStorageProvider.add).toHaveBeenCalled();
+            expect(removeSpy).toHaveBeenCalled();
         });
     });
 
     describe('Record load on the database start', () => {
         it('Shouldn not fail when no records are available in the database dir', () => {
-            jest.spyOn(testStorageProvider, 'start').mockReturnValue(true);
-            jest.spyOn(testStorageProvider, 'get').mockResolvedValue(Promise.resolve([]));
+            const fileSystem = mockFileSystem();
+
             const client = BacktraceTestClient.buildFakeClient(
                 {
                     database: testDatabaseSettings,
                 },
                 [],
                 [],
-                testStorageProvider,
+                fileSystem,
             );
 
             expect((client.database as BacktraceDatabase).get().length).toBe(0);
@@ -102,15 +104,16 @@ describe('Database context memory storage tests', () => {
                 id: '123',
                 locked: false,
             };
-            jest.spyOn(testStorageProvider, 'start').mockReturnValue(true);
-            jest.spyOn(testStorageProvider, 'get').mockResolvedValue(Promise.resolve([record]));
+            const fileSystem = mockFileSystem({
+                [path.join(testDatabaseSettings.path, 'abc-record.json')]: JSON.stringify(record),
+            });
             const client = BacktraceTestClient.buildFakeClient(
                 {
                     database: testDatabaseSettings,
                 },
                 [],
                 [],
-                testStorageProvider,
+                fileSystem,
             );
             await new Promise(process.nextTick);
 
