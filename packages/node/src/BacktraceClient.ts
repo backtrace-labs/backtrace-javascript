@@ -1,22 +1,20 @@
 import {
     BacktraceAttributeProvider,
-    BacktraceConfiguration as CoreConfiguration,
     BacktraceCoreClient,
     BacktraceReport,
     BacktraceRequestHandler,
     BreadcrumbsEventSubscriber,
+    BacktraceConfiguration as CoreConfiguration,
     DebugIdContainer,
+    FileSystem,
     VariableDebugIdMapProvider,
 } from '@backtrace-labs/sdk-core';
-import fs from 'fs';
-import * as fsPromise from 'fs/promises';
 import path from 'path';
-import { AGENT } from './agentDefinition';
 import { BacktraceConfiguration } from './BacktraceConfiguration';
+import { AGENT } from './agentDefinition';
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 import { NodeOptionReader } from './common/NodeOptionReader';
 import { NodeDiagnosticReportConverter } from './converter/NodeDiagnosticReportConverter';
-import { BacktraceDatabaseFileStorageProvider } from './database/BacktraceDatabaseFileStorageProvider';
 
 export class BacktraceClient extends BacktraceCoreClient {
     private _listeners: Record<string, NodeJS.UnhandledRejectionListener | NodeJS.UncaughtExceptionListener> = {};
@@ -26,6 +24,7 @@ export class BacktraceClient extends BacktraceCoreClient {
         requestHandler: BacktraceRequestHandler,
         attributeProviders: BacktraceAttributeProvider[],
         breadcrumbsEventSubscribers: BreadcrumbsEventSubscriber[],
+        fileSystem?: FileSystem,
     ) {
         super({
             options,
@@ -36,8 +35,12 @@ export class BacktraceClient extends BacktraceCoreClient {
             breadcrumbsSetup: {
                 subscribers: breadcrumbsEventSubscribers,
             },
-            databaseStorageProvider: BacktraceDatabaseFileStorageProvider.createIfValid(options.database),
+            fileSystem,
         });
+    }
+
+    public initialize(): void {
+        super.initialize();
 
         this.loadNodeCrashes();
 
@@ -219,7 +222,7 @@ export class BacktraceClient extends BacktraceCoreClient {
     }
 
     private async loadNodeCrashes() {
-        if (!this.options.database?.captureNativeCrashes) {
+        if (!this.fileSystem || !this.options.database?.captureNativeCrashes) {
             return;
         }
 
@@ -228,35 +231,30 @@ export class BacktraceClient extends BacktraceCoreClient {
             ? process.report.directory
             : this.options.database?.path ?? process.cwd();
 
-        const databaseFiles = fs.readdirSync(databasePath, {
-            encoding: 'utf8',
-            withFileTypes: true,
-        });
+        let databaseFiles: string[];
+        try {
+            databaseFiles = await this.fileSystem.readDir(databasePath);
+        } catch {
+            return;
+        }
 
         const converter = new NodeDiagnosticReportConverter();
-
-        const recordNames = databaseFiles
-            .filter(
-                (file) =>
-                    file.isFile() &&
-                    // If the user specifies a preset name for reports, we should compare it directly
-                    // Otherwise, match the default name
-                    (reportName
-                        ? file.name === reportName
-                        : file.name.startsWith('report.') && file.name.endsWith('.json')),
-            )
-            .map((n) => n.name);
+        const recordNames = databaseFiles.filter((file) =>
+            // If the user specifies a preset name for reports, we should compare it directly
+            // Otherwise, match the default name
+            reportName ? file === reportName : file.startsWith('report.') && file.endsWith('.json'),
+        );
 
         for (const recordName of recordNames) {
             const recordPath = path.join(databasePath, recordName);
             try {
-                const recordJson = await fsPromise.readFile(recordPath, 'utf8');
+                const recordJson = await this.fileSystem.readFile(recordPath);
                 const data = converter.convert(JSON.parse(recordJson));
                 await this.send(data);
             } catch {
                 // Do nothing, skip the report
             } finally {
-                await fsPromise.unlink(recordPath);
+                await this.fileSystem.unlink(recordPath);
             }
         }
     }

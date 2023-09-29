@@ -1,8 +1,8 @@
 import path from 'path';
 import { BacktraceReportSubmissionResult } from '../../src';
+import { mockFileSystem } from '../_mocks/fileSystem';
 import { BacktraceTestClient } from '../mocks/BacktraceTestClient';
 import { testHttpClient } from '../mocks/testHttpClient';
-import { testStorageProvider } from '../mocks/testStorageProvider';
 
 jest.useFakeTimers();
 
@@ -32,7 +32,7 @@ describe('Database record batch tests', () => {
             },
             [],
             [],
-            testStorageProvider,
+            mockFileSystem(),
         );
         const database = client.database;
         if (!database) {
@@ -65,7 +65,7 @@ describe('Database record batch tests', () => {
             },
             [],
             [],
-            testStorageProvider,
+            mockFileSystem(),
         );
         const database = client.database;
         if (!database) {

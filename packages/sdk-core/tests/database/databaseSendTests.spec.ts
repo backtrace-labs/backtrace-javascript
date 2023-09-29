@@ -1,8 +1,8 @@
 import path from 'path';
 import { BacktraceDatabaseConfiguration, BacktraceReportSubmissionResult } from '../../src';
 import { BacktraceDatabase } from '../../src/modules/database/BacktraceDatabase';
+import { mockFileSystem } from '../_mocks/fileSystem';
 import { BacktraceTestClient } from '../mocks/BacktraceTestClient';
-import { testStorageProvider } from '../mocks/testStorageProvider';
 
 describe('Database send tests', () => {
     afterEach(() => {
@@ -26,7 +26,7 @@ describe('Database send tests', () => {
                 },
                 [],
                 [],
-                testStorageProvider,
+                mockFileSystem(),
             );
             const database = client.database as BacktraceDatabase;
             if (!database) {
@@ -51,7 +51,7 @@ describe('Database send tests', () => {
                 },
                 [],
                 [],
-                testStorageProvider,
+                mockFileSystem(),
             );
             const database = client.database as BacktraceDatabase;
             if (!database) {
@@ -82,7 +82,7 @@ describe('Database send tests', () => {
                 },
                 [],
                 [],
-                testStorageProvider,
+                mockFileSystem(),
             );
             const database = client.database as BacktraceDatabase;
             if (!database) {
@@ -108,7 +108,7 @@ describe('Database send tests', () => {
                 },
                 [],
                 [],
-                testStorageProvider,
+                mockFileSystem(),
             );
             const database = client.database as BacktraceDatabase;
             if (!database) {

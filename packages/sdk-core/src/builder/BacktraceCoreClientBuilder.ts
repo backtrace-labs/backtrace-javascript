@@ -4,9 +4,11 @@ import { BacktraceAttributeProvider } from '../modules/attribute/BacktraceAttrib
 import { BreadcrumbsEventSubscriber } from '../modules/breadcrumbs';
 import { BacktraceStackTraceConverter } from '../modules/converter';
 import { BacktraceSessionProvider } from '../modules/metrics/BacktraceSessionProvider';
+import { FileSystem } from '../modules/storage';
 
 export abstract class BacktraceCoreClientBuilder<T extends BacktraceCoreClient> {
     protected stackTraceConverter?: BacktraceStackTraceConverter;
+    protected fileSystem?: FileSystem;
 
     constructor(
         protected handler: BacktraceRequestHandler,
@@ -39,5 +41,11 @@ export abstract class BacktraceCoreClientBuilder<T extends BacktraceCoreClient> 
         this.stackTraceConverter = stackTraceConverter;
         return this;
     }
+
+    public useFileSystem(fileSystem: FileSystem): this {
+        this.fileSystem = fileSystem;
+        return this;
+    }
+
     public abstract build(): T;
 }
