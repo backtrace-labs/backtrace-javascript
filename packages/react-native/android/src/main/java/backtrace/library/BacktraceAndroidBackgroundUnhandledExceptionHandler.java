@@ -21,7 +21,7 @@ import java.io.StringWriter;
 public class BacktraceAndroidBackgroundUnhandledExceptionHandler extends ReactContextBaseJavaModule implements Thread.UncaughtExceptionHandler  {
     private final static transient String LOG_TAG = BacktraceAndroidBackgroundUnhandledExceptionHandler.class.getSimpleName();
 
-    private Thread.UncaughtExceptionHandler mRootHandler;
+    private Thread.UncaughtExceptionHandler _rootHandler;
 
     private Thread _lastCaughtBackgroundExceptionThread;
     private Throwable _lastCaughtBackgroundException;
@@ -29,7 +29,7 @@ public class BacktraceAndroidBackgroundUnhandledExceptionHandler extends ReactCo
     /**
      * Check if data shouldn't be reported.
      */
-    private volatile boolean shouldStop = false;
+    private volatile boolean _shouldStop = false;
 
     /**
      * React native callback method
@@ -37,11 +37,8 @@ public class BacktraceAndroidBackgroundUnhandledExceptionHandler extends ReactCo
     private Callback _callback;
     public static final String NAME = "BacktraceAndroidBackgroundUnhandledExceptionHandler";
 
-    private final Context context;
-
     public BacktraceAndroidBackgroundUnhandledExceptionHandler(ReactApplicationContext reactContext) {
         super(reactContext);
-        this.context = reactContext.getApplicationContext();
     }
 
     @Override
@@ -55,7 +52,7 @@ public class BacktraceAndroidBackgroundUnhandledExceptionHandler extends ReactCo
     public void start(Callback callback) {
         Log.d(LOG_TAG, "Initializing Android unhandled exception handler");
         _callback = callback;
-        mRootHandler = Thread.getDefaultUncaughtExceptionHandler();
+        _rootHandler = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler(this);
     }
 
@@ -63,7 +60,7 @@ public class BacktraceAndroidBackgroundUnhandledExceptionHandler extends ReactCo
     public void uncaughtException(final Thread thread, final Throwable throwable) {
         _lastCaughtBackgroundExceptionThread = thread;
         _lastCaughtBackgroundException = throwable;
-        if (shouldStop == true) {
+        if (_shouldStop == true) {
             finish();
             return;
         }
@@ -91,16 +88,16 @@ public class BacktraceAndroidBackgroundUnhandledExceptionHandler extends ReactCo
             Log.d(LOG_TAG, "The exception object or the exception thread is not available. This is probably a bug.");
             return;
         }
-        if (shouldStop) {
+        if (_shouldStop) {
             Log.d(LOG_TAG, "Backtrace client has been disposed. The report won't be available.");
             return;
         }
-        mRootHandler.uncaughtException(_lastCaughtBackgroundExceptionThread, _lastCaughtBackgroundException);
+        _rootHandler.uncaughtException(_lastCaughtBackgroundExceptionThread, _lastCaughtBackgroundException);
     }
 
     @ReactMethod
     public void stop() {
         Log.d(LOG_TAG, "Uncaught exception handler has been disabled.");
-        shouldStop = true;
+        _shouldStop = true;
     }
 }
