@@ -2,6 +2,7 @@ import { ReactStackTraceConverter } from '@backtrace-labs/react';
 import {
     BacktraceCoreClient,
     SingleSessionProvider,
+    SubmissionUrlInformation,
     V8StackTraceConverter,
     VariableDebugIdMapProvider,
     type AttributeType,
@@ -17,7 +18,6 @@ import { version } from './common/platformHelper';
 import { CrashReporter } from './crashReporter/CrashReporter';
 import { generateUnhandledExceptionHandler } from './handlers';
 import { type ExceptionHandler } from './handlers/ExceptionHandler';
-import { SubmissionUrlInformation } from './SubmissionUrlInformation';
 export class BacktraceClient extends BacktraceCoreClient {
     private readonly crashReporter: CrashReporter = new CrashReporter();
     private readonly _exceptionHandler: ExceptionHandler = generateUnhandledExceptionHandler();
