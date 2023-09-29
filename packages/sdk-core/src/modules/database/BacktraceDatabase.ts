@@ -263,7 +263,7 @@ export class BacktraceDatabase implements BacktraceModule {
             return;
         }
 
-        const sessionId = record.data.attributes['application.session'];
+        const sessionId = record.data.attributes?.['application.session'];
         if (typeof sessionId !== 'string') {
             this._sessionFiles.lockPreviousSessions(record.id);
             return;

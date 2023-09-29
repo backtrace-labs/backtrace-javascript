@@ -16,13 +16,13 @@ import { ConsoleEventSubscriber } from './events/ConsoleEventSubscriber';
 import { RawBreadcrumb } from './model/RawBreadcrumb';
 import { InMemoryBreadcrumbsStorage } from './storage/InMemoryBreadcrumbsStorage';
 
+const BREADCRUMB_ATTRIBUTE_NAME = 'breadcrumbs.lastId';
+
 export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule {
     /**
      * Breadcrumbs type
      */
     public readonly breadcrumbsType: BreadcrumbType;
-
-    public readonly BREADCRUMB_ATTRIBUTE_NAME = 'breadcrumbs.lastId';
 
     /**
      * Breadcrumbs Log level
@@ -63,7 +63,7 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
             client.addAttachment(attachment);
         }
         client.addAttribute(() => ({
-            [this.BREADCRUMB_ATTRIBUTE_NAME]: this._storage.lastBreadcrumbId,
+            [BREADCRUMB_ATTRIBUTE_NAME]: this._storage.lastBreadcrumbId,
         }));
 
         reportEvents.on('before-skip', (report) => this.logReport(report));

@@ -5,13 +5,12 @@ import { InMemoryBreadcrumbsStorage } from '../../src/modules/breadcrumbs/storag
 describe('Breadcrumbs creation tests', () => {
     it('Last breadcrumb id attribute should be equal to last bredcrumb id in the array', () => {
         const storage = new InMemoryBreadcrumbsStorage(100);
-        const breadcrumbsManager = new BreadcrumbsManager(undefined, { storage });
-        breadcrumbsManager.info('test');
+        storage.add({ level: BreadcrumbLogLevel.Info, message: 'test', type: BreadcrumbType.Manual });
 
-        const attributes = breadcrumbsManager.get();
+        const lastBreadcrumbId = storage.lastBreadcrumbId;
         const [breadcrumb] = JSON.parse(storage.get() as string);
 
-        expect(breadcrumb.id).toEqual(attributes[breadcrumbsManager.BREADCRUMB_ATTRIBUTE_NAME]);
+        expect(breadcrumb.id).toEqual(lastBreadcrumbId);
     });
 
     it('Each breadcrumb should have different id', () => {
@@ -26,16 +25,14 @@ describe('Breadcrumbs creation tests', () => {
     });
 
     it('Should update breadcrumb id every time after adding a breadcrumb', () => {
-        const breadcrumbsManager = new BreadcrumbsManager();
+        const storage = new InMemoryBreadcrumbsStorage(100);
 
-        breadcrumbsManager.info('test');
-        const attributes1 = breadcrumbsManager.get();
-        breadcrumbsManager.info('test2');
-        const attributes2 = breadcrumbsManager.get();
+        storage.add({ level: BreadcrumbLogLevel.Info, message: 'test', type: BreadcrumbType.Manual });
+        const breadcrumbId1 = storage.lastBreadcrumbId;
+        storage.add({ level: BreadcrumbLogLevel.Info, message: 'test', type: BreadcrumbType.Manual });
+        const breadcrumbId2 = storage.lastBreadcrumbId;
 
-        expect(attributes1[breadcrumbsManager.BREADCRUMB_ATTRIBUTE_NAME] as number).toBeLessThan(
-            attributes2[breadcrumbsManager.BREADCRUMB_ATTRIBUTE_NAME] as number,
-        );
+        expect(breadcrumbId1).toBeLessThan(breadcrumbId2);
     });
 
     it('Should set expected breadcrumb message', () => {
