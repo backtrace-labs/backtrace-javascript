@@ -28,11 +28,6 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
      * Breadcrumbs Log level
      */
     public readonly logLevel: BreadcrumbLogLevel;
-
-    get type(): 'scoped' | 'dynamic' {
-        return 'dynamic';
-    }
-
     /**
      * Determines if the breadcrumb manager is enabled.
      */
@@ -63,17 +58,13 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
         }
     }
 
-    public get(): Record<string, number> {
-        return {
-            [this.BREADCRUMB_ATTRIBUTE_NAME]: this._storage.lastBreadcrumbId,
-        };
-    }
-
     public bind({ client, reportEvents }: BacktraceModuleBindData): void {
         for (const attachment of this._storage.getAttachments()) {
             client.addAttachment(attachment);
         }
-        client.addAttributeProvider(this);
+        client.addAttribute(() => ({
+            [this.BREADCRUMB_ATTRIBUTE_NAME]: this._storage.lastBreadcrumbId,
+        }));
 
         reportEvents.on('before-skip', (report) => this.logReport(report));
     }

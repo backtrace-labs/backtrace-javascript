@@ -238,10 +238,6 @@ export abstract class BacktraceCoreClient {
         this.attributeManager.add(attributes);
     }
 
-    public addAttributeProvider(attributeProvider: BacktraceAttributeProvider) {
-        this.attributeManager.addProvider(attributeProvider);
-    }
-
     /**
      * Add attachment to the client
      * @param attachment attachment
