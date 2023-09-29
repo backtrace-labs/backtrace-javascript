@@ -14,11 +14,11 @@ export class AndroidUnhandledExceptionHandler extends UnhandledExceptionHandler 
             return;
         }
 
-        this._unhandledExceptionHandler.start(async (classifier: string, message: string, stackTrace: string) => {
+        this._unhandledExceptionHandler.start((classifier: string, message: string, stackTrace: string) => {
             // to do:
             // save the report when the database feature is enabled
             console.log(`Backtrace: ${message} ${classifier} Stack Trace: ${stackTrace}`);
-            await client.send(
+            client.send(
                 new BacktraceReport(
                     message,
                     {
