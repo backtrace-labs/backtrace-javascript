@@ -1,5 +1,10 @@
-![GitHub-Mark-Dark](./slbt.light.png#gh-dark-mode-only)
-![GitHub-Mark-Light](./slbt.dark.png#gh-light-mode-only)
+<div align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./slbt.light.png" width="640">
+    <source media="(prefers-color-scheme: light)" srcset="./slbt.dark.png" width="640">
+    <img src="./slbt.light.png">
+  </picture>
+</div>
 
 # Sauce Labs Web SDK
 
