@@ -18,7 +18,7 @@ Backtrace is an advanced Error Reporting service, with industry-leading features
 <table>
 <tr>
 <td>Source map support</td>
-<td>Source maps can be used to convert minified/transpiled production code into the original source code so error data can contain functions, line numbers, and more. In addition, the report can  show the failing function in the user source code.</td>
+<td>Source maps can be used to convert minified/transpiled production code into the original source code so error data can contain functions, line numbers, and more. In addition, the report can  show the failing function in the your source code.</td>
 </tr>
 <tr>
 <td>Advanced breadcrumbs</td>
@@ -32,14 +32,14 @@ Backtrace is an advanced Error Reporting service, with industry-leading features
 <td>File attachments can be added to error submissions.</td>
 </tr>
 <tr>
-<td>Default and dynamics attributes</td>
-<td>The SDK provides accurate information about the browser and OS of users by default, including additional attributes specific to each Javascript framework.
+<td>Default and dynamic attributes</td>
+<td>The SDK provides accurate information about the browser and OS by default, including additional attributes specific to each Javascript framework.
 
 You can also add dynamic attributes resolved every time when the library generates a report.</td>
 </tr>
 <tr>
 <td>Application Stability Metrics</td>
-<td>Backtrace SDKs have built in functionality to generate application session and user stability metrics like “Error free sessions” in the Backtrace Web Console.</td>
+<td>Backtrace SDKs have built in functionality to generate application session and stability metrics like “Error free sessions” in the Backtrace web console.</td>
 </tr>
 <tr>
 <td>(Node) Persistent crash data</td>
@@ -51,7 +51,7 @@ You can also add dynamic attributes resolved every time when the library generat
 </tr>
 <tr>
 <td>(React) Redux support</td>
-<td>Backtrace will capture redux actions and states in our breadcrumb system. This allows for tracing the user journey when debugging an error</td>
+<td>Backtrace will capture redux actions and states in our breadcrumb system. This allows for tracing the user journey when debugging an error.</td>
 </tr>
 <tr>
 <td>(React) Error Boundary support</td>
@@ -59,11 +59,11 @@ You can also add dynamic attributes resolved every time when the library generat
 </tr>
 <tr>
 <td>Build system plugins</td>
-<td>Webpack, Vite and Rollup plugins to support Backtrace integration with common build systems of JavaScript projects. The Backtrace plugins:
+<td>Webpack, Vite and Rollup plugins are provided to support Backtrace integration with common build systems of JavaScript projects. The Backtrace plugins allow:
 <ul>
-<li>Allow generation and upload of multiple source maps to Backtrace.</li>
-<li>Allow multiple source maps per application.</li>
-<li>Allow source content to be included in source maps, simplifying source integration.</li>
+<li>Generation and upload of multiple source maps to Backtrace.</li>
+<li>Multiple source maps per application.</li>
+<li>Source content to be included in source maps, simplifying source integration.</li>
 </td>
 </tr>
 </table>
