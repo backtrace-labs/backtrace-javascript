@@ -70,6 +70,7 @@ bool _disabled;
     NSMutableDictionary* attributes = [clientAttributes mutableCopy];
     [attributes setObject:@"OOMException: Out of memory detected."  forKey:@"error.message"];
     [attributes setObject:@"OOMException" forKey:@"classifiers"];
+    [attributes setObject:@"OOMException" forKey:@"error.type"];
     [_applicationState setObject:attributes forKey:@"attributes"];
 }
 

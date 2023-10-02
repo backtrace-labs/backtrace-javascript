@@ -3,7 +3,7 @@
 
 @implementation BacktraceCpuAttributeProvider
 RCT_EXPORT_MODULE()
-RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(readCpuInfo) {
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(get) {
     NSMutableDictionary *dictionary = [NSMutableDictionary dictionary];
     
     processor_cpu_load_info_t cpuLoad;

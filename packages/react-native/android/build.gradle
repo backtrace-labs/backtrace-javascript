@@ -60,6 +60,11 @@ android {
     minSdkVersion getExtOrIntegerDefault("minSdkVersion")
     targetSdkVersion getExtOrIntegerDefault("targetSdkVersion")
     buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
+
+
+    ndk {
+      abiFilters 'x86', 'x86_64', 'armeabi-v7a', 'arm64-v8a'
+    }
   }
   buildTypes {
     release {
@@ -75,7 +80,6 @@ android {
     sourceCompatibility JavaVersion.VERSION_1_8
     targetCompatibility JavaVersion.VERSION_1_8
   }
-
 }
 
 repositories {

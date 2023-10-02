@@ -1,23 +1,30 @@
 import { ReactStackTraceConverter } from '@backtrace-labs/react';
 import {
     BacktraceCoreClient,
-    BacktraceReport,
     SingleSessionProvider,
+    SubmissionUrlInformation,
     V8StackTraceConverter,
     VariableDebugIdMapProvider,
+    type AttributeType,
     type BacktraceAttributeProvider,
     type BacktraceRequestHandler,
     type BreadcrumbsEventSubscriber,
     type DebugIdContainer,
 } from '@backtrace-labs/sdk-core';
+import { Platform } from 'react-native';
 import { BacktraceClientBuilder } from './BacktraceClientBuilder';
 import { type BacktraceConfiguration } from './BacktraceConfiguration';
+import { version } from './common/platformHelper';
 import { CrashReporter } from './crashReporter/CrashReporter';
-import type { HermesUnhandledRejection } from './types/HermesUnhandledRejection';
-import { enableUnhandledPromiseRejectionTracker } from './unhandledPromiseRejectionTracker';
-
+import { generateUnhandledExceptionHandler } from './handlers';
+import { type ExceptionHandler } from './handlers/ExceptionHandler';
 export class BacktraceClient extends BacktraceCoreClient {
-    private readonly _crashReporter: CrashReporter = new CrashReporter();
+    private readonly crashReporter: CrashReporter = new CrashReporter();
+    private readonly _exceptionHandler: ExceptionHandler = generateUnhandledExceptionHandler();
+
+    public crash(): void {
+        this.crashReporter.crash();
+    }
     constructor(
         options: BacktraceConfiguration,
         requestHandler: BacktraceRequestHandler,
@@ -28,9 +35,9 @@ export class BacktraceClient extends BacktraceCoreClient {
             options,
             sdkOptions: {
                 agent: '@backtrace/react-native',
-                agentVersion: '1.0.0',
+                agentVersion: '0.0.1',
                 langName: 'react-native',
-                langVersion: 'unknown',
+                langVersion: version(),
             },
             requestHandler,
             attributeProviders,
@@ -41,33 +48,19 @@ export class BacktraceClient extends BacktraceCoreClient {
             stackTraceConverter: new ReactStackTraceConverter(new V8StackTraceConverter()),
             sessionProvider: new SingleSessionProvider(),
         });
+
         this.captureUnhandledErrors(options.captureUnhandledErrors, options.captureUnhandledPromiseRejections);
-        this._crashReporter.initialize(options.url, this.attributeManager.get('scoped').attributes, this.attachments);
+        const submissionUrl = SubmissionUrlInformation.toJsonReportSubmissionUrl(options.url);
 
-        // function allocateMemory(size: number) {
-        //     const numbers = size / 8;
-        //     const arr = [];
-        //     arr.length = numbers;
-        //     for (let i = 0; i < numbers; i++) {
-        //         arr[i] = i;
-        //     }
-        //     return arr;
-        // }
-
-        // const TIME_INTERVAL_IN_MSEC = 40;
-        // const memoryLeakAllocations = [];
-
-        // console.log('This may take a while dependning on Node memory limits.');
-        // console.log('For best results, start with --max-old-space-size set to a low value, like 100.');
-        // console.log('e.g. node --max-old-space-size=100 lib/index.js');
-        // setInterval(() => {
-        //     const allocation = allocateMemory(10 * 1024 * 1024);
-        //     memoryLeakAllocations.push(allocation);
-        // }, TIME_INTERVAL_IN_MSEC);
-
-        setTimeout(() => {
-            this._crashReporter.crash();
-        }, 15_000);
+        this.crashReporter.initialize(
+            Platform.select({
+                ios: SubmissionUrlInformation.toPlCrashReporterSubmissionUrl(submissionUrl),
+                android: SubmissionUrlInformation.toMinidumpSubmissionUrl(submissionUrl),
+                default: submissionUrl,
+            }),
+            this.attributeManager.get('scoped').attributes,
+            this.attachments,
+        );
     }
 
     /**
@@ -82,7 +75,24 @@ export class BacktraceClient extends BacktraceCoreClient {
     public addAttribute(attributes: () => Record<string, unknown>): void;
     public addAttribute(attributes: Record<string, unknown> | (() => Record<string, unknown>)) {
         super.addAttribute(attributes as Record<string, unknown>);
-        this._crashReporter?.updateAttributes(super.attributes);
+        if (typeof attributes === 'function') {
+            return;
+        }
+
+        const clientAttributes = super.attributes;
+        this.crashReporter?.updateAttributes(
+            Object.fromEntries(
+                Object.entries(attributes)
+                    .filter(([key]) => clientAttributes[key] != null)
+                    .map((n) => n as [string, AttributeType]),
+            ),
+        );
+    }
+
+    public dispose(): void {
+        this._exceptionHandler.dispose();
+        this.crashReporter.dispose();
+        super.dispose();
     }
 
     public static builder(options: BacktraceConfiguration): BacktraceClientBuilder {
@@ -118,44 +128,11 @@ export class BacktraceClient extends BacktraceCoreClient {
 
     private captureUnhandledErrors(captureUnhandledExceptions = true, captureUnhandledRejections = true) {
         if (captureUnhandledExceptions) {
-            const globalErrorHandler = ErrorUtils.getGlobalHandler();
-            ErrorUtils.setGlobalHandler((error: Error, fatal?: boolean) => {
-                this.send(error, {
-                    'error.type': 'Unhandled exception',
-                    fatal,
-                }).then(() => {
-                    globalErrorHandler(error, fatal);
-                });
-            });
+            this._exceptionHandler.captureManagedErrors(this);
         }
 
         if (captureUnhandledRejections) {
-            const hermesInternal = (global as unknown as { HermesInternal: HermesUnhandledRejection | undefined })
-                ?.HermesInternal;
-
-            if (hermesInternal?.hasPromise?.() && hermesInternal?.enablePromiseRejectionTracker) {
-                hermesInternal.enablePromiseRejectionTracker({
-                    allRejections: true,
-                    onUnhandled: (id: number, rejection: Error | object = {}) => {
-                        this.send(
-                            new BacktraceReport(
-                                rejection as Error,
-                                {
-                                    'error.type': 'Unhandled exception',
-                                    unhandledPromiseRejectionId: id,
-                                },
-                                [],
-                                {
-                                    classifiers: ['UnhandledPromiseRejection'],
-                                    skipFrames: rejection instanceof Error ? 0 : 1,
-                                },
-                            ),
-                        );
-                    },
-                });
-            } else {
-                enableUnhandledPromiseRejectionTracker(this);
-            }
+            this._exceptionHandler.captureUnhandledPromiseRejections(this);
         }
     }
 }

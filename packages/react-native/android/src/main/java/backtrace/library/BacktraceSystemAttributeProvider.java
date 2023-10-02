@@ -1,10 +1,12 @@
-package com.backtrace.reactnative;
+package backtraceio.library;
 
 import androidx.annotation.NonNull;
 
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.WritableNativeMap;
 import com.facebook.react.module.annotations.ReactModule;
 
 import android.os.Build;
@@ -33,9 +35,18 @@ public class BacktraceSystemAttributeProvider extends ReactContextBaseJavaModule
         return NAME;
     }
 
-
     @ReactMethod(isBlockingSynchronousMethod = true)
-    public String readMachineId() {
+    public WritableMap get() {
+        WritableMap map = new WritableNativeMap();
+        map.putString("guid", this.readMachineId());
+        map.putString("uname.machine", this.readSystemArchitecture());
+        map.putString("uname.sysname", "Android");
+        map.putString("uname.version", this.readSystemVersion());
+        map.putString("uname.release", this.readSystemRelease());
+        return map;
+    }
+
+    private String readMachineId() {
         String androidId = Settings.Secure.getString(this.context.getContentResolver(),
                 Settings.Secure.ANDROID_ID);
 
@@ -46,18 +57,15 @@ public class BacktraceSystemAttributeProvider extends ReactContextBaseJavaModule
         return UUID.nameUUIDFromBytes(androidId.getBytes()).toString();
     }
 
-    @ReactMethod(isBlockingSynchronousMethod = true)
-    public String readSystemArchitecture() {
+    private String readSystemArchitecture() {
         return System.getProperty("os.arch");
     }
 
-    @ReactMethod(isBlockingSynchronousMethod = true)
-    public String readSystemRelease() {
+    private String readSystemRelease() {
         return Build.VERSION.RELEASE;
     }
 
-    @ReactMethod(isBlockingSynchronousMethod = true)
-    public String readSystemVersion() {
+    private String readSystemVersion() {
         return System.getProperty("os.version");
     }
 }
