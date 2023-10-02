@@ -47,11 +47,11 @@ public class BacktraceReactNative extends ReactContextBaseJavaModule {
     @ReactMethod(isBlockingSynchronousMethod = true)
     public Boolean initialize(String minidumpSubmissionUrl, ReadableMap readableAttributes, ReadableArray attachmentPaths) {
         Log.d(this.NAME, "Initializing crashpad");
-        String databasePath = context.getFilesDir().getAbsolutePath();
-        Log.d(this.NAME, "Using: " +databasePath );
+
         String handlerPath = context.getApplicationInfo().nativeLibraryDir + _crashpadHandlerName;
+
         if (!(new File(handlerPath).exists())) {
-            Log.d(this.NAME, "Crashpad handler doesnt exist");
+            Log.d(this.NAME, "Crashpad handler doesn't exist");
             return false;
         }
         HashMap<String, Object> attributes =  readableAttributes.toHashMap();
@@ -59,14 +59,11 @@ public class BacktraceReactNative extends ReactContextBaseJavaModule {
         String[] keys = attributes.keySet().toArray(new String[0]);
         String[] values = attributes.values().toArray(new String[0]);
 
-//        String[] attachments = new String[attachmentPaths.size()];
-//        for (attachmentPath:
-//             attachmentPaths.toArrayList()) {
-//            attachments[]
-//        }
-//        String[] attachments = attachmentPaths.toArrayList();
-
         // Create the crashpad directory if it doesn't exist
+        // to do:
+        // on this stage the database directory should exists. Because the database
+        // implementation is in progress, crashpad database directory is created here manually.
+        String databasePath = context.getFilesDir().getAbsolutePath();
         File crashHandlerDir = new File(databasePath);
         crashHandlerDir.mkdir();
 
@@ -76,7 +73,7 @@ public class BacktraceReactNative extends ReactContextBaseJavaModule {
                 handlerPath,
                 keys,
                 values,
-                new String[0],
+                attachmentPaths.toArrayList().toArray(new String[0]),
                 false,
                 null
         );
