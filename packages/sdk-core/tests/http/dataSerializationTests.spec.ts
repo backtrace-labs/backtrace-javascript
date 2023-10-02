@@ -31,4 +31,13 @@ describe('Data serialization tests', () => {
         const data = dataBuilder.build(new BacktraceReport(new Error(), annotation));
         expect(() => JSON.stringify(data, jsonEscaper())).not.toThrow();
     });
+
+    it('Should serialize correctly big ints', () => {
+        const annotation: Record<string, unknown> = {
+            bigint: BigInt(9007199254740991),
+        };
+        annotation['circular-reference'] = annotation;
+        const data = dataBuilder.build(new BacktraceReport(new Error(), annotation));
+        expect(() => JSON.stringify(data, jsonEscaper())).not.toThrow();
+    });
 });
