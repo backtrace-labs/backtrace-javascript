@@ -7,6 +7,7 @@ import {
     DebugIdProvider,
     FileSystem,
     SdkOptions,
+    SessionFiles,
 } from '.';
 import { CoreClientSetup } from './builder/CoreClientSetup';
 import { Events } from './common/Events';
@@ -103,6 +104,10 @@ export abstract class BacktraceCoreClient {
         return this._modules;
     }
 
+    protected get sessionFiles() {
+        return this._modules.get(SessionFiles);
+    }
+
     protected readonly reportEvents: Events<ReportEvents>;
     protected readonly attributeManager: AttributeManager;
     protected readonly options: BacktraceConfiguration;
@@ -157,8 +162,23 @@ export abstract class BacktraceCoreClient {
                 this.options.database,
             );
 
+            if (this.fileSystem) {
+                const sessionFiles = new SessionFiles(
+                    this.fileSystem,
+                    this.options.database.path,
+                    this.sessionId,
+                    this.options.database.maximumOldSessions ?? 1,
+                );
+                this._modules.set(SessionFiles, sessionFiles);
+            }
+
             if (provider) {
-                const database = new BacktraceDatabase(this.options.database, provider, this._reportSubmission);
+                const database = new BacktraceDatabase(
+                    this.options.database,
+                    provider,
+                    this._reportSubmission,
+                    this.sessionFiles,
+                );
                 this._modules.set(BacktraceDatabase, database);
             }
         }
@@ -176,8 +196,6 @@ export abstract class BacktraceCoreClient {
 
         if (this.options.breadcrumbs?.enable !== false) {
             const breadcrumbsManager = new BreadcrumbsManager(this.options?.breadcrumbs, this._setup.breadcrumbsSetup);
-            this._attachments.push(breadcrumbsManager.breadcrumbsStorage);
-            this.attributeManager.addProvider(breadcrumbsManager);
             this._modules.set(BreadcrumbsManager, breadcrumbsManager);
         }
 
@@ -199,8 +217,11 @@ export abstract class BacktraceCoreClient {
             if (module.bind) {
                 module.bind(this.getModuleBindData());
             }
+
             module.initialize();
         }
+
+        this.sessionFiles?.clearPreviousSessions();
     }
 
     /**
@@ -292,7 +313,7 @@ export abstract class BacktraceCoreClient {
         }
     }
 
-    private generateSubmissionData(report: BacktraceReport): BacktraceData | undefined {
+    protected generateSubmissionData(report: BacktraceReport): BacktraceData | undefined {
         const backtraceData = this._dataBuilder.build(report);
         if (!this.options.beforeSend) {
             return backtraceData;
@@ -319,6 +340,7 @@ export abstract class BacktraceCoreClient {
         return {
             client: this,
             reportEvents: this.reportEvents,
+            sessionFiles: this.sessionFiles,
         };
     }
 }

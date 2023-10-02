@@ -3,6 +3,7 @@ import {
     BreadcrumbLogLevel,
     BreadcrumbType,
     BreadcrumbsSetup,
+    BreadcrumbsStorage,
     defaultBreadcrumbsLogLevel,
     defaultBreadcurmbType,
 } from '.';
@@ -13,8 +14,9 @@ import { BacktraceModule, BacktraceModuleBindData } from '../BacktraceModule';
 import { BreadcrumbsEventSubscriber } from './events/BreadcrurmbsEventSubscriber';
 import { ConsoleEventSubscriber } from './events/ConsoleEventSubscriber';
 import { RawBreadcrumb } from './model/RawBreadcrumb';
-import { BreadcrumbsStorage } from './storage/BreadcrumbsStorage';
 import { InMemoryBreadcrumbsStorage } from './storage/InMemoryBreadcrumbsStorage';
+
+const BREADCRUMB_ATTRIBUTE_NAME = 'breadcrumbs.lastId';
 
 export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule {
     /**
@@ -22,36 +24,31 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
      */
     public readonly breadcrumbsType: BreadcrumbType;
 
-    public readonly BREADCRUMB_ATTRIBUTE_NAME = 'breadcrumbs.lastId';
-
     /**
      * Breadcrumbs Log level
      */
     public readonly logLevel: BreadcrumbLogLevel;
-
-    get type(): 'scoped' | 'dynamic' {
-        return 'dynamic';
-    }
-
-    public readonly breadcrumbsStorage: BreadcrumbsStorage;
-
     /**
      * Determines if the breadcrumb manager is enabled.
      */
     private _enabled = true;
 
     private readonly _eventSubscribers: BreadcrumbsEventSubscriber[] = [new ConsoleEventSubscriber()];
-
     private readonly _interceptor?: (breadcrumb: RawBreadcrumb) => RawBreadcrumb | undefined;
+    private _storage: BreadcrumbsStorage;
 
     constructor(configuration?: BacktraceBreadcrumbsSettings, options?: BreadcrumbsSetup) {
         this.breadcrumbsType = configuration?.eventType ?? defaultBreadcurmbType;
         this.logLevel = configuration?.logLevel ?? defaultBreadcrumbsLogLevel;
-        this.breadcrumbsStorage = options?.storage ?? new InMemoryBreadcrumbsStorage(configuration?.maximumBreadcrumbs);
+        this._storage = options?.storage ?? new InMemoryBreadcrumbsStorage(configuration?.maximumBreadcrumbs);
         this._interceptor = configuration?.intercept;
         if (options?.subscribers) {
             this._eventSubscribers.push(...options.subscribers);
         }
+    }
+
+    public setStorage(storage: BreadcrumbsStorage) {
+        this._storage = storage;
     }
 
     public dispose(): void {
@@ -61,13 +58,14 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
         }
     }
 
-    public get(): Record<string, number> {
-        return {
-            [this.BREADCRUMB_ATTRIBUTE_NAME]: this.breadcrumbsStorage.lastBreadcrumbId,
-        };
-    }
+    public bind({ client, reportEvents }: BacktraceModuleBindData): void {
+        for (const attachment of this._storage.getAttachments()) {
+            client.addAttachment(attachment);
+        }
+        client.addAttribute(() => ({
+            [BREADCRUMB_ATTRIBUTE_NAME]: this._storage.lastBreadcrumbId,
+        }));
 
-    public bind({ reportEvents }: BacktraceModuleBindData): void {
         reportEvents.on('before-skip', (report) => this.logReport(report));
     }
 
@@ -136,7 +134,7 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
             return false;
         }
 
-        this.breadcrumbsStorage.add(rawBreadcrumb);
+        this._storage.add(rawBreadcrumb);
         return true;
     }
 }

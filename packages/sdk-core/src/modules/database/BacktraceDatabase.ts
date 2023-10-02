@@ -5,6 +5,7 @@ import { BacktraceDatabaseConfiguration } from '../../model/configuration/Backtr
 import { BacktraceData } from '../../model/data/BacktraceData';
 import { BacktraceReportSubmission } from '../../model/http/BacktraceReportSubmission';
 import { BacktraceModule, BacktraceModuleBindData } from '../BacktraceModule';
+import { SessionFiles } from '../storage';
 import { BacktraceDatabaseContext } from './BacktraceDatabaseContext';
 import { BacktraceDatabaseStorageProvider } from './BacktraceDatabaseStorageProvider';
 import { BacktraceDatabaseRecord } from './model/BacktraceDatabaseRecord';
@@ -30,6 +31,7 @@ export class BacktraceDatabase implements BacktraceModule {
         private readonly _options: BacktraceDatabaseConfiguration | undefined,
         private readonly _storageProvider: BacktraceDatabaseStorageProvider,
         private readonly _requestHandler: BacktraceReportSubmission,
+        private readonly _sessionFiles?: SessionFiles,
     ) {
         this._databaseRecordContext = new BacktraceDatabaseContext(this._options?.maximumRetries);
         this._maximumRecords = this._options?.maximumNumberOfRecords ?? 8;
@@ -54,9 +56,13 @@ export class BacktraceDatabase implements BacktraceModule {
             return false;
         }
 
-        this.loadReports().then(async () => {
-            await this.setupDatabaseAutoSend();
-        });
+        const lockId = this._sessionFiles?.lockPreviousSessions();
+        this.loadReports()
+            .then(() => {
+                this.setupDatabaseAutoSend();
+            })
+            .finally(() => lockId && this._sessionFiles?.unlockPreviousSessions(lockId));
+
         this._enabled = true;
         return true;
     }
@@ -88,6 +94,7 @@ export class BacktraceDatabase implements BacktraceModule {
             record.locked = false;
             if (submissionResult.status === 'Ok') {
                 this.remove(record);
+                this._sessionFiles?.unlockPreviousSessions(record.id);
             }
         });
     }
@@ -124,6 +131,7 @@ export class BacktraceDatabase implements BacktraceModule {
         }
 
         this._databaseRecordContext.add(record);
+        this.lockSessionWithRecord(record);
 
         return record;
     }
@@ -162,6 +170,7 @@ export class BacktraceDatabase implements BacktraceModule {
         }
         this._databaseRecordContext.remove(record);
         this._storageProvider.delete(record);
+        this._sessionFiles?.unlockPreviousSessions(record.id);
     }
 
     public addStorageProvider(storageProvider: BacktraceDatabaseStorageProvider) {
@@ -224,13 +233,17 @@ export class BacktraceDatabase implements BacktraceModule {
         }
     }
 
-    private async loadReports(): Promise<void> {
+    private async loadReports() {
         const records = await this._storageProvider.get();
         if (records.length > this._maximumRecords) {
             records.length = this._maximumRecords;
         }
         this.prepareDatabase(records.length);
         this._databaseRecordContext.load(records);
+
+        for (const record of records) {
+            this.lockSessionWithRecord(record);
+        }
     }
 
     private async setupDatabaseAutoSend() {
@@ -243,5 +256,20 @@ export class BacktraceDatabase implements BacktraceModule {
         };
         this._intervalId = setInterval(sendDatabaseReports, this._retryInterval);
         await this.send();
+    }
+
+    private lockSessionWithRecord(record: BacktraceDatabaseRecord) {
+        if (!this._sessionFiles) {
+            return;
+        }
+
+        const sessionId = record.data.attributes?.['application.session'];
+        if (typeof sessionId !== 'string') {
+            this._sessionFiles.lockPreviousSessions(record.id);
+            return;
+        }
+
+        const session = this._sessionFiles.getSessionWithId(sessionId);
+        session?.lock(record.id);
     }
 }

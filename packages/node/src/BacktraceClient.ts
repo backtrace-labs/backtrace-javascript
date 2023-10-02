@@ -4,14 +4,17 @@ import {
     BacktraceReport,
     BacktraceRequestHandler,
     BreadcrumbsEventSubscriber,
+    BreadcrumbsManager,
     BacktraceConfiguration as CoreConfiguration,
     DebugIdContainer,
     FileSystem,
+    SessionFiles,
     VariableDebugIdMapProvider,
 } from '@backtrace-labs/sdk-core';
 import path from 'path';
 import { BacktraceConfiguration } from './BacktraceConfiguration';
 import { AGENT } from './agentDefinition';
+import { FileBreadcrumbsStorage } from './breadcrumbs/FileBreadcrumbsStorage';
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 import { NodeOptionReader } from './common/NodeOptionReader';
 import { NodeDiagnosticReportConverter } from './converter/NodeDiagnosticReportConverter';
@@ -37,19 +40,32 @@ export class BacktraceClient extends BacktraceCoreClient {
             },
             fileSystem,
         });
+
+        const breadcrumbsManager = this.modules.get(BreadcrumbsManager);
+        if (breadcrumbsManager && this.sessionFiles) {
+            breadcrumbsManager.setStorage(
+                FileBreadcrumbsStorage.create(this.sessionFiles, options.breadcrumbs?.maximumBreadcrumbs ?? 100),
+            );
+        }
     }
 
     public initialize(): void {
-        super.initialize();
+        const lockId = this.sessionFiles?.lockPreviousSessions();
 
-        this.loadNodeCrashes();
+        try {
+            super.initialize();
+            this.captureUnhandledErrors(
+                this.options.captureUnhandledErrors,
+                this.options.captureUnhandledPromiseRejections,
+            );
 
-        this.captureUnhandledErrors(
-            this.options.captureUnhandledErrors,
-            this.options.captureUnhandledPromiseRejections,
-        );
+            this.captureNodeCrashes();
+        } catch (err) {
+            lockId && this.sessionFiles?.unlockPreviousSessions(lockId);
+            throw err;
+        }
 
-        this.captureNodeCrashes();
+        this.loadNodeCrashes().finally(() => lockId && this.sessionFiles?.unlockPreviousSessions(lockId));
     }
 
     public static builder(options: BacktraceConfiguration): BacktraceClientBuilder {
@@ -222,7 +238,7 @@ export class BacktraceClient extends BacktraceCoreClient {
     }
 
     private async loadNodeCrashes() {
-        if (!this.fileSystem || !this.options.database?.captureNativeCrashes) {
+        if (!this.database || !this.fileSystem || !this.options.database?.captureNativeCrashes) {
             return;
         }
 
@@ -245,17 +261,61 @@ export class BacktraceClient extends BacktraceCoreClient {
             reportName ? file === reportName : file.startsWith('report.') && file.endsWith('.json'),
         );
 
+        if (!recordNames.length) {
+            return;
+        }
+
+        const reports: [path: string, report: BacktraceReport, sessionFiles?: SessionFiles][] = [];
         for (const recordName of recordNames) {
             const recordPath = path.join(databasePath, recordName);
             try {
                 const recordJson = await this.fileSystem.readFile(recordPath);
-                const data = converter.convert(JSON.parse(recordJson));
-                await this.send(data);
+                const report = converter.convert(JSON.parse(recordJson));
+                reports.push([recordPath, report]);
+            } catch {
+                // Do nothing, skip the report
+            }
+        }
+
+        // Sort reports by timestamp descending
+        reports.sort((a, b) => b[1].timestamp - a[1].timestamp);
+
+        // Map reports to sessions
+        // When the sessions are sorted by timestamp, we can assume that each previous session maps to the next report
+        let currentSession = this.sessionFiles?.getPreviousSession();
+        for (const tuple of reports) {
+            tuple[2] = currentSession;
+            currentSession = currentSession?.getPreviousSession();
+        }
+
+        for (const [recordPath, report, session] of reports) {
+            try {
+                if (session) {
+                    const breadcrumbsStorage = FileBreadcrumbsStorage.createFromSession(session);
+                    if (breadcrumbsStorage) {
+                        report.attachments.push(...breadcrumbsStorage.getAttachments());
+                    }
+
+                    report.attributes['application.session'] = session.sessionId;
+                } else {
+                    report.attributes['application.session'] = null;
+                }
+
+                const data = this.generateSubmissionData(report);
+                if (data) {
+                    this.database.add(data, report.attachments);
+                }
             } catch {
                 // Do nothing, skip the report
             } finally {
-                await this.fileSystem.unlink(recordPath);
+                try {
+                    await this.fileSystem.unlink(recordPath);
+                } catch {
+                    // Do nothing
+                }
             }
         }
+
+        await this.database.send();
     }
 }
