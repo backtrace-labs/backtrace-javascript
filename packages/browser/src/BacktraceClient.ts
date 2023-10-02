@@ -88,9 +88,9 @@ export class BacktraceClient extends BacktraceCoreClient {
         if (captureUnhandledExceptions) {
             window.addEventListener(
                 'error',
-                async (errorEvent: ErrorEvent) => {
-                    await this.send(
-                        new BacktraceReport(errorEvent.error, {
+                (errorEvent: ErrorEvent) => {
+                    this.send(
+                        new BacktraceReport(errorEvent.error ?? errorEvent.message, {
                             'error.type': 'Unhandled exception',
                         }),
                     );
@@ -104,8 +104,8 @@ export class BacktraceClient extends BacktraceCoreClient {
         if (captureUnhandledRejections) {
             window.addEventListener(
                 'unhandledrejection',
-                async (errorEvent: PromiseRejectionEvent) => {
-                    await this.send(
+                (errorEvent: PromiseRejectionEvent) => {
+                    this.send(
                         new BacktraceReport(
                             errorEvent.reason,
                             {
