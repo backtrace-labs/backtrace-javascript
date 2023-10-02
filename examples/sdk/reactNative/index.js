@@ -4,8 +4,6 @@ import App from './App';
 import { name as appName } from './app.json';
 import { SUBMISSION_URL } from './src/consts';
 
-console.reportErrorsAsExceptions = false;
-
 BacktraceClient.initialize({
     url: SUBMISSION_URL,
     userAttributes: {

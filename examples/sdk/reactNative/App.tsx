@@ -1,21 +1,15 @@
 import { BacktraceClient } from '@backtrace-labs/react-native';
-import React, { useState } from 'react';
-import { Alert, FlatList, Image, LogBox, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, FlatList, Image, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { generateActions } from './src/actions/actions';
 import { CustomizableButton } from './src/components/CustomizableButton';
 import { SUBMISSION_URL } from './src/consts';
 
 function App(): JSX.Element {
-    LogBox.ignoreAllLogs(true);
-    LogBox.uninstall();
-    const [clicked, setClicked] = useState(false);
     const client = BacktraceClient.instance as BacktraceClient;
     if (!client) {
         throw new Error('BacktraceClient is uninitialized. Call "BacktraceClient.initialize" function first.');
     }
-    if (clicked) {
-        throw new Error('Test throw to demonstrate the Backtrace Error Boundary');
-    }
+
     if (SUBMISSION_URL.includes('your-universe')) {
         Alert.alert('Don\'t forget to update your submission url in "./src/consts.ts" with your universe and token!');
     }
