@@ -1,5 +1,6 @@
 import type { Middleware, Action } from 'redux';
 import { BacktraceClient } from '../BacktraceClient';
+import { jsonEscaper } from '@backtrace-labs/sdk-core';
 
 /**
  *
@@ -20,12 +21,14 @@ export const createBacktraceReduxMiddleware = (
             const interceptedAction = interceptAction(action);
             // If the user returns undefined for an action, we skip the breadcrumb
             if (interceptedAction) {
-                client.breadcrumbs?.info(`REDUX Action: ${JSON.stringify(interceptedAction)}`);
+                client.breadcrumbs?.info(`REDUX Action: ${JSON.stringify(interceptedAction, jsonEscaper())}`);
             }
             return response;
         } catch (err) {
             const message = err instanceof Error ? err.message : err?.toString() ?? 'unknown';
-            client.breadcrumbs?.warn(`A problem occurred during action ${action.type}. Reason: ${message}`);
+            client.breadcrumbs?.warn(
+                `A problem occurred during action ${action?.type ?? 'unknown'}. Reason: ${message}`,
+            );
             throw err;
         }
     };
