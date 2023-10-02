@@ -22,10 +22,11 @@ function notify(message: string) {
 }
 
 export function generateActions(client: BacktraceClient) {
+    const platform = Platform.OS as 'android' | 'ios';
     return [
         {
             name: 'OOM',
-            platform: 'ios',
+            platform,
             action: () => {
                 function allocateMemory(size: number) {
                     const numbers = size / 8;
@@ -55,7 +56,7 @@ export function generateActions(client: BacktraceClient) {
         },
         {
             name: 'Throw an error',
-            platform: Platform.OS as 'android' | 'ios',
+            platform,
             action: async () => {
                 console.log('Sending an error to Backtrace.');
                 try {
@@ -68,7 +69,7 @@ export function generateActions(client: BacktraceClient) {
         },
         {
             name: 'Send a message',
-            platform: Platform.OS as 'android' | 'ios',
+            platform,
             action: async () => {
                 console.log('Sending a message to Backtrace.');
                 await client.send('Manual Test Message');
@@ -77,7 +78,7 @@ export function generateActions(client: BacktraceClient) {
         },
         {
             name: 'Throw an unhandled error',
-            platform: Platform.OS as 'android' | 'ios',
+            platform,
             action: async () => {
                 notify('Sending an unhandled exception to Backtrace.');
                 throwAnError();
@@ -85,14 +86,14 @@ export function generateActions(client: BacktraceClient) {
         },
         {
             name: 'Crash application',
-            platform: Platform.OS as 'android' | 'ios',
+            platform,
             action: async () => {
                 client.crash();
             },
         },
         {
             name: 'Generate metric',
-            platform: Platform.OS as 'android' | 'ios',
+            platform,
             action: async () => {
                 if (!client.metrics) {
                     notify('Metrics are unavailable');
@@ -105,7 +106,7 @@ export function generateActions(client: BacktraceClient) {
         },
         {
             name: 'Send metrics',
-            platform: Platform.OS as 'android' | 'ios',
+            platform,
             action: async () => {
                 if (!client.metrics) {
                     notify('Metrics are unavailable');
@@ -118,7 +119,7 @@ export function generateActions(client: BacktraceClient) {
         },
         {
             name: 'Update a time attribute',
-            platform: Platform.OS as 'android' | 'ios',
+            platform,
             action: async () => {
                 const value = Date.now();
                 notify(`Setting a time attribute to ${value}`);
