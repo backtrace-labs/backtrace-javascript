@@ -41,9 +41,8 @@ export function generateActions(client: BacktraceClient) {
                 const TIME_INTERVAL_IN_MSEC = 40;
                 const memoryLeakAllocations = [];
 
-                console.log('This may take a while dependning on Node memory limits.');
-                console.log('For best results, start with --max-old-space-size set to a low value, like 100.');
-                console.log('e.g. node --max-old-space-size=100 lib/index.js');
+                console.log('Starting OOM. Your application should crash soon.');
+                console.log('This may take a while dependning on memory limits.');
                 setInterval(() => {
                     const allocation = allocateMemory(10 * 1024 * 1024);
                     memoryLeakAllocations.push(allocation);
