@@ -15,8 +15,16 @@
         "test": "npm run test --ws --if-present"
     },
     "workspaces": [
-        "packages/*",
-        "tools/*"
+        "packages/sdk-core",
+        "packages/node",
+        "packages/browser",
+        "packages/react",
+        "packages/nestjs",
+        "tools/sourcemap-tools",
+        "tools/cli",
+        "tools/rollup-plugin",
+        "tools/webpack-plugin",
+        "tools/vite-plugin"
     ],
     "repository": {
         "type": "git",

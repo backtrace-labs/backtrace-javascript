@@ -22,22 +22,22 @@ export abstract class BacktraceCoreClientBuilder<T extends BacktraceCoreClient> 
         return this;
     }
 
-    public useBreadcrumbSubscriber(breadcrumbSubscriber: BreadcrumbsEventSubscriber): BacktraceCoreClientBuilder<T> {
+    public useBreadcrumbSubscriber(breadcrumbSubscriber: BreadcrumbsEventSubscriber): this {
         this.breadcrumbsSubscribers.push(breadcrumbSubscriber);
         return this;
     }
 
-    public useSessionProvider(sessionProvider: BacktraceSessionProvider): BacktraceCoreClientBuilder<T> {
+    public useSessionProvider(sessionProvider: BacktraceSessionProvider): this {
         this.sessionProvider = sessionProvider;
         return this;
     }
 
-    public useRequestHandler(handler: BacktraceRequestHandler): BacktraceCoreClientBuilder<T> {
+    public useRequestHandler(handler: BacktraceRequestHandler): this {
         this.handler = handler;
         return this;
     }
 
-    public useStackTraceConverter(stackTraceConverter: BacktraceStackTraceConverter): BacktraceCoreClientBuilder<T> {
+    public useStackTraceConverter(stackTraceConverter: BacktraceStackTraceConverter): this {
         this.stackTraceConverter = stackTraceConverter;
         return this;
     }
