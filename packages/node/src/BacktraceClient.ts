@@ -7,6 +7,7 @@ import {
     BreadcrumbsManager,
     BacktraceConfiguration as CoreConfiguration,
     DebugIdContainer,
+    FileAttributeManager,
     FileSystem,
     SessionFiles,
     VariableDebugIdMapProvider,
@@ -46,6 +47,10 @@ export class BacktraceClient extends BacktraceCoreClient {
             breadcrumbsManager.setStorage(
                 FileBreadcrumbsStorage.create(this.sessionFiles, options.breadcrumbs?.maximumBreadcrumbs ?? 100),
             );
+        }
+
+        if (this.sessionFiles && this.fileSystem && options.database?.captureNativeCrashes) {
+            this.addModule(FileAttributeManager, FileAttributeManager.create(this.fileSystem));
         }
     }
 
@@ -295,6 +300,9 @@ export class BacktraceClient extends BacktraceCoreClient {
                     if (breadcrumbsStorage) {
                         report.attachments.push(...breadcrumbsStorage.getAttachments());
                     }
+
+                    const fileAttributes = FileAttributeManager.createFromSession(session, this.fileSystem);
+                    Object.assign(report.attributes, await fileAttributes.get());
 
                     report.attributes['application.session'] = session.sessionId;
                 } else {

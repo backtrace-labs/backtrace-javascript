@@ -15,8 +15,8 @@ import { ReportEvents } from './events/ReportEvents';
 import { AttributeType, BacktraceData } from './model/data/BacktraceData';
 import { BacktraceReportSubmission } from './model/http/BacktraceReportSubmission';
 import { BacktraceReport } from './model/report/BacktraceReport';
-import { BacktraceModuleBindData } from './modules/BacktraceModule';
-import { BacktraceModules, ReadonlyBacktraceModules } from './modules/BacktraceModules';
+import { BacktraceModule, BacktraceModuleBindData } from './modules/BacktraceModule';
+import { BacktraceModuleCtor, BacktraceModules, ReadonlyBacktraceModules } from './modules/BacktraceModules';
 import { AttributeManager } from './modules/attribute/AttributeManager';
 import { ClientAttributeProvider } from './modules/attribute/ClientAttributeProvider';
 import { UserAttributeProvider } from './modules/attribute/UserAttributeProvider';
@@ -218,7 +218,9 @@ export abstract class BacktraceCoreClient {
                 module.bind(this.getModuleBindData());
             }
 
-            module.initialize();
+            if (module.initialize) {
+                module.initialize();
+            }
         }
 
         this.sessionFiles?.clearPreviousSessions();
@@ -313,6 +315,10 @@ export abstract class BacktraceCoreClient {
         }
     }
 
+    protected addModule<T extends BacktraceModule>(type: BacktraceModuleCtor<T>, module: T) {
+        this._modules.set(type, module);
+    }
+
     protected generateSubmissionData(report: BacktraceReport): BacktraceData | undefined {
         const backtraceData = this._dataBuilder.build(report);
         if (!this.options.beforeSend) {
@@ -340,6 +346,7 @@ export abstract class BacktraceCoreClient {
         return {
             client: this,
             reportEvents: this.reportEvents,
+            attributeManager: this.attributeManager,
             sessionFiles: this.sessionFiles,
         };
     }

@@ -1,11 +1,16 @@
+import { Events } from '../../common/Events';
+import { AttributeEvents } from '../../events/AttributeEvents';
 import { ReportData } from '../../model/report/ReportData';
 import { BacktraceAttributeProvider } from './BacktraceAttributeProvider';
 import { ReportDataBuilder } from './ReportDataBuilder';
 
 export class AttributeManager {
+    public readonly attributeEvents: Events<AttributeEvents>;
+
     private readonly _attributeProviders: BacktraceAttributeProvider[] = [];
 
     constructor(providers: BacktraceAttributeProvider[]) {
+        this.attributeEvents = new Events();
         for (const provider of providers) {
             this.addProvider(provider);
         }
@@ -38,6 +43,7 @@ export class AttributeManager {
                 type: 'scoped',
                 get: () => attributes,
             });
+            this.attributeEvents.emit('scoped-attributes-updated', this.get('scoped'));
         }
     }
 
