@@ -6,6 +6,16 @@ import { type ExceptionHandler } from './ExceptionHandler';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const rejectionTracking = require('promise/setimmediate/rejection-tracking');
 
+function getPrettyFormat() {
+    try {
+        return require('pretty-format');
+    } catch {
+        return undefined;
+    }
+}
+
+const cachedPrettyFormat = getPrettyFormat();
+
 export class UnhandledExceptionHandler implements ExceptionHandler {
     protected enabled = true;
     public captureManagedErrors(client: BacktraceClient) {
@@ -49,6 +59,10 @@ export class UnhandledExceptionHandler implements ExceptionHandler {
                 },
             });
         } else {
+            // This is the same unhandled exception handler that exists in the react-native source code.
+            // The only difference is to make sure we do not execute it in the dev mode (react-native checks it earlier)
+            // and backtrace error reporting function
+            // refs: https://github.com/facebook/react-native/blob/a59b947a1e077d1c3f0d36926d374db5fe7d3291/packages/react-native/Libraries/promiseRejectionTrackingOptions.js#L38
             rejectionTracking.enable({
                 allRejections: true,
                 onUnhandled: (id: number, rejection: Error) => {
@@ -79,12 +93,11 @@ export class UnhandledExceptionHandler implements ExceptionHandler {
                         message = Error.prototype.toString.call(rejection);
                         stack = rejection.stack as string;
                     } else {
-                        try {
-                            // eslint-disable-next-line @typescript-eslint/no-var-requires
-                            message = require('pretty-format')(rejection);
-                        } catch {
-                            message = typeof rejection === 'string' ? rejection : JSON.stringify({ ...rejection });
-                        }
+                        message = cachedPrettyFormat
+                            ? cachedPrettyFormat(rejection)
+                            : typeof rejection === 'string'
+                            ? rejection
+                            : JSON.stringify({ ...rejection });
                     }
 
                     const warning =
