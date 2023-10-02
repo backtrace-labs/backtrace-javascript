@@ -28,13 +28,13 @@ export class UnhandledExceptionHandler implements ExceptionHandler {
         if (hermesInternal?.hasPromise?.() && hermesInternal?.enablePromiseRejectionTracker) {
             hermesInternal.enablePromiseRejectionTracker({
                 allRejections: true,
-                onUnhandled: (id: number, rejection: Error | object = {}) => {
+                onUnhandled: (id: number, rejection: Error | string = 'Unknown') => {
                     if (!this.enabled) {
                         return;
                     }
                     client.send(
                         new BacktraceReport(
-                            rejection as Error,
+                            rejection,
                             {
                                 'error.type': 'Unhandled exception',
                                 unhandledPromiseRejectionId: id,
@@ -55,7 +55,7 @@ export class UnhandledExceptionHandler implements ExceptionHandler {
                     if (this.enabled) {
                         client.send(
                             new BacktraceReport(
-                                rejection as Error,
+                                rejection,
                                 {
                                     'error.type': 'Unhandled exception',
                                     unhandledPromiseRejectionId: id,

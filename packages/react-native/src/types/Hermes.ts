@@ -3,6 +3,6 @@ export interface Hermes {
     hasPromise?: () => boolean;
     enablePromiseRejectionTracker: (options: {
         allRejections: boolean;
-        onUnhandled: (id: number, rejection?: Error | object) => void;
+        onUnhandled: (id: number, rejection?: Error | string) => void;
     }) => void;
 }
