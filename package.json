@@ -16,10 +16,11 @@
     },
     "workspaces": [
         "packages/sdk-core",
-        "packages/node",
         "packages/browser",
         "packages/react",
+        "packages/node",
         "packages/nestjs",
+        "packages/react-native",
         "tools/sourcemap-tools",
         "tools/cli",
         "tools/rollup-plugin",

@@ -1,0 +1,29 @@
+{
+    "compilerOptions": {
+        "rootDir": "./src",
+        "outDir": "./lib",
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "module": "esnext",
+        "noUnusedLocals": true,
+        "skipLibCheck": true,
+        "strict": true,
+
+        "allowUnreachableCode": false,
+        "allowUnusedLabels": false,
+        "jsx": "react",
+        "lib": ["esnext"],
+        "moduleResolution": "node",
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitReturns": true,
+        "noImplicitUseStrict": false,
+        "noStrictGenericChecks": false,
+        "noUncheckedIndexedAccess": true,
+
+        "noUnusedParameters": true,
+        "resolveJsonModule": true,
+        "target": "esnext",
+        "verbatimModuleSyntax": true
+    },
+    "references": []
+}
