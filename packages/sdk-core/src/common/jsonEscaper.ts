@@ -8,7 +8,16 @@ export function jsonEscaper() {
         if (!key) {
             return value;
         }
-        if (typeof value !== 'object' || value === null) {
+        if (value === null) {
+            return value;
+        }
+        const valueType = typeof value;
+
+        if (valueType === 'bigint') {
+            return (value as bigint).toString();
+        }
+
+        if (valueType !== 'object') {
             return value;
         }
 

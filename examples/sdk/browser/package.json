@@ -40,6 +40,7 @@
         "webpack-cli": "^5.1.4"
     },
     "dependencies": {
-        "@reduxjs/toolkit": "^1.9.5"
+        "@reduxjs/toolkit": "^1.9.5",
+        "@backtrace-labs/browser": "^0.0.5"
     }
 }

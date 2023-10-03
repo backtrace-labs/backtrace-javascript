@@ -36,5 +36,8 @@
     "homepage": "https://github.com/backtrace-labs/backtrace-javascript#readme",
     "devDependencies": {
         "typescript": "^5.1.3"
+    },
+    "dependencies": {
+        "@backtrace-labs/node": "file:../../../packages/node"
     }
 }

@@ -48,7 +48,7 @@ export class SubmissionUrlInformation {
 
     /**
      * Find the universe based on the submission URL
-     * @param submissionUrl submission URL
+     * @param submissionUrl submission URL - full submission URL to Backtrace.
      * @returns universe name
      */
     public static findUniverse(submissionUrl: string): string | undefined {
@@ -63,13 +63,22 @@ export class SubmissionUrlInformation {
         }
         // the universe name should be available in the hostname
         // for example abc.sp.backtrace.io or zyx.in.backtrace.io or foo.backtrace.io
-        const hostname = new URL(submissionUrl).hostname;
-        if (!hostname.endsWith('backtrace.io')) {
+        const domainIndex = submissionUrl.indexOf('.backtrace.io');
+        if (domainIndex === -1) {
             return undefined;
         }
 
+        const protocolSeparator = '://';
+        let protocolEndIndex = submissionUrl.indexOf(protocolSeparator);
+        if (protocolEndIndex === -1) {
+            protocolEndIndex = 0;
+        } else {
+            protocolEndIndex += protocolSeparator.length;
+        }
+
+        const hostname = submissionUrl.substring(protocolEndIndex, domainIndex);
         const endOfUniverseName = hostname.indexOf('.');
-        return hostname.substring(0, endOfUniverseName);
+        return endOfUniverseName === -1 ? hostname : hostname.substring(0, endOfUniverseName);
     }
 
     public static findToken(submissionUrl: string): string | null {
@@ -80,7 +89,7 @@ export class SubmissionUrlInformation {
             // submit.backtrace.io/universe/token/format
             // by spliting the submission URL by `/` and dropping the last
             // part of the URL, the last element on the list is the token.
-            return submissionUrlParts[submissionUrlParts.length - 2];
+            return submissionUrlParts[submissionUrlParts.length - 2] ?? null;
         }
 
         const url = new URL(submissionUrl);
@@ -90,22 +99,33 @@ export class SubmissionUrlInformation {
 
     public static changeSubmissionFormat(submissionUrl: string, desiredFormat: 'json' | 'plcrash' | 'minidump') {
         const submitIndex = submissionUrl.indexOf(this.SUBMIT_PREFIX);
-        const url = new URL(submissionUrl);
+
         if (submitIndex !== -1) {
-            const pathParts = url.pathname.split('/');
+            const queryParametersIndex = submissionUrl.indexOf('?');
+            const queryParameters = queryParametersIndex === -1 ? '' : submissionUrl.substring(queryParametersIndex);
+            const pathname = submissionUrl.substring(
+                submitIndex + this.SUBMIT_PREFIX.length,
+                queryParametersIndex === -1 ? undefined : queryParametersIndex,
+            );
+            const pathParts = pathname.split('/');
             // path parts are prefixed with '/' character. Expected and valid submit format is:
             // /universe/token/format
             // splitting pathname should generate at least 4 elements ('', universe, token, format)
             // if pathParts length is not equal to 4 then the invalid were passed.
-            const expectedMinimalPathParts = 4;
+            const expectedMinimalPathParts = 3;
             if (pathParts.length < expectedMinimalPathParts) {
                 return submissionUrl;
             }
-            pathParts[3] = desiredFormat;
-            url.pathname = pathParts.join('/');
+            pathParts[2] = desiredFormat;
+            return (
+                submissionUrl.substring(0, submitIndex + this.SUBMIT_PREFIX.length) +
+                pathParts.join('/') +
+                queryParameters
+            );
         } else {
+            const url = new URL(submissionUrl);
             url.searchParams.set('format', desiredFormat);
+            return url.href;
         }
-        return url.href;
     }
 }

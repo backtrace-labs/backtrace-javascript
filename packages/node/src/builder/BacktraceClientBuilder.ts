@@ -17,6 +17,7 @@ import {
     ProcessInformationAttributeProvider,
     ProcessStatusAttributeProvider,
 } from '../attributes';
+import { NodeFileSystem } from '../storage/NodeFileSystem';
 
 export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<BacktraceClient> {
     constructor(
@@ -46,11 +47,14 @@ export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<Backtrace
     }
 
     public build(): BacktraceClient {
-        return new BacktraceClient(
+        const instance = new BacktraceClient(
             { ...this._options, attachments: this.transformAttachments() },
             this.handler,
             this.attributeProviders,
             this.breadcrumbsSubscribers,
+            this.fileSystem ?? new NodeFileSystem(),
         );
+        instance.initialize();
+        return instance;
     }
 }

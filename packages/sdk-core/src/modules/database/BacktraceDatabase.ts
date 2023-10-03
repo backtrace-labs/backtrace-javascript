@@ -4,10 +4,13 @@ import { BacktraceAttachment } from '../../model/attachment';
 import { BacktraceDatabaseConfiguration } from '../../model/configuration/BacktraceDatabaseConfiguration';
 import { BacktraceData } from '../../model/data/BacktraceData';
 import { BacktraceReportSubmission } from '../../model/http/BacktraceReportSubmission';
+import { BacktraceModule, BacktraceModuleBindData } from '../BacktraceModule';
+import { SessionFiles } from '../storage';
 import { BacktraceDatabaseContext } from './BacktraceDatabaseContext';
 import { BacktraceDatabaseStorageProvider } from './BacktraceDatabaseStorageProvider';
 import { BacktraceDatabaseRecord } from './model/BacktraceDatabaseRecord';
-export class BacktraceDatabase {
+
+export class BacktraceDatabase implements BacktraceModule {
     /**
      * Determines if the database is enabled.
      */
@@ -28,6 +31,7 @@ export class BacktraceDatabase {
         private readonly _options: BacktraceDatabaseConfiguration | undefined,
         private readonly _storageProvider: BacktraceDatabaseStorageProvider,
         private readonly _requestHandler: BacktraceReportSubmission,
+        private readonly _sessionFiles?: SessionFiles,
     ) {
         this._databaseRecordContext = new BacktraceDatabaseContext(this._options?.maximumRetries);
         this._maximumRecords = this._options?.maximumNumberOfRecords ?? 8;
@@ -38,7 +42,7 @@ export class BacktraceDatabase {
      * Starts database integration.
      * @returns true if the database started successfully. Otherwise false.
      */
-    public start(): boolean {
+    public initialize(): boolean {
         if (this._enabled) {
             return this._enabled;
         }
@@ -52,11 +56,47 @@ export class BacktraceDatabase {
             return false;
         }
 
-        this.loadReports().then(async () => {
-            await this.setupDatabaseAutoSend();
-        });
+        const lockId = this._sessionFiles?.lockPreviousSessions();
+        this.loadReports()
+            .then(() => {
+                this.setupDatabaseAutoSend();
+            })
+            .finally(() => lockId && this._sessionFiles?.unlockPreviousSessions(lockId));
+
         this._enabled = true;
         return true;
+    }
+
+    public bind({ reportEvents }: BacktraceModuleBindData): void {
+        if (this._enabled) {
+            return;
+        }
+
+        if (this._options?.enable === false) {
+            return;
+        }
+
+        reportEvents.on('before-send', (_, data, attachments) => {
+            const record = this.add(data, attachments);
+
+            if (!record || record.locked || record.count !== 1) {
+                return undefined;
+            }
+
+            record.locked = true;
+        });
+
+        reportEvents.on('after-send', (_, data, __, submissionResult) => {
+            const record = this._databaseRecordContext.find((record) => record.data.uuid === data.uuid);
+            if (!record) {
+                return;
+            }
+            record.locked = false;
+            if (submissionResult.status === 'Ok') {
+                this.remove(record);
+                this._sessionFiles?.unlockPreviousSessions(record.id);
+            }
+        });
     }
 
     /**
@@ -91,6 +131,7 @@ export class BacktraceDatabase {
         }
 
         this._databaseRecordContext.add(record);
+        this.lockSessionWithRecord(record);
 
         return record;
     }
@@ -129,6 +170,7 @@ export class BacktraceDatabase {
         }
         this._databaseRecordContext.remove(record);
         this._storageProvider.delete(record);
+        this._sessionFiles?.unlockPreviousSessions(record.id);
     }
 
     public addStorageProvider(storageProvider: BacktraceDatabaseStorageProvider) {
@@ -191,13 +233,17 @@ export class BacktraceDatabase {
         }
     }
 
-    private async loadReports(): Promise<void> {
+    private async loadReports() {
         const records = await this._storageProvider.get();
         if (records.length > this._maximumRecords) {
             records.length = this._maximumRecords;
         }
         this.prepareDatabase(records.length);
         this._databaseRecordContext.load(records);
+
+        for (const record of records) {
+            this.lockSessionWithRecord(record);
+        }
     }
 
     private async setupDatabaseAutoSend() {
@@ -210,5 +256,20 @@ export class BacktraceDatabase {
         };
         this._intervalId = setInterval(sendDatabaseReports, this._retryInterval);
         await this.send();
+    }
+
+    private lockSessionWithRecord(record: BacktraceDatabaseRecord) {
+        if (!this._sessionFiles) {
+            return;
+        }
+
+        const sessionId = record.data.attributes?.['application.session'];
+        if (typeof sessionId !== 'string') {
+            this._sessionFiles.lockPreviousSessions(record.id);
+            return;
+        }
+
+        const session = this._sessionFiles.getSessionWithId(sessionId);
+        session?.lock(record.id);
     }
 }

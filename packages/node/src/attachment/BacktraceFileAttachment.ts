@@ -1,12 +1,13 @@
-import { BacktraceAttachment } from '@backtrace-labs/sdk-core';
+import { BacktraceFileAttachment as CoreBacktraceFileAttachment } from '@backtrace-labs/sdk-core';
 import fs from 'fs';
 import path from 'path';
 import { Readable } from 'stream';
 
-export class BacktraceFileAttachment implements BacktraceAttachment<Readable> {
+export class BacktraceFileAttachment implements CoreBacktraceFileAttachment<Readable> {
     public readonly name: string;
-    constructor(public readonly filePath: string) {
-        this.name = path.basename(this.filePath);
+
+    constructor(public readonly filePath: string, name?: string) {
+        this.name = name ?? path.basename(this.filePath);
     }
 
     public get(): fs.ReadStream | undefined {

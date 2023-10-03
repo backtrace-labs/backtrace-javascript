@@ -1,22 +1,24 @@
 import {
     BacktraceAttributeProvider,
-    BacktraceConfiguration as CoreConfiguration,
     BacktraceCoreClient,
     BacktraceReport,
     BacktraceRequestHandler,
     BreadcrumbsEventSubscriber,
+    BreadcrumbsManager,
+    BacktraceConfiguration as CoreConfiguration,
     DebugIdContainer,
+    FileAttributeManager,
+    FileSystem,
+    SessionFiles,
     VariableDebugIdMapProvider,
 } from '@backtrace-labs/sdk-core';
-import fs from 'fs';
-import * as fsPromise from 'fs/promises';
 import path from 'path';
-import { AGENT } from './agentDefinition';
 import { BacktraceConfiguration } from './BacktraceConfiguration';
+import { AGENT } from './agentDefinition';
+import { FileBreadcrumbsStorage } from './breadcrumbs/FileBreadcrumbsStorage';
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 import { NodeOptionReader } from './common/NodeOptionReader';
 import { NodeDiagnosticReportConverter } from './converter/NodeDiagnosticReportConverter';
-import { BacktraceDatabaseFileStorageProvider } from './database/BacktraceDatabaseFileStorageProvider';
 
 export class BacktraceClient extends BacktraceCoreClient {
     private _listeners: Record<string, NodeJS.UnhandledRejectionListener | NodeJS.UncaughtExceptionListener> = {};
@@ -26,6 +28,7 @@ export class BacktraceClient extends BacktraceCoreClient {
         requestHandler: BacktraceRequestHandler,
         attributeProviders: BacktraceAttributeProvider[],
         breadcrumbsEventSubscribers: BreadcrumbsEventSubscriber[],
+        fileSystem?: FileSystem,
     ) {
         super({
             options,
@@ -36,17 +39,38 @@ export class BacktraceClient extends BacktraceCoreClient {
             breadcrumbsSetup: {
                 subscribers: breadcrumbsEventSubscribers,
             },
-            databaseStorageProvider: BacktraceDatabaseFileStorageProvider.createIfValid(options.database),
+            fileSystem,
         });
 
-        this.loadNodeCrashes();
+        const breadcrumbsManager = this.modules.get(BreadcrumbsManager);
+        if (breadcrumbsManager && this.sessionFiles) {
+            breadcrumbsManager.setStorage(
+                FileBreadcrumbsStorage.create(this.sessionFiles, options.breadcrumbs?.maximumBreadcrumbs ?? 100),
+            );
+        }
 
-        this.captureUnhandledErrors(
-            this.options.captureUnhandledErrors,
-            this.options.captureUnhandledPromiseRejections,
-        );
+        if (this.sessionFiles && this.fileSystem && options.database?.captureNativeCrashes) {
+            this.addModule(FileAttributeManager, FileAttributeManager.create(this.fileSystem));
+        }
+    }
 
-        this.captureNodeCrashes();
+    public initialize(): void {
+        const lockId = this.sessionFiles?.lockPreviousSessions();
+
+        try {
+            super.initialize();
+            this.captureUnhandledErrors(
+                this.options.captureUnhandledErrors,
+                this.options.captureUnhandledPromiseRejections,
+            );
+
+            this.captureNodeCrashes();
+        } catch (err) {
+            lockId && this.sessionFiles?.unlockPreviousSessions(lockId);
+            throw err;
+        }
+
+        this.loadNodeCrashes().finally(() => lockId && this.sessionFiles?.unlockPreviousSessions(lockId));
     }
 
     public static builder(options: BacktraceConfiguration): BacktraceClientBuilder {
@@ -219,7 +243,7 @@ export class BacktraceClient extends BacktraceCoreClient {
     }
 
     private async loadNodeCrashes() {
-        if (!this.options.database?.captureNativeCrashes) {
+        if (!this.database || !this.fileSystem || !this.options.database?.captureNativeCrashes) {
             return;
         }
 
@@ -228,36 +252,78 @@ export class BacktraceClient extends BacktraceCoreClient {
             ? process.report.directory
             : this.options.database?.path ?? process.cwd();
 
-        const databaseFiles = fs.readdirSync(databasePath, {
-            encoding: 'utf8',
-            withFileTypes: true,
-        });
+        let databaseFiles: string[];
+        try {
+            databaseFiles = await this.fileSystem.readDir(databasePath);
+        } catch {
+            return;
+        }
 
         const converter = new NodeDiagnosticReportConverter();
+        const recordNames = databaseFiles.filter((file) =>
+            // If the user specifies a preset name for reports, we should compare it directly
+            // Otherwise, match the default name
+            reportName ? file === reportName : file.startsWith('report.') && file.endsWith('.json'),
+        );
 
-        const recordNames = databaseFiles
-            .filter(
-                (file) =>
-                    file.isFile() &&
-                    // If the user specifies a preset name for reports, we should compare it directly
-                    // Otherwise, match the default name
-                    (reportName
-                        ? file.name === reportName
-                        : file.name.startsWith('report.') && file.name.endsWith('.json')),
-            )
-            .map((n) => n.name);
+        if (!recordNames.length) {
+            return;
+        }
 
+        const reports: [path: string, report: BacktraceReport, sessionFiles?: SessionFiles][] = [];
         for (const recordName of recordNames) {
             const recordPath = path.join(databasePath, recordName);
             try {
-                const recordJson = await fsPromise.readFile(recordPath, 'utf8');
-                const data = converter.convert(JSON.parse(recordJson));
-                await this.send(data);
+                const recordJson = await this.fileSystem.readFile(recordPath);
+                const report = converter.convert(JSON.parse(recordJson));
+                reports.push([recordPath, report]);
+            } catch {
+                // Do nothing, skip the report
+            }
+        }
+
+        // Sort reports by timestamp descending
+        reports.sort((a, b) => b[1].timestamp - a[1].timestamp);
+
+        // Map reports to sessions
+        // When the sessions are sorted by timestamp, we can assume that each previous session maps to the next report
+        let currentSession = this.sessionFiles?.getPreviousSession();
+        for (const tuple of reports) {
+            tuple[2] = currentSession;
+            currentSession = currentSession?.getPreviousSession();
+        }
+
+        for (const [recordPath, report, session] of reports) {
+            try {
+                if (session) {
+                    const breadcrumbsStorage = FileBreadcrumbsStorage.createFromSession(session);
+                    if (breadcrumbsStorage) {
+                        report.attachments.push(...breadcrumbsStorage.getAttachments());
+                    }
+
+                    const fileAttributes = FileAttributeManager.createFromSession(session, this.fileSystem);
+                    Object.assign(report.attributes, await fileAttributes.get());
+
+                    report.attributes['application.session'] = session.sessionId;
+                } else {
+                    report.attributes['application.session'] = null;
+                }
+
+                const data = this.generateSubmissionData(report);
+                if (data) {
+                    this.database.add(data, report.attachments);
+                }
             } catch {
                 // Do nothing, skip the report
             } finally {
-                await fsPromise.unlink(recordPath);
+                try {
+                    await this.fileSystem.unlink(recordPath);
+                } catch {
+                    // Do nothing
+                }
             }
         }
+
+        await this.database.send();
     }
 }

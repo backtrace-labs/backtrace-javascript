@@ -1,19 +1,24 @@
 const path = require('path');
 
 /** @type {import('webpack').Configuration} */
-const webpackTypescriptConfig = {
-    resolve: {
-        extensions: ['.js', '.ts', '.jsx', '.tsx'],
-    },
-    module: {
-        rules: [
-            {
-                test: /\.tsx?$/,
-                loader: 'ts-loader',
-            },
-        ],
-    },
-};
+const webpackTypescriptConfig = getWebpackTypescriptConfig();
+
+function getWebpackTypescriptConfig(options) {
+    return {
+        resolve: {
+            extensions: ['.js', '.ts', '.jsx', '.tsx'],
+        },
+        module: {
+            rules: [
+                {
+                    test: /\.tsx?$/,
+                    loader: 'ts-loader',
+                    options
+                },
+            ],
+        },
+    };
+}
 
 function minifiedAndUnminified(/** @type {import('webpack').Configuration} */ config) {
     const { name, ext } = path.parse(config.output.filename);
@@ -41,4 +46,4 @@ function minifiedAndUnminified(/** @type {import('webpack').Configuration} */ co
     ];
 }
 
-module.exports = { webpackTypescriptConfig, minifiedAndUnminified };
+module.exports = { webpackTypescriptConfig, minifiedAndUnminified, getWebpackTypescriptConfig };
