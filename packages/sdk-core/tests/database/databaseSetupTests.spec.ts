@@ -35,7 +35,7 @@ describe('Database setup tests', () => {
             ),
         );
 
-        const databaseStartResult = database.start();
+        const databaseStartResult = database.initialize();
 
         expect(databaseStartResult).toBeTruthy();
         expect(database.enabled).toBeTruthy();
@@ -53,7 +53,7 @@ describe('Database setup tests', () => {
             ),
         );
 
-        const databaseStartResult = database.start();
+        const databaseStartResult = database.initialize();
 
         expect(databaseStartResult).toBeFalsy();
         expect(database.enabled).toBeFalsy();
@@ -75,7 +75,7 @@ describe('Database setup tests', () => {
         );
         jest.spyOn(testStorageProvider, 'start').mockReturnValue(false);
 
-        const databaseStartResult = database.start();
+        const databaseStartResult = database.initialize();
 
         expect(databaseStartResult).toBeFalsy();
         expect(database.enabled).toBeFalsy();
@@ -93,7 +93,7 @@ describe('Database setup tests', () => {
             ),
         );
 
-        database.start();
+        database.initialize();
         database.dispose();
 
         expect(database.enabled).toBeFalsy();

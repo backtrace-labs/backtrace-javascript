@@ -41,7 +41,7 @@ import { CliLogger } from '../logger';
 import { findConfig, joinOptions, loadOptions } from '../options/loadOptions';
 import { addSourceToSourceMap } from './add-sources';
 import { processSource } from './process';
-import { saveAssets, uploadAssets, uploadOrSaveAssets } from './upload';
+import { getUploadUrl, saveAssets, uploadAssets, uploadOrSaveAssets } from './upload';
 
 export interface RunOptions extends GlobalOptions {
     readonly 'add-sources': boolean;
@@ -52,6 +52,8 @@ export interface RunOptions extends GlobalOptions {
     readonly exclude: string | string[];
     readonly 'dry-run': boolean;
     readonly url: string;
+    readonly subdomain: string;
+    readonly token: string;
     readonly 'include-sources': boolean;
     readonly output: string;
     readonly insecure: boolean;
@@ -106,6 +108,18 @@ export const runCmd = new Command<RunOptions>({
         type: String,
         description: 'URL to upload to.',
         alias: 'u',
+    })
+    .option({
+        name: 'subdomain',
+        type: String,
+        description: 'Subdomain to upload to. Do not use on on-premise environments.',
+        alias: 's',
+    })
+    .option({
+        name: 'token',
+        type: String,
+        description: 'Symbol submission token. Required when subdomain is provided.',
+        alias: 't',
     })
     .option({
         name: 'output',
@@ -191,6 +205,13 @@ export async function runSourcemapCommands({ opts, logger, getHelpMessage }: Com
         return Err('path must be specified');
     }
 
+    const uploadUrlResult = getUploadUrl(uploadOptions);
+    if (uploadUrlResult.isErr()) {
+        logger.info(getHelpMessage());
+        return uploadUrlResult;
+    }
+    const uploadUrl = uploadUrlResult.data;
+
     const logInfo = log(logger, 'info');
     const logDebug = log(logger, 'debug');
     const logTrace = log(logger, 'trace');
@@ -262,7 +283,7 @@ export async function runSourcemapCommands({ opts, logger, getHelpMessage }: Com
 
     const saveArchiveCommandResult = runOptions.upload
         ? await uploadOrSaveAssets(
-              uploadOptions.url,
+              uploadUrl,
               uploadOptions.output,
               (url) =>
                   uploadAssets(
@@ -305,12 +326,12 @@ export async function runSourcemapCommands({ opts, logger, getHelpMessage }: Com
                   logDebug(`running upload...`),
                   map((t) => t.sourceMap),
                   filterProcessedAssetsCommand,
-                  opts['pass-with-no-files']
+                  uploadOptions['pass-with-no-files']
                       ? Ok
                       : failIfEmpty('no processed sourcemaps found, make sure to run process'),
                   R.map(uniqueBy((asset) => asset.content.debugId)),
                   R.map((assets) =>
-                      opts['dry-run']
+                      uploadOptions['dry-run']
                           ? Ok({ rxid: '<dry-run>' })
                           : assets.length
                           ? saveArchiveCommand(assets)
@@ -348,16 +369,23 @@ export async function runSourcemapCommands({ opts, logger, getHelpMessage }: Com
         R.map(flow(mapAsync(handleAssetCommand(runProcess, runAddSources)), R.flatMap)),
         R.map(filterBehaviorSkippedElements),
         R.map(
-            logInfo(
-                (assets) =>
-                    `processed ${assets.reduce((sum, r) => sum + (r.processed ? 1 : 0), 0)} source and sourcemaps`,
-            ),
+            runProcess
+                ? logInfo(
+                      (assets) =>
+                          `processed ${assets.reduce(
+                              (sum, r) => sum + (r.processed ? 1 : 0),
+                              0,
+                          )} source and sourcemaps`,
+                  )
+                : pass,
         ),
         R.map(
-            logInfo(
-                (assets) =>
-                    `added sources to ${assets.reduce((sum, r) => sum + (r.sourceAdded ? 1 : 0), 0)} sourcemaps`,
-            ),
+            runAddSources
+                ? logInfo(
+                      (assets) =>
+                          `added sources to ${assets.reduce((sum, r) => sum + (r.sourceAdded ? 1 : 0), 0)} sourcemaps`,
+                  )
+                : pass,
         ),
         R.map(uploadCommand ?? Ok),
     );

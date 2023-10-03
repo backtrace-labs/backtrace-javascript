@@ -7,7 +7,7 @@ const nodeExternals = require('webpack-node-externals');
 module.exports = {
     ...webpackTypescriptConfig,
     mode: process.env.NODE_ENV ?? 'production',
-    devtool: 'source-map',
+    devtool: 'nosources-source-map',
     entry: './src/index.ts',
     target: 'node',
     externalsPresets: { node: true },
@@ -20,6 +20,9 @@ module.exports = {
         filename: 'index.js',
         path: path.join(__dirname, 'lib'),
         libraryTarget: 'commonjs2',
+        devtoolModuleFilenameTemplate(info) {
+            return path.relative(path.join(__dirname, 'lib'), info.absoluteResourcePath);
+        },
     },
     plugins: [agentDefinitionPlugin(path.join(__dirname, 'package.json'))],
     optimization: {

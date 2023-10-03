@@ -19,8 +19,13 @@
         "packages/browser",
         "packages/react",
         "packages/node",
+        "packages/nestjs",
         "packages/react-native",
-        "tools/*"
+        "tools/sourcemap-tools",
+        "tools/cli",
+        "tools/rollup-plugin",
+        "tools/webpack-plugin",
+        "tools/vite-plugin"
     ],
     "repository": {
         "type": "git",

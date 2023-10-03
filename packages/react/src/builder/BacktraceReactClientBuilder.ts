@@ -14,7 +14,7 @@ export class BacktraceReactClientBuilder extends BacktraceClientBuilder {
     }
 
     public build(): BacktraceClient {
-        return new BacktraceClient(
+        const instance = new BacktraceClient(
             this.options,
             this.handler,
             this.attributeProviders,
@@ -22,5 +22,7 @@ export class BacktraceReactClientBuilder extends BacktraceClientBuilder {
             this.breadcrumbsSubscribers,
             this.sessionProvider,
         );
+        instance.initialize();
+        return instance;
     }
 }
