@@ -1,0 +1,132 @@
+.card {
+    padding: 40px;
+    background-color: white;
+    width: 30%;
+}
+
+#redux-demo-container {
+    display: none;
+}
+
+.center {
+    display: block;
+    margin: 0 auto;
+}
+
+.action-container {
+    width: 50%;
+    padding: 20px;
+}
+
+.card-header {
+    font-family: 'DM Sans', Arial, sans-serif;
+    font-size: 22px;
+    color: #2d2d2d;
+    text-align: center;
+    line-height: 120%;
+    margin-bottom: 24px;
+}
+.footer {
+    width: 30%;
+    padding: 40px;
+    text-align: center;
+}
+p {
+    font-family: 'DM Sans', Arial, sans-serif;
+    font-weight: 300;
+    font-size: 15px;
+}
+
+.action-button {
+    cursor: pointer;
+    background-color: #3ddc91;
+    padding: 12px 35px;
+    border-radius: 50px;
+    margin-bottom: 5px;
+    width: 40%;
+    text-align: center;
+}
+.action-button a {
+    color: #132322;
+    font-family: 'DM Sans', Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    font-style: normal;
+    line-height: 20px;
+    text-decoration: none;
+    display: block;
+}
+
+img {
+    -ms-interpolation-mode: bicubic;
+    border: 0;
+}
+
+p,
+a,
+li,
+td,
+blockquote {
+    mso-line-height-rule: exactly;
+}
+
+p,
+a,
+li,
+td,
+body,
+table,
+blockquote {
+    -ms-text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+}
+
+/*------ Reset Style ------ */
+* {
+    -webkit-text-size-adjust: none;
+    -webkit-text-resize: 100%;
+    text-resize: 100%;
+}
+
+table {
+    border-spacing: 0 2px !important;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+    display: block;
+    margin: 0;
+    padding: 0;
+    color: #1e2127;
+}
+
+img,
+a img {
+    border: 0;
+    height: auto;
+    outline: none;
+    text-decoration: none;
+}
+
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.footerAddressInfo {
+    color: #1e2127;
+    font-family: 'DM Sans', Arial, sans-serif;
+    font-size: 16px;
+    margin-top: 16px;
+    margin-bottom: 8px;
+}
+/*------ Google Font Style ------ */
+[style*='DM Sans'] {
+    font-family: 'DM Sans', Helvetica, Arial, sans-serif !important;
+}
