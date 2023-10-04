@@ -310,7 +310,7 @@ The following options are available for the BacktraceClientOptions passed when i
 | `token`                             | String                                              | The submission token for error injestion. This is required only if submitting directly to a Backtrace URL. (uncommon)                                                                                                                                                                                                                                                                |         | <ul><li>- [ ] </li></ul> |
 | `userAttributes`                    | Dictionary                                          | Additional attributes that can be filtered and aggregated against in the Backtrace UI.                                                                                                                                                                                                                                                                                               |         | <ul><li>- [ ] </li></ul> |
 | `attachments`                       | BacktraceAttachment[]                               | Additional files to be sent with error reports. See [File Attachments](#file-attachments)                                                                                                                                                                                                                                                                                            |         | <ul><li>- [ ] </li></ul> |
-| `beforeSend`                        | (data: BacktraceData) => BacktraceData \| undefined | Triggers an event every time an exception in the managed environment occurs, which allows you to skip the report (by returning a null value) or to modify data that library collected before sending the report. You can use the BeforeSend event to extend attributes or JSON object data based on data the application has at the time of exception. See [BeforeSend](#modifyskip-error-reports)) |         | <ul><li>- [ ] </li></ul> |
+| `beforeSend`                        | (data: BacktraceData) => BacktraceData \| undefined | Triggers an event every time an exception in the managed environment occurs, which allows you to skip the report (by returning a null value) or to modify data that library collected before sending the report. You can use the BeforeSend event to extend attributes or JSON object data based on data the application has at the time of exception. See [Modify/skip error reports](#modifyskip-error-reports)) |         | <ul><li>- [ ] </li></ul> |
 | `skipReport`                        | (report: BacktraceReport) => boolean                | If you want to ignore specific types of error reports, we recommend that you use the skipReport callback. By using it, based on the data generated in the report, you can decide to filter the report, or send it to Backtrace.                                                                                                                                                      |         | <ul><li>- [ ] </li></ul> |
 | `captureUnhandledErrors`            | Boolean                                             | Enable unhandled errors                                                                                                                                                                                                                                                                                                                                                              | `true`  | <ul><li>- [ ] </li></ul> |
 | `captureUnhandledPromiseRejections` | Boolean                                             | Enable unhandled promise rejection                                                                                                                                                                                                                                                                                                                                                   | `true`  | <ul><li>- [ ] </li></ul> |
@@ -322,8 +322,7 @@ The following options are available for the BacktraceClientOptions passed when i
 
 ### Manually send an error
 
-There are several ways to send an error to Backtrace. For more details on the definition of `client.send()` see
-[Methods](#methods) below.
+There are several ways to send an error to Backtrace:
 
 ```ts
 // send as a string
@@ -350,7 +349,7 @@ A BeforeSend event is triggered when an exception in the managed environment occ
 
 Custom handlers can be implemented to override BacktraceClient file and http operations. Overriding the default operations allows custom encryption for data at rest or in motion.
 
-> Do not use these operations to modify the data objects. Use a [BeforeSend](#modifyskip-error-reports) handler to modify a report before sending it to Backtrace.
+> Do not use these operations to modify the data objects. See [Modify/skip error reports](#modifyskip-error-reports) for the correct method to modify a report before sending it to Backtrace.
 
 ```ts
   // Code sample
