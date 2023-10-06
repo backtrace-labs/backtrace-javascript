@@ -20,11 +20,10 @@ and easy, after which you can explore the rich set of Backtrace features.
         - [Metrics Configuration](#metrics-configuration)
         - [Metrics Usage](#metrics-usage)
 1. [Advanced SDK Features](#advanced-sdk-features)
+    - [BacktraceClient options](#backtraceclient)
     - [Manually send an error](#manually-send-an-error)
-    - [BacktraceClient](#backtraceclient)
-        - [BacktraceClientOptions](#backtraceclientoptions)
-        - [BacktraceClient Methods](#backtraceclient-methods)
-    - [BacktraceReports](#backtracereport)
+    - [Modify/skip error reports](#modifyskip-error-reports)
+    - [Custom file/http handlers](#custom-filehttp-handlers)
 
 ## Basic Integration
 
@@ -293,25 +292,6 @@ client.metrics?.send();
 
 ## Advanced SDK Features
 
-### Manually send an error
-
-There are several ways to send an error to Backtrace. For more details on the definition of `client.send()` see
-[Methods](#methods) below.
-
-```ts
-// send as a string
-await client.send('This is a string!');
-
-// send as an Error
-await client.send(new Error('This is an Error!'));
-
-// as a BacktraceReport (string)
-await client.send(new BacktraceReport('This is a report with a string!'));
-
-// as a BacktraceReport (Error)
-await client.send(new BacktraceReport(new Error('This is a report with a string!')));
-```
-
 ### BacktraceClient
 
 BacktraceClient is the main SDK class. Error monitoring starts when this object is instantiated, and it will compose and
@@ -330,7 +310,7 @@ The following options are available for the BacktraceClientOptions passed when i
 | `token`                             | String                                              | The submission token for error injestion. This is required only if submitting directly to a Backtrace URL. (uncommon)                                                                                                                                                                                                                                                                |         | <ul><li>- [ ] </li></ul> |
 | `userAttributes`                    | Dictionary                                          | Additional attributes that can be filtered and aggregated against in the Backtrace UI.                                                                                                                                                                                                                                                                                               |         | <ul><li>- [ ] </li></ul> |
 | `attachments`                       | BacktraceAttachment[]                               | Additional files to be sent with error reports. See [File Attachments](#file-attachments)                                                                                                                                                                                                                                                                                            |         | <ul><li>- [ ] </li></ul> |
-| `beforeSend`                        | (data: BacktraceData) => BacktraceData \| undefined | Triggers an event every time an exception in the managed environment occurs, which allows you to skip the report (by returning a null value) or to modify data that library collected before sending the report. You can use the BeforeSend event to extend attributes or JSON object data based on data the application has at the time of exception. See [BeforeSend](#beforesend) |         | <ul><li>- [ ] </li></ul> |
+| `beforeSend`                        | (data: BacktraceData) => BacktraceData \| undefined | Triggers an event every time an exception in the managed environment occurs, which allows you to skip the report (by returning a null value) or to modify data that library collected before sending the report. You can use the BeforeSend event to extend attributes or JSON object data based on data the application has at the time of exception. See [Modify/skip error reports](#modifyskip-error-reports)) |         | <ul><li>- [ ] </li></ul> |
 | `skipReport`                        | (report: BacktraceReport) => boolean                | If you want to ignore specific types of error reports, we recommend that you use the skipReport callback. By using it, based on the data generated in the report, you can decide to filter the report, or send it to Backtrace.                                                                                                                                                      |         | <ul><li>- [ ] </li></ul> |
 | `captureUnhandledErrors`            | Boolean                                             | Enable unhandled errors                                                                                                                                                                                                                                                                                                                                                              | `true`  | <ul><li>- [ ] </li></ul> |
 | `captureUnhandledPromiseRejections` | Boolean                                             | Enable unhandled promise rejection                                                                                                                                                                                                                                                                                                                                                   | `true`  | <ul><li>- [ ] </li></ul> |
@@ -340,18 +320,55 @@ The following options are available for the BacktraceClientOptions passed when i
 | `metrics`                           | BacktraceMetricsOptions                             | See [Backtrace Stability Metrics](#application-stability-metrics)                                                                                                                                                                                                                                                                                                                    |         | <ul><li>- [ ] </li></ul> |
 | `breadcrumbs`                       | BacktraceBreadcrumbsSettings                        | See [Backtrace Breadcrumbs](#breadcrumbs)                                                                                                                                                                                                                                                                                                                                            |         | <ul><li>- [ ] </li></ul> |
 
-#### BacktraceClient Methods
+### Manually send an error
 
-| Name                                                                                                                                            | Return Type     | Description                                                                       |
-| ----------------------------------------------------------------------------------------------------------------------------------------------- | --------------- | --------------------------------------------------------------------------------- |
-| `addAttribute(attributes: Record<string, unknown>)`                                                                                             | void            | Add attributes to the BacktraceClient reports                                     |
-| `addAttachment(attachment: BacktraceAttachment)`                                                                                                | void            | Add an attachment to the BacktraceClient reports                                  |
-| `initialize(options: BacktraceClientOptions)`                                                                                                   | BacktraceClient | Initializes a new BacktraceClient (returns the same instance on subsequent calls) |
-| `builder(options: BacktraceClientOptions).build()`                                                                                              | BacktraceClient | (Advanced) Sets up a new BacktraceClient for reporting                            |
-| `send(data: BacktraceReport \| Error \| string, reportAttributes: Record<string, unknown> = {}, reportAttachments: BacktraceAttachment[] = [])` | `Promise<void>` | Asynchronously sends error data to Backtrace                                      |
-| `dispose`                                                                                                                                       | void            | Disposes the client                                                               |
+There are several ways to send an error to Backtrace:
 
-### BacktraceReport
+```ts
+// send as a string
+await client.send('This is a string!');
 
-A Backtrace Report is the format that ultimately gets sent to Backtrace. Its structure can be found in
-`BacktraceReport.ts`.
+// send as an Error
+await client.send(new Error('This is an Error!'));
+
+// as a BacktraceReport (string)
+await client.send(new BacktraceReport('This is a report with a string!'));
+
+// as a BacktraceReport (Error)
+await client.send(new BacktraceReport(new Error('This is a report with a string!')));
+```
+
+### Modify/skip error reports
+A BeforeSend event is triggered when an exception in the managed environment occurs to which you can attach a handler. You can use the BeforeSend event to scrub PII, or extend attributes or JSON object data based on data your application has at the time of exception. A report can be skipped sompletely by returning a null value.
+
+```ts
+const client = BacktraceClient.initialize({
+    url: SUBMISSION_URL,
+    name: '@backtrace-labs/browser-example',
+    version: '0.0.1',
+    beforeSend: (data: BacktraceData) => {
+        // skip the report by returning a null from the callback
+        if (!shouldSendReportToBacktrace(data)) {
+            return undefined;
+        }
+        // apply custom attribute 
+        data.attributes['new-attribute"] = 'apply-data-in-callback';
+        return data;
+    },
+});
+
+```
+
+### Custom file/http handlers
+
+Custom handlers can be implemented to override BacktraceClient file and http operations. Overriding the default operations allows custom encryption for data at rest or in motion.
+
+> Do not use these operations to modify the data objects. See [Modify/skip error reports](#modifyskip-error-reports) for the correct method to modify a report before sending it to Backtrace.
+
+```ts
+const client = BacktraceClient.builder(options)
+    .useRequestHandler(requestHandler)
+    .useBreadcrumbSubscriber(breadcrumbSubscriber)
+    .addAttributeProvider(attributeProvider)
+    .build();
+```
