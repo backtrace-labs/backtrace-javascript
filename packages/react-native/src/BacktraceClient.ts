@@ -1,6 +1,7 @@
 import { ReactStackTraceConverter } from '@backtrace-labs/react';
 import {
     BacktraceCoreClient,
+    BreadcrumbsManager,
     SingleSessionProvider,
     SubmissionUrlInformation,
     V8StackTraceConverter,
@@ -11,25 +12,33 @@ import {
     type BreadcrumbsEventSubscriber,
     type DebugIdContainer,
 } from '@backtrace-labs/sdk-core';
-import { Platform } from 'react-native';
+import { NativeModules, Platform } from 'react-native';
 import { BacktraceClientBuilder } from './BacktraceClientBuilder';
 import { type BacktraceConfiguration } from './BacktraceConfiguration';
+import { FileBreadcrumbsStorage } from './breadcrumbs/FileBreadcrumbsStorage';
 import { version } from './common/platformHelper';
 import { CrashReporter } from './crashReporter/CrashReporter';
 import { generateUnhandledExceptionHandler } from './handlers';
 import { type ExceptionHandler } from './handlers/ExceptionHandler';
+import { ReactNativeFileSystem } from './storage/ReactNativeFileSystem';
 export class BacktraceClient extends BacktraceCoreClient {
-    private readonly crashReporter: CrashReporter = new CrashReporter();
+    private readonly _crashReporter?: CrashReporter;
     private readonly _exceptionHandler: ExceptionHandler = generateUnhandledExceptionHandler();
 
     public crash(): void {
-        this.crashReporter.crash();
+        CrashReporter.crash();
     }
+
+    public static get applicationDataPath(): string {
+        return NativeModules.BacktraceDirectoryProvider?.applicationDirectory() ?? '';
+    }
+
     constructor(
         options: BacktraceConfiguration,
         requestHandler: BacktraceRequestHandler,
         attributeProviders: BacktraceAttributeProvider[],
         breadcrumbsEventSubscribers: BreadcrumbsEventSubscriber[],
+        fileSystem?: ReactNativeFileSystem,
     ) {
         super({
             options,
@@ -47,20 +56,38 @@ export class BacktraceClient extends BacktraceCoreClient {
             },
             stackTraceConverter: new ReactStackTraceConverter(new V8StackTraceConverter()),
             sessionProvider: new SingleSessionProvider(),
+            fileSystem,
         });
+        if (!fileSystem) {
+            return;
+        }
 
-        this.captureUnhandledErrors(options.captureUnhandledErrors, options.captureUnhandledPromiseRejections);
-        const submissionUrl = SubmissionUrlInformation.toJsonReportSubmissionUrl(options.url);
+        const breadcrumbsManager = this.modules.get(BreadcrumbsManager);
+        if (breadcrumbsManager && this.sessionFiles) {
+            breadcrumbsManager.setStorage(
+                FileBreadcrumbsStorage.create(
+                    fileSystem,
+                    this.sessionFiles,
+                    options.breadcrumbs?.maximumBreadcrumbs ?? 100,
+                ),
+            );
+        }
+    }
 
-        this.crashReporter.initialize(
-            Platform.select({
-                ios: SubmissionUrlInformation.toPlCrashReporterSubmissionUrl(submissionUrl),
-                android: SubmissionUrlInformation.toMinidumpSubmissionUrl(submissionUrl),
-                default: submissionUrl,
-            }),
-            this.attributeManager.get('scoped').attributes,
-            this.attachments,
-        );
+    public initialize(): void {
+        const lockId = this.sessionFiles?.lockPreviousSessions();
+        try {
+            super.initialize();
+            this.captureUnhandledErrors(
+                this.options.captureUnhandledErrors,
+                this.options.captureUnhandledPromiseRejections,
+            );
+
+            this.initializeNativeCrashReporter();
+        } catch (err) {
+            lockId && this.sessionFiles?.unlockPreviousSessions(lockId);
+            throw err;
+        }
     }
 
     /**
@@ -80,7 +107,7 @@ export class BacktraceClient extends BacktraceCoreClient {
         }
 
         const clientAttributes = super.attributes;
-        this.crashReporter?.updateAttributes(
+        this._crashReporter?.updateAttributes(
             Object.fromEntries(
                 Object.entries(attributes)
                     .filter(([key]) => clientAttributes[key] != null)
@@ -91,7 +118,7 @@ export class BacktraceClient extends BacktraceCoreClient {
 
     public dispose(): void {
         this._exceptionHandler.dispose();
-        this.crashReporter.dispose();
+        this._crashReporter?.dispose();
         super.dispose();
     }
 
@@ -134,5 +161,35 @@ export class BacktraceClient extends BacktraceCoreClient {
         if (captureUnhandledRejections) {
             this._exceptionHandler.captureUnhandledPromiseRejections(this);
         }
+    }
+
+    private initializeNativeCrashReporter(): CrashReporter | undefined {
+        if (!this.options.database?.enable) {
+            return;
+        }
+
+        if (!this.options.database?.captureNativeCrashes) {
+            return;
+        }
+
+        const fileSystem = this.fileSystem;
+        if (!fileSystem) {
+            return;
+        }
+
+        const submissionUrl = SubmissionUrlInformation.toJsonReportSubmissionUrl(this.options.url);
+
+        const crashReporter = new CrashReporter(fileSystem);
+        crashReporter.initialize(
+            Platform.select({
+                ios: SubmissionUrlInformation.toPlCrashReporterSubmissionUrl(submissionUrl),
+                android: SubmissionUrlInformation.toMinidumpSubmissionUrl(submissionUrl),
+                default: submissionUrl,
+            }),
+            this.options.database.path,
+            this.attributeManager.get('scoped').attributes,
+            this.attachments,
+        );
+        return crashReporter;
     }
 }

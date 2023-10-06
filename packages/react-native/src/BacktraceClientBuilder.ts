@@ -6,6 +6,7 @@ import { ReactNativeAttributeProvider } from './attributes/ReactNativeAttributeP
 import { BacktraceClient } from './BacktraceClient';
 import { type BacktraceConfiguration } from './BacktraceConfiguration';
 import { DebuggerHelper } from './common/DebuggerHelper';
+import { ReactNativeFileSystem } from './storage/ReactNativeFileSystem';
 
 export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<BacktraceClient> {
     constructor(private readonly options: BacktraceConfiguration) {
@@ -36,8 +37,25 @@ export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<Backtrace
             [],
             new SingleSessionProvider(),
         );
+        if (Platform.OS === 'android' || Platform.OS === 'ios') {
+            this.fileSystem = new ReactNativeFileSystem();
+        }
     }
+
+    public useFileSystem(fileSystem: ReactNativeFileSystem): this {
+        super.useFileSystem(fileSystem);
+        return this;
+    }
+
     public build(): BacktraceClient {
-        return new BacktraceClient(this.options, this.handler, this.attributeProviders, this.breadcrumbsSubscribers);
+        const client = new BacktraceClient(
+            this.options,
+            this.handler,
+            this.attributeProviders,
+            this.breadcrumbsSubscribers,
+            this.fileSystem as ReactNativeFileSystem,
+        );
+        client.initialize();
+        return client;
     }
 }

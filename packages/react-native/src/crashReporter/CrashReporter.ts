@@ -1,11 +1,14 @@
-import { type AttributeType, type BacktraceAttachment } from '@backtrace-labs/sdk-core';
+import { type AttributeType, type BacktraceAttachment, type FileSystem } from '@backtrace-labs/sdk-core';
 import { NativeModules } from 'react-native';
+import { BacktraceFileAttachment } from '../attachment/BacktraceFileAttachment';
 import { DebuggerHelper } from '../common/DebuggerHelper';
 
 export class CrashReporter {
-    private readonly _backtraceReactNative = NativeModules.BacktraceReactNative;
+    private static readonly BacktraceReactNative = NativeModules.BacktraceReactNative;
 
     private _enabled = false;
+
+    constructor(private readonly _fileSystem: FileSystem) {}
 
     /**
      * Determines if the crash reporting solution was already initialized.
@@ -14,6 +17,7 @@ export class CrashReporter {
 
     public initialize(
         submissionUrl: string,
+        databasePath: string,
         attributes: Record<string, AttributeType>,
         attachments: readonly BacktraceAttachment[],
     ): boolean {
@@ -21,7 +25,7 @@ export class CrashReporter {
             return false;
         }
         // verify if the native bindings are available
-        if (!this._backtraceReactNative) {
+        if (!CrashReporter.BacktraceReactNative) {
             return false;
         }
 
@@ -29,19 +33,18 @@ export class CrashReporter {
             return false;
         }
 
-        if (attachments.length !== 0) {
-            // to do:
-            // add attachment support with the new file system
-            console.warn('File attachments are unsupported.');
-        }
+        this._fileSystem.createDirSync(`${databasePath}/native`);
 
-        this._backtraceReactNative.initialize(
+        CrashReporter.BacktraceReactNative.initialize(
             submissionUrl,
+            databasePath,
             {
                 ...this.convertAttributes(attributes),
                 'error.type': 'Crash',
             },
-            [],
+            attachments
+                .filter((n) => n instanceof BacktraceFileAttachment)
+                .map((n) => (n as BacktraceFileAttachment).filePath),
         );
         this._enabled = true;
         CrashReporter.initialized = true;
@@ -52,12 +55,14 @@ export class CrashReporter {
         if (!this._enabled) {
             return;
         }
-        this._backtraceReactNative.useAttributes(this.convertAttributes(attributes));
+        CrashReporter.BacktraceReactNative.useAttributes(this.convertAttributes(attributes));
     }
 
-    public crash(): void {
-        if (this._backtraceReactNative) {
-            this._backtraceReactNative.crash();
+    public static crash(): void {
+        if (CrashReporter.BacktraceReactNative) {
+            CrashReporter.BacktraceReactNative.crash();
+        } else {
+            throw new Error('Native binding is not available');
         }
     }
 
