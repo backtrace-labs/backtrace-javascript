@@ -31,7 +31,7 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
     /**
      * Determines if the breadcrumb manager is enabled.
      */
-    private _enabled = true;
+    private _enabled = false;
 
     private readonly _eventSubscribers: BreadcrumbsEventSubscriber[] = [new ConsoleEventSubscriber()];
     private readonly _interceptor?: (breadcrumb: RawBreadcrumb) => RawBreadcrumb | undefined;
@@ -48,7 +48,9 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
     }
 
     public addEventSubscriber(subscriber: BreadcrumbsEventSubscriber) {
-        subscriber.start(this);
+        if (this._enabled) {
+            subscriber.start(this);
+        }
         this._eventSubscribers.push(subscriber);
     }
 
@@ -75,9 +77,14 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
     }
 
     public initialize() {
+        if (this._enabled) {
+            return;
+        }
+
         for (const subscriber of this._eventSubscribers) {
             subscriber.start(this);
         }
+        this._enabled = true;
     }
 
     public verbose(message: string, attributes?: Record<string, AttributeType> | undefined): boolean {
