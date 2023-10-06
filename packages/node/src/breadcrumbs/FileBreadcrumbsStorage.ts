@@ -2,12 +2,12 @@ import {
     BacktraceAttachment,
     Breadcrumb,
     BreadcrumbLogLevel,
-    BreadcrumbType,
     BreadcrumbsStorage,
+    BreadcrumbType,
+    jsonEscaper,
     RawBreadcrumb,
     SessionFiles,
     TimeHelper,
-    jsonEscaper,
 } from '@backtrace-labs/sdk-core';
 import path from 'path';
 import { BacktraceFileAttachment } from '../attachment';
@@ -67,6 +67,7 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
             timestamp: TimeHelper.now(),
             type: BreadcrumbType[rawBreadcrumb.type].toLowerCase(),
             level: BreadcrumbLogLevel[rawBreadcrumb.level].toLowerCase(),
+            attributes: rawBreadcrumb.attributes,
         };
 
         const breadcrumbJson = JSON.stringify(breadcrumb, jsonEscaper());
