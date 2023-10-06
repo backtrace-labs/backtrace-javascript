@@ -342,7 +342,21 @@ await client.send(new BacktraceReport(new Error('This is a report with a string!
 A BeforeSend event is triggered when an exception in the managed environment occurs to which you can attach a handler. You can use the BeforeSend event to scrub PII, or extend attributes or JSON object data based on data your application has at the time of exception. A report can be skipped sompletely by returning a null value.
 
 ```ts
-  // Code sample
+const client = BacktraceClient.initialize({
+    url: SUBMISSION_URL,
+    name: '@backtrace-labs/browser-example',
+    version: '0.0.1',
+    beforeSend: (data: BacktraceData) => {
+        // skip the report by returning a null from the callback
+        if (!shouldSendReportToBacktrace(data)) {
+            return undefined;
+        }
+        // apply custom attribute 
+        data.attributes['new-attribute"] = 'apply-data-in-callback';
+        return data;
+    },
+});
+
 ```
 
 ### Custom file/http handlers
