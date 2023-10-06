@@ -15,6 +15,7 @@ describe('Breadcrumbs filtering options tests', () => {
                     storage,
                 },
             );
+            breadcrumbsManager.initialize();
 
             const result = breadcrumbsManager.addBreadcrumb(message, BreadcrumbLogLevel.Debug, BreadcrumbType.Http);
             const breadcrumbs = JSON.parse(storage.get() as string);
@@ -34,6 +35,7 @@ describe('Breadcrumbs filtering options tests', () => {
                     storage,
                 },
             );
+            breadcrumbsManager.initialize();
 
             const result = breadcrumbsManager.addBreadcrumb(message, BreadcrumbLogLevel.Debug, allowedBreadcrumbType);
             const [breadcrumb] = JSON.parse(storage.get() as string);
@@ -54,6 +56,7 @@ describe('Breadcrumbs filtering options tests', () => {
                     storage,
                 },
             );
+            breadcrumbsManager.initialize();
 
             const result = breadcrumbsManager.addBreadcrumb(message, BreadcrumbLogLevel.Debug, BreadcrumbType.Http);
             const breadcrumbs = JSON.parse(storage.get() as string);
@@ -73,6 +76,7 @@ describe('Breadcrumbs filtering options tests', () => {
                     storage,
                 },
             );
+            breadcrumbsManager.initialize();
 
             const result = breadcrumbsManager.addBreadcrumb(message, allowedLogLevel, BreadcrumbType.Http);
             const [breadcrumb] = JSON.parse(storage.get() as string);
@@ -86,6 +90,7 @@ describe('Breadcrumbs filtering options tests', () => {
             const breadcrumbsManager = new BreadcrumbsManager({
                 logLevel: allowedLogLevel,
             });
+            breadcrumbsManager.initialize();
 
             const result = breadcrumbsManager.warn(message);
             expect(result).toBeFalsy();
@@ -97,6 +102,7 @@ describe('Breadcrumbs filtering options tests', () => {
             const breadcrumbsManager = new BreadcrumbsManager({
                 logLevel: allowedLogLevel,
             });
+            breadcrumbsManager.initialize();
 
             const result = breadcrumbsManager.error(message);
             expect(result).toBeTruthy();
@@ -106,6 +112,7 @@ describe('Breadcrumbs filtering options tests', () => {
     describe('Disabled breadcrumbs integration', () => {
         it('Should not accept breadcrumbs after breadcrumbs dispose', () => {
             const breadcrumbsManager = new BreadcrumbsManager();
+            breadcrumbsManager.initialize();
             breadcrumbsManager.dispose();
 
             const result = breadcrumbsManager.error('test');
@@ -125,6 +132,8 @@ describe('Breadcrumbs filtering options tests', () => {
                     storage,
                 },
             );
+            breadcrumbsManager.initialize();
+
             for (let index = 0; index < maximumBreadcrumbs; index++) {
                 breadcrumbsManager.error(index.toString());
             }
@@ -151,6 +160,8 @@ describe('Breadcrumbs filtering options tests', () => {
                     storage,
                 },
             );
+            breadcrumbsManager.initialize();
+
             const expectedBreadcrumbMessage = 'after free space';
             for (let index = 0; index < maximumBreadcrumbs; index++) {
                 breadcrumbsManager.error(index.toString());
