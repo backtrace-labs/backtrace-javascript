@@ -78,7 +78,7 @@ public class BacktraceFileSystemProvider extends ReactContextBaseJavaModule {
             scanner.close();
             promise.resolve(sb.toString());
         } catch (Exception e) {
-            Log.d(LOG_TAG, "READ FILE PROVIDER" +  e.getMessage());
+            Log.d(LOG_TAG, e.getMessage());
             promise.reject(e);
         }
     }
