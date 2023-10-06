@@ -9,8 +9,8 @@ export class WebRequestEventSubscriber implements BreadcrumbsEventSubscriber {
     private _xmlHttpRequestOriginalOpenMethod?: typeof XMLHttpRequest.prototype.open;
     private _fetchOriginalMethod?: typeof window.fetch;
 
-    public start(breadcrumbsManager: BacktraceBreadcrumbs): void {
-        if ((breadcrumbsManager.breadcrumbsType & BreadcrumbType.Http) !== BreadcrumbType.Http) {
+    public start(backtraceBreadcrumbs: BacktraceBreadcrumbs): void {
+        if ((backtraceBreadcrumbs.breadcrumbsType & BreadcrumbType.Http) !== BreadcrumbType.Http) {
             return;
         }
         const xmlHttpRequestOriginalOpenMethod = XMLHttpRequest.prototype.open;
@@ -25,7 +25,7 @@ export class WebRequestEventSubscriber implements BreadcrumbsEventSubscriber {
             const readyStateChangeCallback = this.onreadystatechange;
             this.onreadystatechange = (event: Event) => {
                 if (this.readyState === XMLHttpRequest.DONE) {
-                    breadcrumbsManager.addBreadcrumb(
+                    backtraceBreadcrumbs.addBreadcrumb(
                         `Sent an HTTP ${method} request to ${url}. Response status code: ${this.status}`,
                         BreadcrumbLogLevel.Debug,
                         BreadcrumbType.Http,
@@ -57,7 +57,7 @@ export class WebRequestEventSubscriber implements BreadcrumbsEventSubscriber {
 
             try {
                 const result = await fetchOriginalMethod(resource, config);
-                breadcrumbsManager.addBreadcrumb(
+                backtraceBreadcrumbs.addBreadcrumb(
                     `Sent an HTTP ${method} request to ${resource}. Response status code: ${result.status}`,
                     BreadcrumbLogLevel.Debug,
                     BreadcrumbType.Http,
@@ -69,7 +69,7 @@ export class WebRequestEventSubscriber implements BreadcrumbsEventSubscriber {
 
                 return result;
             } catch (e) {
-                breadcrumbsManager.addBreadcrumb(
+                backtraceBreadcrumbs.addBreadcrumb(
                     `HTTP ${method} failure on request to ${resource}. Reason: ${
                         e instanceof Error ? e.message : e?.toString() ?? 'unknown'
                     }`,
