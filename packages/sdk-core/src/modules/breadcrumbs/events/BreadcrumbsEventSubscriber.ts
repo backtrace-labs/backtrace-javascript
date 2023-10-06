@@ -1,11 +1,11 @@
-import { BreadcrumbsManager } from '../BreadcrumbsManager';
+import { BacktraceBreadcrumbs } from '../BacktraceBreadcrumbs';
 
 export interface BreadcrumbsEventSubscriber {
     /**
      * Set up breadcrumbs listener
      * @param breadcrumbsManager breadcrumbs manager
      */
-    start(breadcrumbsManager: BreadcrumbsManager): void;
+    start(breadcrumbsManager: BacktraceBreadcrumbs): void;
 
     /**
      * Dispose all breadcrumbs events

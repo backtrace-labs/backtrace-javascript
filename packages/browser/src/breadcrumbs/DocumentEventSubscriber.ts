@@ -1,14 +1,14 @@
 import {
+    BacktraceBreadcrumbs,
     BreadcrumbLogLevel,
     BreadcrumbsEventSubscriber,
-    BreadcrumbsManager,
     BreadcrumbType,
 } from '@backtrace-labs/sdk-core';
 
 export class DocumentEventSubscriber implements BreadcrumbsEventSubscriber {
     private readonly _controller: AbortController = new AbortController();
 
-    public start(breadcrumbsManager: BreadcrumbsManager): void {
+    public start(breadcrumbsManager: BacktraceBreadcrumbs): void {
         const signal = this._controller.signal;
         document.addEventListener(
             'click',

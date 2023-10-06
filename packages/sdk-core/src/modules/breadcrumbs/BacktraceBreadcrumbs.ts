@@ -13,11 +13,12 @@ export interface BacktraceBreadcrumbs {
      */
     readonly logLevel: BreadcrumbLogLevel;
 
-    /**
-     * Dispose breadcrumbs integration
-     */
-    dispose(): void;
-
+    addBreadcrumb(
+        message: string,
+        level: BreadcrumbLogLevel,
+        type: BreadcrumbType,
+        attributes?: Record<string, AttributeType> | undefined,
+    ): void;
     verbose(message: string, attributes?: Record<string, AttributeType>): void;
     debug(message: string, attributes?: Record<string, AttributeType>): void;
     info(message: string, attributes?: Record<string, AttributeType>): void;

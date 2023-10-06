@@ -1,8 +1,8 @@
 import { textFormatter } from '../../../common/textFormatter';
-import { BreadcrumbsManager } from '../BreadcrumbsManager';
+import { BacktraceBreadcrumbs } from '../BacktraceBreadcrumbs';
 import { BreadcrumbLogLevel } from '../model/BreadcrumbLogLevel';
 import { BreadcrumbType } from '../model/BreadcrumbType';
-import { BreadcrumbsEventSubscriber } from './BreadcrurmbsEventSubscriber';
+import { BreadcrumbsEventSubscriber } from './BreadcrumbsEventSubscriber';
 
 type ConsoleMethod = (...args: unknown[]) => void;
 export class ConsoleEventSubscriber implements BreadcrumbsEventSubscriber {
@@ -11,7 +11,7 @@ export class ConsoleEventSubscriber implements BreadcrumbsEventSubscriber {
      */
     private readonly _events: Record<string, ConsoleMethod> = {};
     private _formatter!: (...params: unknown[]) => string;
-    public start(breadcrumbsManager: BreadcrumbsManager): void {
+    public start(breadcrumbsManager: BacktraceBreadcrumbs): void {
         if ((breadcrumbsManager.breadcrumbsType & BreadcrumbType.Log) !== BreadcrumbType.Log) {
             return;
         }
@@ -35,7 +35,7 @@ export class ConsoleEventSubscriber implements BreadcrumbsEventSubscriber {
     private bindToConsoleMethod(
         name: keyof Console,
         level: BreadcrumbLogLevel,
-        breadcrumbsManager: BreadcrumbsManager,
+        breadcrumbsManager: BacktraceBreadcrumbs,
     ) {
         const originalMethod = console[name] as ConsoleMethod;
 

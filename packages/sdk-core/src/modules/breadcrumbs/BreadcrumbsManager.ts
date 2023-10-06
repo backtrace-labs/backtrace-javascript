@@ -11,7 +11,7 @@ import { BacktraceBreadcrumbsSettings } from '../../model/configuration/Backtrac
 import { AttributeType } from '../../model/data/BacktraceData';
 import { BacktraceReport } from '../../model/report/BacktraceReport';
 import { BacktraceModule, BacktraceModuleBindData } from '../BacktraceModule';
-import { BreadcrumbsEventSubscriber } from './events/BreadcrurmbsEventSubscriber';
+import { BreadcrumbsEventSubscriber } from './events/BreadcrumbsEventSubscriber';
 import { ConsoleEventSubscriber } from './events/ConsoleEventSubscriber';
 import { RawBreadcrumb } from './model/RawBreadcrumb';
 import { InMemoryBreadcrumbsStorage } from './storage/InMemoryBreadcrumbsStorage';

@@ -1,14 +1,14 @@
 import {
+    BacktraceBreadcrumbs,
     BreadcrumbLogLevel,
     BreadcrumbsEventSubscriber,
-    BreadcrumbsManager,
     BreadcrumbType,
 } from '@backtrace-labs/sdk-core';
 
 export class HistoryEventSubscriber implements BreadcrumbsEventSubscriber {
     private _abortController = new AbortController();
     private _originalHistoryPushStateMethod?: typeof history.pushState;
-    public start(breadcrumbsManager: BreadcrumbsManager): void {
+    public start(breadcrumbsManager: BacktraceBreadcrumbs): void {
         if ((breadcrumbsManager.breadcrumbsType & BreadcrumbType.Navigation) !== BreadcrumbType.Navigation) {
             return;
         }

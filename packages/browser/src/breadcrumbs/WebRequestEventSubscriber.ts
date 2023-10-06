@@ -1,7 +1,7 @@
 import {
+    BacktraceBreadcrumbs,
     BreadcrumbLogLevel,
     BreadcrumbsEventSubscriber,
-    BreadcrumbsManager,
     BreadcrumbType,
 } from '@backtrace-labs/sdk-core';
 
@@ -9,7 +9,7 @@ export class WebRequestEventSubscriber implements BreadcrumbsEventSubscriber {
     private _xmlHttpRequestOriginalOpenMethod?: typeof XMLHttpRequest.prototype.open;
     private _fetchOriginalMethod?: typeof window.fetch;
 
-    public start(breadcrumbsManager: BreadcrumbsManager): void {
+    public start(breadcrumbsManager: BacktraceBreadcrumbs): void {
         if ((breadcrumbsManager.breadcrumbsType & BreadcrumbType.Http) !== BreadcrumbType.Http) {
             return;
         }
