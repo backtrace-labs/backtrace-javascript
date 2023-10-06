@@ -1,21 +1,21 @@
 import {
+    BacktraceBreadcrumbs,
     BreadcrumbLogLevel,
     BreadcrumbsEventSubscriber,
-    BreadcrumbsManager,
     BreadcrumbType,
 } from '@backtrace-labs/sdk-core';
 
 export class HistoryEventSubscriber implements BreadcrumbsEventSubscriber {
     private _abortController = new AbortController();
     private _originalHistoryPushStateMethod?: typeof history.pushState;
-    public start(breadcrumbsManager: BreadcrumbsManager): void {
-        if ((breadcrumbsManager.breadcrumbsType & BreadcrumbType.Navigation) !== BreadcrumbType.Navigation) {
+    public start(backtraceBreadcrumbs: BacktraceBreadcrumbs): void {
+        if ((backtraceBreadcrumbs.breadcrumbsType & BreadcrumbType.Navigation) !== BreadcrumbType.Navigation) {
             return;
         }
         window.addEventListener(
             'popstate',
             (event: PopStateEvent) => {
-                breadcrumbsManager.addBreadcrumb(
+                backtraceBreadcrumbs.addBreadcrumb(
                     `Navigating back to ${document.location}`,
                     BreadcrumbLogLevel.Info,
                     BreadcrumbType.Navigation,
@@ -35,7 +35,7 @@ export class HistoryEventSubscriber implements BreadcrumbsEventSubscriber {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const [data, _, url] = args;
             originalHistoryPushStateMethod.apply(history, args);
-            breadcrumbsManager.addBreadcrumb(
+            backtraceBreadcrumbs.addBreadcrumb(
                 `Navigating to ${document.location}`,
                 BreadcrumbLogLevel.Info,
                 BreadcrumbType.Navigation,
