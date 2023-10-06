@@ -1,14 +1,14 @@
 import {
+    BacktraceBreadcrumbs,
     BreadcrumbLogLevel,
     BreadcrumbsEventSubscriber,
-    BreadcrumbsManager,
     BreadcrumbType,
 } from '@backtrace-labs/sdk-core';
 
 export class DocumentEventSubscriber implements BreadcrumbsEventSubscriber {
     private readonly _controller: AbortController = new AbortController();
 
-    public start(breadcrumbsManager: BreadcrumbsManager): void {
+    public start(backtraceBreadcrumbs: BacktraceBreadcrumbs): void {
         const signal = this._controller.signal;
         document.addEventListener(
             'click',
@@ -18,7 +18,7 @@ export class DocumentEventSubscriber implements BreadcrumbsEventSubscriber {
                     return;
                 }
 
-                breadcrumbsManager.addBreadcrumb(
+                backtraceBreadcrumbs.addBreadcrumb(
                     `Clicked ${target.id} ${target.tagName}`,
                     BreadcrumbLogLevel.Info,
                     BreadcrumbType.User,
@@ -43,7 +43,7 @@ export class DocumentEventSubscriber implements BreadcrumbsEventSubscriber {
                     return;
                 }
 
-                breadcrumbsManager.addBreadcrumb(
+                backtraceBreadcrumbs.addBreadcrumb(
                     `Double clicked ${target.id} ${target.tagName}`,
                     BreadcrumbLogLevel.Info,
                     BreadcrumbType.User,
@@ -68,7 +68,7 @@ export class DocumentEventSubscriber implements BreadcrumbsEventSubscriber {
                     return;
                 }
 
-                breadcrumbsManager.addBreadcrumb(
+                backtraceBreadcrumbs.addBreadcrumb(
                     `An element ${target.id} ${target.tagName} is being dragged`,
                     BreadcrumbLogLevel.Debug,
                     BreadcrumbType.User,
@@ -92,7 +92,7 @@ export class DocumentEventSubscriber implements BreadcrumbsEventSubscriber {
                     return;
                 }
 
-                breadcrumbsManager.addBreadcrumb(
+                backtraceBreadcrumbs.addBreadcrumb(
                     `A dragged element is dropped on the target	${target.id} ${target.tagName}`,
                     BreadcrumbLogLevel.Debug,
                     BreadcrumbType.User,
@@ -109,11 +109,11 @@ export class DocumentEventSubscriber implements BreadcrumbsEventSubscriber {
         );
 
         window.addEventListener('load', () => {
-            breadcrumbsManager.addBreadcrumb(`The page has loaded`, BreadcrumbLogLevel.Info, BreadcrumbType.System);
+            backtraceBreadcrumbs.addBreadcrumb(`The page has loaded`, BreadcrumbLogLevel.Info, BreadcrumbType.System);
         });
 
         window.addEventListener('unload', () => {
-            breadcrumbsManager.addBreadcrumb(
+            backtraceBreadcrumbs.addBreadcrumb(
                 `The page started unloading`,
                 BreadcrumbLogLevel.Info,
                 BreadcrumbType.System,
@@ -121,7 +121,7 @@ export class DocumentEventSubscriber implements BreadcrumbsEventSubscriber {
         });
 
         window.addEventListener('pagehide', () => {
-            breadcrumbsManager.addBreadcrumb(
+            backtraceBreadcrumbs.addBreadcrumb(
                 'User navigates away from a webpage',
                 BreadcrumbLogLevel.Info,
                 BreadcrumbType.User,
@@ -129,7 +129,7 @@ export class DocumentEventSubscriber implements BreadcrumbsEventSubscriber {
         });
 
         window.addEventListener('pageshow', () => {
-            breadcrumbsManager.addBreadcrumb(
+            backtraceBreadcrumbs.addBreadcrumb(
                 'User navigates to a webpage',
                 BreadcrumbLogLevel.Info,
                 BreadcrumbType.User,
@@ -139,7 +139,7 @@ export class DocumentEventSubscriber implements BreadcrumbsEventSubscriber {
         window.addEventListener(
             'online',
             () => {
-                breadcrumbsManager.addBreadcrumb(
+                backtraceBreadcrumbs.addBreadcrumb(
                     `The browser starts working online`,
                     BreadcrumbLogLevel.Info,
                     BreadcrumbType.System,
@@ -153,7 +153,7 @@ export class DocumentEventSubscriber implements BreadcrumbsEventSubscriber {
         window.addEventListener(
             'offline',
             () => {
-                breadcrumbsManager.addBreadcrumb(
+                backtraceBreadcrumbs.addBreadcrumb(
                     `The browser starts working offline	`,
                     BreadcrumbLogLevel.Warning,
                     BreadcrumbType.System,

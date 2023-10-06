@@ -11,7 +11,7 @@ import { BacktraceBreadcrumbsSettings } from '../../model/configuration/Backtrac
 import { AttributeType } from '../../model/data/BacktraceData';
 import { BacktraceReport } from '../../model/report/BacktraceReport';
 import { BacktraceModule, BacktraceModuleBindData } from '../BacktraceModule';
-import { BreadcrumbsEventSubscriber } from './events/BreadcrurmbsEventSubscriber';
+import { BreadcrumbsEventSubscriber } from './events/BreadcrumbsEventSubscriber';
 import { ConsoleEventSubscriber } from './events/ConsoleEventSubscriber';
 import { RawBreadcrumb } from './model/RawBreadcrumb';
 import { InMemoryBreadcrumbsStorage } from './storage/InMemoryBreadcrumbsStorage';
@@ -31,7 +31,7 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
     /**
      * Determines if the breadcrumb manager is enabled.
      */
-    private _enabled = true;
+    private _enabled = false;
 
     private readonly _eventSubscribers: BreadcrumbsEventSubscriber[] = [new ConsoleEventSubscriber()];
     private readonly _interceptor?: (breadcrumb: RawBreadcrumb) => RawBreadcrumb | undefined;
@@ -45,6 +45,13 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
         if (options?.subscribers) {
             this._eventSubscribers.push(...options.subscribers);
         }
+    }
+
+    public addEventSubscriber(subscriber: BreadcrumbsEventSubscriber) {
+        if (this._enabled) {
+            subscriber.start(this);
+        }
+        this._eventSubscribers.push(subscriber);
     }
 
     public setStorage(storage: BreadcrumbsStorage) {
@@ -70,9 +77,14 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
     }
 
     public initialize() {
+        if (this._enabled) {
+            return;
+        }
+
         for (const subscriber of this._eventSubscribers) {
             subscriber.start(this);
         }
+        this._enabled = true;
     }
 
     public verbose(message: string, attributes?: Record<string, AttributeType> | undefined): boolean {
