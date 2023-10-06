@@ -1,8 +1,8 @@
 import { textFormatter } from '../../../common/textFormatter';
-import { BreadcrumbsManager } from '../BreadcrumbsManager';
+import { BacktraceBreadcrumbs } from '../BacktraceBreadcrumbs';
 import { BreadcrumbLogLevel } from '../model/BreadcrumbLogLevel';
 import { BreadcrumbType } from '../model/BreadcrumbType';
-import { BreadcrumbsEventSubscriber } from './BreadcrurmbsEventSubscriber';
+import { BreadcrumbsEventSubscriber } from './BreadcrumbsEventSubscriber';
 
 type ConsoleMethod = (...args: unknown[]) => void;
 export class ConsoleEventSubscriber implements BreadcrumbsEventSubscriber {
@@ -11,18 +11,18 @@ export class ConsoleEventSubscriber implements BreadcrumbsEventSubscriber {
      */
     private readonly _events: Record<string, ConsoleMethod> = {};
     private _formatter!: (...params: unknown[]) => string;
-    public start(breadcrumbsManager: BreadcrumbsManager): void {
-        if ((breadcrumbsManager.breadcrumbsType & BreadcrumbType.Log) !== BreadcrumbType.Log) {
+    public start(backtraceBreadcrumbs: BacktraceBreadcrumbs): void {
+        if ((backtraceBreadcrumbs.breadcrumbsType & BreadcrumbType.Log) !== BreadcrumbType.Log) {
             return;
         }
 
         this._formatter = textFormatter();
 
-        this.bindToConsoleMethod('log', BreadcrumbLogLevel.Info, breadcrumbsManager);
-        this.bindToConsoleMethod('warn', BreadcrumbLogLevel.Warning, breadcrumbsManager);
-        this.bindToConsoleMethod('error', BreadcrumbLogLevel.Error, breadcrumbsManager);
-        this.bindToConsoleMethod('debug', BreadcrumbLogLevel.Debug, breadcrumbsManager);
-        this.bindToConsoleMethod('trace', BreadcrumbLogLevel.Verbose, breadcrumbsManager);
+        this.bindToConsoleMethod('log', BreadcrumbLogLevel.Info, backtraceBreadcrumbs);
+        this.bindToConsoleMethod('warn', BreadcrumbLogLevel.Warning, backtraceBreadcrumbs);
+        this.bindToConsoleMethod('error', BreadcrumbLogLevel.Error, backtraceBreadcrumbs);
+        this.bindToConsoleMethod('debug', BreadcrumbLogLevel.Debug, backtraceBreadcrumbs);
+        this.bindToConsoleMethod('trace', BreadcrumbLogLevel.Verbose, backtraceBreadcrumbs);
     }
 
     public dispose(): void {
@@ -35,14 +35,14 @@ export class ConsoleEventSubscriber implements BreadcrumbsEventSubscriber {
     private bindToConsoleMethod(
         name: keyof Console,
         level: BreadcrumbLogLevel,
-        breadcrumbsManager: BreadcrumbsManager,
+        backtraceBreadcrumbs: BacktraceBreadcrumbs,
     ) {
         const originalMethod = console[name] as ConsoleMethod;
 
         (console[name] as ConsoleMethod) = (...args: unknown[]) => {
             originalMethod(...args);
             const message = this._formatter(...args);
-            breadcrumbsManager.addBreadcrumb(message, level, BreadcrumbType.Log);
+            backtraceBreadcrumbs.addBreadcrumb(message, level, BreadcrumbType.Log);
         };
         this._events[name] = originalMethod;
     }

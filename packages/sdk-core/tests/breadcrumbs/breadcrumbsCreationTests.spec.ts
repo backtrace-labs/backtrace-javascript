@@ -16,6 +16,7 @@ describe('Breadcrumbs creation tests', () => {
     it('Each breadcrumb should have different id', () => {
         const storage = new InMemoryBreadcrumbsStorage(100);
         const breadcrumbsManager = new BreadcrumbsManager(undefined, { storage });
+        breadcrumbsManager.initialize();
         breadcrumbsManager.info('test');
         breadcrumbsManager.info('test2');
 
@@ -39,6 +40,7 @@ describe('Breadcrumbs creation tests', () => {
         const message = 'test';
         const storage = new InMemoryBreadcrumbsStorage(100);
         const breadcrumbsManager = new BreadcrumbsManager(undefined, { storage });
+        breadcrumbsManager.initialize();
         breadcrumbsManager.info(message);
         const [breadcrumb] = JSON.parse(storage.get() as string);
 
@@ -50,6 +52,7 @@ describe('Breadcrumbs creation tests', () => {
         const level = BreadcrumbLogLevel.Warning;
         const storage = new InMemoryBreadcrumbsStorage(100);
         const breadcrumbsManager = new BreadcrumbsManager(undefined, { storage });
+        breadcrumbsManager.initialize();
         breadcrumbsManager.log(message, level);
         const [breadcrumb] = JSON.parse(storage.get() as string);
 
@@ -62,6 +65,7 @@ describe('Breadcrumbs creation tests', () => {
         const type = BreadcrumbType.Configuration;
         const storage = new InMemoryBreadcrumbsStorage(100);
         const breadcrumbsManager = new BreadcrumbsManager(undefined, { storage });
+        breadcrumbsManager.initialize();
         breadcrumbsManager.addBreadcrumb(message, level, type);
         const [breadcrumb] = JSON.parse(storage.get() as string);
 
@@ -74,6 +78,7 @@ describe('Breadcrumbs creation tests', () => {
         const attributes = { foo: 'bar', baz: 1 };
         const storage = new InMemoryBreadcrumbsStorage(100);
         const breadcrumbsManager = new BreadcrumbsManager(undefined, { storage });
+        breadcrumbsManager.initialize();
         breadcrumbsManager.log(message, level, attributes);
         const [breadcrumb] = JSON.parse(storage.get() as string);
 

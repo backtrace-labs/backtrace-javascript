@@ -1,4 +1,4 @@
-import { BreadcrumbsEventSubscriber } from './events/BreadcrurmbsEventSubscriber';
+import { BreadcrumbsEventSubscriber } from './events/BreadcrumbsEventSubscriber';
 import { BreadcrumbsStorage } from './storage/BreadcrumbsStorage';
 
 export interface BreadcrumbsSetup {

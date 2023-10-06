@@ -12,6 +12,8 @@ describe('Breadcrumbs interceptor tests', () => {
                 storage,
             },
         );
+        breadcrumbsManager.initialize();
+
         breadcrumbsManager.info('test');
         const breadcrumbs = JSON.parse(storage.get() as string) as Breadcrumb[];
         expect(breadcrumbs.length).toBe(0);
@@ -31,6 +33,8 @@ describe('Breadcrumbs interceptor tests', () => {
                 storage,
             },
         );
+        breadcrumbsManager.initialize();
+
         breadcrumbsManager.info('test');
 
         const [breadcrumb] = JSON.parse(storage.get() as string) as Breadcrumb[];
