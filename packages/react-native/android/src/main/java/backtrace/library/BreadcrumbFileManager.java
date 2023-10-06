@@ -1,4 +1,3 @@
-
 package backtraceio.library;
 
 import android.util.Log;
