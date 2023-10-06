@@ -47,6 +47,11 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
         }
     }
 
+    public addEventSubscriber(subscriber: BreadcrumbsEventSubscriber) {
+        subscriber.start(this);
+        this._eventSubscribers.push(subscriber);
+    }
+
     public setStorage(storage: BreadcrumbsStorage) {
         this._storage = storage;
     }

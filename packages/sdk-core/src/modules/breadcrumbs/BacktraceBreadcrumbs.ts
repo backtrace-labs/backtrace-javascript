@@ -1,4 +1,5 @@
 import { AttributeType } from '../../model/data/BacktraceData';
+import { BreadcrumbsEventSubscriber } from './events/BreadcrumbsEventSubscriber';
 import { BreadcrumbLogLevel } from './model/BreadcrumbLogLevel';
 import { BreadcrumbType } from './model/BreadcrumbType';
 
@@ -12,6 +13,12 @@ export interface BacktraceBreadcrumbs {
      * Breadcrumbs Log level
      */
     readonly logLevel: BreadcrumbLogLevel;
+
+    /**
+     * Adds and starts `BreadcrumbsEventSubscriber` with this instance of `BacktraceBreadcrumbs`.
+     * @param subscriber
+     */
+    addEventSubscriber(subscriber: BreadcrumbsEventSubscriber): void;
 
     addBreadcrumb(
         message: string,
