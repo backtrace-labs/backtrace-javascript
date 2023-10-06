@@ -356,7 +356,6 @@ const client = BacktraceClient.initialize({
         return data;
     },
 });
-
 ```
 
 ### Custom file/http handlers
