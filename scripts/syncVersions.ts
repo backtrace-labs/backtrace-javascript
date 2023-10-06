@@ -47,36 +47,36 @@ function getWorkspacePackageJsonPaths(packageJson: PackageJson) {
     return packageJson.workspaces?.map((workspaceDir) => path.join(rootDir, workspaceDir, 'package.json')) ?? [];
 }
 
+function updateDependency(packageJson: PackageJson, type: Dependencies, name: string, newVersion: string) {
+    const deps = packageJson[type];
+    if (!deps) {
+        return false;
+    }
+
+    const currentVersion = deps[name];
+    if (!currentVersion) {
+        return false;
+    }
+
+    if (currentVersion !== newVersion) {
+        deps[name] = newVersion;
+        console.log(`[${packageJson.name}] - updated ${name} from ${currentVersion} to ${newVersion} in ${type}`);
+
+        return true;
+    }
+
+    return false;
+}
+
 function updateVersions(packageJson: PackageJson, currentVersions: Record<string, string>) {
     let updated = false;
 
     for (const [name, version] of Object.entries(currentVersions)) {
         const newVersion = `^${version}`;
 
-        function updateDependency(type: Dependencies) {
-            const deps = packageJson[type];
-            if (!deps) {
-                return;
-            }
-
-            const currentVersion = deps[name];
-            if (!currentVersion) {
-                return;
-            }
-
-            if (currentVersion !== newVersion) {
-                deps[name] = newVersion;
-                console.log(
-                    `[${packageJson.name}] - updated ${name} from ${currentVersion} to ${newVersion} in ${type}`,
-                );
-
-                return true;
-            }
-        }
-
-        updated = updateDependency('dependencies') || updated;
-        updated = updateDependency('devDependencies') || updated;
-        updated = updateDependency('peerDependencies') || updated;
+        updated = updateDependency(packageJson, 'dependencies', name, newVersion) || updated;
+        updated = updateDependency(packageJson, 'devDependencies', name, newVersion) || updated;
+        updated = updateDependency(packageJson, 'peerDependencies', name, newVersion) || updated;
     }
 
     if (!updated) {
