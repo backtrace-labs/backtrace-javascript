@@ -366,5 +366,9 @@ Custom handlers can be implemented to override BacktraceClient file and http ope
 > Do not use these operations to modify the data objects. See [Modify/skip error reports](#modifyskip-error-reports) for the correct method to modify a report before sending it to Backtrace.
 
 ```ts
-  // Code sample
+const client = BacktraceClient.builder(options)
+    .useRequestHandler(requestHandler)
+    .useBreadcrumbSubscriber(breadcrumbSubscriber)
+    .addAttributeProvider(attributeProvider)
+    .build();
 ```
