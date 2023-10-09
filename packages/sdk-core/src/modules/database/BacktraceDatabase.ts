@@ -198,7 +198,11 @@ export class BacktraceDatabase implements BacktraceModule {
      */
     public async send() {
         for (let bucketIndex = 0; bucketIndex < this._databaseRecordContext.bucketCount; bucketIndex++) {
-            for (const record of this._databaseRecordContext.getBucket(bucketIndex)) {
+            // make a copy of records to not update the array after each remove
+            const records = [...this._databaseRecordContext.getBucket(bucketIndex)];
+
+            for (let recordIndex = 0; recordIndex < records.length; recordIndex++) {
+                const record = records[recordIndex];
                 if (record.locked) {
                     continue;
                 }
@@ -227,22 +231,27 @@ export class BacktraceDatabase implements BacktraceModule {
         if (numberOfRecords + totalNumberOfRecords <= this._maximumRecords) {
             return;
         }
-        const recordsToDelete = this._databaseRecordContext.dropOverflow(totalNumberOfRecords);
-        for (const record of recordsToDelete) {
-            this._storageProvider.delete(record);
-        }
+        this.deleteRecords(this._databaseRecordContext.dropOverflow(totalNumberOfRecords));
     }
 
     private async loadReports() {
         const records = await this._storageProvider.get();
-        if (records.length > this._maximumRecords) {
-            records.length = this._maximumRecords;
+        // delete old records before adding them to the database
+        if (records.length >= this._maximumRecords) {
+            this.deleteRecords(records.splice(this._maximumRecords));
         }
+
         this.prepareDatabase(records.length);
         this._databaseRecordContext.load(records);
 
         for (const record of records) {
             this.lockSessionWithRecord(record);
+        }
+    }
+
+    private deleteRecords(recordsToDelete: BacktraceDatabaseRecord[]) {
+        for (const recordToDelete of recordsToDelete) {
+            this._storageProvider.delete(recordToDelete);
         }
     }
 
