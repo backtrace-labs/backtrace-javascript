@@ -12,8 +12,11 @@ import com.facebook.react.module.annotations.ReactModule;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -31,7 +34,7 @@ public class BreadcrumbFileManager extends ReactContextBaseJavaModule {
     private String _fallbackFile;
     private Integer _maximumBreadcrumbsPerFile;
 
-    private FileWriter _writer;
+    private BufferedWriter _writer;
 
     private Integer _currentBreadcrumbsLines = 0;
 
@@ -81,8 +84,13 @@ public class BreadcrumbFileManager extends ReactContextBaseJavaModule {
         }
     }
 
-    private FileWriter createWriter(String _sourceFile) throws IOException {
-        return new FileWriter(_sourceFile, false);
+    private BufferedWriter createWriter(String _sourceFile) throws IOException {
+        return new BufferedWriter(
+                new OutputStreamWriter(
+                        new FileOutputStream(_sourceFile), // true to append
+                        StandardCharsets.UTF_8                  // Set encoding
+                )
+        );
     }
 
     private void prepareNextBreadcrumbsBatch() throws IOException {
