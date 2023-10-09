@@ -18,7 +18,7 @@ export class BacktraceFileAttachment implements CoreBacktraceFileAttachment {
         const exists = this._fileSystemProvider.existsSync(this.filePath);
 
         if (!exists) {
-            return null;
+            return undefined;
         }
         return {
             uri: `file://${this.filePath}`,

@@ -60,9 +60,9 @@ public class BreadcrumbFileManager extends ReactContextBaseJavaModule {
         if (!_enabled) {
             return;
         }
+        _lock.lock();
 
         try {
-            _lock.lock();
             if (_maximumBreadcrumbsPerFile < _currentBreadcrumbsLines + 1) {
                 prepareNextBreadcrumbsBatch();
                 _currentBreadcrumbsLines = 0;
@@ -78,27 +78,6 @@ public class BreadcrumbFileManager extends ReactContextBaseJavaModule {
             promise.resolve(false);
         } finally {
             _lock.unlock();
-        }
-    }
-
-    public String readFileSync(String path) {
-        File file = new File(path);
-        if (!file.exists()) {
-            return null;
-        }
-        try {
-            Scanner scanner = new Scanner(file);
-            StringBuilder sb = new StringBuilder();
-
-            while (scanner.hasNext()) {
-                sb.append(scanner.nextLine());
-            }
-
-            scanner.close();
-            return sb.toString();
-        } catch (Exception e) {
-            Log.d(LOG_TAG, e.getMessage());
-            return null;
         }
     }
 

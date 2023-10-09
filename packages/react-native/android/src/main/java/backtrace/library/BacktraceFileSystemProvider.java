@@ -44,15 +44,14 @@ public class BacktraceFileSystemProvider extends ReactContextBaseJavaModule {
         if (!file.exists()) {
             return null;
         }
-        try {
-            Scanner scanner = new Scanner(file);
+
+        try (Scanner scanner = new Scanner(file)){
             StringBuilder sb = new StringBuilder();
 
             while (scanner.hasNext()) {
                 sb.append(scanner.nextLine());
             }
 
-            scanner.close();
             return sb.toString();
         } catch (Exception e) {
             Log.d(LOG_TAG, e.getMessage());
@@ -67,8 +66,7 @@ public class BacktraceFileSystemProvider extends ReactContextBaseJavaModule {
             promise.reject(new FileNotFoundException(path));
             return;
         }
-        try {
-            Scanner scanner = new Scanner(file);
+        try (Scanner scanner = new Scanner(file)){
             StringBuilder sb = new StringBuilder();
 
             while (scanner.hasNext()) {
