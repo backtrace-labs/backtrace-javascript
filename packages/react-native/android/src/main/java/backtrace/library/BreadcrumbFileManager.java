@@ -87,8 +87,8 @@ public class BreadcrumbFileManager extends ReactContextBaseJavaModule {
     private BufferedWriter createWriter(String _sourceFile) throws IOException {
         return new BufferedWriter(
                 new OutputStreamWriter(
-                        new FileOutputStream(_sourceFile), // true to append
-                        StandardCharsets.UTF_8                  // Set encoding
+                        new FileOutputStream(_sourceFile),
+                        StandardCharsets.UTF_8
                 )
         );
     }
