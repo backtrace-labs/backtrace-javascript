@@ -251,7 +251,7 @@ export class BacktraceDatabase implements BacktraceModule {
 
     private deleteRecords(recordsToDelete: BacktraceDatabaseRecord[]) {
         for (const recordToDelete of recordsToDelete) {
-            this._storageProvider.delete(recordToDelete);
+            this.remove(recordToDelete);
         }
     }
 
