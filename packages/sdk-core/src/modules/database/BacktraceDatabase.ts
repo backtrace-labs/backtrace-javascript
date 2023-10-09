@@ -161,16 +161,20 @@ export class BacktraceDatabase implements BacktraceModule {
     }
 
     /**
-     * Removes the database record
-     * @param record database records
+     * Removes the database record/records
+     * @param recordOrRecords database records
      */
-    public remove(record: BacktraceDatabaseRecord) {
+    public remove(recordOrRecords: BacktraceDatabaseRecord | BacktraceDatabaseRecord[]) {
         if (!this._enabled) {
             return;
         }
-        this._databaseRecordContext.remove(record);
-        this._storageProvider.delete(record);
-        this._sessionFiles?.unlockPreviousSessions(record.id);
+        const records = Array.isArray(recordOrRecords) ? recordOrRecords : [recordOrRecords];
+
+        for (const record of records) {
+            this._databaseRecordContext.remove(record);
+            this._storageProvider.delete(record);
+            this._sessionFiles?.unlockPreviousSessions(record.id);
+        }
     }
 
     public addStorageProvider(storageProvider: BacktraceDatabaseStorageProvider) {
@@ -230,14 +234,14 @@ export class BacktraceDatabase implements BacktraceModule {
         if (numberOfRecords + totalNumberOfRecords <= this._maximumRecords) {
             return;
         }
-        this.deleteRecords(this._databaseRecordContext.dropOverflow(totalNumberOfRecords));
+        this.remove(this._databaseRecordContext.dropOverflow(totalNumberOfRecords));
     }
 
     private async loadReports() {
         const records = await this._storageProvider.get();
         // delete old records before adding them to the database
         if (records.length >= this._maximumRecords) {
-            this.deleteRecords(records.splice(this._maximumRecords));
+            this.remove(records.splice(this._maximumRecords));
         }
 
         this.prepareDatabase(records.length);
@@ -245,12 +249,6 @@ export class BacktraceDatabase implements BacktraceModule {
 
         for (const record of records) {
             this.lockSessionWithRecord(record);
-        }
-    }
-
-    private deleteRecords(recordsToDelete: BacktraceDatabaseRecord[]) {
-        for (const recordToDelete of recordsToDelete) {
-            this.remove(recordToDelete);
         }
     }
 
