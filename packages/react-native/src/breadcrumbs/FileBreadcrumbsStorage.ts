@@ -30,7 +30,7 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
         maximumBreadcrumbs: number,
     ) {
         this._writer = _fileSystem.breadcrumbProvider;
-        this._writer.use(_mainFile, _fallbackFile, maximumBreadcrumbs);
+        this._writer.use(_mainFile, _fallbackFile, Math.floor(maximumBreadcrumbs / 2));
     }
 
     public static create(fileSystem: ReactNativeFileSystem, session: SessionFiles, maximumBreadcrumbs: number) {

@@ -46,10 +46,10 @@ public class BreadcrumbFileManager extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod(isBlockingSynchronousMethod = true)
-    public void use(String sourceFile, String fallbackFile, Integer maximumBreadcrumbs) throws IOException {
+    public void use(String sourceFile, String fallbackFile, Integer maximumBreadcrumbsPerFile) throws IOException {
         _sourceFile = sourceFile;
         _fallbackFile = fallbackFile;
-        _maximumBreadcrumbsPerFile = maximumBreadcrumbs / 2;
+        _maximumBreadcrumbsPerFile = maximumBreadcrumbsPerFile;
         _writer = this.createWriter(_sourceFile);
         _enabled = true;
     }
