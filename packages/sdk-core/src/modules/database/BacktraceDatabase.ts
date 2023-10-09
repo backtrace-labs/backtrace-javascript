@@ -201,8 +201,7 @@ export class BacktraceDatabase implements BacktraceModule {
             // make a copy of records to not update the array after each remove
             const records = [...this._databaseRecordContext.getBucket(bucketIndex)];
 
-            for (let recordIndex = 0; recordIndex < records.length; recordIndex++) {
-                const record = records[recordIndex];
+            for (const record of records) {
                 if (record.locked) {
                     continue;
                 }
