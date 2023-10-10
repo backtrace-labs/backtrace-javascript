@@ -79,7 +79,7 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
      * @returns backtrace client
      */
     public static initialize(
-        options: BacktraceConfiguration,
+        options: BacktraceSetupConfiguration,
         build?: (builder: BacktraceClientBuilder) => void,
     ): BacktraceClient {
         if (this.instance) {
