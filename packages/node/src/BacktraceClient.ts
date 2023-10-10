@@ -8,7 +8,7 @@ import {
     VariableDebugIdMapProvider,
 } from '@backtrace-labs/sdk-core';
 import path from 'path';
-import { BacktraceConfiguration } from './BacktraceConfiguration';
+import { BacktraceConfiguration, BacktraceSetupConfiguration } from './BacktraceConfiguration';
 import { BacktraceNodeRequestHandler } from './BacktraceNodeRequestHandler';
 import { AGENT } from './agentDefinition';
 import { transformAttachment } from './attachment/transformAttachments';
@@ -67,7 +67,7 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
         this.loadNodeCrashes().finally(() => lockId && this.sessionFiles?.unlockPreviousSessions(lockId));
     }
 
-    public static builder(options: BacktraceConfiguration): BacktraceClientBuilder {
+    public static builder(options: BacktraceSetupConfiguration): BacktraceClientBuilder {
         return new BacktraceClientBuilder({ options });
     }
 
