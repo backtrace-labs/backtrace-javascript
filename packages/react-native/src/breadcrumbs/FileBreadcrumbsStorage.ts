@@ -10,8 +10,8 @@ import {
     type RawBreadcrumb,
 } from '@backtrace-labs/sdk-core';
 import { BacktraceFileAttachment } from '../attachment/BacktraceFileAttachment';
-import { type ReactNativeBreadcrumbFile } from '../storage/ReactNativeBreadcrumbFile';
 import { ReactNativeFileSystem } from '../storage/ReactNativeFileSystem';
+import { AlternatingFileWriter } from './AlternatingFileWriter';
 
 const FILE_PREFIX = 'breadcrumbs';
 
@@ -21,7 +21,7 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
     }
 
     private _lastBreadcrumbId: number = TimeHelper.toTimestampInSec(TimeHelper.now());
-    private readonly _writer: ReactNativeBreadcrumbFile;
+    private readonly _writer: AlternatingFileWriter;
 
     constructor(
         private readonly _fileSystem: ReactNativeFileSystem,
@@ -29,8 +29,12 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
         private readonly _fallbackFile: string,
         maximumBreadcrumbs: number,
     ) {
-        this._writer = _fileSystem.breadcrumbProvider;
-        this._writer.use(_mainFile, _fallbackFile, Math.floor(maximumBreadcrumbs / 2));
+        this._writer = new AlternatingFileWriter(
+            _mainFile,
+            _fallbackFile,
+            Math.floor(maximumBreadcrumbs / 2),
+            _fileSystem,
+        );
     }
 
     public static create(fileSystem: ReactNativeFileSystem, session: SessionFiles, maximumBreadcrumbs: number) {
@@ -69,12 +73,12 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
         };
 
         const breadcrumbJson = JSON.stringify(breadcrumb, jsonEscaper());
-        this._writer.append(breadcrumbJson + '\n');
+        this._writer.writeLine(breadcrumbJson);
 
         return id;
     }
 
     private static getFileName(index: number) {
-        return `${FILE_PREFIX}-${index}`;
+        return `bt-${FILE_PREFIX}-${index}`;
     }
 }

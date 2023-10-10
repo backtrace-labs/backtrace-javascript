@@ -135,4 +135,18 @@ public class BacktraceFileSystemProvider extends ReactContextBaseJavaModule {
         File file = new File(path);
         promise.resolve(file.exists());
     }
+
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    public boolean renameSync(String sourcePath, String destinationPath) {
+        File sourceFile = new File(sourcePath);
+        File destinationFile = new File(destinationPath);
+        return sourceFile.renameTo(destinationFile);
+    }
+
+    @ReactMethod
+    public void rename(String sourcePath, String destinationPath, Promise promise) {
+        File sourceFile = new File(sourcePath);
+        File destinationFile = new File(destinationPath);
+        promise.resolve(sourceFile.renameTo(destinationFile));
+    }
 }
