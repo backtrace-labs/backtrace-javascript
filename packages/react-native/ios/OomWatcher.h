@@ -13,7 +13,7 @@
     BOOL _disabled;
 }
 - (void) disable;
-+ (void) cleanup;
+- (void) cleanup;
 - (instancetype) init;
 - (BOOL) shouldReportOom:(BOOL)didCrash;
 - (NSDictionary*) getOomState;
