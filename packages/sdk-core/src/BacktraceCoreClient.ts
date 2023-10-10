@@ -203,7 +203,11 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
             this._modules.set(BreadcrumbsManager, breadcrumbsManager);
         }
 
-        this._enabled = true;
+        if (setup.modules) {
+            for (const module of setup.modules) {
+                this.addModule(module);
+            }
+        }
     }
 
     public initialize() {
@@ -228,6 +232,8 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
         }
 
         this.sessionFiles?.clearPreviousSessions();
+
+        this._enabled = true;
     }
 
     /**
@@ -319,8 +325,27 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
         }
     }
 
-    protected addModule<T extends BacktraceModule>(type: BacktraceModuleCtor<T>, module: T) {
+    protected addModule<T extends BacktraceModule>(module: T): void;
+    protected addModule<T extends BacktraceModule>(type: BacktraceModuleCtor<T>, module: T): void;
+    protected addModule<T extends BacktraceModule>(typeOrModule: BacktraceModuleCtor<T> | T, module?: T) {
+        let type: BacktraceModuleCtor<T>;
+        if (typeof typeOrModule === 'function') {
+            type = typeOrModule;
+        } else {
+            module = typeOrModule;
+            type = Object.getPrototypeOf(module);
+        }
+
+        if (!module) {
+            throw new Error('Module implementation is required.');
+        }
+
         this._modules.set(type, module);
+
+        if (this._enabled) {
+            module.bind && module.bind(this.getModuleBindData());
+            module.initialize && module.initialize();
+        }
     }
 
     protected generateSubmissionData(report: BacktraceReport): BacktraceData | undefined {
