@@ -1,38 +1,24 @@
 import {
-    BacktraceAttributeProvider,
-    BacktraceClient as BrowserClient,
+    BacktraceClientSetup,
     BacktraceConfiguration,
-    BacktraceRequestHandler,
-    BacktraceStackTraceConverter,
-    BreadcrumbsEventSubscriber,
+    BacktraceClient as BrowserClient,
+    getStackTraceConverter,
 } from '@backtrace-labs/browser';
-import { BacktraceSessionProvider, SdkOptions } from '@backtrace-labs/sdk-core';
 import { AGENT } from './agentDefinition';
 import { BacktraceReactClientBuilder } from './builder/BacktraceReactClientBuilder';
+import { ReactStackTraceConverter } from './converters/ReactStackTraceConverter';
 
-export class BacktraceClient extends BrowserClient {
-    constructor(
-        options: BacktraceConfiguration,
-        requestHandler: BacktraceRequestHandler,
-        attributeProviders: BacktraceAttributeProvider[],
-        stackTraceConverter: BacktraceStackTraceConverter,
-        breadcrumbsEventSubscriber: BreadcrumbsEventSubscriber[],
-        sessionProvider?: BacktraceSessionProvider,
-        sdkOptions: SdkOptions = AGENT,
-    ) {
-        super(
-            options,
-            requestHandler,
-            attributeProviders,
-            stackTraceConverter,
-            breadcrumbsEventSubscriber,
-            sessionProvider,
-            sdkOptions,
-        );
+export class BacktraceClient extends BrowserClient<BacktraceConfiguration> {
+    constructor(clientSetup: BacktraceClientSetup) {
+        super({
+            sdkOptions: AGENT,
+            stackTraceConverter: new ReactStackTraceConverter(getStackTraceConverter()),
+            ...clientSetup,
+        });
     }
 
     public static builder(options: BacktraceConfiguration): BacktraceReactClientBuilder {
-        return new BacktraceReactClientBuilder(options);
+        return new BacktraceReactClientBuilder({ options });
     }
     /**
      * Initializes the client. If the client already exists, the available instance
