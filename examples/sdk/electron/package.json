@@ -7,13 +7,12 @@
         "node": ">=14"
     },
     "scripts": {
-        "build": "tsc -p tsconfig.main.json && webpack",
-        "clean": "rimraf \"lib\" && tsc --clean && tsc -b tsconfig.main.json --clean && tsc -b tsconfig.renderer.json --clean",
+        "build": "webpack",
+        "clean": "rimraf \"lib\" && tsc -b --clean && tsc -b tsconfig.main.json --clean && tsc -b tsconfig.renderer.json --clean",
         "format": "prettier --write '**/*.ts'",
         "lint": "eslint . --ext .ts",
         "start": "electron .",
-        "watch-main": "tsc -p tsconfig.main.json -w",
-        "watch-renderer": "webpack -w"
+        "watch": "webpack -w"
     },
     "repository": {
         "type": "git",
