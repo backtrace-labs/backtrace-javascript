@@ -1,5 +1,6 @@
 import { BacktraceConfiguration } from '../model/configuration/BacktraceConfiguration';
 import { BacktraceRequestHandler } from '../model/http';
+import { BacktraceReportSubmission } from '../model/http/BacktraceReportSubmission';
 import { BacktraceAttributeProvider } from '../modules/attribute/BacktraceAttributeProvider';
 import { BreadcrumbsSetup } from '../modules/breadcrumbs';
 import { BacktraceStackTraceConverter } from '../modules/converter';
@@ -22,5 +23,6 @@ export interface CoreClientSetup<O extends BacktraceConfiguration = BacktraceCon
     readonly sessionProvider?: BacktraceSessionProvider;
     readonly debugIdMapProvider?: DebugIdMapProvider;
     readonly breadcrumbsSetup?: BreadcrumbsSetup;
+    readonly reportSubmission?: BacktraceReportSubmission;
     readonly fileSystem?: FileSystem;
 }

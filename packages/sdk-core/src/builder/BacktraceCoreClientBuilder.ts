@@ -1,3 +1,4 @@
+import { BacktraceReportSubmission } from '../model/http/BacktraceReportSubmission';
 import { BacktraceRequestHandler } from '../model/http/BacktraceRequestHandler';
 import { BacktraceAttributeProvider } from '../modules/attribute/BacktraceAttributeProvider';
 import { BreadcrumbsEventSubscriber } from '../modules/breadcrumbs';
@@ -51,6 +52,11 @@ export abstract class BacktraceCoreClientBuilder<S extends Partial<CoreClientSet
 
     public useFileSystem(fileSystem: FileSystem): this {
         this.clientSetup.fileSystem = fileSystem;
+        return this;
+    }
+
+    public useReportSubmission(reportSubmission: BacktraceReportSubmission) {
+        this.clientSetup.reportSubmission = reportSubmission;
         return this;
     }
 }

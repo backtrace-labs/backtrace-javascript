@@ -3,6 +3,7 @@ import {
     BacktraceAttributeProvider,
     BacktraceBreadcrumbs,
     BacktraceConfiguration,
+    BacktraceRequestHandler,
     BacktraceSessionProvider,
     DebugIdProvider,
     FileSystem,
@@ -13,7 +14,7 @@ import { CoreClientSetup } from './builder/CoreClientSetup';
 import { Events } from './common/Events';
 import { ReportEvents } from './events/ReportEvents';
 import { AttributeType, BacktraceData } from './model/data/BacktraceData';
-import { BacktraceReportSubmission } from './model/http/BacktraceReportSubmission';
+import { BacktraceReportSubmission, RequestBacktraceReportSubmission } from './model/http/BacktraceReportSubmission';
 import { BacktraceReport } from './model/report/BacktraceReport';
 import { BacktraceModule, BacktraceModuleBindData } from './modules/BacktraceModule';
 import { BacktraceModuleCtor, BacktraceModules, ReadonlyBacktraceModules } from './modules/BacktraceModules';
@@ -120,6 +121,7 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
     private readonly _rateLimitWatcher: RateLimitWatcher;
     private readonly _sessionProvider: BacktraceSessionProvider;
     private readonly _sdkOptions: SdkOptions;
+    private readonly _requestHandler: BacktraceRequestHandler;
 
     private _enabled = false;
 
@@ -131,8 +133,10 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
         this._sdkOptions = setup.sdkOptions;
         this._attachments = this.options.attachments ?? [];
         this._sessionProvider = setup.sessionProvider ?? new SingleSessionProvider();
-        this._reportSubmission = new BacktraceReportSubmission(this.options, setup.requestHandler);
+        this._reportSubmission =
+            setup.reportSubmission ?? new RequestBacktraceReportSubmission(this.options, setup.requestHandler);
         this._rateLimitWatcher = new RateLimitWatcher(this.options.rateLimit);
+        this._requestHandler = setup.requestHandler;
 
         const attributeProviders: BacktraceAttributeProvider[] = [
             new ClientAttributeProvider(this.agent, this.agentVersion, this._sessionProvider.sessionId),
@@ -347,6 +351,8 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
             client: this,
             reportEvents: this.reportEvents,
             attributeManager: this.attributeManager,
+            reportSubmission: this._reportSubmission,
+            requestHandler: this._requestHandler,
             sessionFiles: this.sessionFiles,
         };
     }
