@@ -1,5 +1,5 @@
 import { ReactNativeFileSystem } from '../storage';
-import { StreamWriter } from '../storage/StreamWriter';
+import { type StreamWriter } from '../storage/StreamWriter';
 
 export class AlternatingFileWriter {
     private _streamId?: string;
