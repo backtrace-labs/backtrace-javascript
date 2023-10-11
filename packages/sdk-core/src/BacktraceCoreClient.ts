@@ -30,7 +30,7 @@ import { MetricsBuilder } from './modules/metrics/MetricsBuilder';
 import { SingleSessionProvider } from './modules/metrics/SingleSessionProvider';
 import { RateLimitWatcher } from './modules/rateLimiter/RateLimitWatcher';
 
-export abstract class BacktraceCoreClient {
+export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = BacktraceConfiguration> {
     /**
      * Backtrace client instance
      */
@@ -108,9 +108,9 @@ export abstract class BacktraceCoreClient {
         return this._modules.get(SessionFiles);
     }
 
+    protected readonly options: O;
     protected readonly reportEvents: Events<ReportEvents>;
     protected readonly attributeManager: AttributeManager;
-    protected readonly options: BacktraceConfiguration;
     protected readonly fileSystem?: FileSystem;
 
     private readonly _modules: BacktraceModules = new Map();
@@ -123,42 +123,42 @@ export abstract class BacktraceCoreClient {
 
     private _enabled = false;
 
-    protected constructor(private readonly _setup: CoreClientSetup) {
+    protected constructor(setup: CoreClientSetup<O>) {
         this.reportEvents = new Events();
 
-        this.options = _setup.options;
-        this.fileSystem = _setup.fileSystem;
-        this._sdkOptions = _setup.sdkOptions;
+        this.options = setup.options;
+        this.fileSystem = setup.fileSystem;
+        this._sdkOptions = setup.sdkOptions;
         this._attachments = this.options.attachments ?? [];
-        this._sessionProvider = this._setup.sessionProvider ?? new SingleSessionProvider();
-        this._reportSubmission = new BacktraceReportSubmission(this.options, this._setup.requestHandler);
+        this._sessionProvider = setup.sessionProvider ?? new SingleSessionProvider();
+        this._reportSubmission = new BacktraceReportSubmission(this.options, setup.requestHandler);
         this._rateLimitWatcher = new RateLimitWatcher(this.options.rateLimit);
 
         const attributeProviders: BacktraceAttributeProvider[] = [
             new ClientAttributeProvider(this.agent, this.agentVersion, this._sessionProvider.sessionId),
         ];
 
-        if (this._setup.attributeProviders) {
-            attributeProviders.push(...this._setup.attributeProviders);
+        if (setup.attributeProviders) {
+            attributeProviders.push(...setup.attributeProviders);
         }
 
-        if (this._setup.options.userAttributes) {
-            attributeProviders.push(new UserAttributeProvider(this._setup.options.userAttributes));
+        if (this.options.userAttributes) {
+            attributeProviders.push(new UserAttributeProvider(this.options.userAttributes));
         }
 
         this.attributeManager = new AttributeManager(attributeProviders);
 
-        const stackTraceConverter = this._setup.stackTraceConverter ?? new V8StackTraceConverter();
+        const stackTraceConverter = setup.stackTraceConverter ?? new V8StackTraceConverter();
         this._dataBuilder = new BacktraceDataBuilder(
             this._sdkOptions,
             stackTraceConverter,
             this.attributeManager,
-            new DebugIdProvider(stackTraceConverter, this._setup.debugIdMapProvider),
+            new DebugIdProvider(stackTraceConverter, setup.debugIdMapProvider),
         );
 
-        if (this.options?.database?.enable === true && this._setup.fileSystem) {
+        if (this.options?.database?.enable === true && setup.fileSystem) {
             const provider = BacktraceDatabaseFileStorageProvider.createIfValid(
-                this._setup.fileSystem,
+                setup.fileSystem,
                 this.options.database,
             );
 
@@ -187,7 +187,7 @@ export abstract class BacktraceCoreClient {
             this.options,
             this._sessionProvider,
             this.attributeManager,
-            this._setup.requestHandler,
+            setup.requestHandler,
         ).build();
 
         if (metrics) {
@@ -195,7 +195,7 @@ export abstract class BacktraceCoreClient {
         }
 
         if (this.options.breadcrumbs?.enable !== false) {
-            const breadcrumbsManager = new BreadcrumbsManager(this.options?.breadcrumbs, this._setup.breadcrumbsSetup);
+            const breadcrumbsManager = new BreadcrumbsManager(this.options?.breadcrumbs, setup.breadcrumbsSetup);
             this._modules.set(BreadcrumbsManager, breadcrumbsManager);
         }
 

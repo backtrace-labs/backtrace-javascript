@@ -1,51 +1,56 @@
-import { BacktraceCoreClient } from '../BacktraceCoreClient';
 import { BacktraceRequestHandler } from '../model/http/BacktraceRequestHandler';
 import { BacktraceAttributeProvider } from '../modules/attribute/BacktraceAttributeProvider';
 import { BreadcrumbsEventSubscriber } from '../modules/breadcrumbs';
 import { BacktraceStackTraceConverter } from '../modules/converter';
 import { BacktraceSessionProvider } from '../modules/metrics/BacktraceSessionProvider';
 import { FileSystem } from '../modules/storage';
+import { CoreClientSetup } from './CoreClientSetup';
 
-export abstract class BacktraceCoreClientBuilder<T extends BacktraceCoreClient> {
-    protected stackTraceConverter?: BacktraceStackTraceConverter;
-    protected fileSystem?: FileSystem;
+type Writeable<T> = { -readonly [P in keyof T]: T[P] };
 
-    constructor(
-        protected handler: BacktraceRequestHandler,
-        protected readonly attributeProviders: BacktraceAttributeProvider[] = [],
-        protected readonly breadcrumbsSubscribers: BreadcrumbsEventSubscriber[] = [],
-        protected sessionProvider?: BacktraceSessionProvider,
-    ) {}
+export abstract class BacktraceCoreClientBuilder<S extends Partial<CoreClientSetup> = Partial<CoreClientSetup>> {
+    constructor(protected readonly clientSetup: Writeable<S>) {}
 
     public addAttributeProvider(provider: BacktraceAttributeProvider) {
-        this.attributeProviders.push(provider);
+        if (!this.clientSetup.attributeProviders) {
+            this.clientSetup.attributeProviders = [provider];
+        } else {
+            this.clientSetup.attributeProviders.push(provider);
+        }
         return this;
     }
 
     public useBreadcrumbSubscriber(breadcrumbSubscriber: BreadcrumbsEventSubscriber): this {
-        this.breadcrumbsSubscribers.push(breadcrumbSubscriber);
+        if (!this.clientSetup.breadcrumbsSetup) {
+            this.clientSetup.breadcrumbsSetup = {};
+        }
+
+        if (!this.clientSetup.breadcrumbsSetup.subscribers) {
+            this.clientSetup.breadcrumbsSetup.subscribers = [breadcrumbSubscriber];
+        } else {
+            this.clientSetup.breadcrumbsSetup.subscribers.push(breadcrumbSubscriber);
+        }
+
         return this;
     }
 
     public useSessionProvider(sessionProvider: BacktraceSessionProvider): this {
-        this.sessionProvider = sessionProvider;
+        this.clientSetup.sessionProvider = sessionProvider;
         return this;
     }
 
     public useRequestHandler(handler: BacktraceRequestHandler): this {
-        this.handler = handler;
+        this.clientSetup.requestHandler = handler;
         return this;
     }
 
     public useStackTraceConverter(stackTraceConverter: BacktraceStackTraceConverter): this {
-        this.stackTraceConverter = stackTraceConverter;
+        this.clientSetup.stackTraceConverter = stackTraceConverter;
         return this;
     }
 
     public useFileSystem(fileSystem: FileSystem): this {
-        this.fileSystem = fileSystem;
+        this.clientSetup.fileSystem = fileSystem;
         return this;
     }
-
-    public abstract build(): T;
 }

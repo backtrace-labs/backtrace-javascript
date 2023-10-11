@@ -1,4 +1,4 @@
-import { ReactStackTraceConverter } from '@backtrace-labs/react';
+import { BacktraceBrowserRequestHandler, ReactStackTraceConverter } from '@backtrace-labs/react';
 import {
     BacktraceCoreClient,
     SingleSessionProvider,
@@ -6,51 +6,44 @@ import {
     V8StackTraceConverter,
     VariableDebugIdMapProvider,
     type AttributeType,
-    type BacktraceAttributeProvider,
-    type BacktraceRequestHandler,
-    type BreadcrumbsEventSubscriber,
     type DebugIdContainer,
 } from '@backtrace-labs/sdk-core';
 import { Platform } from 'react-native';
-import { BacktraceClientBuilder } from './BacktraceClientBuilder';
 import { type BacktraceConfiguration } from './BacktraceConfiguration';
+import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
+import type { BacktraceClientSetup } from './builder/BacktraceClientSetup';
 import { version } from './common/platformHelper';
 import { CrashReporter } from './crashReporter/CrashReporter';
 import { generateUnhandledExceptionHandler } from './handlers';
 import { type ExceptionHandler } from './handlers/ExceptionHandler';
-export class BacktraceClient extends BacktraceCoreClient {
+
+export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration> {
     private readonly crashReporter: CrashReporter = new CrashReporter();
     private readonly _exceptionHandler: ExceptionHandler = generateUnhandledExceptionHandler();
 
     public crash(): void {
         this.crashReporter.crash();
     }
-    constructor(
-        options: BacktraceConfiguration,
-        requestHandler: BacktraceRequestHandler,
-        attributeProviders: BacktraceAttributeProvider[],
-        breadcrumbsEventSubscribers: BreadcrumbsEventSubscriber[],
-    ) {
+    constructor(clientSetup: BacktraceClientSetup) {
         super({
-            options,
             sdkOptions: {
                 agent: '@backtrace/react-native',
                 agentVersion: '0.0.1',
                 langName: 'react-native',
                 langVersion: version(),
             },
-            requestHandler,
-            attributeProviders,
+            requestHandler: new BacktraceBrowserRequestHandler(clientSetup.options),
             debugIdMapProvider: new VariableDebugIdMapProvider(global as DebugIdContainer),
-            breadcrumbsSetup: {
-                subscribers: breadcrumbsEventSubscribers,
-            },
             stackTraceConverter: new ReactStackTraceConverter(new V8StackTraceConverter()),
             sessionProvider: new SingleSessionProvider(),
+            ...clientSetup,
         });
 
-        this.captureUnhandledErrors(options.captureUnhandledErrors, options.captureUnhandledPromiseRejections);
-        const submissionUrl = SubmissionUrlInformation.toJsonReportSubmissionUrl(options.url);
+        this.captureUnhandledErrors(
+            clientSetup.options.captureUnhandledErrors,
+            clientSetup.options.captureUnhandledPromiseRejections,
+        );
+        const submissionUrl = SubmissionUrlInformation.toJsonReportSubmissionUrl(clientSetup.options.url);
 
         this.crashReporter.initialize(
             Platform.select({
@@ -96,7 +89,7 @@ export class BacktraceClient extends BacktraceCoreClient {
     }
 
     public static builder(options: BacktraceConfiguration): BacktraceClientBuilder {
-        return new BacktraceClientBuilder(options);
+        return new BacktraceClientBuilder({ options });
     }
     /**
      * Initializes the client. If the client already exists, the available instance
