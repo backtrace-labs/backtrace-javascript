@@ -10,4 +10,7 @@ export interface ReactNativeFileProvider {
 
     exists(path: string): Promise<boolean>;
     existsSync(path: string): boolean;
+
+    rename(path: string, newPath: string): Promise<boolean>;
+    renameSync(path: string, newPath: string): boolean;
 }

@@ -26,7 +26,7 @@ public class ReactNativePackage implements ReactPackage {
 
         modules.add(new backtrace.library.BacktraceFileSystemProvider(reactContext));
         modules.add(new backtrace.library.BacktraceDirectoryProvider(reactContext));
-        modules.add(new backtraceio.library.BreadcrumbFileManager(reactContext));
+        modules.add(new backtraceio.library.StreamWriter());
         return modules;
     }
 

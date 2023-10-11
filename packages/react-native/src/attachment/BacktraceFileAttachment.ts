@@ -28,4 +28,11 @@ export class BacktraceFileAttachment implements CoreBacktraceFileAttachment {
             filepath: this.filePath,
         };
     }
+
+    public toJSON() {
+        return {
+            filePath: this.filePath,
+            name: this.name,
+        };
+    }
 }
