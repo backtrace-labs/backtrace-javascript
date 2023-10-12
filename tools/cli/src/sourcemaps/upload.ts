@@ -243,8 +243,8 @@ export async function uploadSourcemaps({ opts, logger, getHelpMessage }: Command
     const saveArchiveCommandResult = await uploadOrSaveAssets(
         uploadUrl,
         opts.output,
-        (url) => uploadAssets(url, { ignoreSsl: opts.insecure ?? false }, opts['include-sources'] ?? false),
-        (path) => flow(saveAssets(path, opts['include-sources'] ?? false), Ok),
+        (url) => uploadAssets(url, { ignoreSsl: opts.insecure ?? false }),
+        (path) => flow(saveAssets(path), Ok),
     );
 
     if (saveArchiveCommandResult.isErr()) {
@@ -279,6 +279,7 @@ export async function uploadSourcemaps({ opts, logger, getHelpMessage }: Command
                 : failIfEmpty('no processed sourcemaps found, make sure to run process first'),
         ),
         R.map(uniqueBy((asset) => asset.content.debugId)),
+        R.map(opts['include-sources'] ? pass : map(stripSourcesContent)),
         R.map((assets) =>
             opts['dry-run']
                 ? Ok<UploadResultWithAssets>({
@@ -320,30 +321,29 @@ export function uploadOrSaveAssets(
     }
 }
 
-export function uploadAssets(uploadUrl: string, options: SymbolUploaderOptions, includeSources: boolean) {
+export function uploadAssets(uploadUrl: string, options: SymbolUploaderOptions) {
     const uploader = new SymbolUploader(uploadUrl, options);
     return function uploadAssets(
         assets: AssetWithContent<RawSourceMapWithDebugId>[],
     ): ResultPromise<UploadResult, string> {
         const { request, promise } = uploader.createUploadRequest();
 
-        return pipe(request, pipeAssets(assets, includeSources), () => promise);
+        return pipe(request, pipeAssets(assets), () => promise);
     };
 }
 
-export function saveAssets(outputPath: string, includeSources: boolean) {
-    return async function saveAssets(assets: AssetWithContent<RawSourceMapWithDebugId>[]): Promise<UploadResult> {
+export function saveAssets(outputPath: string) {
+    return function saveAssets(assets: AssetWithContent<RawSourceMapWithDebugId>[]): Promise<UploadResult> {
         const stream = fs.createWriteStream(outputPath);
-
-        return pipe(stream, pipeAssets(assets, includeSources), () => ({ rxid: outputPath } as UploadResult));
+        return pipe(stream, pipeAssets(assets), () => ({ rxid: outputPath } as UploadResult));
     };
 }
 
-function pipeAssets(assets: AssetWithContent<RawSourceMapWithDebugId>[], includeSources: boolean) {
-    function appendToArchive(asset: AssetWithContent<RawSourceMapWithDebugId>) {
-        return function appendToArchive(archive: ZipArchive) {
+function pipeAssets(assets: AssetWithContent<RawSourceMapWithDebugId>[]) {
+    function appendToArchive(archive: ZipArchive) {
+        return function appendToArchive(asset: AssetWithContent<RawSourceMapWithDebugId>) {
             const filename = `${asset.content.debugId}-${path.basename(asset.name)}`;
-            archive.append(filename, JSON.stringify(includeSources ? asset.content : stripSourcesContent(asset)));
+            archive.append(filename, JSON.stringify(asset.content));
             return archive;
         };
     }
@@ -354,7 +354,7 @@ function pipeAssets(assets: AssetWithContent<RawSourceMapWithDebugId>[], include
         return pipe(
             writable,
             pipeStream(archive),
-            () => assets.map(appendToArchive).map((fn) => fn(archive)),
+            () => assets.map(appendToArchive(archive)),
             () => archive.finalize(),
         );
     };
