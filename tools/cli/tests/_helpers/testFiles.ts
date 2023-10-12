@@ -7,7 +7,9 @@ import path from 'path';
 export type TestFiles =
     | 'no-sourcemaps'
     | 'not-linked-sourcemaps'
+    | 'directory-linked-sourcemaps'
     | 'processed-not-linked-sourcemaps'
+    | 'processed-directory-linked-sourcemaps'
     | 'original'
     | 'processed'
     | 'processed-with-sources'
@@ -36,7 +38,7 @@ export function withWorkingCopy(sources: TestFiles | TestFiles[], fn: (path: str
         try {
             await fn(workingCopy);
         } finally {
-            fsExtra.removeSync(workingCopy);
+            fs.rmSync(workingCopy, { recursive: true, force: true });
         }
     };
 }

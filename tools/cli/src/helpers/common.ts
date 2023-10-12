@@ -55,8 +55,8 @@ export function readSourceAndSourceMap(sourceProcessor: SourceProcessor) {
                 pipe(
                     source.content,
                     (content) => sourceProcessor.getSourceMapPathFromSource(content, sourceAsset.path),
-                    (result) => result ?? pathIfExists(`${source.path}.map`),
-                    (path) => (path ? Ok(path) : Err('could not find source map for source')),
+                    R.map((result) => result ?? pathIfExists(`${source.path}.map`)),
+                    R.map((path) => (path ? Ok(path) : Err('could not find source map for source'))),
                     R.map((path) => ({ name: path, path } as Asset)),
                     R.map(readSourceMap),
                     R.map((sourceMap) => ({ source, sourceMap } as SourceAndSourceMap)),
