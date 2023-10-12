@@ -1,7 +1,7 @@
 import { BacktraceReportSubmission } from '../model/http/BacktraceReportSubmission';
 import { BacktraceRequestHandler } from '../model/http/BacktraceRequestHandler';
 import { BacktraceAttributeProvider } from '../modules/attribute/BacktraceAttributeProvider';
-import { BreadcrumbsEventSubscriber } from '../modules/breadcrumbs';
+import { BreadcrumbsEventSubscriber, BreadcrumbsStorage } from '../modules/breadcrumbs';
 import { BacktraceStackTraceConverter } from '../modules/converter';
 import { BacktraceSessionProvider } from '../modules/metrics/BacktraceSessionProvider';
 import { FileSystem } from '../modules/storage';
@@ -32,6 +32,15 @@ export abstract class BacktraceCoreClientBuilder<S extends Partial<CoreClientSet
             this.clientSetup.breadcrumbsSetup.subscribers.push(breadcrumbSubscriber);
         }
 
+        return this;
+    }
+
+    public useBreadcrumbsStorage(storage: BreadcrumbsStorage): this {
+        if (!this.clientSetup.breadcrumbsSetup) {
+            this.clientSetup.breadcrumbsSetup = {};
+        }
+
+        this.clientSetup.breadcrumbsSetup.storage = storage;
         return this;
     }
 
