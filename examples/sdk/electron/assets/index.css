@@ -14,8 +14,32 @@
 }
 
 .action-container {
-    width: 50%;
     padding: 20px;
+}
+
+.button-container {
+    display: flex;
+    margin: initial;
+}
+
+.button-container .action-button {
+    padding: 10px 16px;
+}
+
+.button-container :not(:first-child):not(:last-child) {
+    border-radius: initial;
+}
+
+.button-container :first-child {
+    border-radius: 50px 0 0 50px;
+    min-width: initial;
+    flex: 1;
+}
+
+.button-container :last-child {
+    border-radius: 0 50px 50px 0;
+    min-width: initial;
+    flex: 0;
 }
 
 .card-header {
@@ -31,7 +55,7 @@
     padding: 40px;
     text-align: center;
 }
-p {
+p, span {
     font-family: 'DM Sans', Arial, sans-serif;
     font-weight: 300;
     font-size: 15px;
@@ -43,9 +67,24 @@ p {
     padding: 12px 35px;
     border-radius: 50px;
     margin-bottom: 5px;
-    width: 40%;
     text-align: center;
 }
+
+.action-button:hover {
+    background-color: #4eeea2;
+}
+
+.action-description {
+    background-color: #3ddc91;
+    padding: 12px 12px;
+    margin-bottom: 5px;
+    text-align: center;
+}
+
+.round {
+    border-radius: 50px;
+}
+
 .action-button a {
     color: #132322;
     font-family: 'DM Sans', Helvetica, Arial, sans-serif;

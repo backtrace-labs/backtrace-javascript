@@ -1,10 +1,10 @@
 {
     "extends": "./tsconfig.json",
     "compilerOptions": {
-        "outDir": "./lib/renderer",
-        "rootDir": "./src/renderer"
+        "outDir": "./lib",
+        "rootDir": "./src"
     },
-    "include": ["src/renderer"],
+    "include": ["src/renderer", "src/common"],
     "exclude": ["node_modules", "tests", "lib"],
     "references": [
         {

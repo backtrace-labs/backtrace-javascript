@@ -1,11 +1,19 @@
-import { BacktraceClient, BacktraceStringAttachment, createBacktraceReduxMiddleware } from '@backtrace-labs/browser';
+import { BacktraceClient, BacktraceStringAttachment } from '@backtrace-labs/browser';
 import { addBacktraceElectron } from '@backtrace-labs/electron/lib/renderer';
-import { configureStore, createSlice } from '@reduxjs/toolkit';
+import { Events, MainApi } from '../common/MainApi';
+
+declare global {
+    interface Window {
+        readonly mainApi: MainApi;
+    }
+}
+
+const mainApi = window.mainApi;
 
 const client = BacktraceClient.initialize(
     {
         url: 'none',
-        name: '@backtrace-labs/browser-example',
+        name: '@backtrace-labs/electron-renderer',
         version: '0.0.1',
         userAttributes: {
             'custom-attribute': 'test',
@@ -18,56 +26,17 @@ const client = BacktraceClient.initialize(
     (builder) => addBacktraceElectron(builder),
 );
 
-interface DemoState {
-    count: number;
-}
-
-const initialState: DemoState = {
-    count: 0,
-};
-
-const counterSlice = createSlice({
-    name: 'Redux-Demo',
-    initialState,
-    reducers: {
-        setCount(state, action) {
-            state.count = action.payload;
-        },
-    },
-});
-
-const { setCount } = counterSlice.actions;
-
-const store = configureStore({
-    reducer: {
-        counter: counterSlice.reducer,
-    },
-    middleware: (getDefaultMiddleware) => {
-        const backtraceMiddleware = createBacktraceReduxMiddleware(client);
-        return getDefaultMiddleware().concat(backtraceMiddleware);
-    },
-});
-
-function getCount() {
-    return store.getState().counter.count;
-}
-
 function parseNotExistingDomElement(): string {
     const element = document.getElementById('not-existing-id') as HTMLElement;
     return element.outerText.split('\n')[1].toString();
 }
 
-const sendErrorButton = document.getElementById('send-error') as HTMLElement;
-const sendMessageButton = document.getElementById('send-message') as HTMLElement;
-const sendUnhandledExceptionButton = document.getElementById('send-unhandled-exception') as HTMLElement;
-const sendPromiseRejectionButton = document.getElementById('send-promise-rejection') as HTMLElement;
-const generateMetricButton = document.getElementById('generate-metric') as HTMLElement;
-const sendMetricsButton = document.getElementById('send-metrics') as HTMLElement;
-const reduxDemoButton = document.getElementById('redux-demo') as HTMLElement;
-const incrementCounterButton = document.getElementById('increment') as HTMLElement;
-const decrementCounterButton = document.getElementById('decrement') as HTMLElement;
-const clearCounterButton = document.getElementById('clear') as HTMLElement;
-const sendReduxErrorButton = document.getElementById('send-redux-error') as HTMLElement;
+const sendErrorButton = document.querySelectorAll<HTMLElement>('.send-error');
+const sendMessageButton = document.querySelectorAll<HTMLElement>('.send-message');
+const sendUnhandledExceptionButton = document.querySelectorAll<HTMLElement>('.send-unhandled-exception');
+const sendPromiseRejectionButton = document.querySelectorAll<HTMLElement>('.send-promise-rejection');
+const generateMetricButton = document.querySelectorAll<HTMLElement>('.generate-metric');
+const sendMetricsButton = document.querySelectorAll<HTMLElement>('.send-metrics');
 
 async function sendHandledException() {
     try {
@@ -117,48 +86,32 @@ function unhandledException() {
     throw new Error('unhandled exception');
 }
 
-function handleReduxButtonClick() {
-    const reduxDemoContainer = document.getElementById('redux-demo-container') as HTMLElement;
-    const mainButtonsContainer = document.getElementById('main-buttons-container') as HTMLElement;
-
-    reduxDemoContainer.style.display = 'block';
-    mainButtonsContainer.style.display = 'none';
+function routeMainRenderer(mainFn: () => unknown, rendererFn: () => unknown) {
+    return (ev: Event) => {
+        const target = ev.currentTarget as HTMLElement;
+        const targetName = target.getAttribute('data-target');
+        switch (targetName) {
+            case 'main':
+                return mainFn();
+            case 'renderer':
+                return rendererFn();
+            default:
+                throw new Error(`unknown target ${targetName}`);
+        }
+    };
 }
 
-function repaintCount() {
-    const countEl = document.getElementById('count') as HTMLElement;
-    const count = store.getState().counter.count;
-    countEl.innerText = String(count);
+function emitToMain(event: keyof typeof Events) {
+    return () => mainApi.emit(event);
 }
 
-function handleIncrementClick() {
-    console.log('increment counter click');
-    const count = getCount();
-    store.dispatch(setCount(count + 1));
-    repaintCount();
-}
-
-function handleDecrementClick() {
-    console.log('decrement counter click');
-    const count = getCount();
-    store.dispatch(setCount(count - 1));
-    repaintCount();
-}
-
-function handleClearClick() {
-    console.log('clear counter click');
-    store.dispatch(setCount(0));
-    repaintCount();
-}
-
-sendErrorButton.onclick = sendHandledException;
-sendMessageButton.onclick = sendMessage;
-generateMetricButton.onclick = generateMetric;
-sendMetricsButton.onclick = sendMetrics;
-sendUnhandledExceptionButton.onclick = unhandledException;
-sendPromiseRejectionButton.onclick = unhandledPromiseRejection;
-reduxDemoButton.onclick = handleReduxButtonClick;
-incrementCounterButton.onclick = handleIncrementClick;
-decrementCounterButton.onclick = handleDecrementClick;
-clearCounterButton.onclick = handleClearClick;
-sendReduxErrorButton.onclick = sendHandledException;
+sendErrorButton.forEach((el) => (el.onclick = routeMainRenderer(emitToMain('sendError'), sendHandledException)));
+sendMessageButton.forEach((el) => (el.onclick = routeMainRenderer(emitToMain('sendMessage'), sendMessage)));
+generateMetricButton.forEach((el) => (el.onclick = routeMainRenderer(emitToMain('generateMetric'), generateMetric)));
+sendMetricsButton.forEach((el) => (el.onclick = routeMainRenderer(emitToMain('sendMetrics'), sendMetrics)));
+sendUnhandledExceptionButton.forEach(
+    (el) => (el.onclick = routeMainRenderer(emitToMain('sendUnhandledException'), unhandledException)),
+);
+sendPromiseRejectionButton.forEach(
+    (el) => (el.onclick = routeMainRenderer(emitToMain('sendPromiseRejection'), unhandledPromiseRejection)),
+);
