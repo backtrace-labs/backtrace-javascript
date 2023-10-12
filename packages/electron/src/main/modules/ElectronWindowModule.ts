@@ -17,13 +17,17 @@ export class ElectronWindowModule implements BacktraceModule {
             return requestHandler.post(url, dataJson);
         });
 
-        rpc.on(
-            IpcEvents.sendReport,
-            async (_: unknown, data: BacktraceData, attachmentRefs: IpcAttachmentReference[]) => {
-                const attachments = attachmentRefs.map((v) => new IpcAttachment(v.name, v.id, ipcTransport));
-                return await reportSubmission.send(data, [...attachments, ...client.attachments]);
-            },
-        );
+        rpc.on(IpcEvents.sendReport, async (event, data: BacktraceData, attachmentRefs: IpcAttachmentReference[]) => {
+            data.attributes = {
+                'electron.frameId': event.frameId,
+                'electron.processId': event.processId,
+                'electron.renderer': true,
+                ...data.attributes,
+            };
+
+            const attachments = attachmentRefs.map((v) => new IpcAttachment(v.name, v.id, ipcTransport));
+            return await reportSubmission.send(data, [...attachments, ...client.attachments]);
+        });
 
         ipcTransport.on(
             IpcEvents.addBreadcrumb,
