@@ -36,6 +36,6 @@
         "@backtrace-labs/sdk-core": "^0.0.5"
     },
     "peerDependencies": {
-        "electron": "^26.2.4"
+        "electron": "12 - 26"
     }
 }
