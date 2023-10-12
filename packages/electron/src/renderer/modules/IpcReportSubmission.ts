@@ -22,6 +22,12 @@ export class IpcReportSubmission implements BacktraceReportSubmission {
     ): Promise<BacktraceReportSubmissionResult<BacktraceSubmissionResponse>> {
         const references: IpcAttachmentReference[] = [];
 
+        // IPC breadcrumbs storage will set this to -1.
+        // Let main add breadcrumb.lastId if it's less than 0.
+        if ((data.attributes['breadcrumbs.lastId'] as number) < 0) {
+            delete data.attributes['breadcrumbs.lastId'];
+        }
+
         for (const attachment of attachments) {
             const id = IdGenerator.uuid() + '_' + attachment.name;
             const content = attachment.get();

@@ -1,6 +1,7 @@
 import { BacktraceCoreClientBuilder } from '@backtrace-labs/sdk-core';
 import { getIpcRpc } from './ipc/getIpcRpc';
 import { getIpcTransport } from './ipc/getIpcTransport';
+import { IpcBreadcrumbsStorage } from './modules/IpcBreadcrumbsStorage';
 import { IpcReportSubmission } from './modules/IpcReportSubmission';
 import { IpcRequestHandler } from './modules/IpcRequestHandler';
 
@@ -10,5 +11,6 @@ export function addBacktraceElectron<T extends BacktraceCoreClientBuilder>(build
 
     return builder
         .useRequestHandler(new IpcRequestHandler(ipcRpc))
-        .useReportSubmission(new IpcReportSubmission(ipcRpc, ipcTransport));
+        .useReportSubmission(new IpcReportSubmission(ipcRpc, ipcTransport))
+        .useBreadcrumbsStorage(new IpcBreadcrumbsStorage(ipcTransport));
 }

@@ -1,4 +1,4 @@
-import { BacktraceData, BacktraceModule, BacktraceModuleBindData } from '@backtrace-labs/sdk-core';
+import { BacktraceData, BacktraceModule, BacktraceModuleBindData, RawBreadcrumb } from '@backtrace-labs/sdk-core';
 import { BrowserWindow } from 'electron';
 import { IpcAttachmentReference } from '../../common/ipc/IpcAttachmentReference';
 import { IpcEvents } from '../../common/ipc/IpcEvents';
@@ -22,6 +22,18 @@ export class ElectronWindowModule implements BacktraceModule {
             async (_: unknown, data: BacktraceData, attachmentRefs: IpcAttachmentReference[]) => {
                 const attachments = attachmentRefs.map((v) => new IpcAttachment(v.name, v.id, ipcTransport));
                 return await reportSubmission.send(data, [...attachments, ...client.attachments]);
+            },
+        );
+
+        ipcTransport.on(
+            IpcEvents.addBreadcrumb,
+            async (event: Electron.IpcMainInvokeEvent, breadcrumb: RawBreadcrumb) => {
+                client.breadcrumbs?.addBreadcrumb(breadcrumb.message, breadcrumb.level, breadcrumb.type, {
+                    'electron.frameId': event.frameId,
+                    'electron.processId': event.processId,
+                    'electron.renderer': true,
+                    ...breadcrumb.attributes,
+                });
             },
         );
     }
