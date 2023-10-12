@@ -1,8 +1,10 @@
+const prefix = '__BACKTRACE';
+
 export const IpcEvents = {
     streamEvent(name: string, event: string) {
-        return `${name}_${event}`;
+        return `${prefix}_${name}_${event}`;
     },
-    sendReport: 'sendReport',
-    post: 'post',
-    addBreadcrumb: 'addBreadcrumb',
+    sendReport: `${prefix}_sendReport`,
+    post: `${prefix}_post`,
+    addBreadcrumb: `${prefix}_addBreadcrumb`,
 } as const;
