@@ -1,11 +1,10 @@
-import { BrowserWindow, ipcMain } from 'electron';
+import { WebContents, ipcMain } from 'electron';
 import { IpcTransport } from '../../common';
 
 export class WindowIpcTransport implements IpcTransport {
-    constructor(private readonly _window: BrowserWindow) {}
-
+    constructor(private readonly _webContents: WebContents) {}
     public emit(event: string, ...args: unknown[]): boolean {
-        this._window.webContents.send(event, ...args);
+        this._webContents.send(event, ...args);
         return true;
     }
 

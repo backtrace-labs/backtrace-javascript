@@ -5,19 +5,17 @@ import {
     RawBreadcrumb,
     SummedEvent,
 } from '@backtrace-labs/sdk-core';
-import { BrowserWindow } from 'electron';
 import { IpcAttachmentReference } from '../../common/ipc/IpcAttachmentReference';
 import { IpcEvents } from '../../common/ipc/IpcEvents';
-import { WindowIpcRpc } from '../ipc/WindowIpcRpc';
+import { MainIpcRpcHandler } from '../ipc/MainIpcRpcHandler';
+import { MainIpcTransportHandler } from '../ipc/MainIpcTransportHandler';
 import { WindowIpcTransport } from '../ipc/WindowIpcTransport';
 import { IpcAttachment } from './IpcAttachment';
 
-export class ElectronWindowModule implements BacktraceModule {
-    constructor(private readonly _window: BrowserWindow) {}
-
+export class BacktraceMainElectronModule implements BacktraceModule {
     public bind({ requestHandler, reportSubmission, client }: BacktraceModuleBindData): void {
-        const rpc = new WindowIpcRpc(this._window);
-        const ipcTransport = new WindowIpcTransport(this._window);
+        const rpc = new MainIpcRpcHandler();
+        const ipcTransport = new MainIpcTransportHandler();
 
         rpc.on(IpcEvents.post, async (_: unknown, url: string, dataJson: string) => {
             return requestHandler.post(url, dataJson);
@@ -29,7 +27,10 @@ export class ElectronWindowModule implements BacktraceModule {
                 ...data.attributes,
             };
 
-            const attachments = attachmentRefs.map((v) => new IpcAttachment(v.name, v.id, ipcTransport));
+            const attachments = attachmentRefs.map(
+                (v) => new IpcAttachment(v.name, v.id, new WindowIpcTransport(event.sender)),
+            );
+
             return await reportSubmission.send(data, [...attachments, ...client.attachments]);
         });
 

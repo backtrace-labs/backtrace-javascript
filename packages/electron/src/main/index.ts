@@ -1,4 +1,4 @@
 export * from '../common';
 export * from './ipc/ReadableIpcStream';
 export * from './ipc/WindowIpcTransport';
-export * from './modules/ElectronWindowModule';
+export * from './modules/BacktraceMainElectronModule';
