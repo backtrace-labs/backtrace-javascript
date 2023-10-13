@@ -7,6 +7,7 @@ import {
 } from '@backtrace-labs/sdk-core';
 import { IpcAttachmentReference } from '../../common/ipc/IpcAttachmentReference';
 import { IpcEvents } from '../../common/ipc/IpcEvents';
+import { SyncData } from '../../common/models/SyncData';
 import { MainIpcRpcHandler } from '../ipc/MainIpcRpcHandler';
 import { MainIpcTransportHandler } from '../ipc/MainIpcTransportHandler';
 import { WindowIpcTransport } from '../ipc/WindowIpcTransport';
@@ -14,6 +15,10 @@ import { IpcAttachment } from './IpcAttachment';
 
 export class BacktraceMainElectronModule implements BacktraceModule {
     public bind({ requestHandler, reportSubmission, client }: BacktraceModuleBindData): void {
+        const getSyncData = (): SyncData => ({
+            sessionId: client.sessionId,
+        });
+
         const rpc = new MainIpcRpcHandler();
         const ipcTransport = new MainIpcTransportHandler();
 
@@ -35,6 +40,17 @@ export class BacktraceMainElectronModule implements BacktraceModule {
         });
 
         rpc.on(IpcEvents.sendMetrics, async () => client.metrics?.send());
+
+        rpc.on(IpcEvents.sync, () => Promise.resolve(getSyncData()));
+
+        rpc.onSync(IpcEvents.sync, (event: Electron.IpcMainInvokeEvent) => {
+            event.returnValue = getSyncData();
+        });
+
+        ipcTransport.on(IpcEvents.sync, (event) => {
+            const transport = new WindowIpcTransport(event.sender);
+            transport.emit(IpcEvents.sync, getSyncData());
+        });
 
         ipcTransport.on(IpcEvents.addBreadcrumb, (event: Electron.IpcMainInvokeEvent, breadcrumb: RawBreadcrumb) => {
             client.breadcrumbs?.addBreadcrumb(breadcrumb.message, breadcrumb.level, breadcrumb.type, {

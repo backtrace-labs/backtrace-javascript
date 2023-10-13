@@ -9,4 +9,5 @@ export const IpcEvents = {
     sendReport: `${prefix}_sendReport`,
     post: `${prefix}_post`,
     addBreadcrumb: `${prefix}_addBreadcrumb`,
+    sync: `${prefix}_sync`,
 } as const;
