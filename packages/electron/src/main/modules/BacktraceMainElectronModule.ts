@@ -3,8 +3,10 @@ import {
     BacktraceModule,
     BacktraceModuleBindData,
     RawBreadcrumb,
+    SubmissionUrlInformation,
     SummedEvent,
 } from '@backtrace-labs/sdk-core';
+import { app, crashReporter } from 'electron';
 import { IpcAttachmentReference } from '../../common/ipc/IpcAttachmentReference';
 import { IpcEvents } from '../../common/ipc/IpcEvents';
 import { SyncData } from '../../common/models/SyncData';
@@ -14,7 +16,11 @@ import { WindowIpcTransport } from '../ipc/WindowIpcTransport';
 import { IpcAttachment } from './IpcAttachment';
 
 export class BacktraceMainElectronModule implements BacktraceModule {
-    public bind({ requestHandler, reportSubmission, client }: BacktraceModuleBindData): void {
+    private _bindData?: BacktraceModuleBindData;
+
+    public bind(bindData: BacktraceModuleBindData): void {
+        const { requestHandler, reportSubmission, client } = bindData;
+
         const getSyncData = (): SyncData => ({
             sessionId: client.sessionId,
         });
@@ -65,6 +71,34 @@ export class BacktraceMainElectronModule implements BacktraceModule {
                 ...metric.attributes,
             });
         });
+
+        this._bindData = bindData;
+    }
+
+    public initialize(): void {
+        if (!this._bindData) {
+            return;
+        }
+
+        const { options, attributeManager } = this._bindData;
+        if (options.database?.captureNativeCrashes) {
+            if (options.database.path) {
+                app.setPath('crashDumps', options.database.path);
+            }
+
+            crashReporter.start({
+                submitURL: SubmissionUrlInformation.toMinidumpSubmissionUrl(options.url),
+                uploadToServer: true,
+                extra: toStringDictionary(attributeManager.get('scoped').attributes),
+            });
+
+            attributeManager.attributeEvents.on('scoped-attributes-updated', ({ attributes }) => {
+                const dict = toStringDictionary(attributes);
+                for (const key in dict) {
+                    crashReporter.addExtraParameter(key, dict[key]);
+                }
+            });
+        }
     }
 
     private getEventAttributes(event: Electron.IpcMainInvokeEvent) {
@@ -74,4 +108,11 @@ export class BacktraceMainElectronModule implements BacktraceModule {
             'electron.process': 'renderer',
         };
     }
+}
+
+function toStringDictionary(record: Record<string, unknown>): Record<string, string> {
+    return Object.keys(record).reduce((obj, key) => {
+        obj[key] = record[key]?.toString() ?? '';
+        return obj;
+    }, {} as Record<string, string>);
 }
