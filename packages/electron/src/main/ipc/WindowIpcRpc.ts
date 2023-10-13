@@ -1,8 +1,8 @@
 import { IdGenerator } from '@backtrace-labs/sdk-core';
 import { BrowserWindow, IpcMainInvokeEvent, ipcMain } from 'electron';
-import { IpcRpc } from '../../common/ipc/IpcRpc';
+import { IpcRpc, SyncIpcRpcHandler } from '../../common/ipc/IpcRpc';
 
-export class WindowIpcRpc implements IpcRpc {
+export class WindowIpcRpc implements IpcRpc, SyncIpcRpcHandler {
     constructor(private readonly _window: BrowserWindow) {}
 
     public on(event: string, callback: (event: IpcMainInvokeEvent, ...args: any[]) => Promise<any>): this {
@@ -12,6 +12,16 @@ export class WindowIpcRpc implements IpcRpc {
 
     public once(event: string, callback: (event: IpcMainInvokeEvent, ...args: any[]) => Promise<any>): this {
         ipcMain.handleOnce(event, callback);
+        return this;
+    }
+
+    public onSync(event: string, callback: (event: IpcMainInvokeEvent, ...args: any[]) => any): this {
+        ipcMain.on(event, callback);
+        return this;
+    }
+
+    public onceSync(event: string, callback: (event: IpcMainInvokeEvent, ...args: any[]) => any): this {
+        ipcMain.once(event, callback);
         return this;
     }
 

@@ -1,7 +1,7 @@
 import { Event, ipcRenderer } from 'electron';
-import { IpcRpc, IpcRpcEvent } from '../../common/ipc/IpcRpc';
+import { IpcRpc, IpcRpcEvent, SyncIpcRpcCaller } from '../../common/ipc/IpcRpc';
 
-export class RendererIpcRpc implements IpcRpc {
+export class RendererIpcRpc implements IpcRpc, SyncIpcRpcCaller {
     public on(event: string, callback: (event: Event, ...args: any[]) => Promise<any>): this {
         ipcRenderer.on(event, RendererIpcRpc.handleRpcCall(callback));
         return this;
@@ -14,6 +14,10 @@ export class RendererIpcRpc implements IpcRpc {
 
     public invoke<T>(event: string, ...args: unknown[]): Promise<T> {
         return ipcRenderer.invoke(event, ...args);
+    }
+
+    public invokeSync<T>(event: string, ...args: unknown[]): T {
+        return ipcRenderer.sendSync(event, ...args);
     }
 
     private static handleRpcCall(callback: (event: Event, ...args: any[]) => Promise<any>) {

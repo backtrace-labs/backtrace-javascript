@@ -1,8 +1,8 @@
-import { IpcRpc } from '../../common/ipc/IpcRpc';
+import { IpcRpc, SyncIpcRpcCaller } from '../../common/ipc/IpcRpc';
 
 declare global {
     interface Window {
-        BACKTRACE_IPC_RPC: IpcRpc;
+        BACKTRACE_IPC_RPC: IpcRpc & SyncIpcRpcCaller;
     }
 }
 

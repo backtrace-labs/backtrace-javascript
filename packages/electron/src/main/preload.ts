@@ -1,6 +1,6 @@
 import { contextBridge } from 'electron';
 import { IpcTransport } from '../common';
-import { IpcRpc } from '../common/ipc/IpcRpc';
+import { IpcRpc, SyncIpcRpcCaller } from '../common/ipc/IpcRpc';
 import { RendererIpcRpc } from './ipc/RendererIpcRpc';
 import { RendererIpcTransport } from './ipc/RendererIpcTransport';
 
@@ -21,7 +21,7 @@ const ipcTransportApi: IpcTransport = {
 };
 
 const ipcRpc = new RendererIpcRpc();
-const ipcRpcApi: IpcRpc = {
+const ipcRpcApi: IpcRpc & SyncIpcRpcCaller = {
     invoke(event, ...args) {
         return ipcRpc.invoke(event, ...args);
     },
@@ -30,6 +30,9 @@ const ipcRpcApi: IpcRpc = {
     },
     once(event, callback) {
         return ipcRpc.once(event, callback);
+    },
+    invokeSync(event, callback) {
+        return ipcRpc.invokeSync(event, callback);
     },
 };
 
