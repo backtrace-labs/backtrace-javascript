@@ -192,7 +192,7 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
             this._sessionProvider,
             this.attributeManager,
             setup.requestHandler,
-        ).build();
+        ).build(setup.uniqueMetricsQueue, setup.summedMetricsQueue);
 
         if (metrics) {
             this._modules.set(BacktraceMetrics, metrics);

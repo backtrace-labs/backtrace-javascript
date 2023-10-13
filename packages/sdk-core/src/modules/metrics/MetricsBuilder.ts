@@ -32,7 +32,7 @@ export class MetricsBuilder {
 
     public build(
         uniqueEventsSubmissionQueue?: MetricsQueue<UniqueEvent>,
-        summedEventsSubmissionQueue?: MetricsQueue<UniqueEvent>,
+        summedEventsSubmissionQueue?: MetricsQueue<SummedEvent>,
     ): BacktraceMetrics | undefined {
         const metricsOptions = {
             ...this.optionsWithDefaults(),

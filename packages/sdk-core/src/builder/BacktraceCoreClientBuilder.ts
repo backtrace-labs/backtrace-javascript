@@ -4,6 +4,9 @@ import { BacktraceAttributeProvider } from '../modules/attribute/BacktraceAttrib
 import { BreadcrumbsEventSubscriber, BreadcrumbsStorage } from '../modules/breadcrumbs';
 import { BacktraceStackTraceConverter } from '../modules/converter';
 import { BacktraceSessionProvider } from '../modules/metrics/BacktraceSessionProvider';
+import { MetricsQueue } from '../modules/metrics/MetricsQueue';
+import { SummedEvent } from '../modules/metrics/model/SummedEvent';
+import { UniqueEvent } from '../modules/metrics/model/UniqueEvent';
 import { FileSystem } from '../modules/storage';
 import { CoreClientSetup } from './CoreClientSetup';
 
@@ -66,6 +69,16 @@ export abstract class BacktraceCoreClientBuilder<S extends Partial<CoreClientSet
 
     public useReportSubmission(reportSubmission: BacktraceReportSubmission) {
         this.clientSetup.reportSubmission = reportSubmission;
+        return this;
+    }
+
+    public useSummedMetricsQueue(queue: MetricsQueue<SummedEvent>) {
+        this.clientSetup.summedMetricsQueue = queue;
+        return this;
+    }
+
+    public useUniqueMetricsQueue(queue: MetricsQueue<UniqueEvent>) {
+        this.clientSetup.uniqueMetricsQueue = queue;
         return this;
     }
 }

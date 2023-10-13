@@ -6,6 +6,9 @@ import { BacktraceAttributeProvider } from '../modules/attribute/BacktraceAttrib
 import { BreadcrumbsSetup } from '../modules/breadcrumbs';
 import { BacktraceStackTraceConverter } from '../modules/converter';
 import { BacktraceSessionProvider } from '../modules/metrics/BacktraceSessionProvider';
+import { MetricsQueue } from '../modules/metrics/MetricsQueue';
+import { SummedEvent } from '../modules/metrics/model/SummedEvent';
+import { UniqueEvent } from '../modules/metrics/model/UniqueEvent';
 import { FileSystem } from '../modules/storage';
 import { DebugIdMapProvider } from '../sourcemaps';
 import { SdkOptions } from './SdkOptions';
@@ -27,4 +30,6 @@ export interface CoreClientSetup<O extends BacktraceConfiguration = BacktraceCon
     readonly reportSubmission?: BacktraceReportSubmission;
     readonly fileSystem?: FileSystem;
     readonly modules?: BacktraceModule[];
+    readonly summedMetricsQueue?: MetricsQueue<SummedEvent>;
+    readonly uniqueMetricsQueue?: MetricsQueue<UniqueEvent>;
 }
