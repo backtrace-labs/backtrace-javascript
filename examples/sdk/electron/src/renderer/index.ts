@@ -37,6 +37,7 @@ const sendUnhandledExceptionButton = document.querySelectorAll<HTMLElement>('.se
 const sendPromiseRejectionButton = document.querySelectorAll<HTMLElement>('.send-promise-rejection');
 const generateMetricButton = document.querySelectorAll<HTMLElement>('.generate-metric');
 const sendMetricsButton = document.querySelectorAll<HTMLElement>('.send-metrics');
+const crashAppButton = document.querySelectorAll<HTMLElement>('.crash-app');
 
 async function sendHandledException() {
     try {
@@ -115,3 +116,4 @@ sendUnhandledExceptionButton.forEach(
 sendPromiseRejectionButton.forEach(
     (el) => (el.onclick = routeMainRenderer(emitToMain('sendPromiseRejection'), unhandledPromiseRejection)),
 );
+crashAppButton.forEach((el) => (el.onclick = emitToMain('crashApp')));

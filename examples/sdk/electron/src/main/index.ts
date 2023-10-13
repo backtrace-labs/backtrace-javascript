@@ -1,5 +1,4 @@
-import { ElectronWindowModule } from '@backtrace-labs/electron/lib/main';
-import { BacktraceClient } from '@backtrace-labs/node';
+import { BacktraceClient } from '@backtrace-labs/electron/lib/main';
 import { BrowserWindow, app, ipcMain } from 'electron';
 import fs from 'fs';
 import path from 'path';
@@ -73,12 +72,18 @@ function unhandledException() {
     throw new Error('unhandled exception');
 }
 
+function crashApp() {
+    console.log('Crashing the application');
+    process.crash();
+}
+
 handleEvent('sendError', sendHandledException);
 handleEvent('sendMessage', sendMessage);
 handleEvent('generateMetric', generateMetric);
 handleEvent('sendMetrics', sendMetrics);
 handleEvent('sendPromiseRejection', unhandledPromiseRejection);
 handleEvent('sendUnhandledException', unhandledException);
+handleEvent('crashApp', crashApp);
 
 const createWindow = () => {
     const win = new BrowserWindow({
@@ -90,7 +95,6 @@ const createWindow = () => {
     });
 
     win.loadFile('assets/index.html');
-    client.addModule(new ElectronWindowModule(win));
     win.webContents.openDevTools({ mode: 'detach' });
 };
 

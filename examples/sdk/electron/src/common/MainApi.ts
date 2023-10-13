@@ -5,6 +5,7 @@ export const Events = {
     sendPromiseRejection: 'sendPromiseRejection',
     generateMetric: 'generateMetric',
     sendMetrics: 'sendMetrics',
+    crashApp: 'crashApp',
 };
 
 export interface MainApi {
