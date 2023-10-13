@@ -374,6 +374,7 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
     private getModuleBindData(): BacktraceModuleBindData {
         return {
             client: this,
+            options: this.options,
             reportEvents: this.reportEvents,
             attributeManager: this.attributeManager,
             reportSubmission: this._reportSubmission,
