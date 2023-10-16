@@ -351,11 +351,14 @@ function pipeAssets(assets: AssetWithContent<RawSourceMapWithDebugId>[]) {
     return function pipeAssets(writable: Writable) {
         const archive = new ZipArchive();
 
+        const waitForFinish = new Promise((resolve, reject) => writable.on('finish', resolve).on('error', reject));
+
         return pipe(
             writable,
-            pipeStream(archive),
+            pipeStream(archive.stream),
             () => assets.map(appendToArchive(archive)),
             () => archive.finalize(),
+            () => waitForFinish,
         );
     };
 }
