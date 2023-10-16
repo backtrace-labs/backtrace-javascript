@@ -20,7 +20,7 @@ describe('ZipArchive', () => {
     it('should create a zip archive', async () => {
         const archive = new ZipArchive();
         const outputStream = fs.createWriteStream(outputFile);
-        archive.pipe(outputStream);
+        archive.stream.pipe(outputStream);
 
         const entries = [
             ['entry1', 'entry1Data'],
