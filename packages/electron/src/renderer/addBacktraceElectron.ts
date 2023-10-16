@@ -42,7 +42,6 @@ export function addBacktraceElectron<T extends BacktraceCoreClientBuilder>(
 
     if (options?.synchronous) {
         const syncData = ipcRpc.invokeSync<SyncData>(IpcEvents.sync);
-        console.log(syncData);
         builder.useSessionProvider(new ConstSessionProvider(syncData.sessionId));
     } else {
         builder.useSessionProvider(new IpcAsyncSessionProvider(ipcTransport));
