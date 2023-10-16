@@ -1,5 +1,5 @@
 import { BacktraceData } from '../../src';
-import { BacktraceReportSubmission } from '../../src/model/http/BacktraceReportSubmission';
+import { RequestBacktraceReportSubmission } from '../../src/model/http/BacktraceReportSubmission';
 import { BacktraceDatabase } from '../../src/modules/database/BacktraceDatabase';
 import { TEST_SUBMISSION_URL } from '../mocks/BacktraceTestClient';
 import { testHttpClient } from '../mocks/testHttpClient';
@@ -10,7 +10,7 @@ describe('Database setup tests', () => {
         const database = new BacktraceDatabase(
             undefined,
             testStorageProvider,
-            new BacktraceReportSubmission(
+            new RequestBacktraceReportSubmission(
                 {
                     url: TEST_SUBMISSION_URL,
                 },
@@ -27,7 +27,7 @@ describe('Database setup tests', () => {
                 autoSend: false,
             },
             testStorageProvider,
-            new BacktraceReportSubmission(
+            new RequestBacktraceReportSubmission(
                 {
                     url: TEST_SUBMISSION_URL,
                 },
@@ -45,7 +45,7 @@ describe('Database setup tests', () => {
         const database = new BacktraceDatabase(
             { enable: false },
             testStorageProvider,
-            new BacktraceReportSubmission(
+            new RequestBacktraceReportSubmission(
                 {
                     url: TEST_SUBMISSION_URL,
                 },
@@ -66,7 +66,7 @@ describe('Database setup tests', () => {
                 path: '/path/to/fake/dir',
             },
             testStorageProvider,
-            new BacktraceReportSubmission(
+            new RequestBacktraceReportSubmission(
                 {
                     url: TEST_SUBMISSION_URL,
                 },
@@ -85,7 +85,7 @@ describe('Database setup tests', () => {
         const database = new BacktraceDatabase(
             undefined,
             testStorageProvider,
-            new BacktraceReportSubmission(
+            new RequestBacktraceReportSubmission(
                 {
                     url: TEST_SUBMISSION_URL,
                 },
@@ -103,7 +103,7 @@ describe('Database setup tests', () => {
         const database = new BacktraceDatabase(
             undefined,
             testStorageProvider,
-            new BacktraceReportSubmission(
+            new RequestBacktraceReportSubmission(
                 {
                     url: TEST_SUBMISSION_URL,
                 },
