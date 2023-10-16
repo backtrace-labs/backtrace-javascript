@@ -22,6 +22,7 @@ import {
     not,
     pass,
     pipe,
+    stripSourcesContent,
 } from '@backtrace-labs/sourcemap-tools';
 import path from 'path';
 import { GlobalOptions } from '..';
@@ -285,13 +286,8 @@ export async function runSourcemapCommands({ opts, logger, getHelpMessage }: Com
         ? await uploadOrSaveAssets(
               uploadUrl,
               uploadOptions.output,
-              (url) =>
-                  uploadAssets(
-                      url,
-                      { ignoreSsl: uploadOptions.insecure ?? false },
-                      uploadOptions['include-sources'] ?? false,
-                  ),
-              (path) => flow(saveAssets(path, uploadOptions['include-sources'] ?? false), Ok),
+              (url) => uploadAssets(url, { ignoreSsl: uploadOptions.insecure ?? false }),
+              (path) => flow(saveAssets(path), Ok),
           )
         : Ok(undefined);
 
@@ -330,6 +326,7 @@ export async function runSourcemapCommands({ opts, logger, getHelpMessage }: Com
                       ? Ok
                       : failIfEmpty('no processed sourcemaps found, make sure to run process'),
                   R.map(uniqueBy((asset) => asset.content.debugId)),
+                  R.map(opts['include-sources'] ? pass : map(stripSourcesContent)),
                   R.map((assets) =>
                       uploadOptions['dry-run']
                           ? Ok({ rxid: '<dry-run>' })
