@@ -5,7 +5,7 @@ export class StubMetricsQueue<T> implements MetricsQueue<T> {
     public readonly submissionUrl = '';
     public readonly maximumEvents = 0;
 
-    public add(event: T): void {
+    public add(): void {
         return;
     }
 

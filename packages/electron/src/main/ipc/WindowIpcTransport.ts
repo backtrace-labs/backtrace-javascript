@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { WebContents, ipcMain } from 'electron';
 import { IpcTransport } from '../../common';
 

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ipcRenderer } from 'electron';
 import { IpcTransport } from '../../common/ipc/IpcTransport';
 

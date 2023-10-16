@@ -9,10 +9,10 @@ export class ReadableIpcStream extends Readable {
     constructor(private readonly _name: string, private readonly _ipc: IpcTransport, opts?: ReadableOptions) {
         super(opts);
 
-        const close = (_: Event) => this.destroy();
+        const close = () => this.destroy();
         const error = (_: Event, err?: Error) => this.destroy(err);
         const end = () => this.push(null);
-        const data = (_: Event, chunk: any, encoding?: BufferEncoding) => {
+        const data = (_: Event, chunk: unknown, encoding?: BufferEncoding) => {
             if (!this.push(chunk, encoding)) {
                 _ipc.emit(IpcEvents.streamEvent(_name, 'finish'));
             }

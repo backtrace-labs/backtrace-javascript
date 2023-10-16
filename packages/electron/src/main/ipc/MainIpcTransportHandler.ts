@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { IpcMainInvokeEvent, ipcMain } from 'electron';
 import { IpcTransportHandler } from '../../common';
 

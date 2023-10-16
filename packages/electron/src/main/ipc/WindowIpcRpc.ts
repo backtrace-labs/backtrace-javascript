@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { IdGenerator } from '@backtrace-labs/sdk-core';
 import { BrowserWindow, IpcMainInvokeEvent, ipcMain } from 'electron';
 import { IpcRpc, SyncIpcRpcHandler } from '../../common/ipc/IpcRpc';
@@ -5,22 +6,22 @@ import { IpcRpc, SyncIpcRpcHandler } from '../../common/ipc/IpcRpc';
 export class WindowIpcRpc implements IpcRpc, SyncIpcRpcHandler {
     constructor(private readonly _window: BrowserWindow) {}
 
-    public on(event: string, callback: (event: IpcMainInvokeEvent, ...args: any[]) => Promise<any>): this {
+    public on(event: string, callback: (event: IpcMainInvokeEvent, ...args: any[]) => Promise<unknown>): this {
         ipcMain.handle(event, callback);
         return this;
     }
 
-    public once(event: string, callback: (event: IpcMainInvokeEvent, ...args: any[]) => Promise<any>): this {
+    public once(event: string, callback: (event: IpcMainInvokeEvent, ...args: any[]) => Promise<unknown>): this {
         ipcMain.handleOnce(event, callback);
         return this;
     }
 
-    public onSync(event: string, callback: (event: IpcMainInvokeEvent, ...args: any[]) => any): this {
+    public onSync(event: string, callback: (event: IpcMainInvokeEvent, ...args: any[]) => unknown): this {
         ipcMain.on(event, callback);
         return this;
     }
 
-    public onceSync(event: string, callback: (event: IpcMainInvokeEvent, ...args: any[]) => any): this {
+    public onceSync(event: string, callback: (event: IpcMainInvokeEvent, ...args: any[]) => unknown): this {
         ipcMain.once(event, callback);
         return this;
     }
