@@ -33,8 +33,8 @@
         "/lib"
     ],
     "dependencies": {
-        "@backtrace-labs/sdk-core": "^0.0.5",
-        "@backtrace-labs/node": "^0.0.4"
+        "@backtrace-labs/sdk-core": "^0.0.6",
+        "@backtrace-labs/node": "^0.0.5"
     },
     "peerDependencies": {
         "electron": "12 - 26"
