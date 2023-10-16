@@ -22,6 +22,17 @@ export function addBacktraceElectron<T extends BacktraceCoreClientBuilder>(
     const ipcTransport = getIpcTransport();
     const ipcRpc = getIpcRpc();
 
+    // Sanity check - this will throw if ping isn't listened on.
+    ipcRpc
+        .invoke(IpcEvents.ping)
+        .catch((err) =>
+            console.error(
+                'Cannot connect to Backtrace in the main process.\n\n',
+                'Make sure to initialize @backtrace-labs/electron in the main process first.\n\n',
+                err,
+            ),
+        );
+
     builder
         .useRequestHandler(new IpcRequestHandler(ipcRpc))
         .useReportSubmission(new IpcReportSubmission(ipcRpc, ipcTransport))

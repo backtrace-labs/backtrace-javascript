@@ -10,4 +10,5 @@ export const IpcEvents = {
     post: `${prefix}_post`,
     addBreadcrumb: `${prefix}_addBreadcrumb`,
     sync: `${prefix}_sync`,
+    ping: `${prefix}_ping`,
 } as const;

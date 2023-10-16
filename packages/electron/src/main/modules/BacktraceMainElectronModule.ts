@@ -47,6 +47,8 @@ export class BacktraceMainElectronModule implements BacktraceModule {
 
         rpc.on(IpcEvents.sendMetrics, async () => client.metrics?.send());
 
+        rpc.on(IpcEvents.ping, () => Promise.resolve('pong'));
+
         rpc.on(IpcEvents.sync, () => Promise.resolve(getSyncData()));
 
         rpc.onSync(IpcEvents.sync, (event: Electron.IpcMainInvokeEvent) => {
