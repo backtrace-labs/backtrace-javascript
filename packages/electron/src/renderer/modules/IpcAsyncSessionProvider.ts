@@ -22,7 +22,9 @@ export class IpcAsyncSessionProvider implements BacktraceSessionProvider {
         return 0;
     }
 
-    public afterMetricsSubmission(): void {}
+    public afterMetricsSubmission(): void {
+        // Do nothing
+    }
 
     public shouldSend(): boolean {
         return true;
