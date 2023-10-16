@@ -11,6 +11,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(readFileSync:(NSString*)path) {
     NSError *error= NULL;
     NSData* data = [NSData dataWithContentsOfFile:path];
     if (error) {
+        NSLog(@"Backtrace: Cannot read the file. Reason: %@ %@", error, [error userInfo]);
         return NULL;
     }
     NSString* result = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
@@ -31,6 +32,7 @@ RCT_EXPORT_METHOD(readFile:(NSString*)path
     NSError *error= NULL;
     NSData* data = [NSData dataWithContentsOfFile:path];
     if (error) {
+        NSLog(@"Backtrace: Cannot read the file. Reason: %@ %@", error, [error userInfo]);
         reject(@"Cannot read file", [error localizedDescription], error);
         return;
     }
@@ -72,6 +74,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(unlinkSync:(NSString*)path) {
     NSError * error = nil;
     [[NSFileManager defaultManager] removeItemAtPath:path error:&error];
     if (error) {
+        NSLog(@"Backtrace: Cannot unlink the file. Reason: %@ %@", error, [error userInfo]);
         return @NO;
     }
     return @YES;
@@ -113,7 +116,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(copySync:(NSString*)sourcePath
         NSLog(@"Backtrace: Cannot rename the file. Reason: %@ %@", error, [error userInfo]);
         return @NO;
     }
-
+    
     if(![[NSFileManager defaultManager] fileExistsAtPath:sourcePath]) {
         [[NSFileManager defaultManager] copyItemAtPath:destinationPath toPath:sourcePath error:&error];
     }
@@ -138,7 +141,7 @@ RCT_EXPORT_METHOD(copy:(NSString*)sourcePath
         reject(@"Cannot rename the file", [error localizedDescription], error);
         return;
     }
-  
+    
     if(![[NSFileManager defaultManager] fileExistsAtPath:sourcePath]) {
         [[NSFileManager defaultManager] copyItemAtPath:destinationPath toPath:sourcePath error:&error];
     }

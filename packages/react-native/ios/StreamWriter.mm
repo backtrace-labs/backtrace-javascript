@@ -23,6 +23,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(create:(NSString*) sourceFile) {
         
         NSFileHandle* output = [NSFileHandle fileHandleForWritingAtPath:sourceFile];
         if(!output) {
+            NSLog(@"Output file doesn't exist");
             return nil;
         }
         [dictionary setValue:output forKey:sourceFile];
@@ -47,6 +48,7 @@ RCT_EXPORT_METHOD(append:(NSString*) sourceKey
         NSError* error;
         [output writeData:[content dataUsingEncoding:NSUTF8StringEncoding] error:&error];
         if(error) {
+            NSLog(@"Backtrace: Stream writer append error. Reason: %@ %@", error, [error userInfo]);
             reject(@"Stream writer append", error.localizedDescription, error);
             return;
         }
