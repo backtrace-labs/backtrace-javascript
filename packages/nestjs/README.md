@@ -26,7 +26,6 @@ easy, after which you can explore the rich set of Backtrace features.
         - [Manual database operations](#manual-database-operations)
 1. [Advanced SDK Features](#advanced-sdk-features)
     - [BacktraceClient options](#backtraceclient)
-    - [BacktraceDatabase Methods](#backtracedatabase-methods)
     - [Manually send an error](#manually-send-an-error)
     - [Modify/skip error reports](#modifyskip-error-reports)
     - [Custom file/http handlers](#custom-filehttp-handlers)
@@ -426,7 +425,7 @@ breadcrumbs. To reduce database record size, attachment support was limited only
 #### Manual database operations
 
 Database support is available in the client options with the BacktraceDatabase object. You can use it to manually
-operate on database records. Options are detailed in [BacktraceDatabase Methods](#backtracedatabase-methods).
+operate on database records.
 
 ## Advanced SDK Features
 
@@ -454,21 +453,6 @@ The following options are available for the BacktraceClientOptions passed when i
 | `metrics`                           | BacktraceMetricsOptions                             | See [Backtrace Stability Metrics](#application-stability-metrics)                                                                                                                                                                                                                                                                                                                    |         | <ul><li>- [ ] </li></ul> |
 | `breadcrumbs`                       | BacktraceBreadcrumbsSettings                        | See [Backtrace Breadcrumbs](#breadcrumbs)                                                                                                                                                                                                                                                                                                                                            |         | <ul><li>- [ ] </li></ul> |
 | `database`                          | BacktraceDatabaseSettings                           | See [Backtrace Database](#offline-database-support)                                                                                                                                                                                                                                                                                                                                  |         | <ul><li>- [ ] </li></ul> |
-
-#### BacktraceDatabase Methods
-
-| Name                                                                    | Return Type                          | Description                                                                                                                                                          |
-| ----------------------------------------------------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `enabled`                                                               | Boolean                              | Determines if the database is enabled                                                                                                                                |
-| `start()`                                                               | Boolean                              | Starts the database                                                                                                                                                  |
-| `add(backtraceData: Backtracedata, attachments: BacktraceAttachment[])` | BacktraceDatabaseRecord \| undefined | Adds manually a data object to the database. If the database is not available or the record cannot be stored on the hard drive, the add method can return undefined. |
-| `get()`                                                                 | BacktraceDatabaseRecord[]            | Returns all records stored in the database                                                                                                                           |
-| `count()`                                                               | Number                               | Returns the number of records stored in the database                                                                                                                 |
-| `dispose()`                                                             | void                                 | Disables the database integration                                                                                                                                    |
-| `remove(record: BacktraceDatabaseRecord)`                               | void                                 | Removes the record from the database                                                                                                                                 |
-| `flush()`                                                               | Promise<void>                        | Sends all records to Backtrace and remove them no matter if the submission was successful or not                                                                     |
-| `send()`                                                                | Promise<void>                        | Sends all records to Backtrace. If the submission process fails, the retry information is being increased by the records are not removed from the database.          |
-| `dispose`  
 
 ### Manually send an error
 

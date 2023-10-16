@@ -374,7 +374,7 @@ A BeforeSend event is triggered when an exception in the managed environment occ
 ```ts
 const client = BacktraceClient.initialize({
     url: SUBMISSION_URL,
-    name: '@backtrace-labs/browser-example',
+    name: '@backtrace-labs/react-example',
     version: '0.0.1',
     beforeSend: (data: BacktraceData) => {
         // skip the report by returning a null from the callback
