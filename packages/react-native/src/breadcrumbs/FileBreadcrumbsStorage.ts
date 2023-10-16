@@ -9,11 +9,11 @@ import {
     type BreadcrumbsStorage,
     type RawBreadcrumb,
 } from '@backtrace-labs/sdk-core';
-import { BacktraceFileAttachment } from '../attachment/BacktraceFileAttachment';
+import { BacktraceFileAttachment } from '..';
 import { ReactNativeFileSystem } from '../storage/ReactNativeFileSystem';
 import { AlternatingFileWriter } from './AlternatingFileWriter';
 
-const FILE_PREFIX = 'breadcrumbs';
+const FILE_PREFIX = 'bt-breadcrumbs';
 
 export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
     public get lastBreadcrumbId(): number {
@@ -33,7 +33,7 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
             _mainFile,
             _fallbackFile,
             Math.floor(maximumBreadcrumbs / 2),
-            _fileSystem,
+            this._fileSystem,
         );
     }
 
@@ -79,6 +79,6 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
     }
 
     private static getFileName(index: number) {
-        return `bt-${FILE_PREFIX}-${index}`;
+        return `${FILE_PREFIX}-${index}`;
     }
 }

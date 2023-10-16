@@ -12,7 +12,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(createDirSync:(NSString*)path) {
     if (error) {
         return @NO;
     }
-    return @YES;
+    return @(success);
 }
 
 

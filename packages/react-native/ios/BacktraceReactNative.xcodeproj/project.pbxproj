@@ -43,8 +43,8 @@
 		5BDB143D2AD45BE00098C96E /* BacktraceDirectoryProvider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BacktraceDirectoryProvider.h; sourceTree = "<group>"; };
 		5BDB143E2AD460CA0098C96E /* BacktraceFileSystemProvider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BacktraceFileSystemProvider.h; sourceTree = "<group>"; };
 		5BDB143F2AD460CA0098C96E /* BacktraceFileSystemProvider.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = BacktraceFileSystemProvider.mm; sourceTree = "<group>"; };
-		5BDB14402AD46FBD0098C96E /* AlternatingFileWriter.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = AlternatingFileWriter.mm; sourceTree = "<group>"; };
-		5BDB14412AD46FBD0098C96E /* AlternatingFileWriter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AlternatingFileWriter.h; sourceTree = "<group>"; };
+		5BDB14402AD46FBD0098C96E /* StreamWriter.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = StreamWriter.mm; sourceTree = "<group>"; };
+		5BDB14412AD46FBD0098C96E /* StreamWriter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StreamWriter.h; sourceTree = "<group>"; };
 		B3E7B5881CC2AC0600A0062D /* BacktraceReactNative.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BacktraceReactNative.h; sourceTree = "<group>"; };
 		B3E7B5891CC2AC0600A0062D /* BacktraceReactNative.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BacktraceReactNative.mm; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -71,8 +71,8 @@
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
-				5BDB14402AD46FBD0098C96E /* AlternatingFileWriter.mm */,
-				5BDB14412AD46FBD0098C96E /* AlternatingFileWriter.h */,
+				5BDB14402AD46FBD0098C96E /* StreamWriter.mm */,
+				5BDB14412AD46FBD0098C96E /* StreamWriter.h */,
 				5BDB143E2AD460CA0098C96E /* BacktraceFileSystemProvider.h */,
 				5BDB143F2AD460CA0098C96E /* BacktraceFileSystemProvider.mm */,
 				5BDB143C2AD45BE00098C96E /* BacktraceDirectoryProvider.mm */,

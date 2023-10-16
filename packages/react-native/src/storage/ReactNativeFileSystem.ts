@@ -78,12 +78,12 @@ export class ReactNativeFileSystem implements FileSystem {
         return this._fileSystemProvider.existsSync(path);
     }
 
-    public rename(sourceFile: string, destinationFile: string): Promise<boolean> {
-        return this._fileSystemProvider.rename(sourceFile, destinationFile);
+    public copy(sourceFile: string, destinationFile: string): Promise<boolean> {
+        return this._fileSystemProvider.copy(sourceFile, destinationFile);
     }
 
-    public renameSync(sourceFile: string, destinationFile: string): boolean {
-        return this._fileSystemProvider.renameSync(sourceFile, destinationFile);
+    public copySync(sourceFile: string, destinationFile: string): boolean {
+        return this._fileSystemProvider.copySync(sourceFile, destinationFile);
     }
 
     public createAttachment(path: string, name?: string | undefined): BacktraceAttachment<unknown> {

@@ -50,10 +50,6 @@ static void onCrash(siginfo_t *info, ucontext_t *uap, void *context) {
         return nil;
     }
     if( self = [super init]) {
-        if(![CrashUtils prepareCrashDirectory]) {
-            NSLog(@"Backtrace: Cannot start integration - cannot create cache dir");
-            return nil;
-        }
         NSLog(@"Backtrace: Initializing native client");
         _backtraceApi = [[BacktraceApi alloc] initWithBacktraceUrl:submissionUrl];
         _attachmentsPaths = [attachments mutableCopy];

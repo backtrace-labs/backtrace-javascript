@@ -1,6 +1,6 @@
 package backtrace.library;
 
-import android.content.Context;
+import android.os.FileUtils;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -11,16 +11,13 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.module.annotations.ReactModule;
 
-import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Scanner;
 
 @ReactModule(name = BacktraceFileSystemProvider.NAME)
@@ -45,7 +42,7 @@ public class BacktraceFileSystemProvider extends ReactContextBaseJavaModule {
             return null;
         }
 
-        try (Scanner scanner = new Scanner(file)){
+        try (Scanner scanner = new Scanner(file)) {
             StringBuilder sb = new StringBuilder();
 
             while (scanner.hasNext()) {
@@ -66,7 +63,7 @@ public class BacktraceFileSystemProvider extends ReactContextBaseJavaModule {
             promise.reject(new FileNotFoundException(path));
             return;
         }
-        try (Scanner scanner = new Scanner(file)){
+        try (Scanner scanner = new Scanner(file)) {
             StringBuilder sb = new StringBuilder();
 
             while (scanner.hasNext()) {
@@ -137,16 +134,26 @@ public class BacktraceFileSystemProvider extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod(isBlockingSynchronousMethod = true)
-    public boolean renameSync(String sourcePath, String destinationPath) {
-        File sourceFile = new File(sourcePath);
-        File destinationFile = new File(destinationPath);
-        return sourceFile.renameTo(destinationFile);
+    public boolean copySync(String sourcePath, String destinationPath) {
+        return copy(sourcePath, destinationPath);
     }
 
     @ReactMethod
-    public void rename(String sourcePath, String destinationPath, Promise promise) {
-        File sourceFile = new File(sourcePath);
-        File destinationFile = new File(destinationPath);
-        promise.resolve(sourceFile.renameTo(destinationFile));
+    public void copy(String sourcePath, String destinationPath, Promise promise) {
+        promise.resolve(copy(sourcePath, destinationPath));
+    }
+
+    private boolean copy(String sourcePath, String destinationPath) {
+        try (FileInputStream inputStream = new FileInputStream(sourcePath);
+             FileOutputStream outputStream = new FileOutputStream(destinationPath, false)) {
+            byte[] buf = new byte[1024];
+            int len;
+            while ((len = inputStream.read(buf)) > 0) {
+                outputStream.write(buf, 0, len);
+            }
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

@@ -44,13 +44,12 @@ NSString* _oomCache;
 }
 
 - (NSDictionary*) getOomState {
-    NSString* statusPath = [CrashUtils getDefaultOomStatusPath];
     NSFileManager* manager = [NSFileManager defaultManager];
-    if([manager fileExistsAtPath:statusPath] == NO) {
+    if([manager fileExistsAtPath:_oomCache] == NO) {
         return nil;
     }
     
-    NSDictionary* state= [NSDictionary dictionaryWithContentsOfFile:statusPath];
+    NSDictionary* state= [NSDictionary dictionaryWithContentsOfFile:_oomCache];
     return state;
 }
 
