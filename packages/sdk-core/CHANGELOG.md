@@ -1,3 +1,7 @@
+# Version 0.0.7
+
+-   remove `const` from types for Typescript <5 compatibility
+
 # Version 0.0.6
 
 -   add methods to `BacktraceBreadcrumbs` interface and limit `BacktraceManager` visibility
