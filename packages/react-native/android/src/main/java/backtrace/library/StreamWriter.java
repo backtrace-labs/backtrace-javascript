@@ -72,6 +72,7 @@ public class StreamWriter extends ReactContextBaseJavaModule {
         if (writer == null) {
             return true;
         }
+        _map.remove(key);
         try {
             writer.close();
             return true;

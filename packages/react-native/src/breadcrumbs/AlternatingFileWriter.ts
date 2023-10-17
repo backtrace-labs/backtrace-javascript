@@ -42,24 +42,11 @@ export class AlternatingFileWriter {
             return;
         }
 
-        if (!this._streamId) {
-            this._streamId = this._streamWriter.create(this._mainFile);
-        } else if (this._count >= this._fileCapacity) {
-            const closeResult = this._streamWriter.close(this._streamId);
-            if (!closeResult) {
-                return;
-            }
-            const renameResult = this._reactNativeFileSystem.copySync(this._mainFile, this._fallbackFile);
-            this._streamId = undefined;
-            if (!renameResult) {
-                return;
-            }
-            this._streamId = this._streamWriter.create(this._mainFile);
-
-            this._count = 0;
-        }
+        this.prepareBreadcrumbStream();
 
         if (!this._streamId) {
+            this._logQueue.unshift(this._currentAppendedLog);
+            this._currentAppendedLog = undefined;
             return;
         }
 
@@ -78,6 +65,7 @@ export class AlternatingFileWriter {
                 // handle potential issues with appending logs.
                 // we can't do really too much here other than retry
                 // logging the error might also cause a breadcrumb loop, that we should try to avoid
+                this._logQueue.unshift(...logsToAppend);
             })
             .finally(() => {
                 if (this._logQueue.length !== 0) {
@@ -86,6 +74,26 @@ export class AlternatingFileWriter {
                     this._currentAppendedLog = undefined;
                 }
             });
+    }
+
+    private prepareBreadcrumbStream() {
+        if (!this._streamId) {
+            this._streamId = this._streamWriter.create(this._mainFile);
+        } else if (this._count >= this._fileCapacity) {
+            const closeResult = this._streamWriter.close(this._streamId);
+            if (!closeResult) {
+                return;
+            }
+            this._streamId = undefined;
+
+            const renameResult = this._reactNativeFileSystem.copySync(this._mainFile, this._fallbackFile);
+            if (!renameResult) {
+                return;
+            }
+            this._streamId = this._streamWriter.create(this._mainFile);
+
+            this._count = 0;
+        }
     }
 
     public dispose() {
