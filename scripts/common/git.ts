@@ -89,3 +89,36 @@ export function gitPush(branch?: string, remote?: string) {
         ],
     };
 }
+
+export function gitAddTag(name: string, commitHash?: string) {
+    const args = ['tag', name];
+    if (commitHash) {
+        args.push(commitHash);
+    }
+
+    return {
+        command: 'git',
+        args,
+    };
+}
+
+export function gitRemoveTag(name: string) {
+    return {
+        command: 'git',
+        args: ['tag', '-d', name],
+    };
+}
+
+export function gitPushTag(name: string, remote?: string) {
+    return {
+        command: 'git',
+        args: ['push', remote ?? spawnCommandSync(gitGetRemote()), `refs/tags/${name}`],
+    };
+}
+
+export function gitRemoveTagRemote(name: string, remote?: string) {
+    return {
+        command: 'git',
+        args: ['push', '--delete', remote ?? spawnCommandSync(gitGetRemote()), `refs/tags/${name}`],
+    };
+}

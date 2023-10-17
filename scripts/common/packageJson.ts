@@ -53,3 +53,11 @@ export function npmInstall(): SpawnCommandOptions {
         cwd: rootDir,
     };
 }
+
+export function npmPublish(packageJsonPath: string) {
+    return {
+        command: 'npm',
+        args: ['publish'],
+        cwd: path.dirname(packageJsonPath),
+    };
+}
