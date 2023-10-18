@@ -1,15 +1,15 @@
 export {
-    AttributeType,
-    BacktraceAttachment,
-    BacktraceData,
     BacktraceReport,
-    BacktraceStackFrame,
-    BacktraceStackTraceConverter,
     BreadcrumbLogLevel,
-    BreadcrumbsEventSubscriber,
     BreadcrumbsManager,
     BreadcrumbType,
-    RawBreadcrumb,
+    type AttributeType,
+    type BacktraceAttachment,
+    type BacktraceData,
+    type BacktraceStackFrame,
+    type BacktraceStackTraceConverter,
+    type BreadcrumbsEventSubscriber,
+    type RawBreadcrumb,
 } from '@backtrace-labs/sdk-core';
 export * from './attachment/';
 export { BacktraceClient } from './BacktraceClient';
