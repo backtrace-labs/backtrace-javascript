@@ -1,5 +1,10 @@
 import { BacktraceAttachment, BacktraceConfiguration as CoreConfiguration } from '@backtrace-labs/sdk-core';
 import { Readable } from 'stream';
-export interface BacktraceConfiguration extends Omit<CoreConfiguration, 'attachments'> {
+
+export interface BacktraceSetupConfiguration extends Omit<CoreConfiguration, 'attachments'> {
     attachments?: Array<BacktraceAttachment<Buffer | Readable | string | Uint8Array> | string>;
+}
+
+export interface BacktraceConfiguration extends Omit<CoreConfiguration, 'attachments'> {
+    attachments?: BacktraceAttachment<Buffer | Readable | string | Uint8Array>[];
 }

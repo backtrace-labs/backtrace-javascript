@@ -1,4 +1,4 @@
-import { ReactNativeFileSystem } from '../storage';
+import { type FileSystem } from '../storage';
 import { type StreamWriter } from '../storage/StreamWriter';
 
 export class AlternatingFileWriter {
@@ -12,12 +12,12 @@ export class AlternatingFileWriter {
         private readonly _mainFile: string,
         private readonly _fallbackFile: string,
         private readonly _fileCapacity: number,
-        private readonly _reactNativeFileSystem: ReactNativeFileSystem,
+        private readonly _fileSystem: FileSystem,
     ) {
         if (this._fileCapacity <= 0) {
             throw new Error('File capacity may not be less or equal to 0.');
         }
-        this._streamWriter = this._reactNativeFileSystem.streamWriter;
+        this._streamWriter = this._fileSystem.streamWriter;
     }
 
     public async writeLine(value: string): Promise<this> {
@@ -29,7 +29,7 @@ export class AlternatingFileWriter {
         } else if (this._count >= this._fileCapacity) {
             this._streamWriter.close(this._streamId);
             this._count = 0;
-            this._reactNativeFileSystem.renameSync(this._mainFile, this._fallbackFile);
+            this._fileSystem.renameSync(this._mainFile, this._fallbackFile);
             this._streamId = this._streamWriter.create(this._mainFile);
         }
         this._streamWriter.append(this._streamId, value + '\n');

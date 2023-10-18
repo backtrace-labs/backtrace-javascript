@@ -1,15 +1,5 @@
-import {
-    BacktraceAttributeProvider,
-    BacktraceCoreClientBuilder,
-    BacktraceSessionProvider,
-    BacktraceStackTraceConverter,
-    BreadcrumbsEventSubscriber,
-} from '@backtrace-labs/sdk-core';
-import { V8StackTraceConverter } from '@backtrace-labs/sdk-core/lib/modules/converter/V8StackTraceConverter';
-import { BacktraceBrowserRequestHandler } from '../BacktraceBrowserRequestHandler';
-import { BacktraceBrowserSessionProvider } from '../BacktraceBrowserSessionProvider';
+import { BacktraceCoreClientBuilder } from '@backtrace-labs/sdk-core';
 import { BacktraceClient } from '../BacktraceClient';
-import { BacktraceConfiguration } from '../BacktraceConfiguration';
 import { ApplicationInformationAttributeProvider } from '../attributes/ApplicationInformationAttributeProvider';
 import { UserAgentAttributeProvider } from '../attributes/UserAgentAttributeProvider';
 import { UserIdentifierAttributeProvider } from '../attributes/UserIdentifierAttributeProvider';
@@ -18,54 +8,26 @@ import { WindowAttributeProvider } from '../attributes/WindowAttributeProvider';
 import { DocumentEventSubscriber } from '../breadcrumbs/DocumentEventSubscriber';
 import { HistoryEventSubscriber } from '../breadcrumbs/HistoryEventSubscriber';
 import { WebRequestEventSubscriber } from '../breadcrumbs/WebRequestEventSubscriber';
-import { JavaScriptCoreStackTraceConverter } from '../converters/JavaScriptCoreStackTraceConverter';
-import { SpiderMonkeyStackTraceConverter } from '../converters/SpiderMonkeyStackTraceConverter';
-import { getEngine } from '../engineDetector';
+import { BacktraceClientSetup } from './BacktraceClientSetup';
 
-export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<BacktraceClient> {
-    constructor(
-        protected readonly options: BacktraceConfiguration,
-        attributeProviders: BacktraceAttributeProvider[] = [
-            new UserAgentAttributeProvider(),
-            new WebsiteAttributeProvider(),
-            new WindowAttributeProvider(),
-            new UserIdentifierAttributeProvider(),
-            new ApplicationInformationAttributeProvider(options),
-        ],
-        breadcrumbsSubscribers: BreadcrumbsEventSubscriber[] = [
-            new WebRequestEventSubscriber(),
-            new DocumentEventSubscriber(),
-            new HistoryEventSubscriber(),
-        ],
-        sessionProvider: BacktraceSessionProvider = new BacktraceBrowserSessionProvider(),
-    ) {
-        super(new BacktraceBrowserRequestHandler(options), attributeProviders, breadcrumbsSubscribers, sessionProvider);
+export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<BacktraceClientSetup> {
+    constructor(clientSetup: BacktraceClientSetup) {
+        super(clientSetup);
+
+        this.addAttributeProvider(new UserAgentAttributeProvider());
+        this.addAttributeProvider(new WebsiteAttributeProvider());
+        this.addAttributeProvider(new WindowAttributeProvider());
+        this.addAttributeProvider(new UserIdentifierAttributeProvider());
+        this.addAttributeProvider(new ApplicationInformationAttributeProvider(clientSetup.options));
+
+        this.useBreadcrumbSubscriber(new WebRequestEventSubscriber());
+        this.useBreadcrumbSubscriber(new DocumentEventSubscriber());
+        this.useBreadcrumbSubscriber(new HistoryEventSubscriber());
     }
 
     public build(): BacktraceClient {
-        const instance = new BacktraceClient(
-            this.options,
-            this.handler,
-            this.attributeProviders,
-            this.stackTraceConverter ?? this.generateStackTraceConverter(),
-            this.breadcrumbsSubscribers,
-            this.sessionProvider,
-        );
+        const instance = new BacktraceClient(this.clientSetup);
         instance.initialize();
-        return instance;
-    }
-
-    protected generateStackTraceConverter(): BacktraceStackTraceConverter {
-        switch (getEngine()) {
-            case 'JavaScriptCore': {
-                return new JavaScriptCoreStackTraceConverter();
-            }
-            case 'SpiderMonkey': {
-                return new SpiderMonkeyStackTraceConverter();
-            }
-            default: {
-                return new V8StackTraceConverter();
-            }
-        }
+        return instance as BacktraceClient;
     }
 }

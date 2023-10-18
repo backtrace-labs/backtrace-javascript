@@ -1,4 +1,4 @@
-import { ReactStackTraceConverter } from '@backtrace-labs/react';
+import { BacktraceBrowserRequestHandler, ReactStackTraceConverter } from '@backtrace-labs/react';
 import {
     BacktraceCoreClient,
     BreadcrumbsManager,
@@ -7,21 +7,19 @@ import {
     V8StackTraceConverter,
     VariableDebugIdMapProvider,
     type AttributeType,
-    type BacktraceAttributeProvider,
-    type BacktraceRequestHandler,
-    type BreadcrumbsEventSubscriber,
     type DebugIdContainer,
 } from '@backtrace-labs/sdk-core';
 import { NativeModules, Platform } from 'react-native';
-import { BacktraceClientBuilder } from './BacktraceClientBuilder';
 import { type BacktraceConfiguration } from './BacktraceConfiguration';
 import { FileBreadcrumbsStorage } from './breadcrumbs/FileBreadcrumbsStorage';
+import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
+import type { BacktraceClientSetup } from './builder/BacktraceClientSetup';
 import { version } from './common/platformHelper';
 import { CrashReporter } from './crashReporter/CrashReporter';
 import { generateUnhandledExceptionHandler } from './handlers';
 import { type ExceptionHandler } from './handlers/ExceptionHandler';
-import { ReactNativeFileSystem } from './storage/ReactNativeFileSystem';
-export class BacktraceClient extends BacktraceCoreClient {
+import { type FileSystem } from './storage/FileSystem';
+export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration> {
     private readonly _crashReporter?: CrashReporter;
     private readonly _exceptionHandler: ExceptionHandler = generateUnhandledExceptionHandler();
 
@@ -33,31 +31,22 @@ export class BacktraceClient extends BacktraceCoreClient {
         return NativeModules.BacktraceDirectoryProvider?.applicationDirectory() ?? '';
     }
 
-    constructor(
-        options: BacktraceConfiguration,
-        requestHandler: BacktraceRequestHandler,
-        attributeProviders: BacktraceAttributeProvider[],
-        breadcrumbsEventSubscribers: BreadcrumbsEventSubscriber[],
-        fileSystem?: ReactNativeFileSystem,
-    ) {
+    constructor(clientSetup: BacktraceClientSetup) {
         super({
-            options,
             sdkOptions: {
                 agent: '@backtrace/react-native',
                 agentVersion: '0.0.1',
                 langName: 'react-native',
                 langVersion: version(),
             },
-            requestHandler,
-            attributeProviders,
+            requestHandler: new BacktraceBrowserRequestHandler(clientSetup.options),
             debugIdMapProvider: new VariableDebugIdMapProvider(global as DebugIdContainer),
-            breadcrumbsSetup: {
-                subscribers: breadcrumbsEventSubscribers,
-            },
             stackTraceConverter: new ReactStackTraceConverter(new V8StackTraceConverter()),
             sessionProvider: new SingleSessionProvider(),
-            fileSystem,
+            ...clientSetup,
         });
+
+        const fileSystem = clientSetup.fileSystem as FileSystem;
         if (!fileSystem) {
             return;
         }
@@ -68,10 +57,17 @@ export class BacktraceClient extends BacktraceCoreClient {
                 FileBreadcrumbsStorage.create(
                     fileSystem,
                     this.sessionFiles,
-                    options.breadcrumbs?.maximumBreadcrumbs ?? 100,
+                    clientSetup.options.breadcrumbs?.maximumBreadcrumbs ?? 100,
                 ),
             );
         }
+
+        this.attributeManager.attributeEvents.on(
+            'scoped-attributes-updated',
+            (reportData: { attributes: Record<string, AttributeType> }) => {
+                this._crashReporter?.updateAttributes(reportData.attributes);
+            },
+        );
     }
 
     public initialize(): void {
@@ -90,32 +86,6 @@ export class BacktraceClient extends BacktraceCoreClient {
         }
     }
 
-    /**
-     * Add attribute to Backtrace Client reports.
-     * @param attributes key-value object with attributes.
-     */
-    public addAttribute(attributes: Record<string, unknown>): void;
-    /**
-     * Add dynamic attributes to Backtrace Client reports.
-     * @param attributes function returning key-value object with attributes.
-     */
-    public addAttribute(attributes: () => Record<string, unknown>): void;
-    public addAttribute(attributes: Record<string, unknown> | (() => Record<string, unknown>)) {
-        super.addAttribute(attributes as Record<string, unknown>);
-        if (typeof attributes === 'function') {
-            return;
-        }
-
-        const clientAttributes = super.attributes;
-        this._crashReporter?.updateAttributes(
-            Object.fromEntries(
-                Object.entries(attributes)
-                    .filter(([key]) => clientAttributes[key] != null)
-                    .map((n) => n as [string, AttributeType]),
-            ),
-        );
-    }
-
     public dispose(): void {
         this._exceptionHandler.dispose();
         this._crashReporter?.dispose();
@@ -123,7 +93,7 @@ export class BacktraceClient extends BacktraceCoreClient {
     }
 
     public static builder(options: BacktraceConfiguration): BacktraceClientBuilder {
-        return new BacktraceClientBuilder(options);
+        return new BacktraceClientBuilder({ options });
     }
     /**
      * Initializes the client. If the client already exists, the available instance

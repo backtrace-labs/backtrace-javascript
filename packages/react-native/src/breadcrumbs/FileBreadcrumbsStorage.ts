@@ -10,7 +10,7 @@ import {
     type RawBreadcrumb,
 } from '@backtrace-labs/sdk-core';
 import { BacktraceFileAttachment } from '../attachment/BacktraceFileAttachment';
-import { ReactNativeFileSystem } from '../storage/ReactNativeFileSystem';
+import { type FileSystem } from '../storage';
 import { AlternatingFileWriter } from './AlternatingFileWriter';
 
 const FILE_PREFIX = 'breadcrumbs';
@@ -24,7 +24,7 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
     private readonly _writer: AlternatingFileWriter;
 
     constructor(
-        private readonly _fileSystem: ReactNativeFileSystem,
+        private readonly _fileSystem: FileSystem,
         private readonly _mainFile: string,
         private readonly _fallbackFile: string,
         maximumBreadcrumbs: number,
@@ -37,7 +37,7 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
         );
     }
 
-    public static create(fileSystem: ReactNativeFileSystem, session: SessionFiles, maximumBreadcrumbs: number) {
+    public static create(fileSystem: FileSystem, session: SessionFiles, maximumBreadcrumbs: number) {
         const file1 = session.getFileName(this.getFileName(0));
         const file2 = session.getFileName(this.getFileName(1));
         return new FileBreadcrumbsStorage(fileSystem, file1, file2, maximumBreadcrumbs);
