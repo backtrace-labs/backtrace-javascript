@@ -371,16 +371,15 @@ client.metrics?.send();
 The Backtrace NestJS SDK can cache generated reports and crashes to local disk before sending them to Backtrace. This is
 recommended; in certain configurations NestJS applications can crash before the SDK finishes submitting data, and under
 slow internet conditions your application might wait in a closing window until the HTTP submission finishes. In such an
-event occurs cached reports will be sent on next application launch.
+event cached reports will be sent on next application launch.
 
 With offline database support you can:
 
--   cache your reports when the user doesn't have Internet connection or the service is unavailable,
+-   cache your reports when the user doesn't have an internet connection or the service is unavailable,
 -   capture crashes,
--   manually decide when to send them or not.
+-   manually decide whether or not to send reports, and when.
 
-By default the offline database support is disabled. To enable it, please add "enable: true" and the path to the
-directory where Backtrace can store crash data.
+Offline database support is disabled by default. To enable it, please add "enable: true" and the path to the directory where Backtrace can store crash data.
 
 ```ts
 const client = BacktraceClient.initialize({
@@ -404,14 +403,12 @@ client.database.flush();
 | ------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------ |
 | `enabled`                 | Boolean | Enable/disable offline database support.                                                                                                                                     | false   | <ul><li>- [x] </li></ul> |
 | `path`                    | String  | Local storage path for crash data.                                                                                                                                           | -       | <ul><li>- [x] </li></ul> |
-| `createDatabaseDirectory` | Boolean | Allow the SDK to create the offline database directory..                                                                                                                     | true    |
+| `createDatabaseDirectory` | Boolean | Allow the SDK to create the offline database directory.                                                                                                                     | true    |
 | `autoSend`                | Boolean | Sends reports to the server based on the retry settings. If the value is set to 'false', you can use the Flush or Send methods as an alternative.                            | true    |
 | `maximumNumberOfRecords`  | Number  | The maximum number of reports stored in the offline database. When the limit is reached, the oldest reports are removed. If the value is equal to '0', then no limit is set. | 8       |
 | `retryInterval`           | Number  | The amount of time (in ms) to wait between retries if the database is unable to send a report.                                                                               | 60 000  |
 | `maximumRetries`          | Number  | The maximum number of retries to attempt if the database is unable to send a report.                                                                                         | 3       |
 | `captureNativeCrashes`    | Boolean | Capture and symbolicate stack traces for native crashes if the runtime supports this. A crash report is generated, stored locally, and uploaded upon next start.             | false   |
-
----
 
 #### Native crash support
 

@@ -296,16 +296,15 @@ client.metrics?.send();
 The Backtrace react-native SDK can cache generated reports and crashes to local disk before sending them to Backtrace.
 This is recommended; in certain configurations react-native applications can crash before the SDK finishes submitting
 data, and under slow internet conditions your application might wait in a closing window until the HTTP submission
-finishes. In such an event occurs cached reports will be sent on next application launch.
+finishes. In such an event cached reports will be sent on next application launch.
 
 With offline database support you can:
 
--   cache your reports when the user doesn't have Internet connection or the service is unavailable,
+-   cache your reports when the user doesn't have an internet connection or the service is unavailable,
 -   capture crashes,
--   manually decide when to send them or not.
+-   manually decide whether or not to send reports, and when.
 
-By default the offline database support is disabled. To enable it, please add "enable: true" and the path to the
-directory where Backtrace can store crash data.
+Offline database support is disabled by default. To enable it, please add "enable: true" and the path to the directory where Backtrace can store crash data.
 
 ```ts
 const client = BacktraceClient.initialize({
@@ -323,11 +322,12 @@ client.database.send();
 client.database.flush();
 ```
 
-Backtrace client exposes a method `applicationDataPath` that can help you with path creation to your database directory.
+Backtrace client exposes a method `applicationDataPath` that can help you create the path to your database directory.
+
 The helper returns:
 
--   on Android: path to the files directory available in the application context,
--   on iOS: Path to the application cache directory
+-   Android: Path to the files directory available in the application context,
+-   iOS: Path to the application cache directory
 
 #### Database Configuration
 
@@ -335,25 +335,22 @@ The helper returns:
 | ------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------ |
 | `enabled`                 | Boolean | Enable/disable offline database support.                                                                                                                                     | false   | <ul><li>- [x] </li></ul> |
 | `path`                    | String  | Local storage path for crash data.                                                                                                                                           | -       | <ul><li>- [x] </li></ul> |
-| `createDatabaseDirectory` | Boolean | Allow the SDK to create the offline database directory..                                                                                                                     | true    |
+| `createDatabaseDirectory` | Boolean | Allow the SDK to create the offline database directory.                                                                                                                      | true    |
 | `autoSend`                | Boolean | Sends reports to the server based on the retry settings. If the value is set to 'false', you can use the Flush or Send methods as an alternative.                            | true    |
 | `maximumNumberOfRecords`  | Number  | The maximum number of reports stored in the offline database. When the limit is reached, the oldest reports are removed. If the value is equal to '0', then no limit is set. | 8       |
 | `retryInterval`           | Number  | The amount of time (in ms) to wait between retries if the database is unable to send a report.                                                                               | 60 000  |
 | `maximumRetries`          | Number  | The maximum number of retries to attempt if the database is unable to send a report.                                                                                         | 3       |
 | `captureNativeCrashes`    | Boolean | Capture and symbolicate stack traces for native crashes if the runtime supports this. A crash report is generated, stored locally, and uploaded upon next start.             | false   |
 
----
-
 #### Native crash support
 
 The Backtrace React-Native SDK can capture crashes generated in the native layer. Those crashes cannot be captured on
 the JavaScript side by using any kind of helpers. In order to collect them, the SDK uses native crash reporting
-solutions available in the package. On Android, all native crashes from the NDK layer will be send in the same
-application session (from the separated application process). Java exceptions and iOS crashes will be available after
-the application restart. All crashes and reports send after application restart are stored in the database directory.
-Attributes set by user and file attachments should be also uploaded by native crash reporting solution. In-memory
-attachments such as string attachment, are not supported. You cannot also apply any managed layer (JavaScript) callbacks
-to filter, modify crashes before send.
+solutions available in the package. 
+
+Attributes and file attachments will be uploaded by native crash reporting solution. In-memory attachments such as string attachment, are not supported. Also, you cannot apply any managed layer (JavaScript) callbacks to filter, modify crashes before send.
+- On Android, all native crashes from the NDK layer will be sent in the same application session (from a separate application process). 
+- Java exceptions and iOS crashes will be available after the application restart. All crashes and reports send after application restart are stored in the database directory.
 
 #### Manual database operations
 
