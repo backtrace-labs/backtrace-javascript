@@ -34,11 +34,13 @@ NSMutableDictionary* _attributes;
 Boolean disabled = TRUE;
 
 static void onCrash(siginfo_t *info, ucontext_t *uap, void *context) {
-    [OomWatcher cleanup];
+    if(_oomWatcher) {
+        [_oomWatcher cleanup];
+    }
 }
 
 
-- (instancetype)initWithBacktraceUrl:(NSString*) submissionUrl andAttributes:(NSDictionary*) attributes andOomSupport:(bool) enableOomSupport andAttachments:(NSArray*) attachments  {
+- (instancetype)initWithBacktraceUrl:(NSString*) submissionUrl andDatabasePath:(NSString*) databasePath andAttributes:(NSDictionary*) attributes andOomSupport:(bool) enableOomSupport andAttachments:(NSArray*) attachments  {
     if(instance != nil) {
         return instance;
     }
@@ -48,10 +50,6 @@ static void onCrash(siginfo_t *info, ucontext_t *uap, void *context) {
         return nil;
     }
     if( self = [super init]) {
-        if(![CrashUtils prepareCrashDirectory]) {
-            NSLog(@"Backtrace: Cannot start integration - cannot create cache dir");
-            return nil;
-        }
         NSLog(@"Backtrace: Initializing native client");
         _backtraceApi = [[BacktraceApi alloc] initWithBacktraceUrl:submissionUrl];
         _attachmentsPaths = [attachments mutableCopy];
@@ -60,7 +58,9 @@ static void onCrash(siginfo_t *info, ucontext_t *uap, void *context) {
         _crashReporter = [[PLCrashReporter alloc] initWithConfiguration:
                           [[PLCrashReporterConfig alloc]
                            initWithSignalHandlerType: PLCrashReporterSignalHandlerTypeBSD
-                           symbolicationStrategy: PLCrashReporterSymbolicationStrategyAll]];
+                           symbolicationStrategy: PLCrashReporterSymbolicationStrategyAll
+                           basePath: databasePath
+                          ]];
         [self saveReportData];
         PLCrashReporterCallbacks callback = {
             .version = 0,
@@ -212,7 +212,9 @@ static void onCrash(siginfo_t *info, ucontext_t *uap, void *context) {
     if(disabled == YES){
         return;
     }
-    [OomWatcher cleanup];
+    if (_oomWatcher) {
+        [_oomWatcher cleanup];
+    }
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     if(_oomWatcher != nil){
         [_oomWatcher disable];

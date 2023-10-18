@@ -15,6 +15,12 @@ BacktraceClient.initialize({
             prop2: 123,
         },
     },
+    database: {
+        enable: true,
+        captureNativeCrashes: true,
+        createDatabaseDirectory: true,
+        path: `${BacktraceClient.applicationDataPath}/backtrace`,
+    },
 });
 
 AppRegistry.registerComponent(appName, () => App);

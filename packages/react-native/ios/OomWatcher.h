@@ -13,8 +13,8 @@
     BOOL _disabled;
 }
 - (void) disable;
-+ (void) cleanup;
-- (instancetype) init;
+- (void) cleanup;
+- (instancetype) initWithDatabasePath: (NSString*) databasePath;
 - (BOOL) shouldReportOom:(BOOL)didCrash;
 - (NSDictionary*) getOomState;
 - (void) startOomIntegration: (NSArray*) attachments andAttributes:(NSDictionary*) attributes;

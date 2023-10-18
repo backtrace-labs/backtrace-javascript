@@ -26,8 +26,10 @@ public class BacktraceReactNative extends ReactContextBaseJavaModule {
     static {
         System.loadLibrary("backtrace-native");
     }
+
     public static final String NAME = "BacktraceReactNative";
     private final String _crashpadHandlerName = "/libcrashpad_handler.so";
+
     public native void Crash();
 
     private final Context context;
@@ -42,11 +44,11 @@ public class BacktraceReactNative extends ReactContextBaseJavaModule {
     public String getName() {
         return NAME;
     }
-    
+
 
     @ReactMethod(isBlockingSynchronousMethod = true)
-    public Boolean initialize(String minidumpSubmissionUrl, ReadableMap readableAttributes, ReadableArray attachmentPaths) {
-        Log.d(this.NAME, "Initializing crashpad");
+    public Boolean initialize(String minidumpSubmissionUrl, String databasePath, ReadableMap readableAttributes, ReadableArray attachmentPaths) {
+        Log.d(this.NAME, "Initializing native crash reporter");
 
         String handlerPath = context.getApplicationInfo().nativeLibraryDir + _crashpadHandlerName;
 
@@ -54,18 +56,10 @@ public class BacktraceReactNative extends ReactContextBaseJavaModule {
             Log.d(this.NAME, "Crashpad handler doesn't exist");
             return false;
         }
-        HashMap<String, Object> attributes =  readableAttributes.toHashMap();
+        HashMap<String, Object> attributes = readableAttributes.toHashMap();
 
         String[] keys = attributes.keySet().toArray(new String[0]);
         String[] values = attributes.values().toArray(new String[0]);
-
-        // Create the crashpad directory if it doesn't exist
-        // to do:
-        // on this stage the database directory should exists. Because the database
-        // implementation is in progress, crashpad database directory is created here manually.
-        String databasePath = context.getFilesDir().getAbsolutePath();
-        File crashHandlerDir = new File(databasePath);
-        crashHandlerDir.mkdir();
 
         Boolean result = BacktraceDatabase.initialize(
                 minidumpSubmissionUrl,
@@ -84,7 +78,7 @@ public class BacktraceReactNative extends ReactContextBaseJavaModule {
 
     @ReactMethod()
     public void useAttributes(ReadableMap readableAttributes) {
-        HashMap<String, Object> attributes =  readableAttributes.toHashMap();
+        HashMap<String, Object> attributes = readableAttributes.toHashMap();
 
         String[] keys = attributes.keySet().toArray(new String[0]);
         String[] values = attributes.values().toArray(new String[0]);
