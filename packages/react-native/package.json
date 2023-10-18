@@ -93,6 +93,6 @@
     },
     "dependencies": {
         "@backtrace-labs/react": "^0.0.5",
-        "@backtrace-labs/sdk-core": "^0.0.5"
+        "@backtrace-labs/sdk-core": "^0.0.7"
     }
 }

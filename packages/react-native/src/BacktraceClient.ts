@@ -1,6 +1,7 @@
 import { BacktraceBrowserRequestHandler, ReactStackTraceConverter } from '@backtrace-labs/react';
 import {
     BacktraceCoreClient,
+    BreadcrumbsManager,
     SingleSessionProvider,
     SubmissionUrlInformation,
     V8StackTraceConverter,
@@ -8,22 +9,29 @@ import {
     type AttributeType,
     type DebugIdContainer,
 } from '@backtrace-labs/sdk-core';
-import { Platform } from 'react-native';
+import { NativeModules, Platform } from 'react-native';
 import { type BacktraceConfiguration } from './BacktraceConfiguration';
+import { FileBreadcrumbsStorage } from './breadcrumbs/FileBreadcrumbsStorage';
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 import type { BacktraceClientSetup } from './builder/BacktraceClientSetup';
 import { version } from './common/platformHelper';
 import { CrashReporter } from './crashReporter/CrashReporter';
 import { generateUnhandledExceptionHandler } from './handlers';
 import { type ExceptionHandler } from './handlers/ExceptionHandler';
+import { type FileSystem } from './storage/FileSystem';
 
 export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration> {
-    private readonly crashReporter: CrashReporter = new CrashReporter();
+    private readonly _crashReporter?: CrashReporter;
     private readonly _exceptionHandler: ExceptionHandler = generateUnhandledExceptionHandler();
 
     public crash(): void {
-        this.crashReporter.crash();
+        CrashReporter.crash();
     }
+
+    public static get applicationDataPath(): string {
+        return NativeModules.BacktraceDirectoryProvider?.applicationDirectory() ?? '';
+    }
+
     constructor(clientSetup: BacktraceClientSetup) {
         super({
             sdkOptions: {
@@ -39,52 +47,49 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
             ...clientSetup,
         });
 
-        this.captureUnhandledErrors(
-            clientSetup.options.captureUnhandledErrors,
-            clientSetup.options.captureUnhandledPromiseRejections,
-        );
-        const submissionUrl = SubmissionUrlInformation.toJsonReportSubmissionUrl(clientSetup.options.url);
-
-        this.crashReporter.initialize(
-            Platform.select({
-                ios: SubmissionUrlInformation.toPlCrashReporterSubmissionUrl(submissionUrl),
-                android: SubmissionUrlInformation.toMinidumpSubmissionUrl(submissionUrl),
-                default: submissionUrl,
-            }),
-            this.attributeManager.get('scoped').attributes,
-            this.attachments,
-        );
-    }
-
-    /**
-     * Add attribute to Backtrace Client reports.
-     * @param attributes key-value object with attributes.
-     */
-    public addAttribute(attributes: Record<string, unknown>): void;
-    /**
-     * Add dynamic attributes to Backtrace Client reports.
-     * @param attributes function returning key-value object with attributes.
-     */
-    public addAttribute(attributes: () => Record<string, unknown>): void;
-    public addAttribute(attributes: Record<string, unknown> | (() => Record<string, unknown>)) {
-        super.addAttribute(attributes as Record<string, unknown>);
-        if (typeof attributes === 'function') {
+        const fileSystem = clientSetup.fileSystem as FileSystem;
+        if (!fileSystem) {
             return;
         }
 
-        const clientAttributes = super.attributes;
-        this.crashReporter?.updateAttributes(
-            Object.fromEntries(
-                Object.entries(attributes)
-                    .filter(([key]) => clientAttributes[key] != null)
-                    .map((n) => n as [string, AttributeType]),
-            ),
+        const breadcrumbsManager = this.modules.get(BreadcrumbsManager);
+        if (breadcrumbsManager && this.sessionFiles) {
+            breadcrumbsManager.setStorage(
+                FileBreadcrumbsStorage.create(
+                    fileSystem,
+                    this.sessionFiles,
+                    clientSetup.options.breadcrumbs?.maximumBreadcrumbs ?? 100,
+                ),
+            );
+        }
+
+        this.attributeManager.attributeEvents.on(
+            'scoped-attributes-updated',
+            (reportData: { attributes: Record<string, AttributeType> }) => {
+                this._crashReporter?.updateAttributes(reportData.attributes);
+            },
         );
+    }
+
+    public initialize(): void {
+        const lockId = this.sessionFiles?.lockPreviousSessions();
+        try {
+            super.initialize();
+            this.captureUnhandledErrors(
+                this.options.captureUnhandledErrors,
+                this.options.captureUnhandledPromiseRejections,
+            );
+
+            this.initializeNativeCrashReporter();
+        } catch (err) {
+            lockId && this.sessionFiles?.unlockPreviousSessions(lockId);
+            throw err;
+        }
     }
 
     public dispose(): void {
         this._exceptionHandler.dispose();
-        this.crashReporter.dispose();
+        this._crashReporter?.dispose();
         super.dispose();
     }
 
@@ -127,5 +132,35 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
         if (captureUnhandledRejections) {
             this._exceptionHandler.captureUnhandledPromiseRejections(this);
         }
+    }
+
+    private initializeNativeCrashReporter(): CrashReporter | undefined {
+        if (!this.options.database?.enable) {
+            return;
+        }
+
+        if (!this.options.database?.captureNativeCrashes) {
+            return;
+        }
+
+        const fileSystem = this.fileSystem;
+        if (!fileSystem) {
+            return;
+        }
+
+        const submissionUrl = SubmissionUrlInformation.toJsonReportSubmissionUrl(this.options.url);
+
+        const crashReporter = new CrashReporter(fileSystem);
+        crashReporter.initialize(
+            Platform.select({
+                ios: SubmissionUrlInformation.toPlCrashReporterSubmissionUrl(submissionUrl),
+                android: SubmissionUrlInformation.toMinidumpSubmissionUrl(submissionUrl),
+                default: submissionUrl,
+            }),
+            this.options.database.path,
+            this.attributeManager.get('scoped').attributes,
+            this.attachments,
+        );
+        return crashReporter;
     }
 }

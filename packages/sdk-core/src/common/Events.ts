@@ -5,7 +5,7 @@ interface EventCallback {
 }
 
 export class Events<
-    const E extends Record<string | number | symbol, (...args: any[]) => unknown> = Record<
+    E extends Record<string | number | symbol, (...args: any[]) => unknown> = Record<
         string | number | symbol,
         (...args: any[]) => unknown
     >,

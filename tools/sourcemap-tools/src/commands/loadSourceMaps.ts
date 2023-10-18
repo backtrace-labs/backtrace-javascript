@@ -13,7 +13,7 @@ export function loadSourceMap(asset: Asset) {
     );
 }
 
-export function stripSourcesContent(asset: AssetWithContent<RawSourceMap>): AssetWithContent<RawSourceMap> {
+export function stripSourcesContent<T extends AssetWithContent<RawSourceMap>>(asset: T): T {
     return {
         ...asset,
         content: {
