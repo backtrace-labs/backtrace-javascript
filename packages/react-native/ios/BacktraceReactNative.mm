@@ -7,12 +7,13 @@ static BacktraceCrashReporter *instance;
 RCT_EXPORT_MODULE()
 
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(initialize:(NSString*)submissionUrl
+                                       database:(NSString*)databasePath
                                        attributes:(NSDictionary*)attributes
                                        attachmentPaths:(NSArray*)attachmentPaths) {
     if(instance != nil) {
         return nil;
     }
-    instance = [[BacktraceCrashReporter alloc] initWithBacktraceUrl:submissionUrl andAttributes: attributes andOomSupport:TRUE andAttachments:attachmentPaths];
+    instance = [[BacktraceCrashReporter alloc] initWithBacktraceUrl:submissionUrl andDatabasePath: databasePath andAttributes: attributes andOomSupport:TRUE andAttachments:attachmentPaths];
     [instance start];
     return instance;
 }

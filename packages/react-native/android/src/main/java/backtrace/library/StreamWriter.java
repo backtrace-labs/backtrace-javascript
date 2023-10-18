@@ -72,6 +72,7 @@ public class StreamWriter extends ReactContextBaseJavaModule {
         if (writer == null) {
             return true;
         }
+        _map.remove(key);
         try {
             writer.close();
             return true;
@@ -91,7 +92,7 @@ public class StreamWriter extends ReactContextBaseJavaModule {
                     )
             );
         } catch (Exception e) {
-            Log.d(LOG_TAG, "Cannot create a writer. Reason:" + e.getMessage());
+            Log.d(LOG_TAG, "Cannot create a writer. Reason: " + e.getMessage());
             return null;
         }
     }

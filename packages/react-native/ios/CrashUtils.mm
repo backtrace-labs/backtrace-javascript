@@ -41,32 +41,16 @@
     return ( (info.kp_proc.p_flag & P_TRACED) != 0 );
 }
 
++ (NSError*) convertExceptionToError:(NSException*) exception {
+    NSMutableDictionary * info = [NSMutableDictionary dictionary];
+    [info setValue:exception.name forKey:@"ExceptionName"];
+    [info setValue:exception.reason forKey:@"ExceptionReason"];
+    [info setValue:exception.callStackReturnAddresses forKey:@"ExceptionCallStackReturnAddresses"];
+    [info setValue:exception.callStackSymbols forKey:@"ExceptionCallStackSymbols"];
+    [info setValue:exception.userInfo forKey:@"ExceptionUserInfo"];
 
-//  returns cache dir path
-+ (NSString*) getCacheDir {
-    NSString *cacheDirectory = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) objectAtIndex:0];
-    return [cacheDirectory stringByAppendingPathComponent:@"BacktraceCache"];
-}
-
-// returns report path
-+ (NSString*) getDefaultReportPath {
-    return [ [CrashUtils getCacheDir] stringByAppendingPathComponent:@"Backtrace.plist"];
-}
-
-// returns path to oom status file path
-+ (NSString*) getDefaultOomStatusPath {
-    return [ [CrashUtils getCacheDir] stringByAppendingPathComponent:@"BacktraceOOMState.json"];
-}
-
-+ (BOOL) prepareCrashDirectory {
-    NSString* backtraceDir = [CrashUtils getCacheDir];
-    BOOL isDir = NO;
-    NSError *error;
-    if (! [[NSFileManager defaultManager] fileExistsAtPath:backtraceDir isDirectory:&isDir]) {
-        return [[NSFileManager defaultManager] createDirectoryAtPath:backtraceDir withIntermediateDirectories:YES attributes:nil error:&error];
-    } else {
-        return isDir;
-    }
+    NSError *error = [[NSError alloc] initWithDomain:exception.name code:0 userInfo:info];
+    return error;
 }
 
 + (void) crash {

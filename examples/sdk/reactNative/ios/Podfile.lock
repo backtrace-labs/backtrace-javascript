@@ -1,4 +1,8 @@
 PODS:
+  - backtrace-react-native (0.0.1):
+    - PLCrashReporter
+    - RCT-Folly (= 2021.07.22.00)
+    - React-Core
   - boost (1.76.0)
   - CocoaAsyncSocket (7.6.5)
   - DoubleConversion (1.1.6)
@@ -75,6 +79,7 @@ PODS:
   - hermes-engine/Pre-built (0.72.4)
   - libevent (2.1.12)
   - OpenSSL-Universal (1.1.1100)
+  - PLCrashReporter (1.11.1)
   - RCT-Folly (2021.07.22.00):
     - boost
     - DoubleConversion
@@ -491,6 +496,7 @@ PODS:
     - Yoga (~> 1.14)
 
 DEPENDENCIES:
+  - "backtrace-react-native (from `../node_modules/@backtrace-labs/react-native`)"
   - boost (from `../node_modules/react-native/third-party-podspecs/boost.podspec`)
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
@@ -569,10 +575,13 @@ SPEC REPOS:
     - fmt
     - libevent
     - OpenSSL-Universal
+    - PLCrashReporter
     - SocketRocket
     - YogaKit
 
 EXTERNAL SOURCES:
+  backtrace-react-native:
+    :path: "../node_modules/@backtrace-labs/react-native"
   boost:
     :podspec: "../node_modules/react-native/third-party-podspecs/boost.podspec"
   DoubleConversion:
@@ -654,6 +663,7 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
 SPEC CHECKSUMS:
+  backtrace-react-native: b5e15cac52797b2d12e52ec2a57617be9390f1d7
   boost: 57d2868c099736d80fcd648bf211b4431e51a558
   CocoaAsyncSocket: 065fd1e645c7abab64f7a6a2007a48038fdc6a99
   DoubleConversion: 5189b271737e1565bdce30deb4a08d647e3f5f54
@@ -672,6 +682,7 @@ SPEC CHECKSUMS:
   hermes-engine: 81191603c4eaa01f5e4ae5737a9efcf64756c7b2
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
   OpenSSL-Universal: ebc357f1e6bc71fa463ccb2fe676756aff50e88c
+  PLCrashReporter: 5d2d3967afe0efad61b3048d617e2199a5d1b787
   RCT-Folly: 424b8c9a7a0b9ab2886ffe9c3b041ef628fd4fb1
   RCTRequired: c0569ecc035894e4a68baecb30fe6a7ea6e399f9
   RCTTypeSafety: e90354072c21236e0bcf1699011e39acd25fea2f
@@ -710,4 +721,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: 8a8aa8565463f099a849a8e382f9d9ab6df99234
 
-COCOAPODS: 1.12.1
+COCOAPODS: 1.11.3

@@ -16,11 +16,14 @@ bool _debugMode;
 // determine if oom watcher have been disposed
 bool _disabled;
 
-- (instancetype) init {
+NSString* _oomCache;
+
+- (instancetype) initWithDatabasePath: (NSString*) databasePath {
     if (self = [super init]) {
         _lastUpdateTime = 0;
         _applicationState = [NSMutableDictionary dictionary];
         _debugMode = [CrashUtils isDebuggerAttached];
+        _oomCache = [databasePath stringByAppendingPathComponent:@"BacktraceOOMState.json"];
         _disabled = NO;
     }
     
@@ -41,13 +44,12 @@ bool _disabled;
 }
 
 - (NSDictionary*) getOomState {
-    NSString* statusPath = [CrashUtils getDefaultOomStatusPath];
     NSFileManager* manager = [NSFileManager defaultManager];
-    if([manager fileExistsAtPath:statusPath] == NO) {
+    if([manager fileExistsAtPath:_oomCache] == NO) {
         return nil;
     }
     
-    NSDictionary* state= [NSDictionary dictionaryWithContentsOfFile:statusPath];
+    NSDictionary* state= [NSDictionary dictionaryWithContentsOfFile:_oomCache];
     return state;
 }
 
@@ -130,15 +132,18 @@ bool _disabled;
 }
 
 // cleanup Oom integration
-+ (void) cleanup {
-    NSString* statusPath = [CrashUtils getDefaultOomStatusPath];
+- (void) cleanup {
     NSFileManager* manager = [NSFileManager defaultManager];
-    if(![manager fileExistsAtPath:statusPath]) {
+    if(![manager fileExistsAtPath:_oomCache]) {
         return;
     }
     
     NSError *error;
-    [manager removeItemAtPath:statusPath error: &error];
+    [manager removeItemAtPath:_oomCache error: &error];
+    
+    if(error) {
+        NSLog(@"Backtrace: Cannot cleanup the OOM cache file.");
+    }
 }
 
 - (void) disable {
@@ -150,7 +155,7 @@ bool _disabled;
     if(_disabled == YES) {
         return;
     }
-    NSString* statusPath = [CrashUtils getDefaultOomStatusPath];
-    [_applicationState writeToFile:statusPath atomically:YES];
+    
+    [_applicationState writeToFile:_oomCache atomically:YES];
 }
 @end

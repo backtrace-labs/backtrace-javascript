@@ -19,6 +19,7 @@ import { CrashReporter } from './crashReporter/CrashReporter';
 import { generateUnhandledExceptionHandler } from './handlers';
 import { type ExceptionHandler } from './handlers/ExceptionHandler';
 import { type FileSystem } from './storage/FileSystem';
+
 export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration> {
     private readonly _crashReporter?: CrashReporter;
     private readonly _exceptionHandler: ExceptionHandler = generateUnhandledExceptionHandler();
