@@ -11,28 +11,29 @@ export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<Backtrace
     constructor(clientSetup: BacktraceClientSetup) {
         super(clientSetup);
 
-        const attributeProviders = [
-            new ReactNativeAttributeProvider(),
-            ...(DebuggerHelper.isConnected()
-                ? []
-                : Platform.select({
-                      ios: [
-                          new NativeAttributeProvider('BacktraceApplicationAttributeProvider', 'scoped'),
-                          new NativeAttributeProvider('BacktraceDeviceAttributeProvider', 'scoped'),
-                          new NativeAttributeProvider('BacktraceSystemAttributeProvider', 'scoped'),
-                          new NativeAttributeProvider('BacktraceMemoryUsageAttributeProvider', 'dynamic'),
-                          new NativeAttributeProvider('BacktraceCpuAttributeProvider', 'dynamic'),
-                      ],
-                      android: [
-                          new NativeAttributeProvider('BacktraceApplicationAttributeProvider', 'scoped'),
-                          new NativeAttributeProvider('BacktraceDeviceAttributeProvider', 'scoped'),
-                          new NativeAttributeProvider('BacktraceSystemAttributeProvider', 'scoped'),
-                          new NativeAttributeProvider('MemoryInformationAttributeProvider', 'dynamic'),
-                          new NativeAttributeProvider('ProcessAttributeProvider', 'dynamic'),
-                      ],
-                      default: [],
-                  })),
-        ];
+        const debuggerAvailable = DebuggerHelper.isConnected();
+        this.addAttributeProvider(new ReactNativeAttributeProvider());
+        if (debuggerAvailable) {
+            return;
+        }
+
+        const attributeProviders = Platform.select({
+            ios: [
+                new NativeAttributeProvider('BacktraceApplicationAttributeProvider', 'scoped'),
+                new NativeAttributeProvider('BacktraceDeviceAttributeProvider', 'scoped'),
+                new NativeAttributeProvider('BacktraceSystemAttributeProvider', 'scoped'),
+                new NativeAttributeProvider('BacktraceMemoryUsageAttributeProvider', 'dynamic'),
+                new NativeAttributeProvider('BacktraceCpuAttributeProvider', 'dynamic'),
+            ],
+            android: [
+                new NativeAttributeProvider('BacktraceApplicationAttributeProvider', 'scoped'),
+                new NativeAttributeProvider('BacktraceDeviceAttributeProvider', 'scoped'),
+                new NativeAttributeProvider('BacktraceSystemAttributeProvider', 'scoped'),
+                new NativeAttributeProvider('MemoryInformationAttributeProvider', 'dynamic'),
+                new NativeAttributeProvider('ProcessAttributeProvider', 'dynamic'),
+            ],
+            default: [],
+        });
 
         for (const provider of attributeProviders) {
             this.addAttributeProvider(provider);
@@ -48,6 +49,8 @@ export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<Backtrace
     }
 
     public build(): BacktraceClient {
-        return new BacktraceClient(this.clientSetup);
+        const instance = new BacktraceClient(this.clientSetup);
+        instance.initialize();
+        return instance;
     }
 }

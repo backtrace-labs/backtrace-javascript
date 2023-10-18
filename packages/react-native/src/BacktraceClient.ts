@@ -46,6 +46,7 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
             sessionProvider: new SingleSessionProvider(),
             ...clientSetup,
         });
+
         const fileSystem = clientSetup.fileSystem as FileSystem;
         if (!fileSystem) {
             return;
