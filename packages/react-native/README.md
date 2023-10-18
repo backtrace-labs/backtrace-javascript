@@ -348,9 +348,12 @@ The Backtrace React-Native SDK can capture crashes generated in the native layer
 the JavaScript side by using any kind of helpers. In order to collect them, the SDK uses native crash reporting
 solutions available in the package. 
 
-Attributes and file attachments will be uploaded by native crash reporting solution. In-memory attachments such as string attachment, are not supported. Also, you cannot apply any managed layer (JavaScript) callbacks to filter, modify crashes before send.
-- On Android, all native crashes from the NDK layer will be sent in the same application session (from a separate application process). 
+Attributes and file attachments will be uploaded by native crash reporting solution. Some important details:
+- Dynamic attributes will not be added.
+- In-memory attachments such as string attachments, are not supported.
+- You cannot apply any managed layer (JavaScript) callbacks to filter or modify crashes before send.
 - Java exceptions and iOS crashes will be available after the application restart. All crashes and reports send after application restart are stored in the database directory.
+- On Android, all native crashes from the NDK layer will be sent in the same application session (from a separate application process). 
 
 #### Manual database operations
 
