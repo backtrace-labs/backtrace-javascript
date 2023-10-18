@@ -28,7 +28,7 @@ easy, after which you can explore the rich set of Backtrace features.
     - [BacktraceClient options](#backtraceclient)
     - [Manually send an error](#manually-send-an-error)
     - [Modify/skip error reports](#modifyskip-error-reports)
-    - [Custom file/http handlers](#custom-filehttp-handlers)
+    - [SDK Method Overrides](#sdk-method-overrides)
 
 ## Basic Integration
 
@@ -250,7 +250,7 @@ uploaded with each report.
 
 ```ts
 // Import attachment types from @backtrace-labs/nestjs
-import { BacktraceStringAttachment, BacktraceUint8ArrayAttachment  } from "@backtrace-labs/nestjs";
+import { BacktraceStringAttachment, BacktraceUint8ArrayAttachment, BacktraceFileAttachment } from "@backtrace-labs/node";
 
 // BacktraceStringAttachment should be used for text object like a log file, for example
 const stringAttachment = new BacktraceStringAttachment("logfile.txt", "This is the start of my log")
@@ -431,7 +431,7 @@ operate on database records.
 
 ### BacktraceClient
 
-BacktraceClient is the main SDK class. Error monitoring starts when this object is instantiated, and it will compose and send reports for unhandled errors and unhandled promise rejections. It can also be used to manually send reports from exceptions and rejection handlers.
+BacktraceClient is the main SDK class. Error monitoring starts when this singleton object is instantiated, and it will compose and send reports for unhandled errors and unhandled promise rejections. It can also be used to manually send reports from exceptions and rejection handlers. Do not create more than one instance of this object.
 
 #### BacktraceClientOptions
 
@@ -479,8 +479,6 @@ A BeforeSend event is triggered when an exception in the managed environment occ
 ```ts
 const client = BacktraceClient.initialize({
     url: SUBMISSION_URL,
-    name: '@backtrace-labs/browser-example',
-    version: '0.0.1',
     beforeSend: (data: BacktraceData) => {
         // skip the report by returning a null from the callback
         if (!shouldSendReportToBacktrace(data)) {
@@ -493,9 +491,9 @@ const client = BacktraceClient.initialize({
 });
 ```
 
-### Custom file/http handlers
+### SDK Method Overrides
 
-Custom handlers can be implemented to override BacktraceClient file and http operations. Overriding the default operations allows custom encryption for data at rest or in motion.
+BacktraceClient.builder is used to override default BacktraceClient methods. File and http operation overrides, for example, can be used to implement custom encryption for data at rest or in motion.
 
 > Do not use these operations to modify the data objects. See [Modify/skip error reports](#modifyskip-error-reports) for the correct method to modify a report before sending it to Backtrace.
 
