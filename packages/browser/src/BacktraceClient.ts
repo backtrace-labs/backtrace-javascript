@@ -1,50 +1,38 @@
 import {
-    BacktraceAttributeProvider,
     BacktraceCoreClient,
     BacktraceReport,
-    BacktraceRequestHandler,
-    BacktraceSessionProvider,
-    BacktraceStackTraceConverter,
-    BreadcrumbsEventSubscriber,
     DebugIdContainer,
-    SdkOptions,
     VariableDebugIdMapProvider,
 } from '@backtrace-labs/sdk-core';
-import { AGENT } from './agentDefinition';
+import { BacktraceBrowserRequestHandler } from './BacktraceBrowserRequestHandler';
 import { BacktraceBrowserSessionProvider } from './BacktraceBrowserSessionProvider';
 import { BacktraceConfiguration } from './BacktraceConfiguration';
+import { AGENT } from './agentDefinition';
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
+import { BacktraceClientSetup } from './builder/BacktraceClientSetup';
+import { getStackTraceConverter } from './converters/getStackTraceConverter';
 
-export class BacktraceClient extends BacktraceCoreClient {
+export class BacktraceClient<O extends BacktraceConfiguration = BacktraceConfiguration> extends BacktraceCoreClient<O> {
     private readonly _disposeController: AbortController = new AbortController();
 
-    constructor(
-        options: BacktraceConfiguration,
-        requestHandler: BacktraceRequestHandler,
-        attributeProviders: BacktraceAttributeProvider[],
-        stackTraceConverter: BacktraceStackTraceConverter,
-        breadcrumbsEventSubscriber: BreadcrumbsEventSubscriber[],
-        sessionProvider: BacktraceSessionProvider = new BacktraceBrowserSessionProvider(),
-        sdkOptions: SdkOptions = AGENT,
-    ) {
+    constructor(clientSetup: BacktraceClientSetup<O>) {
         super({
-            options,
-            sdkOptions,
-            requestHandler,
-            attributeProviders,
-            stackTraceConverter,
-            sessionProvider,
+            sdkOptions: AGENT,
+            stackTraceConverter: getStackTraceConverter(),
+            requestHandler: new BacktraceBrowserRequestHandler(clientSetup.options),
             debugIdMapProvider: new VariableDebugIdMapProvider(window as DebugIdContainer),
-            breadcrumbsSetup: {
-                subscribers: breadcrumbsEventSubscriber,
-            },
+            sessionProvider: new BacktraceBrowserSessionProvider(),
+            ...clientSetup,
         });
 
-        this.captureUnhandledErrors(options.captureUnhandledErrors, options.captureUnhandledPromiseRejections);
+        this.captureUnhandledErrors(
+            clientSetup.options.captureUnhandledErrors,
+            clientSetup.options.captureUnhandledPromiseRejections,
+        );
     }
 
     public static builder(options: BacktraceConfiguration): BacktraceClientBuilder {
-        return new BacktraceClientBuilder(options);
+        return new BacktraceClientBuilder({ options });
     }
 
     /**

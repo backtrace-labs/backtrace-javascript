@@ -92,6 +92,7 @@ public class StreamWriter extends ReactContextBaseJavaModule {
                     )
             );
         } catch (Exception e) {
+            Log.d(LOG_TAG, "Cannot create a writer. Reason: " + e.getMessage());
             return null;
         }
     }

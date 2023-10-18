@@ -1,14 +1,6 @@
-import {
-    BacktraceAttachment,
-    BacktraceAttributeProvider,
-    BacktraceCoreClientBuilder,
-    BacktraceSessionProvider,
-    BreadcrumbsEventSubscriber,
-} from '@backtrace-labs/sdk-core';
+import { BacktraceCoreClientBuilder } from '@backtrace-labs/sdk-core';
 import { BacktraceClient } from '../BacktraceClient';
-import { BacktraceConfiguration } from '../BacktraceConfiguration';
-import { BacktraceNodeRequestHandler } from '../BacktraceNodeRequestHandler';
-import { BacktraceFileAttachment } from '../attachment';
+import { transformAttachment } from '../attachment/transformAttachments';
 import {
     ApplicationInformationAttributeProvider,
     LinuxProcessStatusAttributeProvider,
@@ -17,43 +9,25 @@ import {
     ProcessInformationAttributeProvider,
     ProcessStatusAttributeProvider,
 } from '../attributes';
-import { NodeFileSystem } from '../storage/NodeFileSystem';
+import { BacktraceClientSetup, BacktraceNodeClientSetup } from './BacktraceClientSetup';
 
-export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<BacktraceClient> {
-    constructor(
-        private readonly _options: BacktraceConfiguration,
-        attributeProvider: BacktraceAttributeProvider[] = [
-            new ApplicationInformationAttributeProvider(),
-            new ProcessStatusAttributeProvider(),
-            new MachineAttributeProvider(),
-            new ProcessInformationAttributeProvider(),
-            new LinuxProcessStatusAttributeProvider(),
-            new MachineIdentitfierAttributeProvider(),
-        ],
-        breadcrumbsSubscribers: BreadcrumbsEventSubscriber[] = [],
-        sessionProvider?: BacktraceSessionProvider,
-    ) {
-        super(new BacktraceNodeRequestHandler(_options), attributeProvider, breadcrumbsSubscribers, sessionProvider);
-    }
+export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<BacktraceClientSetup> {
+    constructor(clientSetup: BacktraceNodeClientSetup) {
+        super({
+            ...clientSetup,
+            options: { ...clientSetup.options, attachments: clientSetup.options.attachments?.map(transformAttachment) },
+        });
 
-    /**
-     * Transform client attachments into the attachment model.
-     * @returns attachments
-     */
-    private transformAttachments(): BacktraceAttachment[] {
-        return (
-            this._options.attachments?.map((n) => (typeof n === 'string' ? new BacktraceFileAttachment(n) : n)) ?? []
-        );
+        this.addAttributeProvider(new ApplicationInformationAttributeProvider());
+        this.addAttributeProvider(new ProcessStatusAttributeProvider());
+        this.addAttributeProvider(new MachineAttributeProvider());
+        this.addAttributeProvider(new ProcessInformationAttributeProvider());
+        this.addAttributeProvider(new LinuxProcessStatusAttributeProvider());
+        this.addAttributeProvider(new MachineIdentitfierAttributeProvider());
     }
 
     public build(): BacktraceClient {
-        const instance = new BacktraceClient(
-            { ...this._options, attachments: this.transformAttachments() },
-            this.handler,
-            this.attributeProviders,
-            this.breadcrumbsSubscribers,
-            this.fileSystem ?? new NodeFileSystem(),
-        );
+        const instance = new BacktraceClient(this.clientSetup as BacktraceNodeClientSetup);
         instance.initialize();
         return instance;
     }

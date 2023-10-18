@@ -13,6 +13,10 @@ export class ZipArchive {
         this._pack.pipe(this._gz);
     }
 
+    public get stream() {
+        return this._gz;
+    }
+
     public append(name: string, sourceMap: string) {
         this._pack.entry({ name }, sourceMap);
         return this;
@@ -22,17 +26,8 @@ export class ZipArchive {
         this._pack.finalize();
 
         return new Promise<ZipArchive>((resolve, reject) => {
-            this._gz.on('close', () => resolve(this));
+            this._gz.on('finish', () => resolve(this));
             this._gz.on('error', reject);
         });
-    }
-
-    public on(event: string, listener: (...args: unknown[]) => void): this {
-        this._pack.on(event, listener);
-        return this;
-    }
-
-    public pipe<T extends NodeJS.WritableStream>(destination: T, options?: { end?: boolean }): T {
-        return this._gz.pipe(destination, options);
     }
 }

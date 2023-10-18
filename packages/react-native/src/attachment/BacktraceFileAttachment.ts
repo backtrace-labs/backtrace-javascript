@@ -1,6 +1,6 @@
 import { type BacktraceFileAttachment as CoreBacktraceFileAttachment } from '@backtrace-labs/sdk-core';
 import { Platform } from 'react-native';
-import { type ReactNativeFileProvider } from '../storage/ReactNativeFileProvider';
+import { type FileSystem } from '../storage/';
 import { type FileLocation } from '../types/FileLocation';
 export class BacktraceFileAttachment implements CoreBacktraceFileAttachment {
     public readonly name: string;
@@ -8,7 +8,7 @@ export class BacktraceFileAttachment implements CoreBacktraceFileAttachment {
 
     private readonly _uploadUri: string;
     constructor(
-        private readonly _fileSystemProvider: ReactNativeFileProvider,
+        private readonly _fileSystemProvider: FileSystem,
         public readonly filePath: string,
         name?: string,
         mimeType?: string,

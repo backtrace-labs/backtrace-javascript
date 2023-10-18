@@ -1,6 +1,19 @@
-export { BacktraceFileAttachment } from './attachment/BacktraceFileAttachment';
+export {
+    BacktraceReport,
+    BreadcrumbLogLevel,
+    BreadcrumbsManager,
+    BreadcrumbType,
+    type AttributeType,
+    type BacktraceAttachment,
+    type BacktraceData,
+    type BacktraceStackFrame,
+    type BacktraceStackTraceConverter,
+    type BreadcrumbsEventSubscriber,
+    type RawBreadcrumb,
+} from '@backtrace-labs/sdk-core';
+export * from './attachment/';
 export { BacktraceClient } from './BacktraceClient';
-export { BacktraceClientBuilder } from './BacktraceClientBuilder';
 export { type BacktraceConfiguration } from './BacktraceConfiguration';
+export { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 export { ErrorBoundary } from './ErrorBoundary';
 export * from './storage/';

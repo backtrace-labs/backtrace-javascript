@@ -87,6 +87,6 @@ export class ReactNativeFileSystem implements FileSystem {
     }
 
     public createAttachment(path: string, name?: string | undefined): BacktraceAttachment<unknown> {
-        return new BacktraceFileAttachment(this._fileSystemProvider, path, name);
+        return new BacktraceFileAttachment(this, path, name);
     }
 }

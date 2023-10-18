@@ -1,5 +1,6 @@
 export * from './BacktraceCoreClient';
 export * from './builder/BacktraceCoreClientBuilder';
+export * from './builder/CoreClientSetup';
 export * from './builder/SdkOptions';
 export * from './common/IdGenerator';
 export * from './common/TimeHelper';

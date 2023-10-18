@@ -1,55 +1,49 @@
 import {
-    BacktraceAttributeProvider,
     BacktraceCoreClient,
     BacktraceReport,
-    BacktraceRequestHandler,
-    BreadcrumbsEventSubscriber,
     BreadcrumbsManager,
-    BacktraceConfiguration as CoreConfiguration,
     DebugIdContainer,
     FileAttributeManager,
-    FileSystem,
     SessionFiles,
     VariableDebugIdMapProvider,
 } from '@backtrace-labs/sdk-core';
 import path from 'path';
-import { BacktraceConfiguration } from './BacktraceConfiguration';
+import { BacktraceConfiguration, BacktraceSetupConfiguration } from './BacktraceConfiguration';
+import { BacktraceNodeRequestHandler } from './BacktraceNodeRequestHandler';
 import { AGENT } from './agentDefinition';
+import { transformAttachment } from './attachment/transformAttachments';
 import { FileBreadcrumbsStorage } from './breadcrumbs/FileBreadcrumbsStorage';
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
+import { BacktraceNodeClientSetup } from './builder/BacktraceClientSetup';
 import { NodeOptionReader } from './common/NodeOptionReader';
 import { NodeDiagnosticReportConverter } from './converter/NodeDiagnosticReportConverter';
 
-export class BacktraceClient extends BacktraceCoreClient {
+export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration> {
     private _listeners: Record<string, NodeJS.UnhandledRejectionListener | NodeJS.UncaughtExceptionListener> = {};
 
-    constructor(
-        options: CoreConfiguration,
-        requestHandler: BacktraceRequestHandler,
-        attributeProviders: BacktraceAttributeProvider[],
-        breadcrumbsEventSubscribers: BreadcrumbsEventSubscriber[],
-        fileSystem?: FileSystem,
-    ) {
+    constructor(clientSetup: BacktraceNodeClientSetup) {
         super({
-            options,
             sdkOptions: AGENT,
-            requestHandler,
-            attributeProviders,
+            requestHandler: new BacktraceNodeRequestHandler(clientSetup.options),
             debugIdMapProvider: new VariableDebugIdMapProvider(global as DebugIdContainer),
-            breadcrumbsSetup: {
-                subscribers: breadcrumbsEventSubscribers,
+            ...clientSetup,
+            options: {
+                ...clientSetup.options,
+                attachments: clientSetup.options.attachments?.map(transformAttachment),
             },
-            fileSystem,
         });
 
         const breadcrumbsManager = this.modules.get(BreadcrumbsManager);
         if (breadcrumbsManager && this.sessionFiles) {
             breadcrumbsManager.setStorage(
-                FileBreadcrumbsStorage.create(this.sessionFiles, options.breadcrumbs?.maximumBreadcrumbs ?? 100),
+                FileBreadcrumbsStorage.create(
+                    this.sessionFiles,
+                    clientSetup.options.breadcrumbs?.maximumBreadcrumbs ?? 100,
+                ),
             );
         }
 
-        if (this.sessionFiles && this.fileSystem && options.database?.captureNativeCrashes) {
+        if (this.sessionFiles && this.fileSystem && clientSetup.options.database?.captureNativeCrashes) {
             this.addModule(FileAttributeManager, FileAttributeManager.create(this.fileSystem));
         }
     }
@@ -73,8 +67,8 @@ export class BacktraceClient extends BacktraceCoreClient {
         this.loadNodeCrashes().finally(() => lockId && this.sessionFiles?.unlockPreviousSessions(lockId));
     }
 
-    public static builder(options: BacktraceConfiguration): BacktraceClientBuilder {
-        return new BacktraceClientBuilder(options);
+    public static builder(options: BacktraceSetupConfiguration): BacktraceClientBuilder {
+        return new BacktraceClientBuilder({ options });
     }
 
     /**
@@ -85,7 +79,7 @@ export class BacktraceClient extends BacktraceCoreClient {
      * @returns backtrace client
      */
     public static initialize(
-        options: BacktraceConfiguration,
+        options: BacktraceSetupConfiguration,
         build?: (builder: BacktraceClientBuilder) => void,
     ): BacktraceClient {
         if (this.instance) {
