@@ -1,3 +1,8 @@
+# Version 0.0.6
+
+-   update `@backtrace-labs/sdk-core` to `0.0.7`
+-   remove `const` from types for Typescript <5 compatibility
+
 # Version 0.0.5
 
 -   update `@backtrace-labs/sdk-core` to `0.0.6`
