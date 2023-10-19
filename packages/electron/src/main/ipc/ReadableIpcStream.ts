@@ -1,3 +1,4 @@
+import { Event } from 'electron';
 import { Readable, ReadableOptions } from 'stream';
 import { IpcTransport } from '../../common';
 import { IpcEvents } from '../../common/ipc/IpcEvents';

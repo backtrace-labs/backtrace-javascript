@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { IpcMainInvokeEvent, ipcMain } from 'electron';
+import { IpcMainEvent, IpcMainInvokeEvent, ipcMain } from 'electron';
 import { IpcRpcHandler, SyncIpcRpcHandler } from '../../common/ipc/IpcRpc';
 
 export class MainIpcRpcHandler implements IpcRpcHandler, SyncIpcRpcHandler {
@@ -13,12 +13,12 @@ export class MainIpcRpcHandler implements IpcRpcHandler, SyncIpcRpcHandler {
         return this;
     }
 
-    public onSync(event: string, callback: (event: IpcMainInvokeEvent, ...args: any[]) => unknown): this {
+    public onSync(event: string, callback: (event: IpcMainEvent, ...args: any[]) => unknown): this {
         ipcMain.on(event, callback);
         return this;
     }
 
-    public onceSync(event: string, callback: (event: IpcMainInvokeEvent, ...args: any[]) => unknown): this {
+    public onceSync(event: string, callback: (event: IpcMainEvent, ...args: any[]) => unknown): this {
         ipcMain.once(event, callback);
         return this;
     }

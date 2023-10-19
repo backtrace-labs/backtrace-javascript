@@ -2,7 +2,7 @@ import { BacktraceAttributeProvider } from '@backtrace-labs/sdk-core';
 import { app } from 'electron';
 
 interface LocaleFunctions {
-    getPreferredSystemLanguages?(): string;
+    getPreferredSystemLanguages?(): string[];
 }
 
 export class AppAttributeProvider implements BacktraceAttributeProvider {

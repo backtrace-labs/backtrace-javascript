@@ -51,7 +51,7 @@ export class BacktraceMainElectronModule implements BacktraceModule {
 
         rpc.on(IpcEvents.sync, () => Promise.resolve(getSyncData()));
 
-        rpc.onSync(IpcEvents.sync, (event: Electron.IpcMainInvokeEvent) => {
+        rpc.onSync(IpcEvents.sync, (event: Electron.IpcMainEvent) => {
             event.returnValue = getSyncData();
         });
 

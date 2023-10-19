@@ -4,7 +4,6 @@ import { app } from 'electron';
 interface LocaleFunctions {
     getLocale?(): string;
     getSystemLocale?(): string;
-    getPreferredSystemLanguages?(): string;
 }
 
 /**
