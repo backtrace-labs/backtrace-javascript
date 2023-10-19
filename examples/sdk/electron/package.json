@@ -1,0 +1,46 @@
+{
+    "name": "@backtrace-labs/electron-example",
+    "version": "1.0.0",
+    "description": "@backtrace-labs/electron example",
+    "main": "lib/main/index.js",
+    "engines": {
+        "node": ">=14"
+    },
+    "scripts": {
+        "build": "webpack",
+        "clean": "rimraf \"lib\" && tsc -b --clean && tsc -b tsconfig.main.json --clean && tsc -b tsconfig.renderer.json --clean",
+        "format": "prettier --write '**/*.ts'",
+        "lint": "eslint . --ext .ts",
+        "start": "electron .",
+        "watch": "webpack -w"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/backtrace-labs/backtrace-javascript.git"
+    },
+    "keywords": [
+        "Error",
+        "Reporting",
+        "Diagnostic",
+        "Tool",
+        "Bug",
+        "Bugs",
+        "StackTrace"
+    ],
+    "author": "Backtrace <team@backtrace.io>",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/backtrace-labs/backtrace-javascript/issues"
+    },
+    "homepage": "https://github.com/backtrace-labs/backtrace-javascript#readme",
+    "devDependencies": {
+        "electron": "^26.2.4",
+        "ts-loader": "^9.4.3",
+        "typescript": "^5.1.3",
+        "webpack": "^5.87.0",
+        "webpack-cli": "^5.1.4"
+    },
+    "dependencies": {
+        "@backtrace-labs/electron": "file:../../../packages/electron"
+    }
+}

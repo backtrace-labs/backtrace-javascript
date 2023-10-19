@@ -27,6 +27,18 @@
             "url": "http://localhost:3000",
             "webRoot": "${workspaceFolder}/examples/sdk/react/",
             "sourceMaps": true
+        },
+        {
+            "name": "Electron example",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/examples/sdk/electron",
+            "runtimeExecutable": "${workspaceFolder}/examples/sdk/electron/node_modules/.bin/electron",
+            "windows": {
+                "runtimeExecutable": "${workspaceFolder}/examples/sdk/electron/node_modules/.bin/electron.cmd"
+            },
+            "args": ["."],
+            "outputCapture": "std"
         }
     ]
 }
