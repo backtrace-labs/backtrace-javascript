@@ -1,6 +1,6 @@
 import path from 'path';
 import { DebugIdGenerator } from './DebugIdGenerator';
-import { parseJSON, readFile } from './helpers/common';
+import { parseJSON, readFile, statFile } from './helpers/common';
 import { pipe } from './helpers/flow';
 import { appendBeforeWhitespaces } from './helpers/stringHelpers';
 import { stringToUuid } from './helpers/stringToUuid';
@@ -117,7 +117,12 @@ export class SourceProcessor {
 
         const source = sourceReadResult.data;
         if (!sourceMapPath) {
-            const pathFromSource = this.getSourceMapPathFromSource(source, sourcePath);
+            const pathFromSourceResult = await this.getSourceMapPathFromSource(source, sourcePath);
+            if (pathFromSourceResult.isErr()) {
+                return pathFromSourceResult;
+            }
+
+            const pathFromSource = pathFromSourceResult.data;
             if (!pathFromSource) {
                 return Err('could not find source map for source');
             }
@@ -152,16 +157,29 @@ export class SourceProcessor {
             return sourceReadResult;
         }
 
-        return Ok(this.getSourceMapPathFromSource(sourceReadResult.data, sourcePath));
+        return this.getSourceMapPathFromSource(sourceReadResult.data, sourcePath);
     }
 
-    public getSourceMapPathFromSource(source: string, sourcePath: string) {
-        const match = source.match(/^\/\/# sourceMappingURL=(.+)$/m);
-        if (!match || !match[1]) {
-            return undefined;
-        }
+    public async getSourceMapPathFromSource(
+        source: string,
+        sourcePath: string,
+    ): ResultPromise<string | undefined, string> {
+        const resolveFile = (filePath: string) =>
+            pipe(
+                filePath,
+                statFile,
+                R.map((stat) =>
+                    stat.isFile()
+                        ? filePath
+                        : (path.join(filePath, path.basename(sourcePath) + '.map') as string | undefined),
+                ),
+            );
 
-        return path.resolve(path.dirname(sourcePath), match[1]);
+        return pipe(source.match(/^\/\/# sourceMappingURL=(.+)$/m), (match) =>
+            !match || !match[1]
+                ? Ok(undefined)
+                : pipe(match[1], (match) => path.resolve(path.dirname(sourcePath), match), resolveFile),
+        );
     }
 
     public async addSourcesToSourceMap(

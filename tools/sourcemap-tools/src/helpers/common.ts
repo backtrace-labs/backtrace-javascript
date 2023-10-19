@@ -25,6 +25,14 @@ export function writeFile(path: string) {
     };
 }
 
+export async function statFile(path: string) {
+    try {
+        return Ok(await fs.promises.stat(path));
+    } catch (err) {
+        return Err(`failed to write file: ${err}`);
+    }
+}
+
 export function createWriteStream(path: string) {
     try {
         return Ok(fs.createWriteStream(path));

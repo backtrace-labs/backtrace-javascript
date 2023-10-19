@@ -93,7 +93,7 @@ export function flow<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T,
     ]
 ): (a: A) => Promise<Z>;
 export function flow(...fns: ((v: unknown) => unknown | Promise<unknown>)[]): (v: unknown) => Promise<unknown> {
-    return async (a) => _pipe(a, ...fns);
+    return (a) => _pipe(a, ...fns);
 }
 
 export function pipe<A, B>(value: A, fnAb: (a: A) => B | Promise<B>): Promise<B>;

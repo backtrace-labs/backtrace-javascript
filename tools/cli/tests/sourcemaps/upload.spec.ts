@@ -397,7 +397,7 @@ describe('upload', () => {
                 });
 
                 assert(result.isOk(), result.data as string);
-                await expect(fs.promises.stat(output)).rejects.toThrow();
+                expect(fs.existsSync(output)).toBe(false);
             }),
         );
     });
@@ -449,6 +449,71 @@ describe('upload', () => {
         it(
             'should call upload',
             withWorkingCopy('processed-not-linked-sourcemaps', async (workingDir) => {
+                const uploadSpy = mockUploader();
+                uploadSpy.mockClear();
+
+                const result = await uploadSourcemaps({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: `${workingDir}/*.js`,
+                        url: 'https://test',
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+                expect(uploadSpy).toBeCalled();
+            }),
+        );
+    });
+
+    describe('directory linked processed sourcemaps', () => {
+        it(
+            'should not fail',
+            withWorkingCopy('processed-directory-linked-sourcemaps', async (workingDir) => {
+                const result = await uploadSourcemaps({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: `${workingDir}/*.js`,
+                        url: 'https://test',
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+            }),
+        );
+
+        it(
+            'should append sourcemaps to archive',
+            withWorkingCopy('processed-directory-linked-sourcemaps', async (workingDir) => {
+                const appendSpy = jest.spyOn(ZipArchive.prototype, 'append');
+                appendSpy.mockClear();
+
+                const result = await uploadSourcemaps({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: `${workingDir}/*.js`,
+                        url: 'https://test',
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+
+                const files = await glob(`${workingDir}/*.js.map`);
+                for (const file of files) {
+                    expect(appendSpy).toHaveBeenCalledWith(
+                        expect.stringContaining(path.basename(file)),
+                        expect.anything(),
+                    );
+                }
+            }),
+        );
+
+        it(
+            'should call upload',
+            withWorkingCopy('processed-directory-linked-sourcemaps', async (workingDir) => {
                 const uploadSpy = mockUploader();
                 uploadSpy.mockClear();
 

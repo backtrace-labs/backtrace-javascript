@@ -415,4 +415,63 @@ describe('add-sources', () => {
             }),
         );
     });
+
+    describe('directory linked sourcemaps', () => {
+        it(
+            'should not fail',
+            withWorkingCopy('directory-linked-sourcemaps', async (workingDir) => {
+                const result = await addSourcesToSourcemaps({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: `${workingDir}/*.js`,
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+            }),
+        );
+
+        it(
+            'should call SourceProcessor with sourcemap paths',
+            withWorkingCopy('directory-linked-sourcemaps', async (workingDir) => {
+                const spy = jest.spyOn(SourceProcessor.prototype, 'addSourcesToSourceMap');
+
+                const result = await addSourcesToSourcemaps({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: `${workingDir}/*.js`,
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+                const files = await glob(`${workingDir}/*.js.map`);
+
+                for (const file of files) {
+                    expect(spy).toBeCalledWith(expect.anything(), file);
+                }
+            }),
+        );
+
+        it(
+            'should modify sourcesmaps in place',
+            withWorkingCopy('directory-linked-sourcemaps', async (workingDir) => {
+                const preHashes = await hashEachFile(await glob(`${workingDir}/*.js.map`));
+
+                const result = await addSourcesToSourcemaps({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: `${workingDir}/*.js`,
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+                const postHashes = await hashEachFile(await glob(`${workingDir}/*.js.map`));
+
+                expectHashesToChange(preHashes, postHashes);
+            }),
+        );
+    });
 });
