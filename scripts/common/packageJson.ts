@@ -22,17 +22,23 @@ export interface Dependency {
 }
 
 export async function loadPackageJson(packageJsonPath: string): Promise<PackageJson> {
-    const error = new Error(`${packageJsonPath} does not seem to be a valid package.json file`);
+    function throwLoadError(error: unknown): never {
+        throw new Error(
+            `${packageJsonPath} does not seem to be a valid package.json file: ${
+                error instanceof Error ? error.message : String(error)
+            }`,
+        );
+    }
 
     let packageJson: Partial<PackageJson>;
     try {
         packageJson = JSON.parse(await fs.promises.readFile(packageJsonPath, 'utf-8')) as Partial<PackageJson>;
-    } catch {
-        throw error;
+    } catch (err) {
+        throwLoadError(err);
     }
 
     if (!packageJson.name || !packageJson.version) {
-        throw error;
+        throwLoadError('no name or version key found');
     }
 
     return packageJson as PackageJson;

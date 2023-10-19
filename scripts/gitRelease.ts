@@ -64,10 +64,6 @@ async function main() {
 
     const argv = process.argv.slice(2);
     const [packageJsonPath, versionOrRelease, identifier] = argv.filter((v) => !options.includes(v as never));
-    const optionValues = options.reduce((val, k) => {
-        val[k] = argv.includes(k);
-        return val;
-    }, {} as Record<(typeof options)[number], boolean>);
 
     if (!packageJsonPath) {
         throw new Error('first argument must be a package.json path');
@@ -76,6 +72,11 @@ async function main() {
     if (!versionOrRelease) {
         throw new Error('second argument must be a version or release type');
     }
+
+    const optionValues = options.reduce((val, k) => {
+        val[k] = argv.includes(k);
+        return val;
+    }, {} as Record<(typeof options)[number], boolean>);
 
     const dryRun = optionValues['--dry-run'];
     if (dryRun) {
