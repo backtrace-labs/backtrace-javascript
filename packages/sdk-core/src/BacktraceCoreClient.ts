@@ -3,6 +3,7 @@ import {
     BacktraceAttributeProvider,
     BacktraceBreadcrumbs,
     BacktraceConfiguration,
+    BacktraceRequestHandler,
     BacktraceSessionProvider,
     DebugIdProvider,
     FileSystem,
@@ -13,7 +14,7 @@ import { CoreClientSetup } from './builder/CoreClientSetup';
 import { Events } from './common/Events';
 import { ReportEvents } from './events/ReportEvents';
 import { AttributeType, BacktraceData } from './model/data/BacktraceData';
-import { BacktraceReportSubmission } from './model/http/BacktraceReportSubmission';
+import { BacktraceReportSubmission, RequestBacktraceReportSubmission } from './model/http/BacktraceReportSubmission';
 import { BacktraceReport } from './model/report/BacktraceReport';
 import { BacktraceModule, BacktraceModuleBindData } from './modules/BacktraceModule';
 import { BacktraceModuleCtor, BacktraceModules, ReadonlyBacktraceModules } from './modules/BacktraceModules';
@@ -120,6 +121,7 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
     private readonly _rateLimitWatcher: RateLimitWatcher;
     private readonly _sessionProvider: BacktraceSessionProvider;
     private readonly _sdkOptions: SdkOptions;
+    private readonly _requestHandler: BacktraceRequestHandler;
 
     private _enabled = false;
 
@@ -131,8 +133,10 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
         this._sdkOptions = setup.sdkOptions;
         this._attachments = this.options.attachments ?? [];
         this._sessionProvider = setup.sessionProvider ?? new SingleSessionProvider();
-        this._reportSubmission = new BacktraceReportSubmission(this.options, setup.requestHandler);
+        this._reportSubmission =
+            setup.reportSubmission ?? new RequestBacktraceReportSubmission(this.options, setup.requestHandler);
         this._rateLimitWatcher = new RateLimitWatcher(this.options.rateLimit);
+        this._requestHandler = setup.requestHandler;
 
         const attributeProviders: BacktraceAttributeProvider[] = [
             new ClientAttributeProvider(this.agent, this.agentVersion, this._sessionProvider.sessionId),
@@ -188,7 +192,7 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
             this._sessionProvider,
             this.attributeManager,
             setup.requestHandler,
-        ).build();
+        ).build(setup.uniqueMetricsQueue, setup.summedMetricsQueue);
 
         if (metrics) {
             this._modules.set(BacktraceMetrics, metrics);
@@ -199,7 +203,11 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
             this._modules.set(BreadcrumbsManager, breadcrumbsManager);
         }
 
-        this._enabled = true;
+        if (setup.modules) {
+            for (const module of setup.modules) {
+                this.addModule(module);
+            }
+        }
     }
 
     public initialize() {
@@ -224,6 +232,8 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
         }
 
         this.sessionFiles?.clearPreviousSessions();
+
+        this._enabled = true;
     }
 
     /**
@@ -315,8 +325,27 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
         }
     }
 
-    protected addModule<T extends BacktraceModule>(type: BacktraceModuleCtor<T>, module: T) {
+    protected addModule<T extends BacktraceModule>(module: T): void;
+    protected addModule<T extends BacktraceModule>(type: BacktraceModuleCtor<T>, module: T): void;
+    protected addModule<T extends BacktraceModule>(typeOrModule: BacktraceModuleCtor<T> | T, module?: T) {
+        let type: BacktraceModuleCtor<T>;
+        if (typeof typeOrModule === 'function') {
+            type = typeOrModule;
+        } else {
+            module = typeOrModule;
+            type = Object.getPrototypeOf(module);
+        }
+
+        if (!module) {
+            throw new Error('Module implementation is required.');
+        }
+
         this._modules.set(type, module);
+
+        if (this._enabled) {
+            module.bind && module.bind(this.getModuleBindData());
+            module.initialize && module.initialize();
+        }
     }
 
     protected generateSubmissionData(report: BacktraceReport): BacktraceData | undefined {
@@ -345,8 +374,11 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
     private getModuleBindData(): BacktraceModuleBindData {
         return {
             client: this,
+            options: this.options,
             reportEvents: this.reportEvents,
             attributeManager: this.attributeManager,
+            reportSubmission: this._reportSubmission,
+            requestHandler: this._requestHandler,
             sessionFiles: this.sessionFiles,
         };
     }

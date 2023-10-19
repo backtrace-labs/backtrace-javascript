@@ -1,12 +1,16 @@
-import { BacktraceCoreClient, SessionFiles } from '..';
+import { BacktraceConfiguration, BacktraceCoreClient, BacktraceRequestHandler, SessionFiles } from '..';
 import { Events } from '../common/Events';
 import { ReportEvents } from '../events/ReportEvents';
+import { BacktraceReportSubmission } from '../model/http/BacktraceReportSubmission';
 import { AttributeManager } from './attribute/AttributeManager';
 
 export interface BacktraceModuleBindData {
     readonly client: BacktraceCoreClient;
+    readonly options: BacktraceConfiguration;
     readonly attributeManager: AttributeManager;
     readonly reportEvents: Events<ReportEvents>;
+    readonly reportSubmission: BacktraceReportSubmission;
+    readonly requestHandler: BacktraceRequestHandler;
     readonly sessionFiles?: SessionFiles;
 }
 

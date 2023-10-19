@@ -1,0 +1,44 @@
+{
+    "name": "@backtrace-labs/electron",
+    "version": "0.0.1",
+    "description": "Backtrace-JavaScript Electron integration",
+    "main": "main/index.js",
+    "types": "main/index.d.ts",
+    "scripts": {
+        "build": "webpack",
+        "clean": "rimraf common main renderer",
+        "format": "prettier --write '**/*.ts'",
+        "lint": "eslint src --ext .ts",
+        "prepublishOnly": "NODE_ENV=production npm run build",
+        "watch": "webpack -w",
+        "test": "NODE_ENV=test jest --passWithNoTests"
+    },
+    "keywords": [
+        "Error",
+        "Reporting",
+        "Diagnostic",
+        "Tool",
+        "Bug",
+        "Bugs",
+        "StackTrace",
+        "Electron"
+    ],
+    "author": "Backtrace <team@backtrace.io>",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/backtrace-labs/backtrace-javascript/issues"
+    },
+    "homepage": "https://github.com/backtrace-labs/backtrace-javascript#readme",
+    "files": [
+        "/common",
+        "/main",
+        "/renderer"
+    ],
+    "dependencies": {
+        "@backtrace-labs/sdk-core": "^0.0.6",
+        "@backtrace-labs/node": "^0.0.5"
+    },
+    "peerDependencies": {
+        "electron": "12 - 26"
+    }
+}

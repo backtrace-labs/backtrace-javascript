@@ -4,8 +4,17 @@ import { BacktraceConfiguration } from '../configuration/BacktraceConfiguration'
 import { BacktraceData } from '../data/BacktraceData';
 import { BacktraceRequestHandler } from './BacktraceRequestHandler';
 import { SubmissionUrlInformation } from './SubmissionUrlInformation';
+import { BacktraceSubmissionResponse } from './model/BacktraceSubmissionResponse';
+import { BacktraceReportSubmissionResult } from './model/BacktraceSubmissionResult';
 
-export class BacktraceReportSubmission {
+export interface BacktraceReportSubmission {
+    send(
+        data: BacktraceData,
+        attachments: BacktraceAttachment[],
+    ): Promise<BacktraceReportSubmissionResult<BacktraceSubmissionResponse>>;
+}
+
+export class RequestBacktraceReportSubmission {
     private readonly _submissionUrl: string;
     constructor(options: BacktraceConfiguration, private readonly _requestHandler: BacktraceRequestHandler) {
         this._submissionUrl = SubmissionUrlInformation.toJsonReportSubmissionUrl(options.url, options.token);

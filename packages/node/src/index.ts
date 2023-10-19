@@ -15,3 +15,4 @@ export * from './BacktraceClient';
 export * from './BacktraceConfiguration';
 export * from './attachment';
 export * from './builder/BacktraceClientBuilder';
+export * from './builder/BacktraceClientSetup';

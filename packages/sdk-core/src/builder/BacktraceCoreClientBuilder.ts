@@ -1,8 +1,12 @@
+import { BacktraceReportSubmission } from '../model/http/BacktraceReportSubmission';
 import { BacktraceRequestHandler } from '../model/http/BacktraceRequestHandler';
 import { BacktraceAttributeProvider } from '../modules/attribute/BacktraceAttributeProvider';
-import { BreadcrumbsEventSubscriber } from '../modules/breadcrumbs';
+import { BreadcrumbsEventSubscriber, BreadcrumbsStorage } from '../modules/breadcrumbs';
 import { BacktraceStackTraceConverter } from '../modules/converter';
 import { BacktraceSessionProvider } from '../modules/metrics/BacktraceSessionProvider';
+import { MetricsQueue } from '../modules/metrics/MetricsQueue';
+import { SummedEvent } from '../modules/metrics/model/SummedEvent';
+import { UniqueEvent } from '../modules/metrics/model/UniqueEvent';
 import { FileSystem } from '../modules/storage';
 import { CoreClientSetup } from './CoreClientSetup';
 
@@ -34,6 +38,15 @@ export abstract class BacktraceCoreClientBuilder<S extends Partial<CoreClientSet
         return this;
     }
 
+    public useBreadcrumbsStorage(storage: BreadcrumbsStorage): this {
+        if (!this.clientSetup.breadcrumbsSetup) {
+            this.clientSetup.breadcrumbsSetup = {};
+        }
+
+        this.clientSetup.breadcrumbsSetup.storage = storage;
+        return this;
+    }
+
     public useSessionProvider(sessionProvider: BacktraceSessionProvider): this {
         this.clientSetup.sessionProvider = sessionProvider;
         return this;
@@ -51,6 +64,21 @@ export abstract class BacktraceCoreClientBuilder<S extends Partial<CoreClientSet
 
     public useFileSystem(fileSystem: FileSystem): this {
         this.clientSetup.fileSystem = fileSystem;
+        return this;
+    }
+
+    public useReportSubmission(reportSubmission: BacktraceReportSubmission) {
+        this.clientSetup.reportSubmission = reportSubmission;
+        return this;
+    }
+
+    public useSummedMetricsQueue(queue: MetricsQueue<SummedEvent>) {
+        this.clientSetup.summedMetricsQueue = queue;
+        return this;
+    }
+
+    public useUniqueMetricsQueue(queue: MetricsQueue<UniqueEvent>) {
+        this.clientSetup.uniqueMetricsQueue = queue;
         return this;
     }
 }

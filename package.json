@@ -26,7 +26,8 @@
         "tools/cli",
         "tools/rollup-plugin",
         "tools/webpack-plugin",
-        "tools/vite-plugin"
+        "tools/vite-plugin",
+        "packages/electron"
     ],
     "repository": {
         "type": "git",
