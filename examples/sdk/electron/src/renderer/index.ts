@@ -1,5 +1,5 @@
 import { BacktraceClient, BacktraceStringAttachment } from '@backtrace-labs/browser';
-import { addBacktraceElectron } from '@backtrace-labs/electron/lib/renderer';
+import { addBacktraceElectron } from '@backtrace-labs/electron/renderer';
 import { Events, MainApi } from '../common/MainApi';
 
 declare global {

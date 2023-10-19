@@ -1,4 +1,4 @@
-import { BacktraceClient } from '@backtrace-labs/electron/lib/main';
+import { BacktraceClient } from '@backtrace-labs/electron';
 import { BrowserWindow, app, ipcMain } from 'electron';
 import fs from 'fs';
 import path from 'path';
