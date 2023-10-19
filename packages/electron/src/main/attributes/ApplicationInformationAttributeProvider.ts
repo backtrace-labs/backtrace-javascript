@@ -21,6 +21,7 @@ export class ApplicationInformationAttributeProvider implements BacktraceAttribu
         return {
             [this.APPLICATION_ATTRIBUTE]: this._application,
             [this.APPLICATION_VERSION_ATTRIBUTE]: this._applicationVersion,
+            'electron.process': 'main',
         };
     }
 }
