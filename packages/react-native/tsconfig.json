@@ -25,5 +25,6 @@
         "target": "esnext",
         "verbatimModuleSyntax": true
     },
-    "references": []
+    "references": [],
+    "exclude": ["node_modules", "tests", "lib"]
 }
