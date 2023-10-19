@@ -2,9 +2,12 @@ import { BacktraceReport } from '@backtrace-labs/sdk-core';
 import { NativeModules } from 'react-native';
 import { BacktraceClient } from '../../BacktraceClient';
 import { DebuggerHelper } from '../../common/DebuggerHelper';
+import { AndroidStackTraceConverter } from '../../converters/AndroidStackTraceConverter';
 import { UnhandledExceptionHandler } from '../UnhandledExceptionHandler';
+import { AndroidUnhandledException } from './AndroidUnhandledException';
 export class AndroidUnhandledExceptionHandler extends UnhandledExceptionHandler {
     private readonly _unhandledExceptionHandler = NativeModules.BacktraceAndroidBackgroundUnhandledExceptionHandler;
+    private readonly _androidStackTraceConverter = new AndroidStackTraceConverter();
     public captureManagedErrors(client: BacktraceClient) {
         super.captureManagedErrors(client);
         if (!this._unhandledExceptionHandler) {
@@ -15,21 +18,15 @@ export class AndroidUnhandledExceptionHandler extends UnhandledExceptionHandler 
         }
 
         this._unhandledExceptionHandler.start((classifier: string, message: string, stackTrace: string) => {
-            // to do:
-            // save the report when the database feature is enabled
-            console.log(`Backtrace: ${message} ${classifier} Stack Trace: ${stackTrace}`);
-            client.send(
-                new BacktraceReport(
-                    message,
-                    {
-                        'error.type': 'Unhandled exception',
-                    },
-                    [],
-                    {
-                        classifiers: [classifier],
-                    },
-                ),
+            const report = new BacktraceReport(
+                new AndroidUnhandledException(classifier, message, stackTrace),
+                {
+                    'error.type': 'Unhandled exception',
+                },
+                [],
             );
+            report.addStackTrace('main', this._androidStackTraceConverter.convert(stackTrace));
+            client.send(report);
         });
     }
 
