@@ -40,7 +40,7 @@ export class ErrorBoundary extends Component<Props, State> {
             'errorboundary.name': name ?? 'main',
             'error.type': 'Unhandled exception',
         });
-        report.addStackTrace(this.COMPONENT_THREAD_NAME, info.componentStack);
+        report.addStackTrace(this.COMPONENT_THREAD_NAME, info.componentStack as string);
         await this._client.send(report);
     }
 
