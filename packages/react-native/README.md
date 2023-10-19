@@ -24,12 +24,10 @@ quick and easy, after which you can explore the rich set of Backtrace features.
         - [Native crash support](#native-crash-support)
         - [Manual database operations](#manual-database-operations)
 1. [Advanced SDK Features](#advanced-sdk-features)
+    - [BacktraceClient Options](#backtraceclient)
     - [Manually send an error](#manually-send-an-error)
-    - [BacktraceClient](#backtraceclient)
-        - [BacktraceClientOptions](#backtraceclientoptions)
-        - [BacktraceClient Methods](#backtraceclient-methods)
-        - [BacktraceDatabase Methods](#backtracedatabase-methods)
-    - [BacktraceReports](#backtracereport)
+    - [Modify/skip error reports](#modifyskip-error-reports)
+    - [SDK Method Overrides](#sdk-method-overrides)
 
 ## Basic Integration
 
@@ -298,16 +296,15 @@ client.metrics?.send();
 The Backtrace react-native SDK can cache generated reports and crashes to local disk before sending them to Backtrace.
 This is recommended; in certain configurations react-native applications can crash before the SDK finishes submitting
 data, and under slow internet conditions your application might wait in a closing window until the HTTP submission
-finishes. In such an event occurs cached reports will be sent on next application launch.
+finishes. In such an event cached reports will be sent on next application launch.
 
 With offline database support you can:
 
--   cache your reports when the user doesn't have Internet connection or the service is unavailable,
+-   cache your reports when the user doesn't have an internet connection or the service is unavailable,
 -   capture crashes,
--   manually decide when to send them or not.
+-   manually decide whether or not to send reports, and when.
 
-By default the offline database support is disabled. To enable it, please add "enable: true" and the path to the
-directory where Backtrace can store crash data.
+Offline database support is disabled by default. To enable it, please add "enable: true" and the path to the directory where Backtrace can store crash data.
 
 ```ts
 const client = BacktraceClient.initialize({
@@ -325,11 +322,12 @@ client.database.send();
 client.database.flush();
 ```
 
-Backtrace client exposes a method `applicationDataPath` that can help you with path creation to your database directory.
+Backtrace client exposes a method `applicationDataPath` that can help you create the path to your database directory.
+
 The helper returns:
 
--   on Android: path to the files directory available in the application context,
--   on iOS: Path to the application cache directory
+-   Android: Path to the files directory available in the application context,
+-   iOS: Path to the application cache directory
 
 #### Database Configuration
 
@@ -337,32 +335,57 @@ The helper returns:
 | ------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------ |
 | `enabled`                 | Boolean | Enable/disable offline database support.                                                                                                                                     | false   | <ul><li>- [x] </li></ul> |
 | `path`                    | String  | Local storage path for crash data.                                                                                                                                           | -       | <ul><li>- [x] </li></ul> |
-| `createDatabaseDirectory` | Boolean | Allow the SDK to create the offline database directory..                                                                                                                     | true    |
+| `createDatabaseDirectory` | Boolean | Allow the SDK to create the offline database directory.                                                                                                                      | true    |
 | `autoSend`                | Boolean | Sends reports to the server based on the retry settings. If the value is set to 'false', you can use the Flush or Send methods as an alternative.                            | true    |
 | `maximumNumberOfRecords`  | Number  | The maximum number of reports stored in the offline database. When the limit is reached, the oldest reports are removed. If the value is equal to '0', then no limit is set. | 8       |
 | `retryInterval`           | Number  | The amount of time (in ms) to wait between retries if the database is unable to send a report.                                                                               | 60 000  |
 | `maximumRetries`          | Number  | The maximum number of retries to attempt if the database is unable to send a report.                                                                                         | 3       |
 | `captureNativeCrashes`    | Boolean | Capture and symbolicate stack traces for native crashes if the runtime supports this. A crash report is generated, stored locally, and uploaded upon next start.             | false   |
 
----
-
 #### Native crash support
 
 The Backtrace React-Native SDK can capture crashes generated in the native layer. Those crashes cannot be captured on
 the JavaScript side by using any kind of helpers. In order to collect them, the SDK uses native crash reporting
-solutions available in the package. On Android, all native crashes from the NDK layer will be send in the same
-application session (from the separated application process). Java exceptions and iOS crashes will be available after
-the application restart. All crashes and reports send after application restart are stored in the database directory.
-Attributes set by user and file attachments should be also uploaded by native crash reporting solution. In-memory
-attachments such as string attachment, are not supported. You cannot also apply any managed layer (JavaScript) callbacks
-to filter, modify crashes before send.
+solutions available in the package. 
+
+Attributes and file attachments will be uploaded by native crash reporting solution. Some important details:
+- Dynamic attributes will not be added.
+- In-memory attachments such as string attachments, are not supported.
+- You cannot apply any managed layer (JavaScript) callbacks to filter or modify crashes before send.
+- Java exceptions and iOS crashes will be available after the application restart. All crashes and reports send after application restart are stored in the database directory.
+- On Android, all native crashes from the NDK layer will be sent in the same application session (from a separate application process). 
 
 #### Manual database operations
 
-Database support is available in the client options with the BacktraceDatabase object. You can use it to manually
-operate on database records. Options are detailed in [BacktraceDatabase Methods](#backtracedatabase-methods).
+Database support is available in the client options with the BacktraceDatabase object. You can use it to manually operate on database records.
 
 ## Advanced SDK Features
+
+### BacktraceClient
+
+BacktraceClient is the main SDK class. Error monitoring starts when this singleton object is instantiated, and it will compose and send reports for unhandled errors and unhandled promise rejections. It can also be used to manually send reports from exceptions and rejection handlers. Do not create more than one instance of this object.
+
+#### BacktraceClientOptions
+
+The following options are available for the BacktraceClientOptions passed when initializing the BacktraceClient.
+
+| Option Name                         | Type                                                | Description                                                                                                                                                                                                                                                                                                                                                                          | Default | Required?                |
+| ----------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | ------------------------ |
+| `url`                               | String                                              | Submission URL to send errors to                                                                                                                                                                                                                                                                                                                                                     |         | <ul><li>- [x] </li></ul> |
+| `token`                             | String                                              | The submission token for error injestion. This is required only if submitting directly to a Backtrace URL. (uncommon)                                                                                                                                                                                                                                                                |         | <ul><li>- [ ] </li></ul> |
+| `userAttributes`                    | Dictionary                                          | Additional attributes that can be filtered and aggregated against in the Backtrace UI.                                                                                                                                                                                                                                                                                               |         | <ul><li>- [ ] </li></ul> |
+| `attachments`                       | BacktraceAttachment[]                               | Additional files to be sent with error reports. See [File Attachments](#file-attachments)                                                                                                                                                                                                                                                                                            |         | <ul><li>- [ ] </li></ul> |
+| `beforeSend`                        | (data: BacktraceData) => BacktraceData \| undefined | Triggers an event every time an exception in the managed environment occurs, which allows you to skip the report (by returning a null value) or to modify data that library collected before sending the report. You can use the BeforeSend event to extend attributes or JSON object data based on data the application has at the time of exception. See [Modify/skip error reports](#modifyskip-error-reports)) |         | <ul><li>- [ ] </li></ul> |
+| `skipReport`                        | (report: BacktraceReport) => boolean                | If you want to ignore specific types of error reports, we recommend that you use the skipReport callback. By using it, based on the data generated in the report, you can decide to filter the report, or send it to Backtrace.                                                                                                                                                      |         | <ul><li>- [ ] </li></ul> |
+| `captureUnhandledErrors`            | Boolean                                             | Enable unhandled errors                                                                                                                                                                                                                                                                                                                                                              | `true`  | <ul><li>- [ ] </li></ul> |
+| `captureUnhandledPromiseRejections` | Boolean                                             | Enable unhandled promise rejection                                                                                                                                                                                                                                                                                                                                                   | `true`  | <ul><li>- [ ] </li></ul> |
+| `timeout`                           | Integer                                             | How long to wait in ms before timing out the connection                                                                                                                                                                                                                                                                                                                              | `15000` | <ul><li>- [ ] </li></ul> |
+| `ignoreSslCertificate`              | Boolean                                             | Ignore SSL Certificate errors                                                                                                                                                                                                                                                                                                                                                        | `false` | <ul><li>- [ ] </li></ul> |
+| `rateLimit`                         | Integer                                             | Limits the number of reports the client will send per minute. If set to '0', there is no limit. If set to a value greater than '0' and the value is reached, the client will not send any reports until the next minute.                                                                                                                                                             | `0`     | <ul><li>- [ ] </li></ul> |
+| `metrics`                           | BacktraceMetricsOptions                             | See [Backtrace Stability Metrics](#application-stability-metrics)                                                                                                                                                                                                                                                                                                                    |         | <ul><li>- [ ] </li></ul> |
+| `breadcrumbs`                       | BacktraceBreadcrumbsSettings                        | See [Backtrace Breadcrumbs](#breadcrumbs)                                                                                                                                                                                                                                                                                                                                            |         | <ul><li>- [ ] </li></ul> |
+| `database`                          | BacktraceDatabaseSettings                           | See [Backtrace Database](#offline-database-support)                                                                                                                                                                                                                                                                                                                                  |         | <ul><li>- [ ] </li></ul> |
+
 
 ### Manually send an error
 
@@ -383,29 +406,34 @@ await client.send(new BacktraceReport('This is a report with a string!'));
 await client.send(new BacktraceReport(new Error('This is a report with a string!')));
 ```
 
-### BacktraceClient
+### Modify/skip error reports
+A BeforeSend event is triggered when an exception in the managed environment occurs to which you can attach a handler. You can use the BeforeSend event to scrub PII, or extend attributes or JSON object data based on data your application has at the time of exception. A report can be skipped sompletely by returning a null value.
 
-BacktraceClient is the main SDK class. Error monitoring starts when this object is instantiated, and it will compose and
-send reports for unhandled errors and unhandled promise rejections. It can also be used to manually send reports from
-exceptions and rejection handlers.
+```ts
+const client = BacktraceClient.initialize({
+    url: SUBMISSION_URL,
+    beforeSend: (data: BacktraceData) => {
+        // skip the report by returning a null from the callback
+        if (!shouldSendReportToBacktrace(data)) {
+            return undefined;
+        }
+        // apply custom attribute 
+        data.attributes['new-attribute"] = 'apply-data-in-callback';
+        return data;
+    },
+});
+```
 
-#### BacktraceClientOptions
+### SDK Method Overrides
 
-The following options are available for the BacktraceClientOptions passed when initializing the BacktraceClient.
+BacktraceClient.builder is used to override default BacktraceClient methods. File and http operation overrides, for example, can be used to implement custom encryption for data at rest or in motion.
 
-| Option Name                         | Type                                                | Description                                                                                                                                                                                                                                                                                                                                                                          | Default | Required?                |
-| ----------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | ------------------------ |
-| `url`                               | String                                              | Submission URL to send errors to                                                                                                                                                                                                                                                                                                                                                     |         | <ul><li>- [x] </li></ul> |
-| `token`                             | String                                              | The submission token for error injestion. This is required only if submitting directly to a Backtrace URL. (uncommon)                                                                                                                                                                                                                                                                |         | <ul><li>- [ ] </li></ul> |
-| `userAttributes`                    | Dictionary                                          | Additional attributes that can be filtered and aggregated against in the Backtrace UI.                                                                                                                                                                                                                                                                                               |         | <ul><li>- [ ] </li></ul> |
-| `attachments`                       | BacktraceAttachment[]                               | Additional files to be sent with error reports. See [File Attachments](#file-attachments)                                                                                                                                                                                                                                                                                            |         | <ul><li>- [ ] </li></ul> |
-| `beforeSend`                        | (data: BacktraceData) => BacktraceData \| undefined | Triggers an event every time an exception in the managed environment occurs, which allows you to skip the report (by returning a null value) or to modify data that library collected before sending the report. You can use the BeforeSend event to extend attributes or JSON object data based on data the application has at the time of exception. See [BeforeSend](#beforesend) |         | <ul><li>- [ ] </li></ul> |
-| `skipReport`                        | (report: BacktraceReport) => boolean                | If you want to ignore specific types of error reports, we recommend that you use the skipReport callback. By using it, based on the data generated in the report, you can decide to filter the report, or send it to Backtrace.                                                                                                                                                      |         | <ul><li>- [ ] </li></ul> |
-| `captureUnhandledErrors`            | Boolean                                             | Enable unhandled errors                                                                                                                                                                                                                                                                                                                                                              | `true`  | <ul><li>- [ ] </li></ul> |
-| `captureUnhandledPromiseRejections` | Boolean                                             | Enable unhandled promise rejection                                                                                                                                                                                                                                                                                                                                                   | `true`  | <ul><li>- [ ] </li></ul> |
-| `timeout`                           | Integer                                             | How long to wait in ms before timing out the connection                                                                                                                                                                                                                                                                                                                              | `15000` | <ul><li>- [ ] </li></ul> |
-| `ignoreSslCertificate`              | Boolean                                             | Ignore SSL Certificate errors                                                                                                                                                                                                                                                                                                                                                        | `false` | <ul><li>- [ ] </li></ul> |
-| `rateLimit`                         | Integer                                             | Limits the number of reports the client will send per minute. If set to '0', there is no limit. If set to a value greater than '0' and the value is reached, the client will not send any reports until the next minute.                                                                                                                                                             | `0`     | <ul><li>- [ ] </li></ul> |
-| `metrics`                           | BacktraceMetricsOptions                             | See [Backtrace Stability Metrics](#application-stability-metrics)                                                                                                                                                                                                                                                                                                                    |         | <ul><li>- [ ] </li></ul> |
-| `breadcrumbs`                       | BacktraceBreadcrumbsSettings                        | See [Backtrace Breadcrumbs](#breadcrumbs)                                                                                                                                                                                                                                                                                                                                            |         | <ul><li>- [ ] </li></ul> |
-| `database`                          | BacktraceDatabaseSettings                           | See [Backtrace Database](#offline-database-support)                                                                                                                                                                                                                                                                                                                                  |         | <ul><li>- [ ] </li></ul> |
+> Do not use these operations to modify the data objects. See [Modify/skip error reports](#modifyskip-error-reports) for the correct method to modify a report before sending it to Backtrace.
+
+```ts
+const client = BacktraceClient.builder(options)
+    .useRequestHandler(requestHandler)
+    .useBreadcrumbSubscriber(breadcrumbSubscriber)
+    .addAttributeProvider(attributeProvider)
+    .build();
+```
