@@ -20,10 +20,10 @@ const main = {
     ],
     output: {
         filename: '[name].js',
-        path: path.join(__dirname, 'lib/main'),
+        path: path.join(__dirname, 'main'),
         libraryTarget: 'commonjs2',
         devtoolModuleFilenameTemplate(info) {
-            return path.relative(path.join(__dirname, 'lib/main'), info.absoluteResourcePath);
+            return path.relative(path.join(__dirname, 'main'), info.absoluteResourcePath);
         },
     },
     plugins: [agentDefinitionPlugin(path.join(__dirname, 'package.json'))],
@@ -43,9 +43,9 @@ const preload = {
     target: 'electron-preload',
     output: {
         filename: '[name].js',
-        path: path.join(__dirname, 'lib/main'),
+        path: path.join(__dirname, 'main'),
         devtoolModuleFilenameTemplate(info) {
-            return path.relative(path.join(__dirname, 'lib/main'), info.absoluteResourcePath);
+            return path.relative(path.join(__dirname, 'main'), info.absoluteResourcePath);
         },
     },
     plugins: [agentDefinitionPlugin(path.join(__dirname, 'package.json'))],
@@ -65,7 +65,7 @@ const renderer = {
     target: 'electron-renderer',
     output: {
         filename: '[name].js',
-        path: path.join(__dirname, 'lib/renderer'),
+        path: path.join(__dirname, 'renderer'),
         libraryTarget: 'commonjs2',
     },
     plugins: [agentDefinitionPlugin(path.join(__dirname, 'package.json'))],

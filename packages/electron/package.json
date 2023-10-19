@@ -2,11 +2,11 @@
     "name": "@backtrace-labs/electron",
     "version": "0.0.1",
     "description": "Backtrace-JavaScript Electron integration",
-    "main": "lib/index.js",
-    "types": "lib/index.d.ts",
+    "main": "main/index.js",
+    "types": "main/index.d.ts",
     "scripts": {
         "build": "webpack",
-        "clean": "rimraf \"lib\"",
+        "clean": "rimraf common main renderer",
         "format": "prettier --write '**/*.ts'",
         "lint": "eslint src --ext .ts",
         "prepublishOnly": "NODE_ENV=production npm run build",
@@ -30,7 +30,9 @@
     },
     "homepage": "https://github.com/backtrace-labs/backtrace-javascript#readme",
     "files": [
-        "/lib"
+        "/common",
+        "/main",
+        "/renderer"
     ],
     "dependencies": {
         "@backtrace-labs/sdk-core": "^0.0.6",
