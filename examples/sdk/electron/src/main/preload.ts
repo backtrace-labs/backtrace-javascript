@@ -1,4 +1,4 @@
-import '@backtrace-labs/electron/lib/main/preload';
+import '@backtrace-labs/electron/main/preload';
 import { contextBridge, ipcRenderer } from 'electron';
 import { MainApi } from '../common/MainApi';
 
