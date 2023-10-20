@@ -12,9 +12,27 @@ import { IpcSummedMetricsQueue } from './modules/IpcSummedMetricsQueue';
 import { StubMetricsQueue } from './modules/StubMetricsQueue';
 
 export interface AddBacktraceElectronOptions {
+    /**
+     * Data needs to be synchronized with the main process.
+     * If this is set to `true`, this synchronization will be synchronous and blocking.
+     * This can help with startup crashes not having the whole information, like session ID.
+     *
+     * **If Backtrace is not fully initialized on the main process, your application may hang with a white screen**.
+     */
     readonly synchronous?: boolean;
 }
 
+/**
+ * Adds Backtrace Electron to the renderer client.
+ * The submission process is overriden to be transferred over IPC to the main process.
+ *
+ * You need to initialize Electron Backtrace client in the main process before adding this.
+ * Requires preload script to be included. See the README for more info.
+ *
+ * @param builder Backtrace client builder.
+ * @param options Building options.
+ * @returns Passed in builder.
+ */
 export function addBacktraceElectron<T extends BacktraceCoreClientBuilder>(
     builder: T,
     options?: AddBacktraceElectronOptions,
