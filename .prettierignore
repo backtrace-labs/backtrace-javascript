@@ -1,1 +1,4 @@
 **/lib
+packages/electron/main
+packages/electron/renderer
+packages/electron/common
