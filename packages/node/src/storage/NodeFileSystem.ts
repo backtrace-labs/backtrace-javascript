@@ -1,4 +1,4 @@
-import { BacktraceAttachment, FileSystem } from '@backtrace-labs/sdk-core';
+import { BacktraceAttachment, FileSystem } from '@backtrace/sdk-core';
 import fs from 'fs';
 import { BacktraceFileAttachment } from '../attachment';
 

@@ -1,8 +1,8 @@
 import {
+    BacktraceClient as NodeBacktraceClient,
     BacktraceNodeClientSetup,
     BacktraceSetupConfiguration,
-    BacktraceClient as NodeBacktraceClient,
-} from '@backtrace-labs/node';
+} from '@backtrace/node';
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 import { BacktraceMainElectronModule } from './modules/BacktraceMainElectronModule';
 

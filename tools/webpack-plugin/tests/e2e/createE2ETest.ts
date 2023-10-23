@@ -1,4 +1,4 @@
-import { Ok, SourceProcessor, SymbolUploader, ZipArchive } from '@backtrace-labs/sourcemap-tools';
+import { Ok, SourceProcessor, SymbolUploader, ZipArchive } from '@backtrace/sourcemap-tools';
 import assert from 'assert';
 import crypto from 'crypto';
 import fs from 'fs';

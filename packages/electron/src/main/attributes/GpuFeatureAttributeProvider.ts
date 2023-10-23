@@ -1,5 +1,5 @@
-import { BacktraceAttributeProvider } from '@backtrace-labs/sdk-core';
-import { GPUFeatureStatus, app } from 'electron';
+import { BacktraceAttributeProvider } from '@backtrace/sdk-core';
+import { app, GPUFeatureStatus } from 'electron';
 
 export class GpuFeatureAttributeProvider implements BacktraceAttributeProvider {
     private _attributes?: Record<string, string>;

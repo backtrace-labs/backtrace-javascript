@@ -8,7 +8,7 @@ import {
     RawBreadcrumb,
     SessionFiles,
     TimeHelper,
-} from '@backtrace-labs/sdk-core';
+} from '@backtrace/sdk-core';
 import path from 'path';
 import { BacktraceFileAttachment } from '../attachment';
 import { AlternatingFileWriter } from '../common/AlternatingFileWriter';

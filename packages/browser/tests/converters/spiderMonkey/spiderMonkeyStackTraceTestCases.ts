@@ -1,4 +1,4 @@
-import { BacktraceStackFrame } from '@backtrace-labs/sdk-core/src/model/data/BacktraceStackTrace';
+import { BacktraceStackFrame } from '@backtrace/sdk-core/src/model/data/BacktraceStackTrace';
 
 const defaultWebsite = `http://localhost/main.js`;
 export const spiderMonkeyStackTraceTests: Array<{

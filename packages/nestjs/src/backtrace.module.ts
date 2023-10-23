@@ -1,4 +1,4 @@
-import { BacktraceClient } from '@backtrace-labs/node';
+import { BacktraceClient } from '@backtrace/node';
 import { ConfigurableModuleBuilder, Global, Module } from '@nestjs/common';
 
 const { ConfigurableModuleClass, MODULE_OPTIONS_TOKEN, OPTIONS_TYPE } = new ConfigurableModuleBuilder<

@@ -1,5 +1,5 @@
-import { BacktraceClient } from '@backtrace-labs/electron';
-import { BrowserWindow, app, ipcMain } from 'electron';
+import { BacktraceClient } from '@backtrace/electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
 import fs from 'fs';
 import path from 'path';
 import { Events } from '../common/MainApi';

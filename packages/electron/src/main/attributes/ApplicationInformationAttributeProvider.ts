@@ -1,4 +1,4 @@
-import { BacktraceAttributeProvider } from '@backtrace-labs/sdk-core';
+import { BacktraceAttributeProvider } from '@backtrace/sdk-core';
 import { app } from 'electron';
 
 export class ApplicationInformationAttributeProvider implements BacktraceAttributeProvider {

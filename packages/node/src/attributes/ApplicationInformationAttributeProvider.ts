@@ -1,4 +1,4 @@
-import { BacktraceAttributeProvider } from '@backtrace-labs/sdk-core';
+import { BacktraceAttributeProvider } from '@backtrace/sdk-core';
 import fs from 'fs';
 import path from 'path';
 import process from 'process';

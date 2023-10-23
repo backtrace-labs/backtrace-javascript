@@ -1,7 +1,7 @@
 {
-    "name": "@backtrace-labs/electron-example",
+    "name": "@backtrace/electron-example",
     "version": "1.0.0",
-    "description": "@backtrace-labs/electron example",
+    "description": "@backtrace/electron example",
     "main": "lib/main/index.js",
     "engines": {
         "node": ">=14"
@@ -41,6 +41,6 @@
         "webpack-cli": "^5.1.4"
     },
     "dependencies": {
-        "@backtrace-labs/electron": "file:../../../packages/electron"
+        "@backtrace/electron": "file:../../../packages/electron"
     }
 }

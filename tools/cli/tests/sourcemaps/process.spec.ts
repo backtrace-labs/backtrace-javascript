@@ -1,4 +1,4 @@
-import { SourceProcessor } from '@backtrace-labs/sourcemap-tools';
+import { SourceProcessor } from '@backtrace/sourcemap-tools';
 import assert from 'assert';
 import { glob } from 'glob';
 import { CliLogger } from '../../src/logger';

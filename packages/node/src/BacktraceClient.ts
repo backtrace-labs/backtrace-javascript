@@ -6,12 +6,12 @@ import {
     FileAttributeManager,
     SessionFiles,
     VariableDebugIdMapProvider,
-} from '@backtrace-labs/sdk-core';
+} from '@backtrace/sdk-core';
 import path from 'path';
-import { BacktraceConfiguration, BacktraceSetupConfiguration } from './BacktraceConfiguration';
-import { BacktraceNodeRequestHandler } from './BacktraceNodeRequestHandler';
 import { AGENT } from './agentDefinition';
 import { transformAttachment } from './attachment/transformAttachments';
+import { BacktraceConfiguration, BacktraceSetupConfiguration } from './BacktraceConfiguration';
+import { BacktraceNodeRequestHandler } from './BacktraceNodeRequestHandler';
 import { FileBreadcrumbsStorage } from './breadcrumbs/FileBreadcrumbsStorage';
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 import { BacktraceNodeClientSetup } from './builder/BacktraceClientSetup';

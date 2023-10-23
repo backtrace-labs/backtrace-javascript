@@ -496,7 +496,7 @@ PODS:
     - Yoga (~> 1.14)
 
 DEPENDENCIES:
-  - "backtrace-react-native (from `../node_modules/@backtrace-labs/react-native`)"
+  - "backtrace-react-native (from `../node_modules/@backtrace/react-native`)"
   - boost (from `../node_modules/react-native/third-party-podspecs/boost.podspec`)
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
@@ -581,7 +581,7 @@ SPEC REPOS:
 
 EXTERNAL SOURCES:
   backtrace-react-native:
-    :path: "../node_modules/@backtrace-labs/react-native"
+    :path: "../node_modules/@backtrace/react-native"
   boost:
     :podspec: "../node_modules/react-native/third-party-podspecs/boost.podspec"
   DoubleConversion:

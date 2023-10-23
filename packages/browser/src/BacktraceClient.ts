@@ -3,11 +3,11 @@ import {
     BacktraceReport,
     DebugIdContainer,
     VariableDebugIdMapProvider,
-} from '@backtrace-labs/sdk-core';
+} from '@backtrace/sdk-core';
+import { AGENT } from './agentDefinition';
 import { BacktraceBrowserRequestHandler } from './BacktraceBrowserRequestHandler';
 import { BacktraceBrowserSessionProvider } from './BacktraceBrowserSessionProvider';
 import { BacktraceConfiguration } from './BacktraceConfiguration';
-import { AGENT } from './agentDefinition';
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 import { BacktraceClientSetup } from './builder/BacktraceClientSetup';
 import { getStackTraceConverter } from './converters/getStackTraceConverter';

@@ -8,7 +8,7 @@ import {
     type Breadcrumb,
     type BreadcrumbsStorage,
     type RawBreadcrumb,
-} from '@backtrace-labs/sdk-core';
+} from '@backtrace/sdk-core';
 import { BacktraceFileAttachment } from '..';
 import { type FileSystem } from '../storage';
 import { AlternatingFileWriter } from './AlternatingFileWriter';

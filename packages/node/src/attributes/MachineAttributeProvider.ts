@@ -1,4 +1,4 @@
-import { BacktraceAttributeProvider } from '@backtrace-labs/sdk-core';
+import { BacktraceAttributeProvider } from '@backtrace/sdk-core';
 import os from 'os';
 
 export class MachineAttributeProvider implements BacktraceAttributeProvider {

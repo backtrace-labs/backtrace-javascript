@@ -1,4 +1,4 @@
-import { type AttributeType, type BacktraceAttachment, type FileSystem } from '@backtrace-labs/sdk-core';
+import { type AttributeType, type BacktraceAttachment, type FileSystem } from '@backtrace/sdk-core';
 import { NativeModules } from 'react-native';
 import { BacktraceFileAttachment } from '../attachment/BacktraceFileAttachment';
 import { DebuggerHelper } from '../common/DebuggerHelper';

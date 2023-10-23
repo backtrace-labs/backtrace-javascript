@@ -2,18 +2,18 @@ import {
     Asset,
     AssetWithContent,
     Err,
+    loadSourceMap,
     Ok,
+    parseJSON,
+    pipe,
     R,
     RawSourceMap,
+    readFile,
     ResultPromise,
     SourceAndSourceMap,
     SourceProcessor,
-    loadSourceMap,
-    parseJSON,
-    pipe,
-    readFile,
     writeFile,
-} from '@backtrace-labs/sourcemap-tools';
+} from '@backtrace/sourcemap-tools';
 import fs from 'fs';
 
 export function toAsset(file: string): Asset {

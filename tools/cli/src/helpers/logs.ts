@@ -1,4 +1,4 @@
-import { Asset, log, LogLevel, ProcessAssetResult, SourceAndSourceMap } from '@backtrace-labs/sourcemap-tools';
+import { Asset, log, LogLevel, ProcessAssetResult, SourceAndSourceMap } from '@backtrace/sourcemap-tools';
 import { CliLogger } from '../logger';
 
 export function logAsset(logger: CliLogger, level: LogLevel) {

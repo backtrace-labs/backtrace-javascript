@@ -1,4 +1,4 @@
-import { PartialCoreClientSetup } from '@backtrace-labs/sdk-core';
+import { PartialCoreClientSetup } from '@backtrace/sdk-core';
 import { BacktraceSetupConfiguration } from '../BacktraceConfiguration';
 
 export interface BacktraceClientSetup extends PartialCoreClientSetup<'sdkOptions' | 'requestHandler'> {}

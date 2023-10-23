@@ -5,7 +5,7 @@ import {
     RawBreadcrumb,
     SubmissionUrlInformation,
     SummedEvent,
-} from '@backtrace-labs/sdk-core';
+} from '@backtrace/sdk-core';
 import { app, crashReporter } from 'electron';
 import { IpcAttachmentReference } from '../../common/ipc/IpcAttachmentReference';
 import { IpcEvents } from '../../common/ipc/IpcEvents';

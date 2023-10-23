@@ -1,4 +1,4 @@
-import { BacktraceClient } from '@backtrace-labs/node';
+import { BacktraceClient } from '@backtrace/node';
 import {
     BadRequestException,
     Controller,

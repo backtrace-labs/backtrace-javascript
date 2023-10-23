@@ -10,7 +10,7 @@ export {
     type BacktraceStackTraceConverter,
     type BreadcrumbsEventSubscriber,
     type RawBreadcrumb,
-} from '@backtrace-labs/sdk-core';
+} from '@backtrace/sdk-core';
 export * from './attachment/';
 export { BacktraceClient } from './BacktraceClient';
 export { type BacktraceConfiguration } from './BacktraceConfiguration';

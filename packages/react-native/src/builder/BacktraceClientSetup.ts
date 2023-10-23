@@ -1,4 +1,4 @@
-import type { PartialCoreClientSetup } from '@backtrace-labs/sdk-core';
+import type { PartialCoreClientSetup } from '@backtrace/sdk-core';
 import type { BacktraceConfiguration } from '../BacktraceConfiguration';
 
 export interface BacktraceClientSetup

@@ -1,10 +1,10 @@
-import { BacktraceNodeClientSetup, BacktraceClientBuilder as NodeBacktraceClientBuilder } from '@backtrace-labs/node';
-import { BacktraceClient } from '../BacktraceClient';
+import { BacktraceClientBuilder as NodeBacktraceClientBuilder, BacktraceNodeClientSetup } from '@backtrace/node';
 import { AppAttributeProvider } from '../attributes/AppAttributeProvider';
 import { ApplicationInformationAttributeProvider } from '../attributes/ApplicationInformationAttributeProvider';
 import { GpuAttributeProvider } from '../attributes/GpuAttributeProvider';
 import { GpuFeatureAttributeProvider } from '../attributes/GpuFeatureAttributeProvider';
 import { ReadyAppAttributeProvider } from '../attributes/ReadyAppAttributeProvider';
+import { BacktraceClient } from '../BacktraceClient';
 
 export class BacktraceClientBuilder extends NodeBacktraceClientBuilder {
     constructor(clientSetup: BacktraceNodeClientSetup) {

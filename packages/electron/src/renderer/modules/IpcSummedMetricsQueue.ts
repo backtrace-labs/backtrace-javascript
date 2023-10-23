@@ -1,4 +1,4 @@
-import { MetricsQueue, SummedEvent } from '@backtrace-labs/sdk-core';
+import { MetricsQueue, SummedEvent } from '@backtrace/sdk-core';
 import { IpcRpc, IpcTransport } from '../../common';
 import { IpcEvents } from '../../common/ipc/IpcEvents';
 

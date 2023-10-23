@@ -1,4 +1,4 @@
-import { BacktraceClient, BreadcrumbLogLevel } from '@backtrace-labs/node';
+import { BacktraceClient, BreadcrumbLogLevel } from '@backtrace/node';
 import fs from 'fs';
 import path from 'path';
 import { exit } from 'process';
@@ -28,7 +28,7 @@ const client = BacktraceClient.initialize({
     },
 });
 
-console.log('Welcome to the @backtrace-labs/node demo');
+console.log('Welcome to the @backtrace/node demo');
 
 async function sendHandledException(attributes: Record<string, number>) {
     console.log('Sending an error to Backtrace');

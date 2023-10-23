@@ -1,4 +1,4 @@
-import { BacktraceReportSubmissionResult, BacktraceRequestHandler } from '@backtrace-labs/sdk-core';
+import { BacktraceReportSubmissionResult, BacktraceRequestHandler } from '@backtrace/sdk-core';
 import { IpcEvents } from '../../common/ipc/IpcEvents';
 import { IpcRpc } from '../../common/ipc/IpcRpc';
 

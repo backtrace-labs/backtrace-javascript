@@ -1,4 +1,4 @@
-import { BacktraceClient } from '@backtrace-labs/react-native';
+import { BacktraceClient } from '@backtrace/react-native';
 import { AppRegistry } from 'react-native';
 import App from './App';
 import { name as appName } from './app.json';

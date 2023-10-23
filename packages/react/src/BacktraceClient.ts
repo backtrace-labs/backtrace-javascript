@@ -1,9 +1,9 @@
 import {
+    BacktraceClient as BrowserClient,
     BacktraceClientSetup,
     BacktraceConfiguration,
-    BacktraceClient as BrowserClient,
     getStackTraceConverter,
-} from '@backtrace-labs/browser';
+} from '@backtrace/browser';
 import { AGENT } from './agentDefinition';
 import { BacktraceReactClientBuilder } from './builder/BacktraceReactClientBuilder';
 import { ReactStackTraceConverter } from './converters/ReactStackTraceConverter';

@@ -6,7 +6,7 @@ import {
     BacktraceSubmissionResponse,
     IdGenerator,
     jsonEscaper,
-} from '@backtrace-labs/sdk-core';
+} from '@backtrace/sdk-core';
 import { IpcTransport } from '../../common';
 import { IpcAttachmentReference } from '../../common/ipc/IpcAttachmentReference';
 import { IpcEvents } from '../../common/ipc/IpcEvents';

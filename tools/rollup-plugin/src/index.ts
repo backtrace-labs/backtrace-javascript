@@ -3,7 +3,7 @@ import {
     BacktracePluginOptions,
     matchSourceExtension,
     processAndUploadAssetsCommand,
-} from '@backtrace-labs/sourcemap-tools';
+} from '@backtrace/sourcemap-tools';
 import path from 'path';
 import { LogLevel, Plugin } from 'rollup';
 

@@ -3,7 +3,7 @@ import {
     BacktraceReport,
     BacktraceRequestHandler,
     BacktraceUint8ArrayAttachment,
-} from '@backtrace-labs/sdk-core';
+} from '@backtrace/sdk-core';
 import { BacktraceClient } from '../../src/';
 
 describe('Client tests', () => {

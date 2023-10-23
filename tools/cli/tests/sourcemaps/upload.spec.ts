@@ -1,4 +1,4 @@
-import { RawSourceMap, ZipArchive } from '@backtrace-labs/sourcemap-tools';
+import { RawSourceMap, ZipArchive } from '@backtrace/sourcemap-tools';
 import assert from 'assert';
 import { randomUUID } from 'crypto';
 import fs from 'fs';

@@ -1,4 +1,4 @@
-import { BacktraceBreadcrumbs } from '@backtrace-labs/sdk-core/src';
+import { BacktraceBreadcrumbs } from '@backtrace/sdk-core/src';
 import { Action, configureStore, createSlice, Middleware, PayloadAction } from '@reduxjs/toolkit';
 import { BacktraceClient } from '../../src/BacktraceClient';
 import { createBacktraceReduxMiddleware } from '../../src/redux/BacktraceReduxMiddleware';

@@ -1,8 +1,8 @@
-import { BacktraceClient } from '@backtrace-labs/node';
+import { BacktraceClient } from '@backtrace/node';
 import { CallHandler, ExecutionContext, HttpException, Injectable, NestInterceptor, Optional } from '@nestjs/common';
 import { HttpArgumentsHost, RpcArgumentsHost, WsArgumentsHost } from '@nestjs/common/interfaces';
 import { type Request as ExpressRequest } from 'express';
-import { Observable, catchError, throwError } from 'rxjs';
+import { catchError, Observable, throwError } from 'rxjs';
 
 type ExceptionTypeFilter = (new (...args: never[]) => unknown)[] | ((err: unknown) => boolean);
 

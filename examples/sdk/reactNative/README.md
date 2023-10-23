@@ -1,6 +1,6 @@
-# @Backtrace-labs/react-native demo
+# @backtrace/react-native demo
 
-This example app shows features available in the @backtrace-labs/react-native package.
+This example app shows features available in the @backtrace/react-native package.
 
 ## Running the Example
 

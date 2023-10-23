@@ -3,7 +3,7 @@ import {
     BreadcrumbLogLevel,
     BreadcrumbsEventSubscriber,
     BreadcrumbType,
-} from '@backtrace-labs/sdk-core';
+} from '@backtrace/sdk-core';
 
 export class HistoryEventSubscriber implements BreadcrumbsEventSubscriber {
     private _abortController = new AbortController();

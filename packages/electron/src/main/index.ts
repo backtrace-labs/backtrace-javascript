@@ -1,2 +1,2 @@
-export * from '@backtrace-labs/node';
+export * from '@backtrace/node';
 export { BacktraceClient } from './BacktraceClient';

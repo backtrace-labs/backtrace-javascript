@@ -1,10 +1,10 @@
-import { BacktraceCoreClientBuilder } from '@backtrace-labs/sdk-core';
-import { BacktraceClient } from '../BacktraceClient';
+import { BacktraceCoreClientBuilder } from '@backtrace/sdk-core';
 import { ApplicationInformationAttributeProvider } from '../attributes/ApplicationInformationAttributeProvider';
 import { UserAgentAttributeProvider } from '../attributes/UserAgentAttributeProvider';
 import { UserIdentifierAttributeProvider } from '../attributes/UserIdentifierAttributeProvider';
 import { WebsiteAttributeProvider } from '../attributes/WebsiteAttributeProvider';
 import { WindowAttributeProvider } from '../attributes/WindowAttributeProvider';
+import { BacktraceClient } from '../BacktraceClient';
 import { DocumentEventSubscriber } from '../breadcrumbs/DocumentEventSubscriber';
 import { HistoryEventSubscriber } from '../breadcrumbs/HistoryEventSubscriber';
 import { WebRequestEventSubscriber } from '../breadcrumbs/WebRequestEventSubscriber';

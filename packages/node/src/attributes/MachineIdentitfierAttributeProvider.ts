@@ -1,4 +1,4 @@
-import { BacktraceAttributeProvider, IdGenerator } from '@backtrace-labs/sdk-core';
+import { BacktraceAttributeProvider, IdGenerator } from '@backtrace/sdk-core';
 import { execSync } from 'child_process';
 import { getValue, HKEY } from 'native-reg';
 

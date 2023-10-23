@@ -1,4 +1,4 @@
-import { type AttributeType, type BacktraceAttributeProvider } from '@backtrace-labs/sdk-core';
+import { type AttributeType, type BacktraceAttributeProvider } from '@backtrace/sdk-core';
 import { NativeModules } from 'react-native';
 export class NativeAttributeProvider implements BacktraceAttributeProvider {
     private readonly _provider: { get(): Record<string, AttributeType> };
