@@ -1,4 +1,4 @@
-import { BacktraceCoreClientBuilder } from '@backtrace-labs/sdk-core';
+import { BacktraceCoreClientBuilder } from '@backtrace/sdk-core';
 import { IpcEvents } from '../common/ipc/IpcEvents';
 import { SyncData } from '../common/models/SyncData';
 import { getIpcRpc } from './ipc/getIpcRpc';
@@ -28,7 +28,7 @@ export function addBacktraceElectron<T extends BacktraceCoreClientBuilder>(
         .catch((err) =>
             console.error(
                 'Cannot connect to Backtrace in the main process.\n\n',
-                'Make sure to initialize @backtrace-labs/electron in the main process first.\n\n',
+                'Make sure to initialize @backtrace/electron in the main process first.\n\n',
                 err,
             ),
         );

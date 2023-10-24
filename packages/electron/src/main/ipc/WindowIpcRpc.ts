@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { IdGenerator } from '@backtrace-labs/sdk-core';
-import { BrowserWindow, IpcMainInvokeEvent, ipcMain } from 'electron';
+import { IdGenerator } from '@backtrace/sdk-core';
+import { BrowserWindow, ipcMain, IpcMainInvokeEvent } from 'electron';
 import { IpcRpc, SyncIpcRpcHandler } from '../../common/ipc/IpcRpc';
 
 export class WindowIpcRpc implements IpcRpc, SyncIpcRpcHandler {

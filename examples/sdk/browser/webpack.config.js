@@ -1,5 +1,5 @@
 const path = require('path');
-const { BacktracePlugin } = require('@backtrace-labs/webpack-plugin');
+const { BacktracePlugin } = require('@backtrace/webpack-plugin');
 const { webpackTypescriptConfig } = require('../../../build/common');
 
 /** @type {import('webpack').Configuration} */

@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-import { Err, R, pipe } from '@backtrace-labs/sourcemap-tools';
+import { Err, pipe, R } from '@backtrace/sourcemap-tools';
 import commandLineArgs from 'command-line-args';
 import { Command } from './commands/Command';
 import { loadVersion } from './helpers/version';
-import { CreateLoggerOptions, createLogger } from './logger';
+import { createLogger, CreateLoggerOptions } from './logger';
 import { DEFAULT_OPTIONS_FILENAME } from './options/loadOptions';
 import { addSourcesCmd } from './sourcemaps/add-sources';
 import { processCmd } from './sourcemaps/process';

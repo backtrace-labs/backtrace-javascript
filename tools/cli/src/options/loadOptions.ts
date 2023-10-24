@@ -1,4 +1,4 @@
-import { Err, Ok, pipe, R, readFile, ResultPromise } from '@backtrace-labs/sourcemap-tools';
+import { Err, Ok, pipe, R, readFile, ResultPromise } from '@backtrace/sourcemap-tools';
 import fs from 'fs';
 import path from 'path';
 import { parseJSONC } from '../helpers/jsonc';

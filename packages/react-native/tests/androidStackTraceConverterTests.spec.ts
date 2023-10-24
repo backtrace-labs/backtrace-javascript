@@ -1,4 +1,4 @@
-import { type BacktraceStackFrame } from '@backtrace-labs/sdk-core';
+import { type BacktraceStackFrame } from '@backtrace/sdk-core';
 import { fail } from 'assert';
 import { AndroidStackTraceConverter } from '../src/converters/AndroidStackTraceConverter';
 

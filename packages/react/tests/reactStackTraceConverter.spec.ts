@@ -1,4 +1,4 @@
-import { BacktraceStackTraceConverter, JavaScriptEngine } from '@backtrace-labs/browser';
+import { BacktraceStackTraceConverter, JavaScriptEngine } from '@backtrace/browser';
 import { ReactStackTraceConverter } from '../src/converters/ReactStackTraceConverter';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

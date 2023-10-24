@@ -1,4 +1,4 @@
-import { BacktraceClient } from '@backtrace-labs/react-native';
+import { BacktraceClient } from '@backtrace/react-native';
 import { Alert, Platform } from 'react-native';
 import { actions as androidActions } from './android/action';
 

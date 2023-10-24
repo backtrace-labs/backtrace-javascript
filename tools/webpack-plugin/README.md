@@ -1,5 +1,7 @@
-# @backtrace-labs/webpack-plugin
-If you're using Webpack as your project bundler, you can use `@backtrace-labs/webpack-plugin` to automate working with sourcemaps.
+# @backtrace/webpack-plugin
+
+If you're using Webpack as your project bundler, you can use `@backtrace/webpack-plugin` to automate working with
+sourcemaps.
 
 [(Source Map feature documentation)](https://docs.saucelabs.com/error-reporting/platform-integrations/source-map/)
 
@@ -9,37 +11,41 @@ Set `devtool` to `source-map` in your `webpack.config.js`:
 
 ```js
 module.exports = {
-  devtool: 'source-map',
-  // other configuration
-}
+    devtool: 'source-map',
+    // other configuration
+};
 ```
 
 If you're using code transpiler plugins (such as Typescript), ensure to enable `source-mapping` there as well.
 
-## Set up `@backtrace-labs/webpack-plugin`
+## Set up `@backtrace/webpack-plugin`
 
 ### Construct an upload URL
 
-A specific URL is required to upload source maps. Follow [these instructions](https://docs.saucelabs.com/error-reporting/project-setup/submission-url/) to create an upload URL for the `sourcemap` endpoint with a `symbol-post` token.
+A specific URL is required to upload source maps. Follow
+[these instructions](https://docs.saucelabs.com/error-reporting/project-setup/submission-url/) to create an upload URL
+for the `sourcemap` endpoint with a `symbol-post` token.
 
-### Install `@backtrace-labs/webpack-plugin` as a developer dependency:
+### Install `@backtrace/webpack-plugin` as a developer dependency:
 
 ```bash
-> npm install --save-dev @backtrace-labs/webpack-plugin
+> npm install --save-dev @backtrace/webpack-plugin
 ```
 
 ### Add it to your `plugins` array in `webpack.config.js`:
 
 ```js
-import { BacktracePlugin } from '@backtrace-labs/webpack-plugin';
+import { BacktracePlugin } from '@backtrace/webpack-plugin';
 // or
-const { BacktracePlugin } = require('@backtrace-labs/webpack-plugin');
+const { BacktracePlugin } = require('@backtrace/webpack-plugin');
 
 module.exports = {
-  // other configuration
-  plugins: [new BacktracePlugin({
-    // enable upload only on production builds
-    uploadUrl: process.env.NODE_ENV === "production" ? "<your upload URL>" : undefined
-  })]
-}
+    // other configuration
+    plugins: [
+        new BacktracePlugin({
+            // enable upload only on production builds
+            uploadUrl: process.env.NODE_ENV === 'production' ? '<your upload URL>' : undefined,
+        }),
+    ],
+};
 ```

@@ -1,4 +1,4 @@
-import { FileFinder, log, pipe } from '@backtrace-labs/sourcemap-tools';
+import { FileFinder, log, pipe } from '@backtrace/sourcemap-tools';
 import fs from 'fs';
 import { glob } from 'glob';
 import path from 'path';

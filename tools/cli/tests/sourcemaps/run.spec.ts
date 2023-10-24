@@ -1,4 +1,4 @@
-import { Ok } from '@backtrace-labs/sourcemap-tools';
+import { Ok } from '@backtrace/sourcemap-tools';
 import assert from 'assert';
 import { randomUUID } from 'crypto';
 import fs from 'fs';

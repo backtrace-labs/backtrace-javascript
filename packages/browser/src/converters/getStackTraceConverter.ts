@@ -1,4 +1,4 @@
-import { BacktraceStackTraceConverter, V8StackTraceConverter } from '@backtrace-labs/sdk-core';
+import { BacktraceStackTraceConverter, V8StackTraceConverter } from '@backtrace/sdk-core';
 import { getEngine } from '../engineDetector';
 import { JavaScriptCoreStackTraceConverter } from './JavaScriptCoreStackTraceConverter';
 import { SpiderMonkeyStackTraceConverter } from './SpiderMonkeyStackTraceConverter';

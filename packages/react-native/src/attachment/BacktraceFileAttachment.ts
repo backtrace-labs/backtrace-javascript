@@ -1,4 +1,4 @@
-import { type BacktraceFileAttachment as CoreBacktraceFileAttachment } from '@backtrace-labs/sdk-core';
+import { type BacktraceFileAttachment as CoreBacktraceFileAttachment } from '@backtrace/sdk-core';
 import { Platform } from 'react-native';
 import { type FileSystem } from '../storage/';
 import { type FileLocation } from '../types/FileLocation';

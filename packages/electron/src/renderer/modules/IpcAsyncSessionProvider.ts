@@ -1,4 +1,4 @@
-import { BacktraceSessionProvider, IdGenerator } from '@backtrace-labs/sdk-core';
+import { BacktraceSessionProvider, IdGenerator } from '@backtrace/sdk-core';
 import { IpcTransport } from '../../common';
 import { IpcEvents } from '../../common/ipc/IpcEvents';
 import { SyncData } from '../../common/models/SyncData';

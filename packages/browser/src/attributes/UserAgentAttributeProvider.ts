@@ -1,4 +1,4 @@
-import { BacktraceAttributeProvider } from '@backtrace-labs/sdk-core';
+import { BacktraceAttributeProvider } from '@backtrace/sdk-core';
 import UAParser from 'ua-parser-js';
 
 export class UserAgentAttributeProvider implements BacktraceAttributeProvider {

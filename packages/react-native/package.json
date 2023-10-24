@@ -1,5 +1,5 @@
 {
-    "name": "@backtrace-labs/react-native",
+    "name": "@backtrace/react-native",
     "version": "0.0.1",
     "description": "Backtrace-Javascript React-Native integration",
     "main": "lib/commonjs/index",
@@ -90,7 +90,7 @@
         "typescript": "^5.0.2"
     },
     "dependencies": {
-        "@backtrace-labs/react": "^0.0.5",
-        "@backtrace-labs/sdk-core": "^0.0.7"
+        "@backtrace/react": "^0.1.0",
+        "@backtrace/sdk-core": "^0.1.0"
     }
 }

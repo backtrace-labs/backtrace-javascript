@@ -1,10 +1,10 @@
-import { BacktraceClient, BacktraceStringAttachment, createBacktraceReduxMiddleware } from '@backtrace-labs/browser';
+import { BacktraceClient, BacktraceStringAttachment, createBacktraceReduxMiddleware } from '@backtrace/browser';
 import { configureStore, createSlice } from '@reduxjs/toolkit';
 import { SUBMISSION_URL } from './consts';
 
 const client = BacktraceClient.initialize({
     url: SUBMISSION_URL,
-    name: '@backtrace-labs/browser-example',
+    name: '@backtrace/browser-example',
     version: '0.0.1',
     userAttributes: {
         'custom-attribute': 'test',

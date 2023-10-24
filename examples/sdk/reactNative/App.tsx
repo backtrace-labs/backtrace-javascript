@@ -1,4 +1,4 @@
-import { BacktraceClient } from '@backtrace-labs/react-native';
+import { BacktraceClient } from '@backtrace/react-native';
 import { Alert, FlatList, Image, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { generateActions } from './src/actions/actions';
 import { CustomizableButton } from './src/components/CustomizableButton';

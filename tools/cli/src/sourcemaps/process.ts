@@ -19,7 +19,7 @@ import {
     R,
     SourceAndSourceMap,
     SourceProcessor,
-} from '@backtrace-labs/sourcemap-tools';
+} from '@backtrace/sourcemap-tools';
 import path from 'path';
 import { GlobalOptions } from '..';
 import { Command, CommandContext } from '../commands/Command';

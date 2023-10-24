@@ -1,4 +1,4 @@
-import { BacktraceReport } from '@backtrace-labs/sdk-core';
+import { BacktraceReport } from '@backtrace/sdk-core';
 import { NativeModules } from 'react-native';
 import { BacktraceClient } from '../../BacktraceClient';
 import { DebuggerHelper } from '../../common/DebuggerHelper';

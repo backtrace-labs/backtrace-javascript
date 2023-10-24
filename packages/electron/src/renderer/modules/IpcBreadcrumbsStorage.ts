@@ -1,4 +1,4 @@
-import { BacktraceAttachment, BreadcrumbsStorage, RawBreadcrumb } from '@backtrace-labs/sdk-core';
+import { BacktraceAttachment, BreadcrumbsStorage, RawBreadcrumb } from '@backtrace/sdk-core';
 import { IpcTransport } from '../../common';
 import { IpcEvents } from '../../common/ipc/IpcEvents';
 

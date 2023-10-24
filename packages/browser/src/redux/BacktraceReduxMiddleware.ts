@@ -1,6 +1,6 @@
-import type { Middleware, Action } from 'redux';
+import { jsonEscaper } from '@backtrace/sdk-core';
+import type { Action, Middleware } from 'redux';
 import { BacktraceClient } from '../BacktraceClient';
-import { jsonEscaper } from '@backtrace-labs/sdk-core';
 
 /**
  *

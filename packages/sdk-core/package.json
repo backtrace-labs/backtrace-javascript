@@ -1,6 +1,6 @@
 {
-    "name": "@backtrace-labs/sdk-core",
-    "version": "0.0.7",
+    "name": "@backtrace/sdk-core",
+    "version": "0.1.0",
     "description": "Backtrace-JavaScript SDK core library",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",

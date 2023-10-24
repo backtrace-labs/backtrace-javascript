@@ -1,5 +1,6 @@
-# @backtrace-labs/vite-plugin
-If you're using Vite as your project bundler, you can use `@backtrace-labs/vite-plugin` to automate working with sourcemaps.
+# @backtrace/vite-plugin
+
+If you're using Vite as your project bundler, you can use `@backtrace/vite-plugin` to automate working with sourcemaps.
 
 [(Source Map feature documentation)](https://docs.saucelabs.com/error-reporting/platform-integrations/source-map/)
 
@@ -9,38 +10,42 @@ Set `sourcemap` in `output` to `true` in your `vite.config.js`:
 
 ```js
 module.exports = {
-  build: {
-    sourcemap: true
-  }
-}
+    build: {
+        sourcemap: true,
+    },
+};
 ```
 
 If you're using code transpiler plugins (such as Typescript), ensure to enable source-mapping there as well.
 
-## Set up `@backtrace-labs/vite-plugin`
+## Set up `@backtrace/vite-plugin`
 
 ### Construct an upload URL
 
-A specific URL is required to upload source maps. Follow [these instructions](https://docs.saucelabs.com/error-reporting/project-setup/submission-url/) to create an upload URL for the `sourcemap` endpoint with a `symbol-post` token.
+A specific URL is required to upload source maps. Follow
+[these instructions](https://docs.saucelabs.com/error-reporting/project-setup/submission-url/) to create an upload URL
+for the `sourcemap` endpoint with a `symbol-post` token.
 
-### Install `@backtrace-labs/vite-plugin` as a developer dependency:
+### Install `@backtrace/vite-plugin` as a developer dependency:
 
 ```bash
-> npm install --save-dev @backtrace-labs/vite-plugin
+> npm install --save-dev @backtrace/vite-plugin
 ```
 
 ### Add it to your `plugins` array in `vite.config.js`:
 
 ```js
-import { BacktracePlugin } from '@backtrace-labs/vite-plugin';
+import { BacktracePlugin } from '@backtrace/vite-plugin';
 // or
-const { BacktracePlugin } = require('@backtrace-labs/vite-plugin');
+const { BacktracePlugin } = require('@backtrace/vite-plugin');
 
 module.exports = {
-  // other configuration
-  plugins: [new BacktracePlugin({
-    // enable upload only on production builds
-    uploadUrl: process.env.NODE_ENV === "production" ? "<your upload URL>" : undefined
-  })]
-}
+    // other configuration
+    plugins: [
+        new BacktracePlugin({
+            // enable upload only on production builds
+            uploadUrl: process.env.NODE_ENV === 'production' ? '<your upload URL>' : undefined,
+        }),
+    ],
+};
 ```

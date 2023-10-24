@@ -1,4 +1,4 @@
-import { BacktraceAttributeProvider } from '@backtrace-labs/sdk-core';
+import { BacktraceAttributeProvider } from '@backtrace/sdk-core';
 
 export class WindowAttributeProvider implements BacktraceAttributeProvider {
     public get type(): 'scoped' | 'dynamic' {

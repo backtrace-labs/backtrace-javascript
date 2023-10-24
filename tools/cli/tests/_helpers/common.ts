@@ -1,4 +1,4 @@
-import { Ok, Result, SymbolUploader, UploadResult } from '@backtrace-labs/sourcemap-tools';
+import { Ok, Result, SymbolUploader, UploadResult } from '@backtrace/sourcemap-tools';
 import { Transform } from 'stream';
 
 export function getHelpMessage() {

@@ -1,4 +1,4 @@
-import { SdkOptions } from '@backtrace-labs/sdk-core/lib/builder/SdkOptions';
+import { SdkOptions } from '@backtrace/sdk-core/lib/builder/SdkOptions';
 
 // These variables will be set on compilation stage
 declare const BACKTRACE_AGENT_NAME: string;

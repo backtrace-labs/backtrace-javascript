@@ -1,4 +1,4 @@
-import { type BacktraceStackFrame } from '@backtrace-labs/sdk-core';
+import { type BacktraceStackFrame } from '@backtrace/sdk-core';
 
 export class AndroidStackTraceConverter {
     public readonly NativeLibraryName = 'Native';

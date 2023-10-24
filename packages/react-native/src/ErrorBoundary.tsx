@@ -1,4 +1,4 @@
-import { BacktraceReport } from '@backtrace-labs/sdk-core';
+import { BacktraceReport } from '@backtrace/sdk-core';
 import { Component, isValidElement, type ErrorInfo, type ReactElement, type ReactNode } from 'react';
 import { BacktraceClient } from './BacktraceClient';
 

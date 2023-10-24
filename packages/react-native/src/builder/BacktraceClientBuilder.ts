@@ -1,4 +1,4 @@
-import { BacktraceCoreClientBuilder } from '@backtrace-labs/sdk-core';
+import { BacktraceCoreClientBuilder } from '@backtrace/sdk-core';
 import { Platform } from 'react-native';
 import { NativeAttributeProvider } from '../attributes/NativeAttributeProvider';
 import { ReactNativeAttributeProvider } from '../attributes/ReactNativeAttributeProvider';

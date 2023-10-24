@@ -1,5 +1,5 @@
 {
-    "name": "@backtrace-labs/browser-example",
+    "name": "@backtrace/browser-example",
     "version": "1.0.0",
     "description": "Backtrace-JavaScript web browser integration",
     "main": "lib/index.js",
@@ -41,6 +41,6 @@
     },
     "dependencies": {
         "@reduxjs/toolkit": "^1.9.5",
-        "@backtrace-labs/browser": "^0.0.5"
+        "@backtrace/browser": "^0.1.0"
     }
 }

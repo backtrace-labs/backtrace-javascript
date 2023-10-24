@@ -1,4 +1,4 @@
-import { BacktraceAttachment } from '@backtrace-labs/sdk-core';
+import { BacktraceAttachment } from '@backtrace/sdk-core';
 import { Readable } from 'stream';
 import { BacktraceSetupConfiguration } from '../BacktraceConfiguration';
 import { BacktraceFileAttachment } from './BacktraceFileAttachment';

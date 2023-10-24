@@ -1,5 +1,5 @@
-import { BacktraceClient, BacktraceStringAttachment } from '@backtrace-labs/browser';
-import { addBacktraceElectron } from '@backtrace-labs/electron/renderer';
+import { BacktraceClient, BacktraceStringAttachment } from '@backtrace/browser';
+import { addBacktraceElectron } from '@backtrace/electron/renderer';
 import { Events, MainApi } from '../common/MainApi';
 
 declare global {
@@ -13,7 +13,7 @@ const mainApi = window.mainApi;
 const client = BacktraceClient.initialize(
     {
         url: 'none',
-        name: '@backtrace-labs/electron-renderer',
+        name: '@backtrace/electron-renderer',
         version: '0.0.1',
         userAttributes: {
             'custom-attribute': 'test',

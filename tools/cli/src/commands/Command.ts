@@ -1,7 +1,7 @@
-import { Err, Ok, Result } from '@backtrace-labs/sourcemap-tools';
+import { Err, Ok, Result } from '@backtrace/sourcemap-tools';
 import commandLineArgs from 'command-line-args';
 import commandLineUsage, { Section } from 'command-line-usage';
-import { CliLogger, CreateLoggerOptions, createLogger } from '../logger';
+import { CliLogger, createLogger, CreateLoggerOptions } from '../logger';
 import { CommandError } from '../models/CommandError';
 import { ExtendedOptionDefinition } from '../models/OptionDefinition';
 

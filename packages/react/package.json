@@ -1,6 +1,6 @@
 {
-    "name": "@backtrace-labs/react",
-    "version": "0.0.5",
+    "name": "@backtrace/react",
+    "version": "0.1.0",
     "description": "Backtrace-Javascript React integration",
     "main": "lib/index.js",
     "scripts": {
@@ -47,8 +47,8 @@
         "webpack-cli": "^5.1.4"
     },
     "dependencies": {
-        "@backtrace-labs/browser": "^0.0.5",
-        "@backtrace-labs/sdk-core": "^0.0.7"
+        "@backtrace/browser": "^0.1.0",
+        "@backtrace/sdk-core": "^0.1.0"
     },
     "peerDependencies": {
         "react": ">=16.8.0"

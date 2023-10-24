@@ -1,5 +1,4 @@
-import { BacktraceCoreClientBuilder } from '@backtrace-labs/sdk-core';
-import { BacktraceClient } from '../BacktraceClient';
+import { BacktraceCoreClientBuilder } from '@backtrace/sdk-core';
 import { transformAttachment } from '../attachment/transformAttachments';
 import {
     ApplicationInformationAttributeProvider,
@@ -9,6 +8,7 @@ import {
     ProcessInformationAttributeProvider,
     ProcessStatusAttributeProvider,
 } from '../attributes';
+import { BacktraceClient } from '../BacktraceClient';
 import { BacktraceClientSetup, BacktraceNodeClientSetup } from './BacktraceClientSetup';
 
 export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<BacktraceClientSetup> {

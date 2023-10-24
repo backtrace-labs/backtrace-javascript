@@ -1,4 +1,4 @@
-import { type BacktraceAttributeProvider } from '@backtrace-labs/sdk-core';
+import { type BacktraceAttributeProvider } from '@backtrace/sdk-core';
 import { Platform } from 'react-native';
 import { hermes } from '../common/hermesHelper';
 

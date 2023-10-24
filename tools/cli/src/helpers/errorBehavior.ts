@@ -1,4 +1,4 @@
-import { Err, Ok, Result, ResultErr } from '@backtrace-labs/sourcemap-tools';
+import { Err, Ok, Result, ResultErr } from '@backtrace/sourcemap-tools';
 
 export const ErrorBehaviors = {
     exit: 'exit',

@@ -1,4 +1,4 @@
-import { MetricsQueue } from '@backtrace-labs/sdk-core';
+import { MetricsQueue } from '@backtrace/sdk-core';
 
 export class StubMetricsQueue<T> implements MetricsQueue<T> {
     public readonly total = 0;

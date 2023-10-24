@@ -1,4 +1,4 @@
-import { R, parseJSON, pipe, readFile } from '@backtrace-labs/sourcemap-tools';
+import { parseJSON, pipe, R, readFile } from '@backtrace/sourcemap-tools';
 import path from 'path';
 
 interface PackageJson {

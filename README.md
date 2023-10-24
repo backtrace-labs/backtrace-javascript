@@ -8,17 +8,23 @@
 
 # Sauce Labs Web SDK
 
-Backtrace's first-class support for JavaScript platforms offers a robust solution for error monitoring and debugging in production web applications, ultimately improving the quality and reliability of your software.
+Backtrace's first-class support for JavaScript platforms offers a robust solution for error monitoring and debugging in
+production web applications, ultimately improving the quality and reliability of your software.
 
 ## Supported JavaScript frameworks
-The @backtrace-labs/browser is suitable for all JavaScript frameworks. Additional integrations are provided to take advantage of the capabilities of different frameworks.
-- [@backtrace-labs/browser](https://github.com/backtrace-labs/backtrace-javascript/tree/dev/packages/browser)
-- [@backtrace-labs/node](https://github.com/backtrace-labs/backtrace-javascript/tree/dev/packages/browser)
-- [@backtrace-labs/react](https://github.com/backtrace-labs/backtrace-javascript/tree/dev/packages/browser)
+
+The @backtrace/browser is suitable for all JavaScript frameworks. Additional integrations are provided to take advantage
+of the capabilities of different frameworks.
+
+-   [@backtrace/browser](https://github.com/backtrace-labs/backtrace-javascript/tree/dev/packages/browser)
+-   [@backtrace/node](https://github.com/backtrace-labs/backtrace-javascript/tree/dev/packages/browser)
+-   [@backtrace/react](https://github.com/backtrace-labs/backtrace-javascript/tree/dev/packages/browser)
 
 ## Web SDK Features
 
-Backtrace is an advanced Error Reporting service, with industry-leading features to correlate, explore, manage and resolve production issues. The Backtrace Web SDK directly connects your applications to those advanced features. These SDKs specifically provide the following:
+Backtrace is an advanced Error Reporting service, with industry-leading features to correlate, explore, manage and
+resolve production issues. The Backtrace Web SDK directly connects your applications to those advanced features. These
+SDKs specifically provide the following:
 
 <table>
 <tr>
@@ -41,6 +47,7 @@ Backtrace is an advanced Error Reporting service, with industry-leading features
 <td>The SDK provides accurate information about the browser and OS by default, including additional attributes specific to each Javascript framework.
 
 You can also add dynamic attributes resolved every time when the library generates a report.</td>
+
 </tr>
 <tr>
 <td>Application Stability Metrics</td>

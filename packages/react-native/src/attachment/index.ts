@@ -1,2 +1,2 @@
-export { BacktraceStringAttachment, BacktraceUint8ArrayAttachment } from '@backtrace-labs/sdk-core';
+export { BacktraceStringAttachment, BacktraceUint8ArrayAttachment } from '@backtrace/sdk-core';
 export * from './BacktraceFileAttachment';

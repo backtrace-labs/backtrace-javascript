@@ -1,4 +1,4 @@
-import { BacktraceAttachment, BacktraceConfiguration as CoreConfiguration } from '@backtrace-labs/sdk-core';
+import { BacktraceAttachment, BacktraceConfiguration as CoreConfiguration } from '@backtrace/sdk-core';
 
 export interface BacktraceConfiguration extends CoreConfiguration {
     /**

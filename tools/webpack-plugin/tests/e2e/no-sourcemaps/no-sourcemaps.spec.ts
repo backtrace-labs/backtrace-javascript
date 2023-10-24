@@ -1,4 +1,4 @@
-import { SourceProcessor } from '@backtrace-labs/sourcemap-tools';
+import { SourceProcessor } from '@backtrace/sourcemap-tools';
 import path from 'path';
 import { asyncWebpack, expectSuccess, getBaseConfig, removeDir, webpackModeTest } from '../helpers';
 

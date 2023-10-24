@@ -1,4 +1,4 @@
-import { BacktraceBrowserRequestHandler, ReactStackTraceConverter } from '@backtrace-labs/react';
+import { BacktraceBrowserRequestHandler, ReactStackTraceConverter } from '@backtrace/react';
 import {
     BacktraceCoreClient,
     BreadcrumbsManager,
@@ -8,7 +8,7 @@ import {
     VariableDebugIdMapProvider,
     type AttributeType,
     type DebugIdContainer,
-} from '@backtrace-labs/sdk-core';
+} from '@backtrace/sdk-core';
 import { NativeModules, Platform } from 'react-native';
 import { type BacktraceConfiguration } from './BacktraceConfiguration';
 import { FileBreadcrumbsStorage } from './breadcrumbs/FileBreadcrumbsStorage';

@@ -1,4 +1,4 @@
-import { BacktraceReportSubmissionResult } from '@backtrace-labs/sdk-core';
+import { BacktraceReportSubmissionResult } from '@backtrace/sdk-core';
 import { Controller, Get, UseInterceptors } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { Test } from '@nestjs/testing';

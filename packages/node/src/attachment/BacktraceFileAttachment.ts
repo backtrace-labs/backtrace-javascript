@@ -1,4 +1,4 @@
-import { BacktraceFileAttachment as CoreBacktraceFileAttachment } from '@backtrace-labs/sdk-core';
+import { BacktraceFileAttachment as CoreBacktraceFileAttachment } from '@backtrace/sdk-core';
 import fs from 'fs';
 import path from 'path';
 import { Readable } from 'stream';

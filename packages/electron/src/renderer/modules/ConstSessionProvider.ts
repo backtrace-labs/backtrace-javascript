@@ -1,4 +1,4 @@
-import { BacktraceSessionProvider } from '@backtrace-labs/sdk-core';
+import { BacktraceSessionProvider } from '@backtrace/sdk-core';
 
 export class ConstSessionProvider implements BacktraceSessionProvider {
     public readonly newSession = true;
