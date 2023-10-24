@@ -3,7 +3,7 @@
 [Backtrace](https://backtrace.io) captures and reports handled and unhandled exceptions in your production software so
 you can manage application quality through the complete product lifecycle.
 
-The [@backtrace-labs/electron](#) SDK connects your JavaScript application to Backtrace. The basic integration is quick
+The [@backtrace/electron](#) SDK connects your JavaScript application to Backtrace. The basic integration is quick
 and easy, after which you can explore the rich set of Backtrace features.
 
 ## Table of Contents
@@ -35,7 +35,7 @@ and easy, after which you can explore the rich set of Backtrace features.
 ### Install the package
 
 ```
-$ npm install @backtrace-labs/electron
+$ npm install @backtrace/electron
 ```
 
 ### Integrate the SDK in the main process
@@ -43,8 +43,8 @@ $ npm install @backtrace-labs/electron
 Add the following code to your application before all other scripts to report Electron errors to Backtrace.
 
 ```ts
-// Import the BacktraceClient from @backtrace-labs/electron with your favorite package manager.
-import { BacktraceClient, BacktraceConfiguration } from '@backtrace-labs/electron';
+// Import the BacktraceClient from @backtrace/electron with your favorite package manager.
+import { BacktraceClient, BacktraceConfiguration } from '@backtrace/electron';
 
 // Configure client options
 const options: BacktraceConfiguration = {
@@ -65,11 +65,11 @@ client.send(new Error('Something broke!'));
 
 ### Integrate the SDK in the renderer process
 
-You can use any browser based Backtrace SDK in your renderer process, such as `@backtrace-labs/browser` or
-`@backtrace-labs/react`. Make sure to install it aside `@backtrace-labs/electron`:
+You can use any browser based Backtrace SDK in your renderer process, such as `@backtrace/browser` or
+`@backtrace/react`. Make sure to install it aside `@backtrace/electron`:
 
 ```
-$ npm install @backtrace-labs/react
+$ npm install @backtrace/react
 ```
 
 To add Backtrace to the renderer process with Electron IPC support, you need to use a
@@ -77,7 +77,7 @@ To add Backtrace to the renderer process with Electron IPC support, you need to 
 have one, add this import to it:
 
 ```ts
-import '@backtrace-labs/electron/main/preload';
+import '@backtrace/electron/main/preload';
 ```
 
 This will ensure that IPC APIs that Backtrace uses are loaded correctly.
@@ -243,8 +243,8 @@ BacktraceClient, or dynamically for specific reports. When including attachments
 uploaded with each report.
 
 ```ts
-// Import attachment types from @backtrace-labs/electron
-import { BacktraceStringAttachment, BacktraceUint8ArrayAttachment, BacktraceFileAttachment } from "@backtrace-labs/electron";
+// Import attachment types from @backtrace/electron
+import { BacktraceStringAttachment, BacktraceUint8ArrayAttachment, BacktraceFileAttachment } from "@backtrace/electron";
 
 // BacktraceStringAttachment should be used for text object like a log file, for example
 const stringAttachment = new BacktraceStringAttachment("logfile.txt", "This is the start of my log")
@@ -297,7 +297,7 @@ and manual breadcrumbs can also be added.
 | `intercept`          | (breadcrumb: RawBreadcrumb) => RawBreadcrumb \| undefined; | Inspects breadcrumb and allows to modify it. If the undefined value is being returned from the method, no breadcrumb will be added to the breadcrumb storage. | All Breadcrumbs | <ul><li>- [ ] </li></ul> |
 
 ```ts
-import { BacktraceClient, BacktraceConfiguration } from '@backtrace-labs/electron';
+import { BacktraceClient, BacktraceConfiguration } from '@backtrace/electron';
 
 // BacktraceClientOptions
 const options: BacktraceConfiguration = {
