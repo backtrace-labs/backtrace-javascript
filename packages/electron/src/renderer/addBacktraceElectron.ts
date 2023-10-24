@@ -18,7 +18,7 @@ export interface AddBacktraceElectronOptions {
      * This can help with startup crashes not having the whole information, like session ID.
      *
      * **If Backtrace is not fully initialized on the main process, your application may hang with a white screen**.
-     * 
+     *
      * @default false
      */
     readonly synchronous?: boolean;
