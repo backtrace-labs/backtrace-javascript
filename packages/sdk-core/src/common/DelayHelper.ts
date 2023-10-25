@@ -1,3 +1,5 @@
+import { AbortError } from './AbortError';
+
 export class Delay {
     /**
      * Promise set timeout wrapper.
@@ -6,12 +8,17 @@ export class Delay {
      */
     public static wait(timeout: number, signal?: AbortSignal) {
         return new Promise<void>((resolve, reject) => {
+            let intervalId: NodeJS.Timeout | undefined;
             function abortCallback() {
                 clearTimeout(intervalId);
-                reject(new Error('Operation cancelled.'));
+                reject(new AbortError());
             }
 
-            const intervalId = setTimeout(() => {
+            if (signal?.aborted) {
+                return abortCallback();
+            }
+
+            intervalId = setTimeout(() => {
                 signal?.removeEventListener('abort', abortCallback);
                 resolve();
             }, timeout);
