@@ -14,6 +14,7 @@ export interface BacktraceRequestHandler {
         submissionUrl: string,
         dataJson: string,
         attachments: BacktraceAttachment[],
+        abort?: AbortSignal,
     ): Promise<BacktraceReportSubmissionResult<BacktraceSubmissionResponse>>;
 
     /**
@@ -21,5 +22,5 @@ export interface BacktraceRequestHandler {
      * @param submissionUrl data submission URL
      * @param payload request payload
      */
-    post<T>(submissionUrl: string, payload: string): Promise<BacktraceReportSubmissionResult<T>>;
+    post<T>(submissionUrl: string, payload: string, abort?: AbortSignal): Promise<BacktraceReportSubmissionResult<T>>;
 }

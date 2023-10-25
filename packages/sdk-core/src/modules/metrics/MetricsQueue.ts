@@ -3,5 +3,6 @@ export interface MetricsQueue<T> {
     readonly submissionUrl: string;
     readonly maximumEvents: number;
     add(event: T): void;
-    send(): Promise<void>;
+    send(abortSignal?: AbortSignal): Promise<void>;
+    dispose?(): void;
 }

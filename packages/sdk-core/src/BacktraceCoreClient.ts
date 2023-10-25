@@ -268,6 +268,7 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
         error: Error | string,
         attributes?: Record<string, unknown>,
         attachments?: BacktraceAttachment[],
+        abortSignal?: AbortSignal,
     ): Promise<void>;
     /**
      * Asynchronously sends error data to Backtrace
