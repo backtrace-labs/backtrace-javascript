@@ -8,7 +8,11 @@ export class Delay {
      */
     public static wait(timeout: number, signal?: AbortSignal) {
         return new Promise<void>((resolve, reject) => {
+            // intervalId has to be defined here,
+            // as abortCallback can execute before setTimeout is executed
+            // eslint-disable-next-line prefer-const
             let intervalId: NodeJS.Timeout | undefined;
+
             function abortCallback() {
                 clearTimeout(intervalId);
                 reject(new AbortError());

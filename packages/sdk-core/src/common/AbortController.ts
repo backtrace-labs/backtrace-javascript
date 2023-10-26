@@ -1,10 +1,11 @@
 import { Events } from './Events';
 
 class PolyfillAbortSignal implements AbortSignal {
-    private readonly _listeners: [EventListenerOrEventListenerObject, (ev: AbortSignalEventMap['abort']) => any][] = [];
+    private readonly _listeners: [EventListenerOrEventListenerObject, (ev: AbortSignalEventMap['abort']) => unknown][] =
+        [];
     private readonly _events = new Events();
     private _aborted = false;
-    private _reason: any = undefined;
+    private _reason: unknown = undefined;
 
     public get aborted() {
         return this._aborted;
@@ -14,7 +15,7 @@ class PolyfillAbortSignal implements AbortSignal {
         return this._reason;
     }
 
-    public onabort: ((this: AbortSignal, ev: Event) => any) | null = null;
+    public onabort: ((this: AbortSignal, ev: Event) => unknown) | null = null;
 
     public throwIfAborted(): void {
         throw new Error('Method not implemented.');
@@ -61,7 +62,7 @@ class PolyfillAbortSignal implements AbortSignal {
         return this._events.emit('abort', event);
     }
 
-    public _abort(reason: any) {
+    public _abort(reason: unknown) {
         const ev = new Event('abort');
         this._aborted = true;
         this._reason = reason;
@@ -80,9 +81,7 @@ class PolyfillAbortController implements AbortController {
 
     private readonly _signal: PolyfillAbortSignal;
 
-    abort(reason?: any): void;
-    abort(reason?: any): void;
-    abort(reason?: unknown): void {
+    public abort(reason?: unknown): void {
         this._signal._abort(reason);
     }
 
