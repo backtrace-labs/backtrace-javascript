@@ -28,6 +28,6 @@ export class WindowAttributeProvider implements BacktraceAttributeProvider {
             return {};
         }
 
-        return flatten(getBasicBrowserWindowAttributes(this._window), `electron.window.${key ?? this._window.id}`);
+        return flatten(getBasicBrowserWindowAttributes(this._window), `window.${key ?? this._window.id}`);
     }
 }

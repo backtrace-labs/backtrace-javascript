@@ -7,11 +7,11 @@ export class AllWindowsAttributeProvider implements BacktraceAttributeProvider {
 
     public get(): Record<string, unknown> {
         const result = {
-            'electron.windows': {} as Record<string, unknown>,
+            windows: {} as Record<string, unknown>,
         };
 
         for (const window of BrowserWindow.getAllWindows()) {
-            result['electron.windows'][window.id] = getBrowserWindowAttributes(window);
+            result.windows[window.id] = getBrowserWindowAttributes(window);
         }
 
         return result;

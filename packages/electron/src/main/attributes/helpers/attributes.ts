@@ -5,7 +5,7 @@ export function getBrowserWindowAttributes(
     visited = new Set<number>(),
 ): Record<string, unknown> {
     if (visited.has(window.id)) {
-        return getRef('windowId', window.id);
+        return getRef('id', window.id);
     }
 
     visited.add(window.id);
@@ -23,64 +23,32 @@ export function getBrowserWindowAttributes(
             ...basic.webContents,
 
             mainFrame: getWebFrameAttributes(window.webContents.mainFrame),
+            opener: window.webContents.opener ? getRef('id', window.webContents.opener.frameTreeNodeId) : null,
         },
     };
 }
 
 export function getBasicBrowserWindowAttributes(window: BrowserWindow) {
-    const parent = window.getParentWindow();
-
     return {
-        accessibleTitle: window.accessibleTitle,
-        autoHideMenuBar: window.autoHideMenuBar,
-        closable: window.closable,
-        documentEdited: window.documentEdited,
-        excludedFromShownWindowsMenu: window.excludedFromShownWindowsMenu,
-        focusable: window.focusable,
-        fullScreen: window.fullScreen,
-        fullScreenable: window.fullScreenable,
         id: window.id,
+        documentEdited: window.documentEdited,
+        fullScreen: window.fullScreen,
         kiosk: window.kiosk,
-        maximizable: window.maximizable,
-        menuBarVisible: window.menuBarVisible,
-        minimizable: window.minimizable,
-        movable: window.movable,
-        representedFilename: window.representedFilename,
-        resizable: window.resizable,
-        shadow: window.shadow,
         simpleFullScreen: window.simpleFullScreen,
         title: window.title,
         visibleOnAllWorkspaces: window.visibleOnAllWorkspaces,
 
-        isAlwaysOnTop: window.isAlwaysOnTop(),
-        isEnabled: window.isEnabled(),
-        isFocused: window.isFocused(),
-        isHiddenInMissionControl: window.isHiddenInMissionControl(),
-        isMaximized: window.isMaximized(),
-        isMenuBarAutoHide: window.isMenuBarAutoHide(),
-        isMinimized: window.isMinimized(),
-        isModal: window.isModal(),
-        isNormal: window.isNormal(),
-        isSimpleFullScreen: window.isSimpleFullScreen(),
-        isTabletMode: window.isTabletMode(),
-        isVisible: window.isVisible(),
-        isVisibleOnAllWorkspaces: window.isVisibleOnAllWorkspaces(),
-
-        backgroundColor: window.getBackgroundColor(),
         bounds: window.getBounds(),
         contentBounds: window.getContentBounds(),
-        contentSize: window.getContentSize(),
-        maximumSize: window.getMaximumSize(),
+        ...point('contentSize', window.getContentSize()),
+        ...point('maximumSize', window.getMaximumSize()),
         mediaSourceId: window.getMediaSourceId(),
-        minimumSize: window.getMinimumSize(),
+        ...point('minimumSize', window.getMinimumSize()),
         normalBounds: window.getNormalBounds(),
         opacity: window.getOpacity(),
-        position: window.getPosition(),
-        size: window.getSize(),
-        windowButtonPosition: window.getWindowButtonPosition(),
-
-        childWindows: window.getChildWindows().map((w) => getRef('windowId', w.id)),
-        parentWindow: parent ? getRef('windowId', parent.id) : null,
+        ...point('position', window.getPosition()),
+        ...point('position', window.getPosition()),
+        ...point('size', window.getSize()),
 
         webContents: {
             audioMuted: window.webContents.audioMuted,
@@ -106,9 +74,6 @@ export function getBasicBrowserWindowAttributes(window: BrowserWindow) {
             isWaitingForResponse: window.webContents.isWaitingForResponse(),
 
             mainFrame: getWebFrameAttributes(window.webContents.mainFrame),
-            opener: window.webContents.opener
-                ? getRef('frameTreeNodeId', window.webContents.opener.frameTreeNodeId)
-                : null,
         },
     };
 }
@@ -131,14 +96,10 @@ function getWebFrameAttributes(frame: WebFrameMain, visited = new Set<number>())
 function getBasicWebFrameAttributes(frame: WebFrameMain): Record<string, unknown> {
     return {
         frameTreeNodeId: frame.frameTreeNodeId,
-        framesInSubtree: frame.framesInSubtree.map((f) => getRef('frameTreeNodeId', f.frameTreeNodeId)),
-        top: frame.top ? getRef('frameTreeNodeId', frame.top.frameTreeNodeId) : null,
+        framesInSubtree: frame.framesInSubtree.map((f) => getRef('id', f.frameTreeNodeId)),
+        top: frame.top ? getRef('id', frame.top.frameTreeNodeId) : null,
 
         name: frame.name,
-        origin: frame.origin,
-        osProcessId: frame.osProcessId,
-        routingId: frame.routingId,
-        url: frame.url,
         visibilityState: frame.visibilityState,
     };
 }
@@ -153,6 +114,13 @@ function getRef(name: string, value: unknown) {
             return ref;
         },
     };
+}
+
+function point(name: string, point: number[]) {
+    return {
+        [`${name}.x`]: point[0],
+        [`${name}.y`]: point[1],
+    } as const;
 }
 
 export function flatten(obj: object, parentKey?: string) {
