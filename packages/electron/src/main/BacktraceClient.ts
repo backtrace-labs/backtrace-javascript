@@ -49,22 +49,16 @@ export class BacktraceClient extends NodeBacktraceClient {
     }
 
     /**
-     * Adds window information to reports.
-     *
-     * By default, the window attributes will be added as an annotations.
-     * To add them as attributes, set `key` or `attributes` to `true` in `options`.
+     * Adds window information to reports as flattened attributes.
      * @param window Window to add attributes from.
      * @param options Options for the attribute provider.
      *
      * @example
-     * // Will add annotations for window under `electron.window.${myWindow.id}`
+     * // Will add attributes for window under `electron.window.${myWindow.id}`
      * client.addWindowAttributes(myWindow);
      *
-     * // Will add attributes and annotations for window under `electron.window.myWindow`
+     * // Will add attributes for window under `electron.window.myWindow`
      * client.addWindowAttributes(myWindow, { key: 'myWindow' })
-     *
-     * // Will add annotations for window under `electron.window.myWindow`
-     * client.addWindowAttributes(myWindow, { key: 'myWindow', attributes: false })
      */
     public addWindow(window: BrowserWindow, options?: WindowAttributeProviderOptions): this {
         this.attributeManager.addProvider(new WindowAttributeProvider(window, options));
@@ -72,10 +66,11 @@ export class BacktraceClient extends NodeBacktraceClient {
     }
 
     /**
-     * Adds main window information to reports. You should add only one window by this.
+     * Adds main window information to reports. You should add only one window using this function.
      *
      * Same as `addWindow(window, { key: 'main' })`.
      * @param window Window to add attributes from.
+     * @param options Options for the attribute provider.
      */
     public addMainWindow(window: BrowserWindow, options?: WindowAttributeProviderOptions): this {
         return this.addWindow(window, {
