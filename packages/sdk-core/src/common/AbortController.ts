@@ -3,7 +3,7 @@ import { Events } from './Events';
 import { OriginalAbortController, OriginalAbortSignal } from './abortInterfaces';
 
 /**
- * Copied and repurposed from https://github.com/mo/abortcontroller-/blob/master/src/abortcontroller.js
+ * Copied and repurposed from https://github.com/mo/abortcontroller-polyfill/blob/master/src/abortcontroller.js
  */
 class Emitter {
     private readonly _listeners: Record<
@@ -70,7 +70,7 @@ class Emitter {
 }
 
 /**
- * Copied and repurposed from https://github.com/mo/abortcontroller-/blob/master/src/abortcontroller.js
+ * Copied and repurposed from https://github.com/mo/abortcontroller-polyfill/blob/master/src/abortcontroller.js
  */
 export class AbortSignal extends Emitter implements OriginalAbortSignal {
     public aborted = false;
@@ -110,7 +110,7 @@ export class AbortSignal extends Emitter implements OriginalAbortSignal {
 }
 
 /**
- * Copied and repurposed from https://github.com/mo/abortcontroller-/blob/master/src/abortcontroller.js
+ * Copied and repurposed from https://github.com/mo/abortcontroller-polyfill/blob/master/src/abortcontroller.js
  */
 export class AbortController implements OriginalAbortController {
     public readonly signal: OriginalAbortSignal;
@@ -127,9 +127,7 @@ export class AbortController implements OriginalAbortController {
         try {
             event = new Event('abort');
         } catch (e) {
-            if (Event) {
-                event = new Event('abort', { bubbles: false, cancelable: false });
-            } else if (typeof document !== 'undefined') {
+            if (typeof document !== 'undefined') {
                 interface IE8Document extends Document {
                     createEventObject?(): Event;
                 }
@@ -179,7 +177,7 @@ export class AbortController implements OriginalAbortController {
 }
 
 /**
- * Copied and repurposed from https://github.com/mo/abortcontroller-/blob/master/src/abortcontroller.js
+ * Copied and repurposed from https://github.com/mo/abortcontroller-polyfill/blob/master/src/abortcontroller.js
  */
 if (typeof Symbol !== 'undefined' && Symbol.toStringTag) {
     type WithToStringTag<T> = Record<typeof Symbol.toStringTag, string> & T;

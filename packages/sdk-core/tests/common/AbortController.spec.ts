@@ -1,6 +1,18 @@
 import { AbortController } from '../../src/common/AbortController';
 import { AbortError } from '../../src/common/AbortError';
 
+function createEvent(type: string) {
+    if (typeof Event === 'undefined') {
+        return {
+            type,
+            bubbles: false,
+            cancelable: false,
+        } as Event;
+    } else {
+        return new Event(type);
+    }
+}
+
 describe('AbortController', () => {
     it('should abort the signal', () => {
         const controller = new AbortController();
@@ -30,7 +42,13 @@ describe('AbortController', () => {
         const spy = jest.spyOn(signal, 'dispatchEvent');
 
         controller.abort();
-        expect(spy).toBeCalledWith(expect.any(Event));
+        if (typeof Event !== 'undefined') {
+            expect(spy).toBeCalledWith(expect.any(Event));
+        } else {
+            expect(spy).toBeCalled();
+            const value = spy.mock.lastCall?.[0];
+            expect(value).toMatchObject({ type: 'abort' });
+        }
     });
 });
 
@@ -46,7 +64,7 @@ describe('AbortSignal', () => {
         const controller = new AbortController();
         const signal = controller.signal;
 
-        signal.dispatchEvent(new Event('abort'));
+        signal.dispatchEvent(createEvent('abort'));
         expect(signal.aborted).toBe(true);
     });
 
@@ -57,7 +75,7 @@ describe('AbortSignal', () => {
         const fn = jest.fn();
         signal.addEventListener('abort', fn);
 
-        signal.dispatchEvent(new Event('abort'));
+        signal.dispatchEvent(createEvent('abort'));
         expect(fn).toBeCalled();
     });
 
@@ -69,7 +87,7 @@ describe('AbortSignal', () => {
         signal.addEventListener('abort', fn);
         signal.removeEventListener('abort', fn);
 
-        signal.dispatchEvent(new Event('abort'));
+        signal.dispatchEvent(createEvent('abort'));
         expect(fn).not.toBeCalled();
     });
 
@@ -80,7 +98,7 @@ describe('AbortSignal', () => {
         const fn = jest.fn();
         signal.onabort = fn;
 
-        signal.dispatchEvent(new Event('abort'));
+        signal.dispatchEvent(createEvent('abort'));
 
         expect(fn).toBeCalled();
     });
@@ -97,7 +115,7 @@ describe('AbortSignal', () => {
             const controller = new AbortController();
             const signal = controller.signal;
 
-            signal.dispatchEvent(new Event('abort'));
+            signal.dispatchEvent(createEvent('abort'));
 
             expect(() => signal.throwIfAborted()).toThrow();
         });

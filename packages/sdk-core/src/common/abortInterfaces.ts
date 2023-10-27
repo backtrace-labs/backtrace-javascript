@@ -2,5 +2,5 @@
 
 export type OriginalAbortController = AbortController;
 export type OriginalAbortSignal = AbortSignal;
-export const OriginalAbortController = AbortController;
-export const OriginalAbortSignal = AbortSignal;
+export const OriginalAbortController = global.AbortController;
+export const OriginalAbortSignal = global.AbortSignal;
