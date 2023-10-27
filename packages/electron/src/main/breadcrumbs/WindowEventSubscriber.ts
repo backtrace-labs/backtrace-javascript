@@ -4,7 +4,7 @@ import {
     BreadcrumbType,
     BreadcrumbsEventSubscriber,
 } from '@backtrace/sdk-core';
-import { BrowserWindow, Event, app } from 'electron';
+import { BrowserWindow, Event, RenderProcessGoneDetails, WebContentsWillFrameNavigateEventParams, app } from 'electron';
 import { point } from '../attributes/helpers/attributes';
 
 export class WindowEventSubscriber implements BreadcrumbsEventSubscriber {
@@ -25,7 +25,13 @@ export class WindowEventSubscriber implements BreadcrumbsEventSubscriber {
     }
 
     private registerWindow(window: BrowserWindow, breadcrumbs: BacktraceBreadcrumbs) {
-        const dispose = this.listenForWindowEvents(window, breadcrumbs);
+        const disposeWindowEvents = this.listenForWindowEvents(window, breadcrumbs);
+        const disposeWebContentsEvents = this.listenOnWebContentsEvents(window, breadcrumbs);
+        const dispose = () => {
+            disposeWindowEvents();
+            disposeWebContentsEvents();
+        };
+
         this._toDispose.push(dispose);
         window.once('closed', () => {
             dispose();
@@ -141,6 +147,129 @@ export class WindowEventSubscriber implements BreadcrumbsEventSubscriber {
             window.off('leave-full-screen', onLeaveFullScreen);
             window.off('leave-html-full-screen', onLeaveFullScreen);
             window.off('app-command', onAppCommand);
+        };
+    }
+
+    private listenOnWebContentsEvents(window: BrowserWindow, breadcrumbs: BacktraceBreadcrumbs) {
+        const webContents = window.webContents;
+        const windowMsg = (msg: string) => `Window ${window.title} (ID: ${window.id}) ${msg}`;
+
+        const onDidFinishLoad = () =>
+            breadcrumbs.addBreadcrumb(windowMsg('finished loading'), BreadcrumbLogLevel.Info, BreadcrumbType.System);
+
+        const onDidFailLoad = () =>
+            breadcrumbs.addBreadcrumb(windowMsg('failed to load'), BreadcrumbLogLevel.Error, BreadcrumbType.System);
+
+        const onDidFailProvisionalLoad = () =>
+            breadcrumbs.addBreadcrumb(
+                windowMsg('cancelled loading'),
+                BreadcrumbLogLevel.Warning,
+                BreadcrumbType.System,
+            );
+
+        const onWillFrameNavigation = (event: Event<WebContentsWillFrameNavigateEventParams>) =>
+            breadcrumbs.addBreadcrumb(windowMsg('started navigation'), BreadcrumbLogLevel.Info, BreadcrumbType.System, {
+                frameTreeNodeId: event.frame.frameTreeNodeId,
+                url: event.url,
+                isMainFrame: event.isMainFrame,
+                isSameDocument: event.isSameDocument,
+            });
+
+        const onDidFrameNavigate = (
+            _: Event,
+            url: string,
+            httpResponseCode: number,
+            httpStatusText: string,
+            isMainFrame: boolean,
+            frameProcessId: number,
+            frameRoutingId: number,
+        ) =>
+            breadcrumbs.addBreadcrumb(windowMsg('navigated'), BreadcrumbLogLevel.Info, BreadcrumbType.System, {
+                frameProcessId,
+                frameRoutingId,
+                url,
+                isMainFrame,
+                httpResponseCode,
+                httpStatusText,
+            });
+
+        const onRenderProcessGone = (_: Event, details: RenderProcessGoneDetails) => {
+            const attributes = { exitCode: details.exitCode, reason: details.reason };
+
+            switch (details.reason) {
+                case 'clean-exit':
+                    return breadcrumbs.addBreadcrumb(
+                        windowMsg('renderer process exited'),
+                        BreadcrumbLogLevel.Info,
+                        BreadcrumbType.System,
+                        attributes,
+                    );
+                case 'abnormal-exit':
+                    return breadcrumbs.addBreadcrumb(
+                        windowMsg('renderer process exited abnormally'),
+                        BreadcrumbLogLevel.Error,
+                        BreadcrumbType.System,
+                        attributes,
+                    );
+                case 'killed':
+                    return breadcrumbs.addBreadcrumb(
+                        windowMsg('renderer process was killed'),
+                        BreadcrumbLogLevel.Warning,
+                        BreadcrumbType.System,
+                        attributes,
+                    );
+                case 'crashed':
+                    return breadcrumbs.addBreadcrumb(
+                        windowMsg('renderer process crashed'),
+                        BreadcrumbLogLevel.Error,
+                        BreadcrumbType.System,
+                        attributes,
+                    );
+                case 'oom':
+                    return breadcrumbs.addBreadcrumb(
+                        windowMsg('renderer process ran out of memory'),
+                        BreadcrumbLogLevel.Error,
+                        BreadcrumbType.System,
+                        attributes,
+                    );
+                case 'launch-failed':
+                    return breadcrumbs.addBreadcrumb(
+                        windowMsg('renderer process failed to launch'),
+                        BreadcrumbLogLevel.Error,
+                        BreadcrumbType.System,
+                        attributes,
+                    );
+                case 'integrity-failure':
+                    return breadcrumbs.addBreadcrumb(
+                        windowMsg('renderer process integrity checks failed'),
+                        BreadcrumbLogLevel.Error,
+                        BreadcrumbType.System,
+                        attributes,
+                    );
+                default:
+                    return breadcrumbs.addBreadcrumb(
+                        windowMsg('renderer process exited'),
+                        BreadcrumbLogLevel.Error,
+                        BreadcrumbType.System,
+                        attributes,
+                    );
+            }
+        };
+
+        webContents.on('did-finish-load', onDidFinishLoad);
+        webContents.on('did-fail-load', onDidFailLoad);
+        webContents.on('did-fail-provisional-load', onDidFailProvisionalLoad);
+        webContents.on('will-frame-navigate', onWillFrameNavigation);
+        webContents.on('did-frame-navigate', onDidFrameNavigate);
+        webContents.on('render-process-gone', onRenderProcessGone);
+
+        return () => {
+            webContents.off('did-finish-load', onDidFinishLoad);
+            webContents.off('did-fail-load', onDidFailLoad);
+            webContents.off('did-fail-provisional-load', onDidFailProvisionalLoad);
+            webContents.off('will-frame-navigate', onWillFrameNavigation);
+            webContents.off('did-frame-navigate', onDidFrameNavigate);
+            webContents.off('render-process-gone', onRenderProcessGone);
         };
     }
 }
