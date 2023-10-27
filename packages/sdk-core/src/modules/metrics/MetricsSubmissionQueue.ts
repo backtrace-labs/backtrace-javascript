@@ -40,16 +40,16 @@ export class MetricsSubmissionQueue<T extends MetricsEvent> implements MetricsQu
         }
     }
 
-    public async send(abort?: AbortSignal) {
+    public async send(abortSignal?: AbortSignal) {
         const eventsToProcess = this._events.splice(0);
-        return await this.submit(eventsToProcess, anySignal(abort, this._abortController.signal));
+        return await this.submit(eventsToProcess, anySignal(abortSignal, this._abortController.signal));
     }
 
     public dispose() {
         this._abortController.abort();
     }
 
-    private async submit(events: T[], abort?: AbortSignal) {
+    private async submit(events: T[], abortSignal?: AbortSignal) {
         for (let attempts = 0; attempts < this.MAXIMUM_NUMBER_OF_ATTEMPTS; attempts++) {
             const response = await this._requestHandler.post(
                 this._submissionUrl,
@@ -63,7 +63,7 @@ export class MetricsSubmissionQueue<T extends MetricsEvent> implements MetricsQu
                     },
                     jsonEscaper(),
                 ),
-                abort,
+                abortSignal,
             );
             if (response.status === 'Ok') {
                 this._numberOfDroppedRequests = 0;
@@ -71,7 +71,7 @@ export class MetricsSubmissionQueue<T extends MetricsEvent> implements MetricsQu
             }
 
             this._numberOfDroppedRequests++;
-            await Delay.wait(2 ** attempts * this.DELAY_BETWEEN_REQUESTS, abort);
+            await Delay.wait(2 ** attempts * this.DELAY_BETWEEN_REQUESTS, abortSignal);
         }
         // if the code reached this line, it means, we couldn't send data to server
         // we need to try to return events to the queue and try to send it once again later.

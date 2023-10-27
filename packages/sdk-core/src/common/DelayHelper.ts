@@ -11,7 +11,7 @@ export class Delay {
             // intervalId has to be defined here,
             // as abortCallback can execute before setTimeout is executed
             // eslint-disable-next-line prefer-const
-            let intervalId: NodeJS.Timeout | undefined;
+            let intervalId: ReturnType<typeof setTimeout> | undefined;
 
             function abortCallback() {
                 clearTimeout(intervalId);

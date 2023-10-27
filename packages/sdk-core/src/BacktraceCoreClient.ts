@@ -263,6 +263,7 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
      * @param error Error or message
      * @param attributes Report attributes
      * @param attachments Report attachments
+     * @param abortSignal Signal to abort sending
      */
     public send(
         error: Error | string,
@@ -273,13 +274,15 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
     /**
      * Asynchronously sends error data to Backtrace
      * @param report Backtrace Report
+     * @param abortSignal Signal to abort sending
      */
-    public send(report: BacktraceReport): Promise<void>;
+    public send(report: BacktraceReport, abortSignal?: AbortSignal): Promise<void>;
     // This function CANNOT be an async function due to possible async state machine stack frame inclusion, which breaks the skip stacks
     public send(
         data: BacktraceReport | Error | string,
-        reportAttributes: Record<string, unknown> = {},
+        reportAttributesOrAbortSignal?: Record<string, unknown> | AbortSignal,
         reportAttachments: BacktraceAttachment[] = [],
+        abortSignal?: AbortSignal,
     ): Promise<void> {
         if (!this._enabled) {
             return Promise.resolve();
@@ -287,6 +290,14 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
         if (this._rateLimitWatcher.skipReport()) {
             return Promise.resolve();
         }
+
+        // If data is BacktraceReport, we know that the second argument should be only AbortSignal
+        const reportAttributes = !this.isReport(data)
+            ? (reportAttributesOrAbortSignal as Record<string, unknown>)
+            : undefined;
+
+        // If data is BacktraceReport, we know that the second argument should be only AbortSignal
+        abortSignal = !this.isReport(data) ? abortSignal : (reportAttributesOrAbortSignal as AbortSignal);
 
         const report = this.isReport(data)
             ? data
@@ -309,9 +320,11 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
 
         this.reportEvents.emit('before-send', report, backtraceData, submissionAttachments);
 
-        return this._reportSubmission.send(backtraceData, submissionAttachments).then((submissionResult) => {
-            this.reportEvents.emit('after-send', report, backtraceData, submissionAttachments, submissionResult);
-        });
+        return this._reportSubmission
+            .send(backtraceData, submissionAttachments, abortSignal)
+            .then((submissionResult) => {
+                this.reportEvents.emit('after-send', report, backtraceData, submissionAttachments, submissionResult);
+            });
     }
 
     /**
