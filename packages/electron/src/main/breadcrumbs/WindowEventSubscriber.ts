@@ -46,7 +46,11 @@ export class WindowEventSubscriber implements BreadcrumbsEventSubscriber {
             breadcrumbs.addBreadcrumb(windowMsg('is closing'), BreadcrumbLogLevel.Info, BreadcrumbType.System);
 
         const onClosed = () =>
-            breadcrumbs.addBreadcrumb(windowMsg('is closed'), BreadcrumbLogLevel.Info, BreadcrumbType.System);
+            breadcrumbs.addBreadcrumb(
+                `Window (ID: ${window.id}) closed`,
+                BreadcrumbLogLevel.Info,
+                BreadcrumbType.System,
+            );
 
         const onUnresponsive = () =>
             breadcrumbs.addBreadcrumb(
