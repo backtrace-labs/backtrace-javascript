@@ -140,7 +140,7 @@ function getRef(name: string, value: unknown) {
     };
 }
 
-function point(name: string, point: number[]) {
+export function point(name: string, point: number[]) {
     return {
         [`${name}.x`]: point[0],
         [`${name}.y`]: point[1],

@@ -8,6 +8,7 @@ import { GpuFeatureAttributeProvider } from '../attributes/GpuFeatureAttributePr
 import { NetAttributeProvider } from '../attributes/NetAttributeProvider';
 import { ReadyAppAttributeProvider } from '../attributes/ReadyAppAttributeProvider';
 import { ScreenAttributeProvider } from '../attributes/ScreenAttributeProvider';
+import { WindowEventSubscriber } from '../breadcrumbs/WindowEventSubscriber';
 
 export class BacktraceClientBuilder extends NodeBacktraceClientBuilder {
     constructor(clientSetup: BacktraceNodeClientSetup) {
@@ -21,6 +22,8 @@ export class BacktraceClientBuilder extends NodeBacktraceClientBuilder {
         this.addAttributeProvider(new AllWindowsAttributeProvider());
         this.addAttributeProvider(new NetAttributeProvider());
         this.addAttributeProvider(new ScreenAttributeProvider());
+
+        this.useBreadcrumbSubscriber(new WindowEventSubscriber());
     }
 
     public build(): BacktraceClient {
