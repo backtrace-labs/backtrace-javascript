@@ -10,6 +10,13 @@ export function getBrowserWindowAttributes(
 
     visited.add(window.id);
 
+    if (window.isDestroyed()) {
+        return {
+            id: window.id,
+            _destroyed: true,
+        };
+    }
+
     const parent = window.getParentWindow();
     const basic = getBasicBrowserWindowAttributes(window);
 
@@ -29,6 +36,14 @@ export function getBrowserWindowAttributes(
 }
 
 export function getBasicBrowserWindowAttributes(window: BrowserWindow) {
+    if (window.isDestroyed()) {
+        return {
+            id: window.id,
+            _destroyed: true,
+            webContents: undefined,
+        };
+    }
+
     return {
         id: window.id,
         documentEdited: window.documentEdited,
@@ -84,13 +99,22 @@ function getWebFrameAttributes(frame: WebFrameMain, visited = new Set<number>())
     }
 
     visited.add(frame.frameTreeNodeId);
-    const basic = getBasicWebFrameAttributes(frame);
 
-    return {
-        ...basic,
-        framesInSubtree: frame.framesInSubtree.map((f) => getWebFrameAttributes(f, visited)),
-        top: frame.top ? getWebFrameAttributes(frame.top, visited) : null,
-    };
+    // Resolving frame attributes can fail if the frame is disposed. In that case, return only the ID
+    try {
+        const basic = getBasicWebFrameAttributes(frame);
+
+        return {
+            ...basic,
+            framesInSubtree: frame.framesInSubtree.map((f) => getWebFrameAttributes(f, visited)),
+            top: frame.top ? getWebFrameAttributes(frame.top, visited) : null,
+        };
+    } catch {
+        return {
+            frameTreeNodeId: frame.frameTreeNodeId,
+            _destroyed: true,
+        };
+    }
 }
 
 function getBasicWebFrameAttributes(frame: WebFrameMain): Record<string, unknown> {
