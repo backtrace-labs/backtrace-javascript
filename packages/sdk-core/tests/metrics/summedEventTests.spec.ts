@@ -60,7 +60,11 @@ describe('Summed events tests', () => {
 
         metrics.initialize();
 
-        expect(testHttpClient.post).toBeCalledWith(summedEventsSubmissionUrl, JSON.stringify(expectedJson));
+        expect(testHttpClient.post).toBeCalledWith(
+            summedEventsSubmissionUrl,
+            JSON.stringify(expectedJson),
+            expect.any(AbortSignal),
+        );
     });
 
     it('Should send summed event to overriden submission URL', () => {
@@ -98,7 +102,11 @@ describe('Summed events tests', () => {
 
         metrics.initialize();
 
-        expect(testHttpClient.post).toBeCalledWith(summedEventsSubmissionUrl, JSON.stringify(expectedJson));
+        expect(testHttpClient.post).toBeCalledWith(
+            summedEventsSubmissionUrl,
+            JSON.stringify(expectedJson),
+            expect.any(AbortSignal),
+        );
     });
 
     it('Should send summed event with custom attributes to the server', () => {
@@ -135,7 +143,11 @@ describe('Summed events tests', () => {
         metrics.initialize();
 
         expect(attributeManager.get().attributes).toMatchObject(customAttributes);
-        expect(testHttpClient.post).toBeCalledWith(expect.anything(), JSON.stringify(expectedJson));
+        expect(testHttpClient.post).toBeCalledWith(
+            expect.anything(),
+            JSON.stringify(expectedJson),
+            expect.any(AbortSignal),
+        );
     });
 
     it('Should add summed event to the submission queue', () => {

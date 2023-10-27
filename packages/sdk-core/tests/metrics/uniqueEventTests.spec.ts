@@ -61,7 +61,11 @@ describe('Unique events tests', () => {
 
         metrics.initialize();
 
-        expect(testHttpClient.post).toBeCalledWith(uniqueEventsSubmissionUrl, JSON.stringify(expectedJson));
+        expect(testHttpClient.post).toBeCalledWith(
+            uniqueEventsSubmissionUrl,
+            JSON.stringify(expectedJson),
+            expect.any(AbortSignal),
+        );
     });
 
     it('Should send unique event to overriden submission URL', () => {
@@ -90,7 +94,11 @@ describe('Unique events tests', () => {
 
         metrics.initialize();
 
-        expect(testHttpClient.post).toBeCalledWith(uniqueEventsSubmissionUrl, expect.anything());
+        expect(testHttpClient.post).toBeCalledWith(
+            uniqueEventsSubmissionUrl,
+            expect.anything(),
+            expect.any(AbortSignal),
+        );
     });
 
     it(`Shouldn't build a client with invalid url`, () => {
@@ -167,6 +175,10 @@ describe('Unique events tests', () => {
         metrics.initialize();
 
         expect(attributeManager.get().attributes).toMatchObject(customAttributes);
-        expect(testHttpClient.post).toBeCalledWith(uniqueEventsSubmissionUrl, JSON.stringify(expectedJson));
+        expect(testHttpClient.post).toBeCalledWith(
+            uniqueEventsSubmissionUrl,
+            JSON.stringify(expectedJson),
+            expect.any(AbortSignal),
+        );
     });
 });
