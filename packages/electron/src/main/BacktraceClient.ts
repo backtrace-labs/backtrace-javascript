@@ -1,8 +1,10 @@
 import {
-    BacktraceClient as NodeBacktraceClient,
     BacktraceNodeClientSetup,
     BacktraceSetupConfiguration,
+    BacktraceClient as NodeBacktraceClient,
 } from '@backtrace/node';
+import { BrowserWindow } from 'electron';
+import { WindowAttributeProvider, WindowAttributeProviderOptions } from './attributes/WindowAttributeProvider';
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 import { BacktraceMainElectronModule } from './modules/BacktraceMainElectronModule';
 
@@ -16,6 +18,14 @@ export class BacktraceClient extends NodeBacktraceClient {
 
     public static builder(options: BacktraceSetupConfiguration): BacktraceClientBuilder {
         return new BacktraceClientBuilder({ options });
+    }
+
+    /**
+     * Returns created BacktraceClient instance if the instance exists.
+     * Otherwise undefined.
+     */
+    public static get instance(): BacktraceClient | undefined {
+        return this._instance as BacktraceClient;
     }
 
     /**
@@ -36,5 +46,36 @@ export class BacktraceClient extends NodeBacktraceClient {
         build && build(builder);
         this._instance = builder.build();
         return this._instance as BacktraceClient;
+    }
+
+    /**
+     * Adds window information to reports as flattened attributes.
+     * @param window Window to add attributes from.
+     * @param options Options for the attribute provider.
+     *
+     * @example
+     * // Will add attributes for window under `electron.window.${myWindow.id}`
+     * client.addWindowAttributes(myWindow);
+     *
+     * // Will add attributes for window under `electron.window.myWindow`
+     * client.addWindowAttributes(myWindow, { key: 'myWindow' })
+     */
+    public addWindow(window: BrowserWindow, options?: WindowAttributeProviderOptions): this {
+        this.attributeManager.addProvider(new WindowAttributeProvider(window, options));
+        return this;
+    }
+
+    /**
+     * Adds main window information to reports. You should add only one window using this function.
+     *
+     * Same as `addWindow(window, { key: 'main' })`.
+     * @param window Window to add attributes from.
+     * @param options Options for the attribute provider.
+     */
+    public addMainWindow(window: BrowserWindow, options?: WindowAttributeProviderOptions): this {
+        return this.addWindow(window, {
+            key: 'main',
+            ...options,
+        });
     }
 }
