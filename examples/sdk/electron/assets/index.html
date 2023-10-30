@@ -1,0 +1,140 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="en">
+    <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&display=swap" rel="stylesheet" />
+        <link rel="stylesheet" href="./index.css" />
+        <script src="../lib/renderer/index.js" type="module"></script>
+    </head>
+
+    <body style="background-color: #d8f8e9; padding: 50px">
+        <div class="card center">
+            <a href="https://www.saucelabs.com/">
+                <img
+                    src="https://info.saucelabs.com/rs/468-XBT-687/images/SL%20logo%20horizontal%20color%2Bdark%402x.png"
+                    width="250"
+                    alt="Sauce Labs"
+                    border="0"
+                    class="center"
+                />
+            </a>
+            <div id="main-buttons-container">
+                <br />
+                <h1 class="card-header" style="text-align: center">Welcome to the Backtrace demo</h1>
+                <p style="text-align: center">Please pick one of the available options:</p>
+                <br />
+                <div class="action-container center">
+                    <div class="button-container center">
+                        <div class="action-description">
+                            <span class="text">Send an error</span>
+                        </div>
+                        <div class="action-button send-error" data-target="main">
+                            <a class="text" target="_blank">Main</a>
+                        </div>
+                        <div class="action-button send-error" data-target="renderer">
+                            <a class="text" target="_blank">Renderer</a>
+                        </div>
+                    </div>
+                    <div class="button-container center">
+                        <div class="action-description">
+                            <span class="text">Send a message</span>
+                        </div>
+                        <div class="action-button send-message" data-target="main">
+                            <a class="text" target="_blank">Main</a>
+                        </div>
+                        <div class="action-button send-message" data-target="renderer">
+                            <a class="text" target="_blank">Renderer</a>
+                        </div>
+                    </div>
+                    <div class="button-container center">
+                        <div class="action-description">
+                            <span class="text">Send an unhandled exception</span>
+                        </div>
+                        <div class="action-button send-unhandled-exception">
+                            <a class="text" data-target="main" target="_blank">Main</a>
+                        </div>
+                        <div class="action-button send-unhandled-exception">
+                            <a class="text" data-target="renderer" target="_blank">Renderer</a>
+                        </div>
+                    </div>
+                    <div class="button-container center">
+                        <div class="action-description">
+                            <span class="text">Send a promise rejection</span>
+                        </div>
+                        <div class="action-button send-promise-rejection" data-target="main">
+                            <a class="text" target="_blank">Main</a>
+                        </div>
+                        <div class="action-button send-promise-rejection" data-target="renderer">
+                            <a class="text" target="_blank">Renderer</a>
+                        </div>
+                    </div>
+                    <div class="button-container center">
+                        <div class="action-description">
+                            <span class="text">Generate metric</span>
+                        </div>
+                        <div class="action-button generate-metric" data-target="main">
+                            <a class="text" target="_blank">Main</a>
+                        </div>
+                        <div class="action-button generate-metric" data-target="renderer">
+                            <a class="text" target="_blank">Renderer</a>
+                        </div>
+                    </div>
+                    <div class="button-container center">
+                        <div class="action-description">
+                            <span class="text">Send metrics</span>
+                        </div>
+                        <div class="action-button send-metrics" data-target="main">
+                            <a class="text" target="_blank">Main</a>
+                        </div>
+                        <div class="action-button send-metrics" data-target="renderer">
+                            <a class="text" target="_blank">Renderer</a>
+                        </div>
+                    </div>
+                    <div class="action-button crash-app" data-target="main">
+                        <a class="text" target="_blank">Crash application</a>
+                    </div>
+                </div>
+            </div>
+            <div class="summary-information">
+                <p>If you have any questions or concerns, please contact us at</p>
+                <a href="mailto:help@saucelabs.com">help@saucelabs.com.</a>
+                <br />
+                <br />
+                <p>Happy testing,</p>
+                <p>The Sauce Labs Team</p>
+            </div>
+        </div>
+        <div class="footer center">
+            <div class="center" style="width: 125px">
+                <a href="https://www.facebook.com/saucelabs"
+                    ><img
+                        src="https://info.saucelabs.com/rs/468-XBT-687/images/facebook.png"
+                        height="30px"
+                        width="30"
+                        border="0"
+                /></a>
+                <a href="https://www.linkedin.com/company/sauce-labs/"
+                    ><img
+                        src="https://info.saucelabs.com/rs/468-XBT-687/images/Linkedin.png"
+                        height="30px"
+                        width="30"
+                        border="0"
+                        style="padding-left: 12px; padding-right: 12px"
+                /></a>
+                <a href="http://www.twitter.com/saucelabs/"
+                    ><img
+                        src="https://info.saucelabs.com/rs/468-XBT-687/images/twitter.png"
+                        height="30px"
+                        width="30"
+                        border="0"
+                /></a>
+            </div>
+            <div class="footerAddressInfo">
+                <h5>Sauce Labs</h5>
+                <p>450 Sansome Street, 9th Floor, San Francisco, CA 94111</p>
+                <p>Copyright © 2023 Sauce Labs. All rights reserved.</p>
+            </div>
+        </div>
+    </body>
+</html>

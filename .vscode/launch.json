@@ -1,0 +1,44 @@
+{
+    "version": "0.1.0",
+    "configurations": [
+        {
+            "name": "Attach to react native app",
+            "cwd": "${workspaceFolder}/examples/sdk/reactNative",
+            "type": "reactnative",
+            "request": "attach",
+            "skipFiles": ["<node_internals>/**", "${workspaceFolder}/node_modules/tslib/**/*.js"]
+        },
+        {
+            "name": "Launch",
+            "program": "${workspaceFolder}/examples/sdk/node/lib/index.js",
+            "request": "launch",
+            "localRoot": "${workspaceFolder}",
+            "remoteRoot": "${workspaceFolder}",
+            "skipFiles": ["<node_internals>/**", "${workspaceFolder}/node_modules/tslib/**/*.js"],
+            "outFiles": ["${workspaceFolder}/examples/sdk/node/lib/**/*.js"],
+            "sourceMaps": true,
+            "type": "pwa-node",
+            "console": "integratedTerminal"
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Launch React Example App",
+            "url": "http://localhost:3000",
+            "webRoot": "${workspaceFolder}/examples/sdk/react/",
+            "sourceMaps": true
+        },
+        {
+            "name": "Electron example",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/examples/sdk/electron",
+            "runtimeExecutable": "${workspaceFolder}/examples/sdk/electron/node_modules/.bin/electron",
+            "windows": {
+                "runtimeExecutable": "${workspaceFolder}/examples/sdk/electron/node_modules/.bin/electron.cmd"
+            },
+            "args": ["."],
+            "outputCapture": "std"
+        }
+    ]
+}

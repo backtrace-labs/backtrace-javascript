@@ -1,0 +1,16 @@
+{
+    "extends": "./tsconfig.base.json",
+    "include": [],
+    "exclude": ["./test", "./lib"],
+    "references": [
+        {
+            "path": "./packages/sdk-core"
+        },
+        {
+            "path": "./tools/sourcemap-tools"
+        },
+        {
+            "path": "./tools/webpack-plugin/tsconfig.build.json"
+        }
+    ]
+}

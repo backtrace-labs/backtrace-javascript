@@ -1,0 +1,65 @@
+{
+    "name": "@backtrace/nestjs",
+    "version": "0.1.0",
+    "description": "Backtrace-JavaScript NestJS integration",
+    "main": "lib/index.js",
+    "types": "lib/index.d.ts",
+    "scripts": {
+        "build": "webpack",
+        "clean": "rimraf \"lib\"",
+        "format": "prettier --write '**/*.ts'",
+        "lint": "eslint . --ext .ts",
+        "prepublishOnly": "NODE_ENV=production npm run build",
+        "watch": "webpack -w",
+        "test": "NODE_ENV=test jest"
+    },
+    "engines": {
+        "node": ">=14"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/backtrace-labs/backtrace-javascript.git"
+    },
+    "keywords": [
+        "Error",
+        "Reporting",
+        "Diagnostic",
+        "Tool",
+        "Bug",
+        "Bugs",
+        "StackTrace",
+        "Nest",
+        "Nestjs"
+    ],
+    "author": "Backtrace <team@backtrace.io>",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/backtrace-labs/backtrace-javascript/issues"
+    },
+    "homepage": "https://github.com/backtrace-labs/backtrace-javascript#readme",
+    "files": [
+        "/lib"
+    ],
+    "devDependencies": {
+        "@nestjs/core": "^9",
+        "@nestjs/platform-express": "^9",
+        "@nestjs/testing": "^9",
+        "@types/express": "^4.17.18",
+        "@types/jest": "^29.5.1",
+        "@types/supertest": "^2.0.13",
+        "jest": "^29.5.0",
+        "supertest": "^6.3.3",
+        "ts-jest": "^29.1.0",
+        "ts-loader": "^9.4.3",
+        "typescript": "^5.0.4",
+        "webpack": "^5.87.0",
+        "webpack-cli": "^5.1.4",
+        "webpack-node-externals": "^3.0.0"
+    },
+    "dependencies": {
+        "@backtrace/node": "^0.1.0"
+    },
+    "peerDependencies": {
+        "@nestjs/common": "^9"
+    }
+}

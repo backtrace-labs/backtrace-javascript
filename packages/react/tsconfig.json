@@ -1,0 +1,15 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "rootDir": "./src",
+        "outDir": "./lib",
+        "jsx": "react",
+        "composite": true
+    },
+    "exclude": ["node_modules", "tests", "lib"],
+    "references": [
+        {
+            "path": "../browser/tsconfig.json"
+        }
+    ]
+}

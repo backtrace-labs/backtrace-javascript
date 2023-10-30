@@ -1,0 +1,53 @@
+{
+    "name": "@backtrace/vite-plugin",
+    "version": "0.1.0",
+    "description": "Backtrace Vite plugin",
+    "main": "lib/index.js",
+    "types": "lib/index.d.ts",
+    "engines": {
+        "node": ">=14"
+    },
+    "scripts": {
+        "build": "tsc -b ./tsconfig.build.json",
+        "build:vite": "vite build --config vite.config.js",
+        "clean": "tsc -b ./tsconfig.build.json --clean && rimraf \"lib\"",
+        "format": "prettier --write '**/*.ts'",
+        "prepublishOnly": "NODE_ENV=production npm run build",
+        "lint": "eslint . --ext .ts",
+        "watch": "tsc -b ./tsconfig.build.json -w"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/backtrace-labs/backtrace-javascript.git"
+    },
+    "keywords": [
+        "Error",
+        "Reporting",
+        "Diagnostic",
+        "Tool",
+        "Bug",
+        "Bugs",
+        "StackTrace",
+        "Source maps",
+        "Sourcemaps",
+        "Vite"
+    ],
+    "author": "Backtrace <team@backtrace.io>",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/backtrace-labs/backtrace-javascript/issues"
+    },
+    "homepage": "https://github.com/backtrace-labs/backtrace-javascript#readme",
+    "files": [
+        "/lib"
+    ],
+    "peerDependencies": {
+        "vite": "^4.4.9"
+    },
+    "dependencies": {
+        "@backtrace/rollup-plugin": "^0.1.0"
+    },
+    "devDependencies": {
+        "typescript": "^5.0.4"
+    }
+}

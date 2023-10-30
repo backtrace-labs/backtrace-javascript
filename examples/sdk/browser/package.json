@@ -1,0 +1,46 @@
+{
+    "name": "@backtrace/browser-example",
+    "version": "1.0.0",
+    "description": "Backtrace-JavaScript web browser integration",
+    "main": "lib/index.js",
+    "types": "lib/index.d.ts",
+    "browser": "lib/index.js",
+    "scripts": {
+        "start": "serve .",
+        "build": "webpack",
+        "clean": "rimraf \"lib\"",
+        "format": "prettier --write '**/*.ts'",
+        "lint": "eslint . --ext .ts",
+        "watch": "webpack -w"
+    },
+    "repository": {
+        "type": "git",
+        "url": "githttps://github.com/backtrace-labs/backtrace-javascript.git"
+    },
+    "keywords": [
+        "Error",
+        "Reporting",
+        "Diagnostic",
+        "Tool",
+        "Bug",
+        "Bugs",
+        "StackTrace"
+    ],
+    "author": "Backtrace <team@backtrace.io>",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/backtrace-labs/backtrace-javascript/issues"
+    },
+    "homepage": "https://github.com/backtrace-labs/backtrace-javascript#readme",
+    "devDependencies": {
+        "serve": "^14.2.0",
+        "ts-loader": "^9.4.3",
+        "typescript": "^5.0.4",
+        "webpack": "^5.87.0",
+        "webpack-cli": "^5.1.4"
+    },
+    "dependencies": {
+        "@reduxjs/toolkit": "^1.9.5",
+        "@backtrace/browser": "^0.1.0"
+    }
+}

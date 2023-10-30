@@ -1,0 +1,14 @@
+{
+    "files": [],
+    "references": [
+        {
+            "path": "packages/sdk-core"
+        },
+        {
+            "path": "tools/sourcemap-tools"
+        },
+        {
+            "path": "tools/webpack-plugin/tsconfig.build.json"
+        }
+    ]
+}
