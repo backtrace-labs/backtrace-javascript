@@ -21,6 +21,7 @@ of the capabilities of different frameworks.
 -   [@backtrace/node](./packages/node)
 -   [@backtrace/nestjs](./packages/nestjs)
 -   [@backtrace/electron](./packages/electron)
+-   [@backtrace/react-native](./packages/react-native)
 
 ## Web SDK Features
 
