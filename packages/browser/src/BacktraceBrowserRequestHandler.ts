@@ -4,6 +4,7 @@ import {
     BacktraceRequestHandler,
     ConnectionError,
     DEFAULT_TIMEOUT,
+    anySignal,
 } from '@backtrace/sdk-core';
 
 export class BacktraceBrowserRequestHandler implements BacktraceRequestHandler {
@@ -26,14 +27,16 @@ export class BacktraceBrowserRequestHandler implements BacktraceRequestHandler {
         submissionUrl: string,
         dataJson: string,
         attachments: BacktraceAttachment<Blob | string>[],
+        abortSignal?: AbortSignal,
     ): Promise<BacktraceReportSubmissionResult<T>> {
         const formData = this.createFormData(dataJson, attachments);
-        return this.post(submissionUrl, formData);
+        return this.post(submissionUrl, formData, abortSignal);
     }
 
     public async post<T>(
         submissionUrl: string,
         payload: string | FormData,
+        abortSignal?: AbortSignal,
     ): Promise<BacktraceReportSubmissionResult<T>> {
         const controller = new AbortController();
         const id = setTimeout(() => controller.abort(), this._timeout);
@@ -43,7 +46,7 @@ export class BacktraceBrowserRequestHandler implements BacktraceRequestHandler {
                 method: 'POST',
                 body: payload,
                 headers: typeof payload === 'string' ? this.JSON_HEADERS : {},
-                signal: controller.signal,
+                signal: anySignal(abortSignal, controller.signal),
             });
 
             clearInterval(id);
