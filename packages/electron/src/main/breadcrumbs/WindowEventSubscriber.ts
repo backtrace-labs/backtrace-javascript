@@ -43,7 +43,7 @@ export class WindowEventSubscriber implements BreadcrumbsEventSubscriber {
         const windowMsg = (msg: string) => `Window ${window.title} (ID: ${window.id}) ${msg}`;
 
         const onClose = () =>
-            breadcrumbs.addBreadcrumb(windowMsg('is closing'), BreadcrumbLogLevel.Info, BreadcrumbType.System);
+            breadcrumbs.addBreadcrumb(windowMsg('is closing'), BreadcrumbLogLevel.Verbose, BreadcrumbType.System);
 
         const onClosed = () =>
             breadcrumbs.addBreadcrumb(
@@ -75,7 +75,7 @@ export class WindowEventSubscriber implements BreadcrumbsEventSubscriber {
         const onHide = () =>
             breadcrumbs.addBreadcrumb(windowMsg('hidden'), BreadcrumbLogLevel.Info, BreadcrumbType.System);
         const onReadyToShow = () =>
-            breadcrumbs.addBreadcrumb(windowMsg('ready to show'), BreadcrumbLogLevel.Info, BreadcrumbType.System);
+            breadcrumbs.addBreadcrumb(windowMsg('ready to show'), BreadcrumbLogLevel.Verbose, BreadcrumbType.System);
 
         const onMaximize = () =>
             breadcrumbs.addBreadcrumb(windowMsg('maximized'), BreadcrumbLogLevel.Info, BreadcrumbType.System);
@@ -172,12 +172,17 @@ export class WindowEventSubscriber implements BreadcrumbsEventSubscriber {
             );
 
         const onWillFrameNavigation = (event: Event<WebContentsWillFrameNavigateEventParams>) =>
-            breadcrumbs.addBreadcrumb(windowMsg('started navigation'), BreadcrumbLogLevel.Info, BreadcrumbType.System, {
-                frameTreeNodeId: event.frame.frameTreeNodeId,
-                url: event.url,
-                isMainFrame: event.isMainFrame,
-                isSameDocument: event.isSameDocument,
-            });
+            breadcrumbs.addBreadcrumb(
+                windowMsg('started navigation'),
+                BreadcrumbLogLevel.Debug,
+                BreadcrumbType.System,
+                {
+                    frameTreeNodeId: event.frame.frameTreeNodeId,
+                    url: event.url,
+                    isMainFrame: event.isMainFrame,
+                    isSameDocument: event.isSameDocument,
+                },
+            );
 
         const onDidFrameNavigate = (
             _: Event,
