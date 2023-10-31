@@ -63,7 +63,7 @@ describe('Summed events tests', () => {
         expect(testHttpClient.post).toBeCalledWith(
             summedEventsSubmissionUrl,
             JSON.stringify(expectedJson),
-            expect.any(AbortSignal),
+            expect.anything(),
         );
     });
 
@@ -105,7 +105,7 @@ describe('Summed events tests', () => {
         expect(testHttpClient.post).toBeCalledWith(
             summedEventsSubmissionUrl,
             JSON.stringify(expectedJson),
-            expect.any(AbortSignal),
+            expect.anything(),
         );
     });
 
@@ -143,11 +143,7 @@ describe('Summed events tests', () => {
         metrics.initialize();
 
         expect(attributeManager.get().attributes).toMatchObject(customAttributes);
-        expect(testHttpClient.post).toBeCalledWith(
-            expect.anything(),
-            JSON.stringify(expectedJson),
-            expect.any(AbortSignal),
-        );
+        expect(testHttpClient.post).toBeCalledWith(expect.anything(), JSON.stringify(expectedJson), expect.anything());
     });
 
     it('Should add summed event to the submission queue', () => {

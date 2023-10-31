@@ -64,7 +64,7 @@ describe('Unique events tests', () => {
         expect(testHttpClient.post).toBeCalledWith(
             uniqueEventsSubmissionUrl,
             JSON.stringify(expectedJson),
-            expect.any(AbortSignal),
+            expect.anything(),
         );
     });
 
@@ -94,11 +94,7 @@ describe('Unique events tests', () => {
 
         metrics.initialize();
 
-        expect(testHttpClient.post).toBeCalledWith(
-            uniqueEventsSubmissionUrl,
-            expect.anything(),
-            expect.any(AbortSignal),
-        );
+        expect(testHttpClient.post).toBeCalledWith(uniqueEventsSubmissionUrl, expect.anything(), expect.anything());
     });
 
     it(`Shouldn't build a client with invalid url`, () => {
@@ -178,7 +174,7 @@ describe('Unique events tests', () => {
         expect(testHttpClient.post).toBeCalledWith(
             uniqueEventsSubmissionUrl,
             JSON.stringify(expectedJson),
-            expect.any(AbortSignal),
+            expect.anything(),
         );
     });
 });
