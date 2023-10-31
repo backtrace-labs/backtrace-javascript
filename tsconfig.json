@@ -12,5 +12,10 @@
         {
             "path": "./tools/webpack-plugin/tsconfig.build.json"
         }
-    ]
+    ],
+    "ts-node": {
+        "compilerOptions": {
+            "target": "ES2019"
+        }
+    }
 }
