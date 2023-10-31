@@ -16,11 +16,11 @@ production web applications, ultimately improving the quality and reliability of
 The @backtrace/browser is suitable for all JavaScript frameworks. Additional integrations are provided to take advantage
 of the capabilities of different frameworks.
 
--   [@backtrace/browser](https://github.com/backtrace-labs/backtrace-javascript/tree/dev/packages/browser)
--   [@backtrace/react](https://github.com/backtrace-labs/backtrace-javascript/tree/dev/packages/react)
--   [@backtrace/node](https://github.com/backtrace-labs/backtrace-javascript/tree/dev/packages/node)
--   [@backtrace/nestjs](https://github.com/backtrace-labs/backtrace-javascript/tree/dev/packages/nestjs)
--   [@backtrace/electron](https://github.com/backtrace-labs/backtrace-javascript/tree/dev/packages/electron)
+-   [@backtrace/browser](./packages/browser)
+-   [@backtrace/react](./packages/react)
+-   [@backtrace/node](./packages/node)
+-   [@backtrace/nestjs](./packages/nestjs)
+-   [@backtrace/electron](./packages/electron)
 
 ## Web SDK Features
 
