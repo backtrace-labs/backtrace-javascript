@@ -181,6 +181,10 @@ export async function runSourcemapCommands({ opts, logger, getHelpMessage }: Com
     }
 
     const config = configResult.data;
+    const runOptions = config ? { ...joinOptions('run')(config), ...opts } : opts;
+    const processOptions = config ? { ...joinOptions('process')(config), ...opts } : opts;
+    const addSourcsOptions = config ? { ...joinOptions('add-sources')(config), ...opts } : opts;
+    const uploadOptions = config ? { ...joinOptions('upload')(config), ...opts } : opts;
 
     opts = {
         ...config,
@@ -189,11 +193,6 @@ export async function runSourcemapCommands({ opts, logger, getHelpMessage }: Com
         upload: opts['upload'],
         process: opts['process'],
     };
-
-    const runOptions = config ? { ...joinOptions('run')(config), ...opts } : opts;
-    const processOptions = config ? { ...joinOptions('process')(config), ...opts } : opts;
-    const addSourcsOptions = config ? { ...joinOptions('add-sources')(config), ...opts } : opts;
-    const uploadOptions = config ? { ...joinOptions('upload')(config), ...opts } : opts;
 
     const searchPath =
         opts.path ??
