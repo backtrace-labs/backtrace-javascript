@@ -60,7 +60,7 @@ function updateVersion(
 }
 
 async function main() {
-    const options = ['--dry-run', '--no-push', '--no-commit', '--no-checkout', '--no-add'] as const;
+    const options = ['--dry-run', '--no-push', '--no-commit', '--no-checkout', '--no-add', '--name'] as const;
 
     const argv = process.argv.slice(2);
     const [packageJsonPath, versionOrRelease, identifier] = argv.filter((v) => !options.includes(v as never));
@@ -74,20 +74,26 @@ async function main() {
     }
 
     const optionValues = options.reduce((val, k) => {
-        val[k] = argv.includes(k);
+        const opt = argv.find((v) => v.startsWith(`${k}=`));
+        if (opt) {
+            val[k] = opt.replace(`${k}=`, '');
+        } else {
+            val[k] = argv.includes(k);
+        }
+
         return val;
-    }, {} as Record<(typeof options)[number], boolean>);
+    }, {} as Record<(typeof options)[number], boolean | string>);
 
     const dryRun = optionValues['--dry-run'];
     if (dryRun) {
         log('dry run enabled');
     }
 
-    const execute = executor(dryRun);
+    const execute = executor(!!dryRun);
 
     const packageLockPath = path.relative(process.cwd(), path.join(rootDir, 'package-lock.json'));
     const packageJson = await loadPackageJson(packageJsonPath);
-    const packageName = packageJson.name.replace('@backtrace/', '');
+    const packageName = optionValues['--name'] ?? packageJson.name.replace('@backtrace/', '');
     const updatedPackageJson = updateVersion(packageJson, versionOrRelease, identifier);
     const currentBranch = execute(gitGetCurrentBranch());
     const branchName = `${packageName}/${updatedPackageJson.version}`;
