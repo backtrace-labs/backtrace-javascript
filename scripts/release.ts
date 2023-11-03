@@ -35,7 +35,7 @@ async function main() {
     const execute = executor(dryRun);
 
     const packageJson = await loadPackageJson(packageJsonPath);
-    const packageName = packageJson.name.replace('@backtrace-labs/', '');
+    const packageName = packageJson.name.replace('@backtrace/', '');
     const tagName = `${packageName}/${packageJson.version}`;
 
     log(`releasing version ${packageJson.version}`);

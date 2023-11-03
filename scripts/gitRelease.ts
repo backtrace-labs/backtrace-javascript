@@ -87,7 +87,7 @@ async function main() {
 
     const packageLockPath = path.relative(process.cwd(), path.join(rootDir, 'package-lock.json'));
     const packageJson = await loadPackageJson(packageJsonPath);
-    const packageName = packageJson.name.replace('@backtrace-labs/', '');
+    const packageName = packageJson.name.replace('@backtrace/', '');
     const updatedPackageJson = updateVersion(packageJson, versionOrRelease, identifier);
     const currentBranch = execute(gitGetCurrentBranch());
     const branchName = `${packageName}/${updatedPackageJson.version}`;
