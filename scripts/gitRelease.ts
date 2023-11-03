@@ -63,7 +63,7 @@ async function main() {
     const options = ['--dry-run', '--no-push', '--no-commit', '--no-checkout', '--no-add', '--name'] as const;
 
     const argv = process.argv.slice(2);
-    const [packageJsonPath, versionOrRelease, identifier] = argv.filter((v) => !options.includes(v as never));
+    const [packageJsonPath, versionOrRelease, identifier] = argv.filter((v) => !options.some((o) => v.startsWith(o)));
 
     if (!packageJsonPath) {
         throw new Error('first argument must be a package.json path');
