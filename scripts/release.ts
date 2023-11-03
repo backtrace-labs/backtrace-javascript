@@ -41,7 +41,10 @@ async function main() {
     const execute = executor(!!dryRun);
 
     const packageJson = await loadPackageJson(packageJsonPath);
-    const packageName = optionValues['--name'] ?? packageJson.name.replace('@backtrace/', '');
+    const packageName =
+        typeof optionValues['--name'] === 'string'
+            ? optionValues['--name']
+            : packageJson.name.replace('@backtrace/', '');
     const tagName = `${packageName}/${packageJson.version}`;
 
     log(`releasing version ${packageJson.version}`);
