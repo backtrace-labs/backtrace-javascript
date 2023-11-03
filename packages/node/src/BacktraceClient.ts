@@ -8,15 +8,16 @@ import {
     VariableDebugIdMapProvider,
 } from '@backtrace/sdk-core';
 import path from 'path';
-import { AGENT } from './agentDefinition';
-import { transformAttachment } from './attachment/transformAttachments';
 import { BacktraceConfiguration, BacktraceSetupConfiguration } from './BacktraceConfiguration';
 import { BacktraceNodeRequestHandler } from './BacktraceNodeRequestHandler';
+import { AGENT } from './agentDefinition';
+import { transformAttachment } from './attachment/transformAttachments';
 import { FileBreadcrumbsStorage } from './breadcrumbs/FileBreadcrumbsStorage';
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 import { BacktraceNodeClientSetup } from './builder/BacktraceClientSetup';
 import { NodeOptionReader } from './common/NodeOptionReader';
 import { NodeDiagnosticReportConverter } from './converter/NodeDiagnosticReportConverter';
+import { NodeFileSystem } from './storage/NodeFileSystem';
 
 export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration> {
     private _listeners: Record<string, NodeJS.UnhandledRejectionListener | NodeJS.UncaughtExceptionListener> = {};
@@ -26,6 +27,7 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
             sdkOptions: AGENT,
             requestHandler: new BacktraceNodeRequestHandler(clientSetup.options),
             debugIdMapProvider: new VariableDebugIdMapProvider(global as DebugIdContainer),
+            fileSystem: new NodeFileSystem(),
             ...clientSetup,
             options: {
                 ...clientSetup.options,
