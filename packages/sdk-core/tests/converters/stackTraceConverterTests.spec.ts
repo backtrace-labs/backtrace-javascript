@@ -3,7 +3,7 @@ import { v8StackTraceTests } from './v8stackTraceTestCases';
 
 describe('Stack trace converter tests', () => {
     describe('v8', () => {
-        const converter = new V8StackTraceConverter();
+        const converter = new V8StackTraceConverter('address at');
 
         describe('Stack trace generator', () => {
             for (const stackTraceTest of v8StackTraceTests) {

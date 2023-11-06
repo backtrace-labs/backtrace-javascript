@@ -42,7 +42,7 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
             },
             requestHandler: new BacktraceBrowserRequestHandler(clientSetup.options),
             debugIdMapProvider: new VariableDebugIdMapProvider(global as DebugIdContainer),
-            stackTraceConverter: new ReactStackTraceConverter(new V8StackTraceConverter()),
+            stackTraceConverter: new ReactStackTraceConverter(new V8StackTraceConverter('address-at')),
             sessionProvider: new SingleSessionProvider(),
             ...clientSetup,
         });
