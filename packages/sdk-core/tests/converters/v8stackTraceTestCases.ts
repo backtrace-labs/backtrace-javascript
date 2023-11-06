@@ -142,4 +142,27 @@ export const v8StackTraceTests: Array<{
             },
         ],
     },
+    {
+        name: 'Address at test',
+        test: {
+            message: 'Foo bar',
+            stackTrace: `Error: Foo bar
+                    at foo (address at main.js.bundle:1:2)
+                    at bar (address at main.js.bundle:3:4)`,
+        },
+        expectation: [
+            {
+                funcName: 'foo',
+                library: 'main.js.bundle',
+                column: 2,
+                line: 1,
+            },
+            {
+                funcName: 'bar',
+                library: 'main.js.bundle',
+                column: 4,
+                line: 3,
+            },
+        ],
+    },
 ];

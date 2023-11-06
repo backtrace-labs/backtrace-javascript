@@ -64,6 +64,9 @@ export class V8StackTraceConverter implements BacktraceStackTraceConverter {
         if (sourceCodeInformation.startsWith('eval')) {
             return this.extractEvalInformation(sourceCodeInformation);
         }
+        if (sourceCodeInformation.startsWith('address at ')) {
+            sourceCodeInformation = sourceCodeInformation.substring('address at '.length);
+        }
         const sourceCodeParts = sourceCodeInformation.split(':');
         const column = parseInt(sourceCodeParts[sourceCodeParts.length - 1]);
         const lineNumber = parseInt(sourceCodeParts[sourceCodeParts.length - 2]);
