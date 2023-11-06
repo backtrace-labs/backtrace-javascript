@@ -1,0 +1,12 @@
+{
+    "version": 3,
+    "file": "entry2.js",
+    "mappings": ";",
+    "sources": [
+        "../sources/dependency.ts",
+        "../sources/entry2.ts"
+    ],
+    "names": [],
+    "sourceRoot": "",
+    "debugId": "d538bdaa-8149-8111-25f0-b5c0f472366a"
+}

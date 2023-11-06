@@ -12,6 +12,8 @@ export type TestFiles =
     | 'processed-directory-linked-sourcemaps'
     | 'original'
     | 'processed'
+    | 'processed-sources'
+    | 'processed-sourcemaps'
     | 'processed-with-sources'
     | 'with-sources'
     | 'invalid';

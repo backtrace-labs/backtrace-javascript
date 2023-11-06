@@ -185,16 +185,31 @@ export async function processSources({ opts, logger, getHelpMessage }: CommandCo
 export function processSource(force: boolean) {
     const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
 
-    const getDebugId = (sourceAndSourceMap: SourceAndSourceMap) =>
+    const getSourceDebugId = (sourceAndSourceMap: SourceAndSourceMap) =>
+        sourceProcessor.getSourceDebugId(sourceAndSourceMap.source.content);
+
+    const getSourceMapDebugId = (sourceAndSourceMap: SourceAndSourceMap) =>
         sourceProcessor.getSourceMapDebugId(sourceAndSourceMap.sourceMap.content);
 
+    const getDebugIds = (sourceAndSourceMap: SourceAndSourceMap) => ({
+        sourceDebugId: getSourceDebugId(sourceAndSourceMap),
+        sourceMapDebugId: getSourceMapDebugId(sourceAndSourceMap),
+    });
+
+    const shouldProcess = (sourceDebugId: string | undefined, sourceMapDebugId: string | undefined) =>
+        force || !sourceDebugId || !sourceMapDebugId || sourceDebugId !== sourceMapDebugId;
+
     return async function processSource(asset: SourceAndSourceMap): Promise<ProcessedSourceAndSourceMap> {
-        return pipe(asset, getDebugId, (debugId) =>
-            !debugId || force
+        return pipe(asset, getDebugIds, ({ sourceDebugId, sourceMapDebugId }) =>
+            shouldProcess(sourceDebugId, sourceMapDebugId)
                 ? pipe(
                       asset,
                       (asset) =>
-                          sourceProcessor.processSourceAndSourceMap(asset.source.content, asset.sourceMap.content),
+                          sourceProcessor.processSourceAndSourceMap(
+                              asset.source.content,
+                              asset.sourceMap.content,
+                              sourceDebugId ?? sourceMapDebugId,
+                          ),
                       (result) =>
                           ({
                               source: { ...asset.source, content: result.source },
@@ -202,7 +217,7 @@ export function processSource(force: boolean) {
                               debugId: result.debugId,
                           } as ProcessedSourceAndSourceMap),
                   )
-                : ({ ...asset, debugId } as ProcessedSourceAndSourceMap),
+                : ({ ...asset, debugId: sourceDebugId } as ProcessedSourceAndSourceMap),
         );
     };
 }
