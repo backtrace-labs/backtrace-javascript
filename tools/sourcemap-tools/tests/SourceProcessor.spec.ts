@@ -1,4 +1,5 @@
 import assert from 'assert';
+import { randomUUID } from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { RawSourceMap, SourceMapConsumer } from 'source-map';
@@ -33,6 +34,23 @@ function foo(){console.log("Hello World!")}foo();`;
         names: ['foo', 'console', 'log'],
         mappings: 'AACA,SAASA,MACLC,QAAQC,IAAI,cAAc,CAC9B,CACAF,IAAI',
     };
+
+    const processedSource = (
+        debugId: string,
+    ) => `;!function(){try{var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof self?self:{},n=(new Error).stack;n&&(e._btDebugIds=e._btDebugIds||{},e._btDebugIds[n]="${debugId}")}catch(e){}}();
+(()=>{"use strict";console.log("Hello World!")})();
+//# sourceMappingURL=source.js.map
+//# debugId=${debugId}
+`;
+
+    const processedSourceMap = (debugId: string) => ({
+        version: 3,
+        file: 'source.js',
+        sources: ['./source.ts'],
+        names: ['console', 'log'],
+        mappings: ';;mBAAAA,QAAQC,IAAI,e',
+        debugId,
+    });
 
     describe('processSourceAndSourceMap', () => {
         it('should append source snippet to the source on the first line', async () => {
@@ -229,6 +247,50 @@ function foo(){console.log("Hello World!")}foo();`;
             await sourceProcessor.processSourceAndSourceMapFiles(sourcePath, undefined, debugId);
 
             expect(processFn).toBeCalledWith(sourceContent, sourceMapContent, debugId);
+        });
+
+        it('should return unmodified source when source has debug ID', async () => {
+            const debugId = randomUUID();
+            const source = processedSource(debugId);
+            const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
+            const result = await sourceProcessor.processSourceAndSourceMap(source, processedSourceMap(debugId));
+
+            expect(result.source).toEqual(source);
+        });
+
+        it('should return unmodified source when source has same debug ID as provided', async () => {
+            const debugId = randomUUID();
+            const source = processedSource(debugId);
+            const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
+            const result = await sourceProcessor.processSourceAndSourceMap(
+                source,
+                processedSourceMap(debugId),
+                debugId,
+            );
+
+            expect(result.source).toEqual(source);
+        });
+
+        it("should return sourcemap with source's debug ID when source has debug ID", async () => {
+            const debugId = randomUUID();
+            const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
+            const result = await sourceProcessor.processSourceAndSourceMap(processedSource(debugId), sourceMap);
+
+            expect(result.sourceMap.debugId).toEqual(debugId);
+        });
+
+        it('should call replace debug ID when source has different debug ID than provided', async () => {
+            const oldDebugId = randomUUID();
+            const newDebugId = randomUUID();
+            const source = processedSource(oldDebugId);
+            const debugIdGenerator = new DebugIdGenerator();
+
+            const spy = jest.spyOn(debugIdGenerator, 'replaceDebugId');
+
+            const sourceProcessor = new SourceProcessor(debugIdGenerator);
+            await sourceProcessor.processSourceAndSourceMap(source, processedSourceMap(oldDebugId), newDebugId);
+
+            expect(spy).toBeCalledWith(source, oldDebugId, newDebugId);
         });
     });
 

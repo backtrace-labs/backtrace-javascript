@@ -11,6 +11,27 @@ export class DebugIdGenerator {
         return `//# ${SOURCE_DEBUG_ID_COMMENT}=${uuid}`;
     }
 
+    public replaceDebugId(source: string, oldDebugId: string, newDebugId: string) {
+        const replaceAll = () => source.replace(oldDebugId, newDebugId);
+
+        // Try to replace more safely first
+        const oldSourceSnippet = this.generateSourceSnippet(oldDebugId);
+        if (source.indexOf(oldSourceSnippet) !== -1) {
+            source = source.replace(oldSourceSnippet, this.generateSourceSnippet(newDebugId));
+        } else {
+            return replaceAll();
+        }
+
+        const oldCommentSnippet = this.generateSourceComment(oldDebugId);
+        if (source.indexOf(oldCommentSnippet) !== -1) {
+            source = source.replace(oldCommentSnippet, this.generateSourceComment(newDebugId));
+        } else {
+            return replaceAll();
+        }
+
+        return source;
+    }
+
     public getSourceDebugId(source: string): string | undefined {
         const regex = new RegExp(`^//# ${SOURCE_DEBUG_ID_COMMENT}=(.+)$`, 'm');
         const match = source.match(regex);
