@@ -1,3 +1,7 @@
+# Version 0.1.1
+
+-   fix missing `NodeFileSystem` default setting in `BacktraceClient`
+
 # Version 0.1.0
 
 -   library rename to `@backtrace/node`
