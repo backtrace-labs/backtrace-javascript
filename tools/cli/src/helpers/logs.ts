@@ -1,5 +1,6 @@
-import { Asset, log, LogLevel, ProcessAssetResult, SourceAndSourceMap } from '@backtrace/sourcemap-tools';
+import { Asset, log, LogLevel, ProcessAssetResult } from '@backtrace/sourcemap-tools';
 import { CliLogger } from '../logger';
+import { SourceAndSourceMapPaths } from '../models/Asset';
 
 export function logAsset(logger: CliLogger, level: LogLevel) {
     const logFn = log(logger, level);
@@ -19,5 +20,5 @@ export function logAsset(logger: CliLogger, level: LogLevel) {
 export const logAssets =
     (logger: CliLogger, level: LogLevel) =>
     (message: string) =>
-    <T extends SourceAndSourceMap>(assets: T) =>
+    <T extends SourceAndSourceMapPaths>(assets: T) =>
         log(logger, level)<T>(`${assets.source.name}: ${message}`)(assets);

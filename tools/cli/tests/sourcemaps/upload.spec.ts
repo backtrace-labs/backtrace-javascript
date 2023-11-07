@@ -531,4 +531,78 @@ describe('upload', () => {
             }),
         );
     });
+
+    describe('tuple paths', () => {
+        it(
+            'should not fail',
+            withWorkingCopy('processed-not-linked-different-name-sourcemaps', async (workingDir) => {
+                const result = await uploadSourcemaps({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: [
+                            `${workingDir}/entry1.js:${workingDir}/sourcemap1.js.map`,
+                            `${workingDir}/entry2.js:${workingDir}/sourcemap2.js.map`,
+                        ],
+                        url: 'https://test',
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+            }),
+        );
+
+        it(
+            'should append sourcemaps to archive',
+            withWorkingCopy('processed-not-linked-different-name-sourcemaps', async (workingDir) => {
+                const appendSpy = jest.spyOn(ZipArchive.prototype, 'append');
+                appendSpy.mockClear();
+
+                const result = await uploadSourcemaps({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: [
+                            `${workingDir}/entry1.js:${workingDir}/sourcemap1.js.map`,
+                            `${workingDir}/entry2.js:${workingDir}/sourcemap2.js.map`,
+                        ],
+                        url: 'https://test',
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+
+                const files = await glob(`${workingDir}/*.js.map`);
+                for (const file of files) {
+                    expect(appendSpy).toHaveBeenCalledWith(
+                        expect.stringContaining(path.basename(file)),
+                        expect.anything(),
+                    );
+                }
+            }),
+        );
+
+        it(
+            'should call upload',
+            withWorkingCopy('processed-not-linked-different-name-sourcemaps', async (workingDir) => {
+                const uploadSpy = mockUploader();
+                uploadSpy.mockClear();
+
+                const result = await uploadSourcemaps({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: [
+                            `${workingDir}/entry1.js:${workingDir}/sourcemap1.js.map`,
+                            `${workingDir}/entry2.js:${workingDir}/sourcemap2.js.map`,
+                        ],
+                        url: 'https://test',
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+                expect(uploadSpy).toBeCalled();
+            }),
+        );
+    });
 });

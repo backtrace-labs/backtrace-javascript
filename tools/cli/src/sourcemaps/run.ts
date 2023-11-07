@@ -29,16 +29,17 @@ import { GlobalOptions } from '..';
 import { Command, CommandContext } from '../commands/Command';
 import {
     isAssetProcessed,
+    printAssetInfo,
     readSourceAndSourceMap,
-    toAsset,
+    toSourceAndSourceMapPaths,
     uniqueBy,
     writeSourceAndSourceMap,
 } from '../helpers/common';
 import { ErrorBehaviors, filterBehaviorSkippedElements, getErrorBehavior, handleError } from '../helpers/errorBehavior';
-import { buildIncludeExclude, find } from '../helpers/find';
+import { buildIncludeExclude, findTuples } from '../helpers/find';
 import { logAsset, logAssets } from '../helpers/logs';
 import { normalizePaths, relativePaths } from '../helpers/normalizePaths';
-import { CliLogger } from '../logger';
+import { SourceAndSourceMapPaths } from '../models/Asset';
 import { findConfig, joinOptions, loadOptions } from '../options/loadOptions';
 import { addSourceToSourceMap } from './add-sources';
 import { processSource } from './process';
@@ -242,14 +243,14 @@ export async function runSourcemapCommands({ opts, logger, getHelpMessage }: Com
     const logAssetBehaviorError = (asset: Asset) => (err: string, level: LogLevel) =>
         logAsset(logger, level)(err)(asset);
 
-    const readAssetCommand = (asset: Asset) =>
+    const readAssetCommand = (asset: SourceAndSourceMapPaths) =>
         pipe(
             asset,
-            logTraceAsset('reading source and sourcemap'),
+            logTraceAssets('reading source and sourcemap'),
             readSourceAndSourceMap(sourceProcessor),
             R.map(logDebugAssets('read source and sourcemap')),
-            R.mapErr((err) => `${asset.name}: ${err}`),
-            handleFailedAsset(logAssetBehaviorError(asset)),
+            R.mapErr((err) => `${asset.source.name}: ${err}`),
+            handleFailedAsset(logAssetBehaviorError(asset.source)),
         );
 
     const handleAssetCommand = (process: boolean, addSources: boolean) => (asset: SourceAndSourceMap) =>
@@ -357,16 +358,16 @@ export async function runSourcemapCommands({ opts, logger, getHelpMessage }: Com
 
     return pipe(
         searchPaths,
-        find,
+        findTuples,
         logDebug((r) => `found ${r.length} files`),
-        map(logTrace((result) => `found file: ${result.path}`)),
-        isIncluded ? filterAsync(isIncluded) : pass,
-        isExcluded ? filterAsync(flow(isExcluded, not)) : pass,
-        filter((t) => t.direct || matchSourceExtension(t.path)),
-        map((t) => t.path),
+        map(logTrace((result) => `found file: ${result.file1.path}`)),
+        isIncluded ? filterAsync((x) => isIncluded(x.file1)) : pass,
+        isExcluded ? filterAsync(flow((x) => isExcluded(x.file1), not)) : pass,
+        filter((t) => t.file1.direct || matchSourceExtension(t.file1.path)),
+        // map((t) => t.path),
         logDebug((r) => `found ${r.length} source files`),
-        map(logTrace((path) => `found source file: ${path}`)),
-        map(toAsset),
+        map(logTrace((path) => `found source file: ${path.file1}`)),
+        map(toSourceAndSourceMapPaths),
         opts['pass-with-no-files'] ? Ok : failIfEmpty('no source files found'),
         R.map(flow(mapAsync(readAssetCommand), R.flatMap)),
         R.map(filterBehaviorSkippedElements),
@@ -394,12 +395,4 @@ export async function runSourcemapCommands({ opts, logger, getHelpMessage }: Com
         ),
         R.map(uploadCommand ?? Ok),
     );
-}
-
-function printAssetInfo(logger: CliLogger) {
-    return function printAssetInfo<T extends SourceAndSourceMap>(asset: T) {
-        logger.debug(`${asset.source.path}`);
-        logger.debug(`└── ${asset.sourceMap.path}`);
-        return asset;
-    };
 }

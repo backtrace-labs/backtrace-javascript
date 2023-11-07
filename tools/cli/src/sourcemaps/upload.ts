@@ -36,7 +36,7 @@ import { GlobalOptions } from '..';
 import { Command, CommandContext } from '../commands/Command';
 import { isAssetProcessed, readSourceMapFromPathOrFromSource, toAsset, uniqueBy, validateUrl } from '../helpers/common';
 import { ErrorBehaviors, filterBehaviorSkippedElements, getErrorBehavior, handleError } from '../helpers/errorBehavior';
-import { buildIncludeExclude, find } from '../helpers/find';
+import { buildIncludeExclude, file2Or1FromTuple, findTuples } from '../helpers/find';
 import { logAsset } from '../helpers/logs';
 import { normalizePaths, relativePaths } from '../helpers/normalizePaths';
 import { CliLogger } from '../logger';
@@ -259,7 +259,8 @@ export async function uploadSourcemaps({ opts, logger, getHelpMessage }: Command
 
     return pipe(
         searchPaths,
-        find,
+        findTuples,
+        map(file2Or1FromTuple),
         logDebug((r) => `found ${r.length} files`),
         map(logTrace((result) => `found file: ${result.path}`)),
         isIncluded ? filterAsync(isIncluded) : pass,

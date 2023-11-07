@@ -15,9 +15,19 @@ import {
     writeFile,
 } from '@backtrace/sourcemap-tools';
 import fs from 'fs';
+import { CliLogger } from '../logger';
+import { SourceAndSourceMapPaths } from '../models/Asset';
+import { FindFileTuple } from './find';
 
 export function toAsset(file: string): Asset {
     return { name: file, path: file };
+}
+
+export function toSourceAndSourceMapPaths(tuple: FindFileTuple): SourceAndSourceMapPaths {
+    return {
+        source: toAsset(tuple.file1.path),
+        sourceMap: tuple.file2 ? toAsset(tuple.file2) : undefined,
+    };
 }
 
 export async function pathIfExists(file: string): Promise<string | undefined> {
@@ -47,22 +57,32 @@ export function readSourceMap<T extends Asset>(asset: T): ResultPromise<AssetWit
 }
 
 export function readSourceAndSourceMap(sourceProcessor: SourceProcessor) {
-    return function _readSourceAndSourceMap(sourceAsset: Asset): ResultPromise<SourceAndSourceMap, string> {
-        return pipe(
-            sourceAsset,
-            readSource,
-            R.map((source) =>
-                pipe(
-                    source.content,
-                    (content) => sourceProcessor.getSourceMapPathFromSource(content, sourceAsset.path),
-                    R.map((result) => result ?? pathIfExists(`${source.path}.map`)),
-                    R.map((path) => (path ? Ok(path) : Err('could not find source map for source'))),
-                    R.map((path) => ({ name: path, path } as Asset)),
-                    R.map(readSourceMap),
-                    R.map((sourceMap) => ({ source, sourceMap } as SourceAndSourceMap)),
-                ),
-            ),
-        );
+    return async function _readSourceAndSourceMapx({
+        source,
+        sourceMap,
+    }: SourceAndSourceMapPaths): ResultPromise<SourceAndSourceMap, string> {
+        const sourceResult = await readSource(source);
+        if (sourceResult.isErr()) {
+            return sourceResult;
+        }
+
+        const loadedSource = sourceResult.data;
+
+        const sourceMapResult = sourceMap
+            ? await readSourceMap(sourceMap)
+            : await pipe(
+                  loadedSource,
+                  ({ content }) => sourceProcessor.getSourceMapPathFromSource(content, source.path),
+                  R.map((result) => result ?? pathIfExists(`${source.path}.map`)),
+                  R.map((path) => (path ? Ok(toAsset(path)) : Err('could not find source map for source'))),
+                  R.map(readSourceMap),
+              );
+
+        if (sourceMapResult.isErr()) {
+            return sourceMapResult;
+        }
+
+        return Ok({ source: loadedSource, sourceMap: sourceMapResult.data });
     };
 }
 
@@ -138,5 +158,13 @@ export function uniqueBy<T, U>(fn: (t: T) => U) {
             keys.add(key);
             return true;
         });
+    };
+}
+
+export function printAssetInfo(logger: CliLogger) {
+    return function printAssetInfo<T extends SourceAndSourceMap>(asset: T) {
+        logger.debug(`${asset.source.path}`);
+        logger.debug(`└── ${asset.sourceMap.path}`);
+        return asset;
     };
 }

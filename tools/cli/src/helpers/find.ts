@@ -1,4 +1,4 @@
-import { FileFinder, log, pipe } from '@backtrace/sourcemap-tools';
+import { FileFinder, filter, flatMap, log, map, mapAsync, pipe } from '@backtrace/sourcemap-tools';
 import fs from 'fs';
 import { glob } from 'glob';
 import path from 'path';
@@ -11,6 +11,11 @@ export interface FindResult {
      * Whether the file was found with recursive search, or was specified directly via glob.
      */
     readonly direct: boolean;
+}
+
+export interface FindFileTuple {
+    readonly file1: FindResult;
+    readonly file2?: string;
 }
 
 /**
@@ -90,3 +95,16 @@ export async function buildIncludeExclude(
 
     return { isIncluded, isExcluded } as const;
 }
+
+export async function findTuples(paths: string[]): Promise<FindFileTuple[]> {
+    return pipe(
+        paths,
+        map((p) => p.split(':')),
+        mapAsync(async ([path1, path2]) => ({ result: await find([path1]), path2 })),
+        filter(({ result }) => result.length > 0),
+        flatMap(({ result, path2 }) => result.map((file1) => ({ file1, file2: path2 }))),
+    );
+}
+
+export const file2Or1FromTuple = ({ file1, file2 }: FindFileTuple) =>
+    file2 ? ({ direct: true, findPath: file2, path: file2 } as FindResult) : file1;

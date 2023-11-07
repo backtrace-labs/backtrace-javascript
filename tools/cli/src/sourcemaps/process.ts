@@ -23,12 +23,13 @@ import {
 import path from 'path';
 import { GlobalOptions } from '..';
 import { Command, CommandContext } from '../commands/Command';
-import { readSourceAndSourceMap, toAsset, writeSourceAndSourceMap } from '../helpers/common';
+import { readSourceAndSourceMap, toSourceAndSourceMapPaths, writeSourceAndSourceMap } from '../helpers/common';
 import { ErrorBehaviors, filterBehaviorSkippedElements, getErrorBehavior, handleError } from '../helpers/errorBehavior';
-import { buildIncludeExclude, find } from '../helpers/find';
+import { buildIncludeExclude, findTuples } from '../helpers/find';
 import { logAsset, logAssets } from '../helpers/logs';
 import { normalizePaths, relativePaths } from '../helpers/normalizePaths';
 import { CliLogger } from '../logger';
+import { SourceAndSourceMapPaths } from '../models/Asset';
 import { findConfig, loadOptionsForCommand } from '../options/loadOptions';
 
 export interface ProcessOptions extends GlobalOptions {
@@ -121,7 +122,6 @@ export async function processSources({ opts, logger, getHelpMessage }: CommandCo
 
     const logDebug = log(logger, 'debug');
     const logTrace = log(logger, 'trace');
-    const logTraceAsset = logAsset(logger, 'trace');
     const logDebugAssets = logAssets(logger, 'debug');
     const logTraceAssets = logAssets(logger, 'trace');
 
@@ -137,10 +137,10 @@ export async function processSources({ opts, logger, getHelpMessage }: CommandCo
     const logAssetBehaviorError = (asset: Asset) => (err: string, level: LogLevel) =>
         logAsset(logger, level)(err)(asset);
 
-    const processAssetCommand = (asset: Asset) =>
+    const processAssetCommand = (asset: SourceAndSourceMapPaths) =>
         pipe(
             asset,
-            logTraceAsset('reading source and sourcemap'),
+            logTraceAssets('reading source and sourcemap'),
             readSourceAndSourceMap(sourceProcessor),
             R.map(logDebugAssets('read source and sourcemap')),
             R.map(logTraceAssets('processing source and sourcemap')),
@@ -155,8 +155,8 @@ export async function processSources({ opts, logger, getHelpMessage }: CommandCo
                           R.map(logDebugAssets('wrote source and sourcemap')),
                       ),
             ),
-            R.mapErr((err) => `${asset.name}: ${err}`),
-            handleFailedAsset(logAssetBehaviorError(asset)),
+            R.mapErr((err) => `${asset.source.name}: ${err}`),
+            handleFailedAsset(logAssetBehaviorError(asset.source)),
         );
 
     const includePaths = normalizePaths(opts.include);
@@ -165,16 +165,15 @@ export async function processSources({ opts, logger, getHelpMessage }: CommandCo
 
     return pipe(
         searchPaths,
-        find,
+        findTuples,
         logDebug((r) => `found ${r.length} files`),
-        map(logTrace((result) => `found file: ${result.path}`)),
-        isIncluded ? filterAsync(isIncluded) : pass,
-        isExcluded ? filterAsync(flow(isExcluded, not)) : pass,
-        filter((t) => t.direct || matchSourceExtension(t.path)),
-        map((t) => t.path),
+        map(logTrace((result) => `found file: ${result.file1.path}`)),
+        isIncluded ? filterAsync((x) => isIncluded(x.file1)) : pass,
+        isExcluded ? filterAsync(flow((x) => isExcluded(x.file1), not)) : pass,
+        filter((t) => t.file1.direct || matchSourceExtension(t.file1.path)),
         logDebug((r) => `found ${r.length} files for processing`),
-        map(logTrace((path) => `file for processing: ${path}`)),
-        map(toAsset),
+        map(logTrace((path) => `file for processing: ${path.file1.path}`)),
+        map(toSourceAndSourceMapPaths),
         opts['pass-with-no-files'] ? Ok : failIfEmpty('no source files found'),
         R.map(flow(mapAsync(processAssetCommand), R.flatMap)),
         R.map(filterBehaviorSkippedElements),
