@@ -260,38 +260,42 @@ export async function uploadSourcemaps({ opts, logger, getHelpMessage }: Command
     return pipe(
         searchPaths,
         findTuples,
-        map(file2Or1FromTuple),
-        logDebug((r) => `found ${r.length} files`),
-        map(logTrace((result) => `found file: ${result.path}`)),
-        isIncluded ? filterAsync(isIncluded) : pass,
-        isExcluded ? filterAsync(flow(isExcluded, not)) : pass,
-        filter((t) => t.direct || matchSourceMapExtension(t.path)),
-        map((t) => t.path),
-        logDebug((r) => `found ${r.length} files for upload`),
-        map(logTrace((path) => `file for upload: ${path}`)),
-        map(toAsset),
-        opts['pass-with-no-files'] ? Ok : failIfEmpty('no sourcemaps found'),
-        R.map(flow(mapAsync(loadSourceMapCommand), R.flatMap)),
-        R.map(filterBehaviorSkippedElements),
-        R.map(filterProcessedAssetsCommand),
         R.map(
-            opts['pass-with-no-files']
-                ? Ok
-                : failIfEmpty('no processed sourcemaps found, make sure to run process first'),
+            flow(
+                map(file2Or1FromTuple),
+                logDebug((r) => `found ${r.length} files`),
+                map(logTrace((result) => `found file: ${result.path}`)),
+                isIncluded ? filterAsync(isIncluded) : pass,
+                isExcluded ? filterAsync(flow(isExcluded, not)) : pass,
+                filter((t) => t.direct || matchSourceMapExtension(t.path)),
+                map((t) => t.path),
+                logDebug((r) => `found ${r.length} files for upload`),
+                map(logTrace((path) => `file for upload: ${path}`)),
+                map(toAsset),
+                opts['pass-with-no-files'] ? Ok : failIfEmpty('no sourcemaps found'),
+                R.map(flow(mapAsync(loadSourceMapCommand), R.flatMap)),
+                R.map(filterBehaviorSkippedElements),
+                R.map(filterProcessedAssetsCommand),
+                R.map(
+                    opts['pass-with-no-files']
+                        ? Ok
+                        : failIfEmpty('no processed sourcemaps found, make sure to run process first'),
+                ),
+                R.map(uniqueBy((asset) => asset.content.debugId)),
+                R.map(opts['include-sources'] ? pass : map(stripSourcesContent)),
+                R.map((assets) =>
+                    opts['dry-run']
+                        ? Ok<UploadResultWithAssets>({
+                              rxid: '<dry-run>',
+                              assets,
+                          })
+                        : assets.length
+                        ? saveArchiveCommand(assets)
+                        : Ok<UploadResultWithAssets>({ rxid: '<no sourcemaps uploaded>', assets }),
+                ),
+                R.map(output(logger)),
+            ),
         ),
-        R.map(uniqueBy((asset) => asset.content.debugId)),
-        R.map(opts['include-sources'] ? pass : map(stripSourcesContent)),
-        R.map((assets) =>
-            opts['dry-run']
-                ? Ok<UploadResultWithAssets>({
-                      rxid: '<dry-run>',
-                      assets,
-                  })
-                : assets.length
-                ? saveArchiveCommand(assets)
-                : Ok<UploadResultWithAssets>({ rxid: '<no sourcemaps uploaded>', assets }),
-        ),
-        R.map(output(logger)),
     );
 }
 

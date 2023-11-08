@@ -359,40 +359,47 @@ export async function runSourcemapCommands({ opts, logger, getHelpMessage }: Com
     return pipe(
         searchPaths,
         findTuples,
-        logDebug((r) => `found ${r.length} files`),
-        map(logTrace((result) => `found file: ${result.file1.path}`)),
-        isIncluded ? filterAsync((x) => isIncluded(x.file1)) : pass,
-        isExcluded ? filterAsync(flow((x) => isExcluded(x.file1), not)) : pass,
-        filter((t) => t.file1.direct || matchSourceExtension(t.file1.path)),
-        // map((t) => t.path),
-        logDebug((r) => `found ${r.length} source files`),
-        map(logTrace((path) => `found source file: ${path.file1}`)),
-        map(toSourceAndSourceMapPaths),
-        opts['pass-with-no-files'] ? Ok : failIfEmpty('no source files found'),
-        R.map(flow(mapAsync(readAssetCommand), R.flatMap)),
-        R.map(filterBehaviorSkippedElements),
-        R.map(map(printAssetInfo(logger))),
-        R.map(flow(mapAsync(handleAssetCommand(runProcess, runAddSources)), R.flatMap)),
-        R.map(filterBehaviorSkippedElements),
         R.map(
-            runProcess
-                ? logInfo(
-                      (assets) =>
-                          `processed ${assets.reduce(
-                              (sum, r) => sum + (r.processed ? 1 : 0),
-                              0,
-                          )} source and sourcemaps`,
-                  )
-                : pass,
+            flow(
+                logDebug((r) => `found ${r.length} files`),
+                map(logTrace((result) => `found file: ${result.file1.path}`)),
+                isIncluded ? filterAsync((x) => isIncluded(x.file1)) : pass,
+                isExcluded ? filterAsync(flow((x) => isExcluded(x.file1), not)) : pass,
+                filter((t) => t.file1.direct || matchSourceExtension(t.file1.path)),
+                // map((t) => t.path),
+                logDebug((r) => `found ${r.length} source files`),
+                map(logTrace((path) => `found source file: ${path.file1}`)),
+                map(toSourceAndSourceMapPaths),
+                opts['pass-with-no-files'] ? Ok : failIfEmpty('no source files found'),
+                R.map(flow(mapAsync(readAssetCommand), R.flatMap)),
+                R.map(filterBehaviorSkippedElements),
+                R.map(map(printAssetInfo(logger))),
+                R.map(flow(mapAsync(handleAssetCommand(runProcess, runAddSources)), R.flatMap)),
+                R.map(filterBehaviorSkippedElements),
+                R.map(
+                    runProcess
+                        ? logInfo(
+                              (assets) =>
+                                  `processed ${assets.reduce(
+                                      (sum, r) => sum + (r.processed ? 1 : 0),
+                                      0,
+                                  )} source and sourcemaps`,
+                          )
+                        : pass,
+                ),
+                R.map(
+                    runAddSources
+                        ? logInfo(
+                              (assets) =>
+                                  `added sources to ${assets.reduce(
+                                      (sum, r) => sum + (r.sourceAdded ? 1 : 0),
+                                      0,
+                                  )} sourcemaps`,
+                          )
+                        : pass,
+                ),
+                R.map(uploadCommand ?? Ok),
+            ),
         ),
-        R.map(
-            runAddSources
-                ? logInfo(
-                      (assets) =>
-                          `added sources to ${assets.reduce((sum, r) => sum + (r.sourceAdded ? 1 : 0), 0)} sourcemaps`,
-                  )
-                : pass,
-        ),
-        R.map(uploadCommand ?? Ok),
     );
 }

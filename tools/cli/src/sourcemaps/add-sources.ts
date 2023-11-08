@@ -168,20 +168,24 @@ export async function addSourcesToSourcemaps({ opts, logger, getHelpMessage }: C
     return pipe(
         searchPaths,
         findTuples,
-        map(file2Or1FromTuple),
-        logDebug((r) => `found ${r.length} files`),
-        map(logTrace((result) => `found file: ${result.path}`)),
-        isIncluded ? filterAsync(isIncluded) : pass,
-        isExcluded ? filterAsync(flow(isExcluded, not)) : pass,
-        filter((t) => t.direct || matchSourceMapExtension(t.path)),
-        map((t) => t.path),
-        logDebug((r) => `found ${r.length} files for adding sources`),
-        map(logTrace((path) => `file to add sources to: ${path}`)),
-        map(toAsset),
-        opts['pass-with-no-files'] ? Ok : failIfEmpty('no sourcemaps found'),
-        R.map(flow(mapAsync(addSourcesCommand), R.flatMap)),
-        R.map(filterBehaviorSkippedElements),
-        R.map(map(output(logger))),
+        R.map(
+            flow(
+                map(file2Or1FromTuple),
+                logDebug((r) => `found ${r.length} files`),
+                map(logTrace((result) => `found file: ${result.path}`)),
+                isIncluded ? filterAsync(isIncluded) : pass,
+                isExcluded ? filterAsync(flow(isExcluded, not)) : pass,
+                filter((t) => t.direct || matchSourceMapExtension(t.path)),
+                map((t) => t.path),
+                logDebug((r) => `found ${r.length} files for adding sources`),
+                map(logTrace((path) => `file to add sources to: ${path}`)),
+                map(toAsset),
+                opts['pass-with-no-files'] ? Ok : failIfEmpty('no sourcemaps found'),
+                R.map(flow(mapAsync(addSourcesCommand), R.flatMap)),
+                R.map(filterBehaviorSkippedElements),
+                R.map(map(output(logger))),
+            ),
+        ),
     );
 }
 

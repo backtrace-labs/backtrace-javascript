@@ -166,18 +166,22 @@ export async function processSources({ opts, logger, getHelpMessage }: CommandCo
     return pipe(
         searchPaths,
         findTuples,
-        logDebug((r) => `found ${r.length} files`),
-        map(logTrace((result) => `found file: ${result.file1.path}`)),
-        isIncluded ? filterAsync((x) => isIncluded(x.file1)) : pass,
-        isExcluded ? filterAsync(flow((x) => isExcluded(x.file1), not)) : pass,
-        filter((t) => t.file1.direct || matchSourceExtension(t.file1.path)),
-        logDebug((r) => `found ${r.length} files for processing`),
-        map(logTrace((path) => `file for processing: ${path.file1.path}`)),
-        map(toSourceAndSourceMapPaths),
-        opts['pass-with-no-files'] ? Ok : failIfEmpty('no source files found'),
-        R.map(flow(mapAsync(processAssetCommand), R.flatMap)),
-        R.map(filterBehaviorSkippedElements),
-        R.map(map(output(logger))),
+        R.map(
+            flow(
+                logDebug((r) => `found ${r.length} files`),
+                map(logTrace((result) => `found file: ${result.file1.path}`)),
+                isIncluded ? filterAsync((x) => isIncluded(x.file1)) : pass,
+                isExcluded ? filterAsync(flow((x) => isExcluded(x.file1), not)) : pass,
+                filter((t) => t.file1.direct || matchSourceExtension(t.file1.path)),
+                logDebug((r) => `found ${r.length} files for processing`),
+                map(logTrace((path) => `file for processing: ${path.file1.path}`)),
+                map(toSourceAndSourceMapPaths),
+                opts['pass-with-no-files'] ? Ok : failIfEmpty('no source files found'),
+                R.map(flow(mapAsync(processAssetCommand), R.flatMap)),
+                R.map(filterBehaviorSkippedElements),
+                R.map(map(output(logger))),
+            ),
+        ),
     );
 }
 

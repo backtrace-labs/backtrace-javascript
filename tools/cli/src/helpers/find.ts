@@ -1,4 +1,17 @@
-import { FileFinder, filter, flatMap, log, map, mapAsync, pipe } from '@backtrace/sourcemap-tools';
+import {
+    Err,
+    FileFinder,
+    Ok,
+    R,
+    Result,
+    filter,
+    flatMap,
+    log,
+    map,
+    mapAsync,
+    pipe,
+    statFile,
+} from '@backtrace/sourcemap-tools';
 import fs from 'fs';
 import { glob } from 'glob';
 import path from 'path';
@@ -96,13 +109,26 @@ export async function buildIncludeExclude(
     return { isIncluded, isExcluded } as const;
 }
 
-export async function findTuples(paths: string[]): Promise<FindFileTuple[]> {
+export async function findTuples(paths: string[]): Promise<Result<FindFileTuple[], string>> {
     return pipe(
         paths,
         map((p) => p.split(':')),
-        mapAsync(async ([path1, path2]) => ({ result: await find([path1]), path2 })),
-        filter(({ result }) => result.length > 0),
-        flatMap(({ result, path2 }) => result.map((file1) => ({ file1, file2: path2 }))),
+        mapAsync(([path1, path2]) =>
+            path2
+                ? pipe(
+                      path2,
+                      statFile,
+                      R.map((r) =>
+                          r.isFile() ? Ok(path2) : Err(`${path1}:${path2}: second part of tuple cannot be a directory`),
+                      ),
+                      R.map(() => [path1, path2]),
+                  )
+                : Ok([path1, path2]),
+        ),
+        R.flatMap,
+        R.map(mapAsync(async ([path1, path2]) => ({ result: await find([path1]), path2 }))),
+        R.map(filter(({ result }) => result.length > 0)),
+        R.map(flatMap(({ result, path2 }) => result.map((file1) => ({ file1, file2: path2 })))),
     );
 }
 
