@@ -2,11 +2,11 @@ import path from 'path';
 import { BacktraceFileAttachment } from '../../src/model/attachment';
 import { FileSystem } from '../../src/modules/storage/FileSystem';
 
-type MockedFileSystem = {
-    [K in keyof FileSystem]: jest.Mock<ReturnType<FileSystem[K]>, Parameters<FileSystem[K]>>;
+export type MockedFileSystem<T extends FileSystem> = {
+    [K in keyof T]: T[K] extends (...args: any) => any ? jest.Mock<ReturnType<T[K]>, Parameters<T[K]>> : never;
 } & { files: Record<string, string> };
 
-export function mockFileSystem(files?: Record<string, string>): MockedFileSystem {
+export function mockFileSystem(files?: Record<string, string>): MockedFileSystem<FileSystem> {
     const fs = Object.entries(files ?? {})
         .map(([k, v]) => [path.resolve(k), v])
         .reduce((obj, [k, v]) => {
@@ -37,10 +37,10 @@ export function mockFileSystem(files?: Record<string, string>): MockedFileSystem
 
         unlink: jest.fn().mockImplementation((p: string) => {
             delete fs[path.resolve(p)];
+            return Promise.resolve();
         }),
         unlinkSync: jest.fn().mockImplementation((p: string) => {
             delete fs[path.resolve(p)];
-            return Promise.resolve();
         }),
 
         exists: jest.fn().mockImplementation((p: string) => Promise.resolve(path.resolve(p) in fs)),
