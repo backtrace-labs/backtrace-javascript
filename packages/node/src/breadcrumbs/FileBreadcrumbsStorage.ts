@@ -12,6 +12,7 @@ import {
 import path from 'path';
 import { BacktraceFileAttachment } from '../attachment';
 import { AlternatingFileWriter } from '../common/AlternatingFileWriter';
+import { NodeFileSystem } from '../storage/interfaces/NodeFileSystem';
 
 const FILE_PREFIX = 'breadcrumbs';
 
@@ -27,12 +28,16 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
     constructor(
         private readonly _mainFile: string,
         private readonly _fallbackFile: string,
+        fileSystem: NodeFileSystem,
         maximumBreadcrumbs: number,
     ) {
-        this._writer = new AlternatingFileWriter(_mainFile, _fallbackFile, maximumBreadcrumbs);
+        this._writer = new AlternatingFileWriter(_mainFile, _fallbackFile, maximumBreadcrumbs, fileSystem);
     }
 
-    public static createFromSession(session: SessionFiles): FileBreadcrumbsStorage | undefined {
+    public static createFromSession(
+        session: SessionFiles,
+        fileSystem: NodeFileSystem,
+    ): FileBreadcrumbsStorage | undefined {
         const files = session
             .getSessionFiles()
             .filter((f) => path.basename(f).startsWith(FILE_PREFIX))
@@ -42,13 +47,13 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
             return undefined;
         }
 
-        return new FileBreadcrumbsStorage(files[0], files[1], 1);
+        return new FileBreadcrumbsStorage(files[0], files[1], fileSystem, 1);
     }
 
-    public static create(session: SessionFiles, maximumBreadcrumbs: number) {
+    public static create(session: SessionFiles, fileSystem: NodeFileSystem, maximumBreadcrumbs: number) {
         const file1 = session.getFileName(this.getFileName(0));
         const file2 = session.getFileName(this.getFileName(1));
-        return new FileBreadcrumbsStorage(file1, file2, maximumBreadcrumbs);
+        return new FileBreadcrumbsStorage(file1, file2, fileSystem, maximumBreadcrumbs);
     }
 
     public getAttachments(): BacktraceAttachment<unknown>[] {

@@ -1,7 +1,7 @@
-import fs from 'fs';
+import { NodeFileSystem, WritableStream } from '../storage/interfaces/NodeFileSystem';
 
 export class AlternatingFileWriter {
-    private _fileStream?: fs.WriteStream;
+    private _fileStream?: WritableStream;
     private _count = 0;
     private _disposed = false;
 
@@ -9,6 +9,7 @@ export class AlternatingFileWriter {
         private readonly _mainFile: string,
         private readonly _fallbackFile: string,
         private readonly _fileCapacity: number,
+        private readonly _fileSystem: NodeFileSystem,
     ) {
         if (this._fileCapacity <= 0) {
             throw new Error('File capacity may not be less or equal to 0.');
@@ -21,26 +22,54 @@ export class AlternatingFileWriter {
         }
 
         if (!this._fileStream) {
-            this._fileStream = fs.createWriteStream(this._mainFile, 'utf-8');
+            const stream = this.safeCreateStream(this._mainFile);
+            if (!stream) {
+                return this;
+            }
+
+            this._fileStream = stream;
         } else if (this._count >= this._fileCapacity) {
             this._fileStream.close();
-            await fs.promises.rename(this._mainFile, this._fallbackFile);
+            this.safeMoveMainToFallback();
             this._count = 0;
-            this._fileStream = fs.createWriteStream(this._mainFile, 'utf-8');
+
+            const stream = this.safeCreateStream(this._mainFile);
+            if (!stream) {
+                return this;
+            }
+
+            this._fileStream = stream;
         }
 
-        await this.writeAsync(this._fileStream, value + '\n');
+        await this.safeWriteAsync(this._fileStream, value + '\n');
         this._count++;
 
         return this;
     }
 
-    private writeAsync(fs: fs.WriteStream, data: unknown) {
-        return new Promise<void>((resolve, reject) => fs.write(data, (err) => (err ? reject(err) : resolve())));
+    private safeWriteAsync(fs: WritableStream, data: string) {
+        return new Promise<boolean>((resolve) => fs.write(data, (err) => (err ? resolve(false) : resolve(true))));
     }
 
     public dispose() {
         this._fileStream?.close();
         this._disposed = true;
+    }
+
+    private safeCreateStream(path: string) {
+        try {
+            return this._fileSystem.createWriteStream(path);
+        } catch {
+            return undefined;
+        }
+    }
+
+    private safeMoveMainToFallback() {
+        try {
+            this._fileSystem.renameSync(this._mainFile, this._fallbackFile);
+            return true;
+        } catch {
+            return false;
+        }
     }
 }
