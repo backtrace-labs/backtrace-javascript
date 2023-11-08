@@ -17,7 +17,7 @@ import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 import { BacktraceNodeClientSetup } from './builder/BacktraceClientSetup';
 import { NodeOptionReader } from './common/NodeOptionReader';
 import { NodeDiagnosticReportConverter } from './converter/NodeDiagnosticReportConverter';
-import { NodeFileSystem } from './storage/NodeFileSystem';
+import { FsNodeFileSystem } from './storage/FsNodeFileSystem';
 
 export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration> {
     private _listeners: Record<string, NodeJS.UnhandledRejectionListener | NodeJS.UncaughtExceptionListener> = {};
@@ -27,7 +27,7 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
             sdkOptions: AGENT,
             requestHandler: new BacktraceNodeRequestHandler(clientSetup.options),
             debugIdMapProvider: new VariableDebugIdMapProvider(global as DebugIdContainer),
-            fileSystem: new NodeFileSystem(),
+            fileSystem: new FsNodeFileSystem(),
             ...clientSetup,
             options: {
                 ...clientSetup.options,
