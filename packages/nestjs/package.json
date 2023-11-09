@@ -1,6 +1,6 @@
 {
     "name": "@backtrace/nestjs",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "Backtrace-JavaScript NestJS integration",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
@@ -11,7 +11,7 @@
         "lint": "eslint . --ext .ts",
         "prepublishOnly": "NODE_ENV=production npm run build",
         "watch": "webpack -w",
-        "test": "NODE_ENV=test jest"
+        "test": "NODE_ENV=test jest --passWithNoTests"
     },
     "engines": {
         "node": ">=14"
@@ -41,9 +41,9 @@
         "/lib"
     ],
     "devDependencies": {
-        "@nestjs/core": "^9",
-        "@nestjs/platform-express": "^9",
-        "@nestjs/testing": "^9",
+        "@nestjs/core": "^10",
+        "@nestjs/platform-express": "^10",
+        "@nestjs/testing": "^10",
         "@types/express": "^4.17.18",
         "@types/jest": "^29.5.1",
         "@types/supertest": "^2.0.13",
@@ -60,6 +60,6 @@
         "@backtrace/node": "^0.1.0"
     },
     "peerDependencies": {
-        "@nestjs/common": "^9"
+        "@nestjs/common": "^9 || ^10"
     }
 }
