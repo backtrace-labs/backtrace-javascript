@@ -1,8 +1,9 @@
-import { BacktraceAttachment, FileSystem } from '@backtrace/sdk-core';
+import { BacktraceAttachment } from '@backtrace/sdk-core';
 import fs from 'fs';
 import { BacktraceFileAttachment } from '../attachment';
+import { NodeFileSystem, WritableStream } from './interfaces/NodeFileSystem';
 
-export class NodeFileSystem implements FileSystem {
+export class FsNodeFileSystem implements NodeFileSystem {
     public readDir(dir: string): Promise<string[]> {
         return fs.promises.readdir(dir);
     }
@@ -41,6 +42,20 @@ export class NodeFileSystem implements FileSystem {
 
     public unlinkSync(path: string): void {
         fs.unlinkSync(path);
+    }
+
+    public rename(oldPath: string, newPath: string): Promise<void> {
+        return fs.promises.rename(oldPath, newPath);
+    }
+
+    public renameSync(oldPath: string, newPath: string): void {
+        fs.renameSync(oldPath, newPath);
+    }
+
+    public createWriteStream(path: string): WritableStream {
+        const stream = fs.createWriteStream(path, 'utf-8');
+        (stream as Partial<WritableStream>).writeSync = (chunk) => stream.write(chunk);
+        return stream as unknown as WritableStream;
     }
 
     public async exists(path: string): Promise<boolean> {
