@@ -28,13 +28,13 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
     }
 
     constructor(clientSetup: BacktraceNodeClientSetup) {
-        const fileSystem = new FsNodeFileSystem();
+        const fileSystem = clientSetup.fileSystem ?? new FsNodeFileSystem();
         super({
             sdkOptions: AGENT,
             requestHandler: new BacktraceNodeRequestHandler(clientSetup.options),
             debugIdMapProvider: new VariableDebugIdMapProvider(global as DebugIdContainer),
-            fileSystem,
             ...clientSetup,
+            fileSystem,
             options: {
                 ...clientSetup.options,
                 attachments: clientSetup.options.attachments?.map(transformAttachment),
@@ -52,8 +52,8 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
             );
         }
 
-        if (this.sessionFiles && this.fileSystem && clientSetup.options.database?.captureNativeCrashes) {
-            this.addModule(FileAttributeManager, FileAttributeManager.create(this.fileSystem));
+        if (this.sessionFiles && clientSetup.options.database?.captureNativeCrashes) {
+            this.addModule(FileAttributeManager, FileAttributeManager.create(fileSystem));
         }
     }
 

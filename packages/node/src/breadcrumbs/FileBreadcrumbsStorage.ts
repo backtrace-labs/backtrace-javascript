@@ -31,7 +31,12 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
         fileSystem: NodeFileSystem,
         maximumBreadcrumbs: number,
     ) {
-        this._writer = new AlternatingFileWriter(_mainFile, _fallbackFile, maximumBreadcrumbs, fileSystem);
+        this._writer = new AlternatingFileWriter(
+            _mainFile,
+            _fallbackFile,
+            Math.floor(maximumBreadcrumbs / 2),
+            fileSystem,
+        );
     }
 
     public static createFromSession(
