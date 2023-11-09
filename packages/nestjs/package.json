@@ -11,7 +11,7 @@
         "lint": "eslint . --ext .ts",
         "prepublishOnly": "NODE_ENV=production npm run build",
         "watch": "webpack -w",
-        "test": "NODE_ENV=test jest"
+        "test": "NODE_ENV=test jest --passWithNoTests"
     },
     "engines": {
         "node": ">=14"
