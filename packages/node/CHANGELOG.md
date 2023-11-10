@@ -1,3 +1,7 @@
+# Version 0.1.3
+
+-   export `BacktraceNodeRequestHandler`
+
 # Version 0.1.2
 
 -   fix `AlternatingFileWriter` crash on high load
