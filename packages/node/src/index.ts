@@ -6,13 +6,14 @@ export {
     BacktraceStackFrame,
     BacktraceStackTraceConverter,
     BreadcrumbLogLevel,
+    BreadcrumbType,
     BreadcrumbsEventSubscriber,
     BreadcrumbsManager,
-    BreadcrumbType,
     RawBreadcrumb,
 } from '@backtrace/sdk-core';
-export * from './attachment';
 export * from './BacktraceClient';
 export * from './BacktraceConfiguration';
+export * from './BacktraceNodeRequestHandler';
+export * from './attachment';
 export * from './builder/BacktraceClientBuilder';
 export * from './builder/BacktraceClientSetup';
