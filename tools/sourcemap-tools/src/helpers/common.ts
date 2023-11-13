@@ -89,8 +89,11 @@ export function map<T, B>(fn: (t: T) => B) {
 }
 
 export function flatMap<T, B>(fn: (t: T) => B[]) {
-    return function map(t: T[]) {
-        return t.flatMap(fn);
+    return function flatMap(t: T[]) {
+        return t.reduce((res, v) => {
+            res.push(...fn(v));
+            return res;
+        }, [] as B[]);
     };
 }
 
