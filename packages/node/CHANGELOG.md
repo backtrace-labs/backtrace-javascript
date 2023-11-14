@@ -1,3 +1,15 @@
+# Version 0.1.3
+
+-   export `BacktraceNodeRequestHandler`
+
+# Version 0.1.2
+
+-   fix `AlternatingFileWriter` crash on high load
+
+# Version 0.1.1
+
+-   fix missing `NodeFileSystem` default setting in `BacktraceClient`
+
 # Version 0.1.0
 
 -   library rename to `@backtrace/node`

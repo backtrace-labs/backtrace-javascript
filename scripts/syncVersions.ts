@@ -6,48 +6,19 @@
  * Pass paths to package.json files as arguments to parse only those.
  */
 
-import fs from 'fs';
 import path from 'path';
+import { log } from './common/output';
+import {
+    DependencyType,
+    PackageJson,
+    getWorkspacePackageJsonPaths,
+    loadPackageJson,
+    savePackageJson,
+} from './common/packageJson';
 
 const rootDir = path.join(__dirname, '..');
 
-interface PackageJson {
-    readonly name: string;
-    readonly version: string;
-    readonly workspaces?: string[];
-    readonly dependencies?: Record<string, string>;
-    readonly devDependencies?: Record<string, string>;
-    readonly peerDependencies?: Record<string, string>;
-}
-
-type Dependencies = keyof Pick<PackageJson, 'dependencies' | 'devDependencies' | 'peerDependencies'>;
-
-async function loadPackageJson(packageJsonPath: string): Promise<PackageJson> {
-    const error = new Error(`${packageJsonPath} does not seem to be a valid package.json file`);
-
-    let packageJson: Partial<PackageJson>;
-    try {
-        packageJson = JSON.parse(await fs.promises.readFile(packageJsonPath, 'utf-8')) as Partial<PackageJson>;
-    } catch {
-        throw error;
-    }
-
-    if (!packageJson.name || !packageJson.version) {
-        throw error;
-    }
-
-    return packageJson as PackageJson;
-}
-
-async function savePackageJson(packageJsonPath: string, packageJson: PackageJson) {
-    return await fs.promises.writeFile(packageJsonPath, JSON.stringify(packageJson, null, '    ') + '\n');
-}
-
-function getWorkspacePackageJsonPaths(packageJson: PackageJson) {
-    return packageJson.workspaces?.map((workspaceDir) => path.join(rootDir, workspaceDir, 'package.json')) ?? [];
-}
-
-function updateDependency(packageJson: PackageJson, type: Dependencies, name: string, newVersion: string) {
+function updateDependency(packageJson: PackageJson, type: DependencyType, name: string, newVersion: string) {
     const deps = packageJson[type];
     if (!deps) {
         return false;
@@ -60,7 +31,7 @@ function updateDependency(packageJson: PackageJson, type: Dependencies, name: st
 
     if (currentVersion !== newVersion) {
         deps[name] = newVersion;
-        console.log(`[${packageJson.name}] - updated ${name} from ${currentVersion} to ${newVersion} in ${type}`);
+        log(`[${packageJson.name}] - updated ${name} from ${currentVersion} to ${newVersion} in ${type}`);
 
         return true;
     }
@@ -80,10 +51,10 @@ function updateVersions(packageJson: PackageJson, currentVersions: Record<string
     }
 
     if (!updated) {
-        console.log(`[${packageJson.name}] - no changes`);
+        log(`[${packageJson.name}] - no changes`);
     }
 
-    return packageJson;
+    return updated;
 }
 
 (async () => {
@@ -101,7 +72,10 @@ function updateVersions(packageJson: PackageJson, currentVersions: Record<string
 
     for (const packageJsonPath of packageJsonPathsToSync) {
         const packageJson = await loadPackageJson(packageJsonPath);
-        const updatedPackageJson = updateVersions(packageJson, currentVersions);
-        await savePackageJson(packageJsonPath, updatedPackageJson);
+        const updated = updateVersions(packageJson, currentVersions);
+        if (updated) {
+            await savePackageJson(packageJsonPath, packageJson);
+            console.log(path.relative(process.cwd(), packageJsonPath));
+        }
     }
 })();

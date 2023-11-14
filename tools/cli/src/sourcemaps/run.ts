@@ -186,6 +186,14 @@ export async function runSourcemapCommands({ opts, logger, getHelpMessage }: Com
     const addSourcsOptions = config ? { ...joinOptions('add-sources')(config), ...opts } : opts;
     const uploadOptions = config ? { ...joinOptions('upload')(config), ...opts } : opts;
 
+    opts = {
+        ...config,
+        ...opts,
+        'add-sources': opts['add-sources'],
+        upload: opts['upload'],
+        process: opts['process'],
+    };
+
     const searchPath =
         opts.path ??
         (config?.path && configPath ? relativePaths(config.path, path.dirname(configPath)) : process.cwd());
@@ -326,7 +334,7 @@ export async function runSourcemapCommands({ opts, logger, getHelpMessage }: Com
                       ? Ok
                       : failIfEmpty('no processed sourcemaps found, make sure to run process'),
                   R.map(uniqueBy((asset) => asset.content.debugId)),
-                  R.map(opts['include-sources'] ? pass : map(stripSourcesContent)),
+                  R.map(uploadOptions['include-sources'] ? pass : map(stripSourcesContent)),
                   R.map((assets) =>
                       uploadOptions['dry-run']
                           ? Ok({ rxid: '<dry-run>' })

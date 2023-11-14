@@ -11,6 +11,7 @@ export interface BacktraceReportSubmission {
     send(
         data: BacktraceData,
         attachments: BacktraceAttachment[],
+        abortSignal?: AbortSignal,
     ): Promise<BacktraceReportSubmissionResult<BacktraceSubmissionResponse>>;
 }
 
@@ -20,8 +21,8 @@ export class RequestBacktraceReportSubmission {
         this._submissionUrl = SubmissionUrlInformation.toJsonReportSubmissionUrl(options.url, options.token);
     }
 
-    public send(data: BacktraceData, attachments: BacktraceAttachment[]) {
+    public send(data: BacktraceData, attachments: BacktraceAttachment[], abortSignal?: AbortSignal) {
         const json = JSON.stringify(data, jsonEscaper());
-        return this._requestHandler.postError(this._submissionUrl, json, attachments);
+        return this._requestHandler.postError(this._submissionUrl, json, attachments, abortSignal);
     }
 }

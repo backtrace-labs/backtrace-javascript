@@ -1,6 +1,7 @@
+import { anySignal, createAbortController } from '../../common/AbortController';
 import { Delay } from '../../common/DelayHelper';
-import { jsonEscaper } from '../../common/jsonEscaper';
 import { TimeHelper } from '../../common/TimeHelper';
+import { jsonEscaper } from '../../common/jsonEscaper';
 import { BacktraceRequestHandler } from '../../model/http';
 import { MetricsQueue } from './MetricsQueue';
 import { MetricsEvent } from './model/MetricsEvent';
@@ -18,6 +19,7 @@ export class MetricsSubmissionQueue<T extends MetricsEvent> implements MetricsQu
 
     private readonly _events: T[] = [];
     private _numberOfDroppedRequests = 0;
+    private readonly _abortController: AbortController;
 
     private readonly MAXIMUM_NUMBER_OF_ATTEMPTS = 3;
 
@@ -27,7 +29,9 @@ export class MetricsSubmissionQueue<T extends MetricsEvent> implements MetricsQu
         private readonly _requestHandler: BacktraceRequestHandler,
         private readonly _metricMetadata: Record<string, unknown>,
         public readonly maximumEvents: number = 50,
-    ) {}
+    ) {
+        this._abortController = createAbortController();
+    }
 
     public add(event: T) {
         this._events.push(event);
@@ -36,12 +40,16 @@ export class MetricsSubmissionQueue<T extends MetricsEvent> implements MetricsQu
         }
     }
 
-    public async send() {
+    public async send(abortSignal?: AbortSignal) {
         const eventsToProcess = this._events.splice(0);
-        return await this.submit(eventsToProcess);
+        return await this.submit(eventsToProcess, anySignal(abortSignal, this._abortController.signal));
     }
 
-    private async submit(events: T[]) {
+    public dispose() {
+        this._abortController.abort();
+    }
+
+    private async submit(events: T[], abortSignal?: AbortSignal) {
         for (let attempts = 0; attempts < this.MAXIMUM_NUMBER_OF_ATTEMPTS; attempts++) {
             const response = await this._requestHandler.post(
                 this._submissionUrl,
@@ -55,6 +63,7 @@ export class MetricsSubmissionQueue<T extends MetricsEvent> implements MetricsQu
                     },
                     jsonEscaper(),
                 ),
+                abortSignal,
             );
             if (response.status === 'Ok') {
                 this._numberOfDroppedRequests = 0;
@@ -62,7 +71,7 @@ export class MetricsSubmissionQueue<T extends MetricsEvent> implements MetricsQu
             }
 
             this._numberOfDroppedRequests++;
-            await Delay.wait(2 ** attempts * this.DELAY_BETWEEN_REQUESTS);
+            await Delay.wait(2 ** attempts * this.DELAY_BETWEEN_REQUESTS, abortSignal);
         }
         // if the code reached this line, it means, we couldn't send data to server
         // we need to try to return events to the queue and try to send it once again later.

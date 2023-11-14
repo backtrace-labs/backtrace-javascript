@@ -19,7 +19,7 @@ export class BacktraceMainElectronModule implements BacktraceModule {
     private _bindData?: BacktraceModuleBindData;
 
     public bind(bindData: BacktraceModuleBindData): void {
-        const { requestHandler, reportSubmission, client } = bindData;
+        const { requestHandler, reportSubmission, client, attributeManager } = bindData;
 
         const getSyncData = (): SyncData => ({
             sessionId: client.sessionId,
@@ -33,9 +33,17 @@ export class BacktraceMainElectronModule implements BacktraceModule {
         });
 
         rpc.on(IpcEvents.sendReport, async (event, data: BacktraceData, attachmentRefs: IpcAttachmentReference[]) => {
+            const { attributes, annotations } = attributeManager.get();
+
             data.attributes = {
+                ...attributes,
                 ...this.getEventAttributes(event),
                 ...data.attributes,
+            };
+
+            data.annotations = {
+                ...annotations,
+                ...data.annotations,
             };
 
             const attachments = attachmentRefs.map(

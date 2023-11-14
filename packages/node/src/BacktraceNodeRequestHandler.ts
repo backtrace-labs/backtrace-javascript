@@ -33,18 +33,24 @@ export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
         submissionUrl: string,
         dataJson: string,
         attachments: BacktraceAttachment<Buffer | Readable | string | Uint8Array>[],
+        abortSignal?: AbortSignal,
     ): Promise<BacktraceReportSubmissionResult<BacktraceSubmissionResponse>> {
         const formData = this.createFormData(dataJson, attachments);
-        return this.send<BacktraceSubmissionResponse>(submissionUrl, formData);
+        return this.send<BacktraceSubmissionResponse>(submissionUrl, formData, abortSignal);
     }
 
-    public async post<T>(submissionUrl: string, payload: string): Promise<BacktraceReportSubmissionResult<T>> {
-        return this.send<T>(submissionUrl, payload);
+    public async post<T>(
+        submissionUrl: string,
+        payload: string,
+        abortSignal?: AbortSignal,
+    ): Promise<BacktraceReportSubmissionResult<T>> {
+        return this.send<T>(submissionUrl, payload, abortSignal);
     }
 
     private async send<T>(
         submissionUrl: string,
         payload: string | FormData,
+        abortSignal?: AbortSignal,
     ): Promise<BacktraceReportSubmissionResult<T>> {
         try {
             const url = new URL(submissionUrl);
@@ -84,11 +90,34 @@ export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
                                     break;
                                 }
                             }
+
+                            cleanup();
+                        });
+                        response.on('error', () => {
+                            cleanup();
                         });
                     },
                 );
 
+                function abortFn(this: AbortSignal) {
+                    const reason =
+                        this.reason instanceof Error
+                            ? this.reason
+                            : typeof this.reason === 'string'
+                            ? new Error(this.reason)
+                            : new Error('Operation cancelled.');
+
+                    request.destroy(reason);
+                }
+
+                abortSignal?.addEventListener('abort', abortFn, { once: true });
+
+                function cleanup() {
+                    abortSignal?.removeEventListener('abort', cleanup);
+                }
+
                 request.on('error', (err: Error) => {
+                    cleanup();
                     if (ConnectionError.isConnectionError(err)) {
                         return res(BacktraceReportSubmissionResult.OnNetworkingError(err.message));
                     }

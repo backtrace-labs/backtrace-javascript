@@ -1,3 +1,5 @@
+import { createAbortController } from '../../common/AbortController';
+import { AbortError } from '../../common/AbortError';
 import { TimeHelper } from '../../common/TimeHelper';
 import { BacktraceMetricsOptions } from '../../model/configuration/BacktraceConfiguration';
 import { AttributeType } from '../../model/data/BacktraceData';
@@ -27,6 +29,7 @@ export class BacktraceMetrics implements BacktraceModule {
     private readonly _updateInterval: number = this._options.autoSendInterval ?? this.DEFAULT_UPDATE_INTERVAL;
 
     private _updateIntervalId?: ReturnType<typeof setTimeout>;
+    private readonly _abortController: AbortController;
 
     constructor(
         private readonly _options: BacktraceMetricsOptions,
@@ -34,7 +37,9 @@ export class BacktraceMetrics implements BacktraceModule {
         private readonly _attributeManager: AttributeManager,
         private readonly _summedEventsSubmissionQueue: MetricsQueue<SummedEvent>,
         private readonly _uniqueEventsSubmissionQueue: MetricsQueue<UniqueEvent>,
-    ) {}
+    ) {
+        this._abortController = createAbortController();
+    }
 
     /**
      * Starts metrics submission.
@@ -45,13 +50,13 @@ export class BacktraceMetrics implements BacktraceModule {
         }
 
         this.addSummedEvent('Application Launches');
-        this.send();
+        this.handleAbort(() => this.send(this._abortController.signal));
 
         if (this._updateInterval === 0) {
             return;
         }
         this._updateIntervalId = setInterval(() => {
-            this.send();
+            this.handleAbort(() => this.send(this._abortController.signal));
         }, this._updateInterval);
     }
 
@@ -84,12 +89,11 @@ export class BacktraceMetrics implements BacktraceModule {
     /**
      * Sends event to the metrics system.
      */
-    public send() {
+    public async send(abortSignal?: AbortSignal) {
         if (!this._sessionProvider.shouldSend()) {
             return false;
         }
-        this.sendUniqueEvent();
-        this._summedEventsSubmissionQueue.send();
+        await Promise.all([this.sendUniqueEvent(abortSignal), this._summedEventsSubmissionQueue.send(abortSignal)]);
         this._sessionProvider.afterMetricsSubmission();
         return true;
     }
@@ -98,16 +102,21 @@ export class BacktraceMetrics implements BacktraceModule {
      * Cleans up metrics interface.
      */
     public dispose() {
+        this._abortController.abort();
+
         if (this._updateIntervalId) {
             clearInterval(this._updateIntervalId);
         }
+
+        this._uniqueEventsSubmissionQueue.dispose && this._uniqueEventsSubmissionQueue.dispose();
+        this._summedEventsSubmissionQueue.dispose && this._summedEventsSubmissionQueue.dispose();
     }
 
-    private sendUniqueEvent() {
+    private async sendUniqueEvent(abortSignal?: AbortSignal) {
         // always add the same unique event before send.
         const { attributes } = this._attributeManager.get();
         this._uniqueEventsSubmissionQueue.add(new UniqueEvent(this.convertAttributes(attributes)));
-        this._uniqueEventsSubmissionQueue.send();
+        await this._uniqueEventsSubmissionQueue.send(abortSignal);
     }
 
     /**
@@ -121,5 +130,17 @@ export class BacktraceMetrics implements BacktraceModule {
                 acc[n] = attributes[n]?.toString();
                 return acc;
             }, {} as Record<string, AttributeType>);
+    }
+
+    private async handleAbort(fn: () => Promise<unknown>): Promise<boolean> {
+        try {
+            await fn();
+            return true;
+        } catch (err) {
+            if (err instanceof AbortError) {
+                return false;
+            }
+            throw err;
+        }
     }
 }

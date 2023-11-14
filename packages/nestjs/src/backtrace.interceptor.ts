@@ -2,7 +2,7 @@ import { BacktraceClient } from '@backtrace/node';
 import { CallHandler, ExecutionContext, HttpException, Injectable, NestInterceptor, Optional } from '@nestjs/common';
 import { HttpArgumentsHost, RpcArgumentsHost, WsArgumentsHost } from '@nestjs/common/interfaces';
 import { type Request as ExpressRequest } from 'express';
-import { catchError, Observable, throwError } from 'rxjs';
+import { Observable, catchError, throwError } from 'rxjs';
 
 type ExceptionTypeFilter = (new (...args: never[]) => unknown)[] | ((err: unknown) => boolean);
 
@@ -43,6 +43,15 @@ export interface BacktraceInterceptorOptions {
      * }
      */
     readonly excludeExceptionTypes?: ExceptionTypeFilter;
+
+    /**
+     * Will not throw on initialization if `true` and the `BacktraceClient` instance is `undefined`.
+     *
+     * If this is `true` and the client instance is not available, the interceptor will not be run.
+     *
+     * @default false
+     */
+    readonly skipIfClientUndefined?: boolean;
 
     /**
      * This method will be called before sending the report.
@@ -93,6 +102,10 @@ export class BacktraceInterceptor implements NestInterceptor {
     public intercept(context: ExecutionContext, next: CallHandler<unknown>): Observable<unknown> {
         const client = this._client ?? BacktraceClient.instance;
         if (!client) {
+            if (this._options.skipIfClientUndefined) {
+                return next.handle();
+            }
+
             throw new Error('Backtrace instance is unavailable. Initialize the client first.');
         }
 
@@ -196,6 +209,7 @@ export class BacktraceInterceptor implements NestInterceptor {
         return {
             includeExceptionTypes: [Error],
             excludeExceptionTypes: (error) => error instanceof HttpException && error.getStatus() < 500,
+            skipIfClientUndefined: false,
         };
     }
 }

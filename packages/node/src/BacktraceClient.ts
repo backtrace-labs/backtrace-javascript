@@ -8,25 +8,33 @@ import {
     VariableDebugIdMapProvider,
 } from '@backtrace/sdk-core';
 import path from 'path';
-import { AGENT } from './agentDefinition';
-import { transformAttachment } from './attachment/transformAttachments';
 import { BacktraceConfiguration, BacktraceSetupConfiguration } from './BacktraceConfiguration';
 import { BacktraceNodeRequestHandler } from './BacktraceNodeRequestHandler';
+import { AGENT } from './agentDefinition';
+import { transformAttachment } from './attachment/transformAttachments';
 import { FileBreadcrumbsStorage } from './breadcrumbs/FileBreadcrumbsStorage';
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 import { BacktraceNodeClientSetup } from './builder/BacktraceClientSetup';
 import { NodeOptionReader } from './common/NodeOptionReader';
 import { NodeDiagnosticReportConverter } from './converter/NodeDiagnosticReportConverter';
+import { FsNodeFileSystem } from './storage/FsNodeFileSystem';
+import { NodeFileSystem } from './storage/interfaces/NodeFileSystem';
 
 export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration> {
     private _listeners: Record<string, NodeJS.UnhandledRejectionListener | NodeJS.UncaughtExceptionListener> = {};
 
+    protected get nodeFileSystem() {
+        return this.fileSystem as NodeFileSystem | undefined;
+    }
+
     constructor(clientSetup: BacktraceNodeClientSetup) {
+        const fileSystem = clientSetup.fileSystem ?? new FsNodeFileSystem();
         super({
             sdkOptions: AGENT,
             requestHandler: new BacktraceNodeRequestHandler(clientSetup.options),
             debugIdMapProvider: new VariableDebugIdMapProvider(global as DebugIdContainer),
             ...clientSetup,
+            fileSystem,
             options: {
                 ...clientSetup.options,
                 attachments: clientSetup.options.attachments?.map(transformAttachment),
@@ -38,13 +46,14 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
             breadcrumbsManager.setStorage(
                 FileBreadcrumbsStorage.create(
                     this.sessionFiles,
+                    fileSystem,
                     clientSetup.options.breadcrumbs?.maximumBreadcrumbs ?? 100,
                 ),
             );
         }
 
-        if (this.sessionFiles && this.fileSystem && clientSetup.options.database?.captureNativeCrashes) {
-            this.addModule(FileAttributeManager, FileAttributeManager.create(this.fileSystem));
+        if (this.sessionFiles && clientSetup.options.database?.captureNativeCrashes) {
+            this.addModule(FileAttributeManager, FileAttributeManager.create(fileSystem));
         }
     }
 
@@ -237,7 +246,7 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
     }
 
     private async loadNodeCrashes() {
-        if (!this.database || !this.fileSystem || !this.options.database?.captureNativeCrashes) {
+        if (!this.database || !this.nodeFileSystem || !this.options.database?.captureNativeCrashes) {
             return;
         }
 
@@ -248,7 +257,7 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
 
         let databaseFiles: string[];
         try {
-            databaseFiles = await this.fileSystem.readDir(databasePath);
+            databaseFiles = await this.nodeFileSystem.readDir(databasePath);
         } catch {
             return;
         }
@@ -268,7 +277,7 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
         for (const recordName of recordNames) {
             const recordPath = path.join(databasePath, recordName);
             try {
-                const recordJson = await this.fileSystem.readFile(recordPath);
+                const recordJson = await this.nodeFileSystem.readFile(recordPath);
                 const report = converter.convert(JSON.parse(recordJson));
                 reports.push([recordPath, report]);
             } catch {
@@ -290,12 +299,12 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
         for (const [recordPath, report, session] of reports) {
             try {
                 if (session) {
-                    const breadcrumbsStorage = FileBreadcrumbsStorage.createFromSession(session);
+                    const breadcrumbsStorage = FileBreadcrumbsStorage.createFromSession(session, this.nodeFileSystem);
                     if (breadcrumbsStorage) {
                         report.attachments.push(...breadcrumbsStorage.getAttachments());
                     }
 
-                    const fileAttributes = FileAttributeManager.createFromSession(session, this.fileSystem);
+                    const fileAttributes = FileAttributeManager.createFromSession(session, this.nodeFileSystem);
                     Object.assign(report.attributes, await fileAttributes.get());
 
                     report.attributes['application.session'] = session.sessionId;
@@ -311,7 +320,7 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
                 // Do nothing, skip the report
             } finally {
                 try {
-                    await this.fileSystem.unlink(recordPath);
+                    await this.nodeFileSystem.unlink(recordPath);
                 } catch {
                     // Do nothing
                 }
