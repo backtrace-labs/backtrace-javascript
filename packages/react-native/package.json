@@ -1,6 +1,6 @@
 {
     "name": "@backtrace/react-native",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "description": "Backtrace-Javascript React-Native integration",
     "main": "lib/commonjs/index",
     "module": "lib/module/index",
