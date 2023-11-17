@@ -15,6 +15,7 @@ import {
 } from '@backtrace/sourcemap-tools';
 import fs from 'fs';
 import { glob } from 'glob';
+import os from 'os';
 import path from 'path';
 
 export interface FindResult {
@@ -159,10 +160,14 @@ export async function findTuples(paths: string[]): Promise<Result<FindFileTuple[
         };
     }
 
+    function isWindows() {
+        return os.platform() === 'win32';
+    }
+
     function processPath(path: string): ResultPromise<FindFileTuple[], string> {
         return pipe(
             path,
-            splitByLongest(':'),
+            splitByLongest(isWindows() ? '::' : ':'),
             verifyTupleLength(path),
             R.map(verifyTuple(path)),
             R.map(async ([path1, path2]) => ({ result: await find([path1]), path2 })),
