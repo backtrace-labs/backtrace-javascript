@@ -57,7 +57,7 @@ export function readSourceMap<T extends Asset>(asset: T): ResultPromise<AssetWit
 }
 
 export function readSourceAndSourceMap(sourceProcessor: SourceProcessor) {
-    return async function _readSourceAndSourceMapx({
+    return async function _readSourceAndSourceMap({
         source,
         sourceMap,
     }: SourceAndSourceMapPaths): ResultPromise<SourceAndSourceMap, string> {

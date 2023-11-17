@@ -6,6 +6,7 @@ import {
     Result,
     filter,
     flatMap,
+    flow,
     log,
     map,
     mapAsync,
@@ -110,16 +111,43 @@ export async function buildIncludeExclude(
 }
 
 export async function findTuples(paths: string[]): Promise<Result<FindFileTuple[], string>> {
+    function findLongest(char: string, str: string) {
+        return pipe(
+            [...str.matchAll(new RegExp(`${char}+`, 'g'))],
+            flatMap((a) => a),
+            (a) => a.sort((a, b) => b.length - a.length),
+            (a) => a[0],
+        );
+    }
+
+    function splitByLongest(char: string) {
+        return async function _splitByLongest(str: string) {
+            const longest = await findLongest(char, str);
+            if (!longest) {
+                return [str];
+            }
+            return str.split(longest);
+        };
+    }
+
     return pipe(
         paths,
-        map((p) => p.split(':')),
+        mapAsync(splitByLongest(':')),
         mapAsync(([path1, path2]) =>
             path2
                 ? pipe(
-                      path2,
-                      statFile,
-                      R.map((r) =>
-                          r.isFile() ? Ok(path2) : Err(`${path1}:${path2}: second part of tuple cannot be a directory`),
+                      [path1, path2],
+                      mapAsync(statFile),
+                      R.flatMap,
+                      R.map(
+                          flow(
+                              map((r) =>
+                                  r.isFile()
+                                      ? Ok(path2)
+                                      : Err(`${path1}:${path2}: both paths of tuple must point to files`),
+                              ),
+                              R.flatMap,
+                          ),
                       ),
                       R.map(() => [path1, path2]),
                   )
