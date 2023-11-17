@@ -4,7 +4,7 @@ import {
     Ok,
     R,
     Result,
-    filter,
+    ResultPromise,
     flatMap,
     flow,
     log,
@@ -130,34 +130,47 @@ export async function findTuples(paths: string[]): Promise<Result<FindFileTuple[
         };
     }
 
-    return pipe(
-        paths,
-        mapAsync(splitByLongest(':')),
-        mapAsync(([path1, path2]) =>
-            path2
-                ? pipe(
+    function verifyTupleLength(path: string) {
+        return function _verifyTupleLength(paths: readonly string[]) {
+            return paths.length > 2
+                ? Err(`${path}: only two paths are allowed in a tuple`)
+                : Ok(paths as readonly [string, string?]);
+        };
+    }
+
+    function verifyTuple(path: string) {
+        return async function _verifyTuple([path1, path2]: readonly [string, string?]) {
+            return path2
+                ? await pipe(
                       [path1, path2],
                       mapAsync(statFile),
                       R.flatMap,
                       R.map(
                           flow(
                               map((r) =>
-                                  r.isFile()
-                                      ? Ok(path2)
-                                      : Err(`${path1}:${path2}: both paths of tuple must point to files`),
+                                  r.isFile() ? Ok(path2) : Err(`${path}: both paths of tuple must point to files`),
                               ),
                               R.flatMap,
                           ),
                       ),
-                      R.map(() => [path1, path2]),
+                      R.map(() => [path1, path2] as const),
                   )
-                : Ok([path1, path2]),
-        ),
-        R.flatMap,
-        R.map(mapAsync(async ([path1, path2]) => ({ result: await find([path1]), path2 }))),
-        R.map(filter(({ result }) => result.length > 0)),
-        R.map(flatMap(({ result, path2 }) => result.map((file1) => ({ file1, file2: path2 })))),
-    );
+                : Ok([path1, path2] as const);
+        };
+    }
+
+    function processPath(path: string): ResultPromise<FindFileTuple[], string> {
+        return pipe(
+            path,
+            splitByLongest(':'),
+            verifyTupleLength(path),
+            R.map(verifyTuple(path)),
+            R.map(async ([path1, path2]) => ({ result: await find([path1]), path2 })),
+            R.map(({ result, path2 }) => result.map((file1) => ({ file1, file2: path2 }))),
+        );
+    }
+
+    return pipe(paths, mapAsync(processPath), R.flatMap, R.map(flatMap((x) => x)));
 }
 
 export const file2Or1FromTuple = ({ file1, file2 }: FindFileTuple) =>
