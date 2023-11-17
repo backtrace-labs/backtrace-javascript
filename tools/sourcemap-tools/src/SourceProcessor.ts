@@ -46,6 +46,10 @@ export class SourceProcessor {
         );
     }
 
+    public getSourceDebugId(source: string): string | undefined {
+        return this._debugIdGenerator.getSourceDebugId(source);
+    }
+
     public getSourceMapDebugId(sourceMap: RawSourceMap): string | undefined {
         return this._debugIdGenerator.getSourceMapDebugId(sourceMap);
     }
@@ -71,30 +75,40 @@ export class SourceProcessor {
         sourceMap: RawSourceMap,
         debugId?: string,
     ): Promise<ProcessResult> {
+        const sourceDebugId = this.getSourceDebugId(source);
         if (!debugId) {
-            debugId = stringToUuid(source);
+            debugId = sourceDebugId ?? stringToUuid(source);
         }
 
-        const sourceSnippet = this._debugIdGenerator.generateSourceSnippet(debugId);
+        let newSource: string | undefined;
+        let offsetSourceMap: RawSourceMap | undefined;
 
-        const shebang = source.match(/^(#!.+\n)/)?.[1];
-        const sourceWithSnippet = shebang
-            ? shebang + sourceSnippet + '\n' + source.substring(shebang.length)
-            : sourceSnippet + '\n' + source;
+        // If source has debug ID, but it is different, we need to only replace it
+        if (sourceDebugId && debugId !== sourceDebugId) {
+            newSource = this._debugIdGenerator.replaceDebugId(source, sourceDebugId, debugId);
+        } else if (!sourceDebugId) {
+            const sourceSnippet = this._debugIdGenerator.generateSourceSnippet(debugId);
 
-        const sourceComment = this._debugIdGenerator.generateSourceComment(debugId);
-        const newSource = appendBeforeWhitespaces(sourceWithSnippet, '\n' + sourceComment);
+            const shebang = source.match(/^(#!.+\n)/)?.[1];
+            const sourceWithSnippet = shebang
+                ? shebang + sourceSnippet + '\n' + source.substring(shebang.length)
+                : sourceSnippet + '\n' + source;
 
-        // We need to offset the source map by amount of lines that we're inserting to the source code
-        // Sourcemaps map code like this:
-        // original code X:Y => generated code A:B
-        // So if we add any code to generated code, mappings after that code will become invalid
-        // We need to offset the mapping lines by sourceSnippetNewlineCount:
-        // original code X:Y => generated code (A + sourceSnippetNewlineCount):B
-        const sourceSnippetNewlineCount = sourceSnippet.match(/\n/g)?.length ?? 0;
-        const offsetSourceMap = await this.offsetSourceMap(sourceMap, sourceSnippetNewlineCount + 1);
-        const newSourceMap = this._debugIdGenerator.addSourceMapDebugId(offsetSourceMap, debugId);
-        return { debugId, source: newSource, sourceMap: newSourceMap };
+            const sourceComment = this._debugIdGenerator.generateSourceComment(debugId);
+            newSource = appendBeforeWhitespaces(sourceWithSnippet, '\n' + sourceComment);
+
+            // We need to offset the source map by amount of lines that we're inserting to the source code
+            // Sourcemaps map code like this:
+            // original code X:Y => generated code A:B
+            // So if we add any code to generated code, mappings after that code will become invalid
+            // We need to offset the mapping lines by sourceSnippetNewlineCount:
+            // original code X:Y => generated code (A + sourceSnippetNewlineCount):B
+            const sourceSnippetNewlineCount = sourceSnippet.match(/\n/g)?.length ?? 0;
+            offsetSourceMap = await this.offsetSourceMap(sourceMap, sourceSnippetNewlineCount + 1);
+        }
+
+        const newSourceMap = this._debugIdGenerator.addSourceMapDebugId(offsetSourceMap ?? sourceMap, debugId);
+        return { debugId, source: newSource ?? source, sourceMap: newSourceMap };
     }
 
     /**
