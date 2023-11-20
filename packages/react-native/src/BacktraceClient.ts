@@ -11,10 +11,10 @@ import {
 } from '@backtrace/sdk-core';
 import { NativeModules, Platform } from 'react-native';
 import { type BacktraceConfiguration } from './BacktraceConfiguration';
+import { AGENT } from './agentDefinition';
 import { FileBreadcrumbsStorage } from './breadcrumbs/FileBreadcrumbsStorage';
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 import type { BacktraceClientSetup } from './builder/BacktraceClientSetup';
-import { version } from './common/platformHelper';
 import { CrashReporter } from './crashReporter/CrashReporter';
 import { generateUnhandledExceptionHandler } from './handlers';
 import { type ExceptionHandler } from './handlers/ExceptionHandler';
@@ -34,12 +34,7 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
 
     constructor(clientSetup: BacktraceClientSetup) {
         super({
-            sdkOptions: {
-                agent: '@backtrace/react-native',
-                agentVersion: '0.0.1',
-                langName: 'react-native',
-                langVersion: version(),
-            },
+            sdkOptions: AGENT,
             requestHandler: new BacktraceBrowserRequestHandler(clientSetup.options),
             debugIdMapProvider: new VariableDebugIdMapProvider(global as DebugIdContainer),
             stackTraceConverter: new ReactStackTraceConverter(new V8StackTraceConverter('address at')),
