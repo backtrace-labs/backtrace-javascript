@@ -531,4 +531,43 @@ describe('run', () => {
             }),
         );
     });
+
+    describe('tuple paths', () => {
+        it(
+            'should return processed sources and sourcemap paths',
+            withWorkingCopy('not-linked-different-name-sourcemaps', async (workingDir) => {
+                const entry1Path = `${workingDir}/entry1.js`;
+                const entry2Path = `${workingDir}/entry2.js`;
+                const sourcemap1Path = `${workingDir}/sourcemap1.js.map`;
+                const sourcemap2Path = `${workingDir}/sourcemap2.js.map`;
+
+                const config = await mockOptions(workingDir, {
+                    run: {
+                        'add-sources': true,
+                        process: true,
+                        upload: true,
+                    },
+                    upload: {
+                        url: 'https://test',
+                    },
+                });
+
+                const result = await runSourcemapCommands({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: [`${entry1Path}:${sourcemap1Path}`, `${entry2Path}:${sourcemap2Path}`],
+                        config,
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+
+                const expected = [entry1Path, entry2Path, sourcemap1Path, sourcemap2Path];
+                expect(result.data.flatMap((d) => [d.source.path, d.sourceMap.path])).toEqual(
+                    expect.arrayContaining(expected),
+                );
+            }),
+        );
+    });
 });

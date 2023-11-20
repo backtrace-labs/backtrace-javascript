@@ -646,4 +646,97 @@ describe('process', () => {
             }),
         );
     });
+
+    describe('tuple paths', () => {
+        it(
+            'should not fail',
+            withWorkingCopy('not-linked-different-name-sourcemaps', async (workingDir) => {
+                const result = await processSources({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: [
+                            `${workingDir}/entry1.js:${workingDir}/sourcemap1.js.map`,
+                            `${workingDir}/entry2.js:${workingDir}/sourcemap2.js.map`,
+                        ],
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+            }),
+        );
+
+        it(
+            'should call SourceProcessor with sources',
+            withWorkingCopy('not-linked-different-name-sourcemaps', async (workingDir) => {
+                const spy = jest.spyOn(SourceProcessor.prototype, 'processSourceAndSourceMap');
+
+                const files = await glob(`${workingDir}/*.js`);
+                const originalSources = await readEachFile(files);
+
+                const result = await processSources({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: [
+                            `${workingDir}/entry1.js:${workingDir}/sourcemap1.js.map`,
+                            `${workingDir}/entry2.js:${workingDir}/sourcemap2.js.map`,
+                        ],
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+
+                for (const source of Object.values(originalSources)) {
+                    expect(spy).toBeCalledWith(source, expect.anything(), expectAnythingOrNothing());
+                }
+            }),
+        );
+
+        it(
+            'should modify sources in place',
+            withWorkingCopy('not-linked-different-name-sourcemaps', async (workingDir) => {
+                const preHashes = await hashEachFile(await glob(`${workingDir}/*.js`));
+
+                const result = await processSources({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: [
+                            `${workingDir}/entry1.js:${workingDir}/sourcemap1.js.map`,
+                            `${workingDir}/entry2.js:${workingDir}/sourcemap2.js.map`,
+                        ],
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+                const postHashes = await hashEachFile(await glob(`${workingDir}/*.js`));
+
+                expectHashesToChange(preHashes, postHashes);
+            }),
+        );
+
+        it(
+            'should modify sourcemaps in place',
+            withWorkingCopy('not-linked-different-name-sourcemaps', async (workingDir) => {
+                const preHashes = await hashEachFile(await glob(`${workingDir}/*.js.map`));
+
+                const result = await processSources({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: [
+                            `${workingDir}/entry1.js:${workingDir}/sourcemap1.js.map`,
+                            `${workingDir}/entry2.js:${workingDir}/sourcemap2.js.map`,
+                        ],
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+                const postHashes = await hashEachFile(await glob(`${workingDir}/*.js.map`));
+
+                expectHashesToChange(preHashes, postHashes);
+            }),
+        );
+    });
 });

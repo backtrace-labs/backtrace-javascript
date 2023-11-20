@@ -36,7 +36,7 @@ export function handleError(behavior: ErrorBehavior = 'exit') {
 
             switch (behavior) {
                 case 'exit':
-                    return Err(result.data);
+                    return result;
                 case 'skip':
                     return Ok<BehaviorSkippedElement<E>>({ reason: result });
                 default:

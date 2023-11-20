@@ -131,12 +131,7 @@ export class SourceProcessor {
 
         const source = sourceReadResult.data;
         if (!sourceMapPath) {
-            const pathFromSourceResult = await this.getSourceMapPathFromSource(source, sourcePath);
-            if (pathFromSourceResult.isErr()) {
-                return pathFromSourceResult;
-            }
-
-            const pathFromSource = pathFromSourceResult.data;
+            const pathFromSource = await this.getSourceMapPathFromSource(source, sourcePath);
             if (!pathFromSource) {
                 return Err('could not find source map for source');
             }
@@ -171,27 +166,20 @@ export class SourceProcessor {
             return sourceReadResult;
         }
 
-        return this.getSourceMapPathFromSource(sourceReadResult.data, sourcePath);
+        return Ok(await this.getSourceMapPathFromSource(sourceReadResult.data, sourcePath));
     }
 
-    public async getSourceMapPathFromSource(
-        source: string,
-        sourcePath: string,
-    ): ResultPromise<string | undefined, string> {
+    public async getSourceMapPathFromSource(source: string, sourcePath: string): Promise<string | undefined> {
         const resolveFile = (filePath: string) =>
-            pipe(
-                filePath,
-                statFile,
-                R.map((stat) =>
-                    stat.isFile()
-                        ? filePath
-                        : (path.join(filePath, path.basename(sourcePath) + '.map') as string | undefined),
-                ),
+            pipe(filePath, statFile, (result) =>
+                !result.isOk() || result.data.isFile()
+                    ? filePath
+                    : (path.join(filePath, path.basename(sourcePath) + '.map') as string | undefined),
             );
 
         return pipe(source.match(/^\/\/# sourceMappingURL=(.+)$/m), (match) =>
             !match || !match[1]
-                ? Ok(undefined)
+                ? undefined
                 : pipe(match[1], (match) => path.resolve(path.dirname(sourcePath), match), resolveFile),
         );
     }

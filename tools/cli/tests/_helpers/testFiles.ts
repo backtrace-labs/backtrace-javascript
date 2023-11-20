@@ -7,8 +7,10 @@ import path from 'path';
 export type TestFiles =
     | 'no-sourcemaps'
     | 'not-linked-sourcemaps'
+    | 'not-linked-different-name-sourcemaps'
     | 'directory-linked-sourcemaps'
     | 'processed-not-linked-sourcemaps'
+    | 'processed-not-linked-different-name-sourcemaps'
     | 'processed-directory-linked-sourcemaps'
     | 'original'
     | 'processed'
