@@ -19,13 +19,11 @@ export interface BacktraceReduxMiddlewareOptions {
     readonly mode?: 'all' | 'omit-values' | 'off';
 }
 
-function getBreadcrumbPayload(mode: BacktraceReduxMiddlewareOptions['mode'], action: Action) {
+function getBreadcrumbPayload(mode: Exclude<BacktraceReduxMiddlewareOptions['mode'], 'off'>, action: Action) {
     switch (mode) {
         case 'all':
-            return action;
+            return { action: JSON.stringify(action, jsonEscaper()) };
         case 'omit-values':
-            return { type: action.type };
-        default:
             return undefined;
     }
 }
@@ -89,12 +87,12 @@ export function createBacktraceReduxMiddleware(
             const interceptedAction = interceptAction(action);
 
             // If the user returns undefined for an action, we skip the breadcrumb
-            const payload = interceptedAction ? getBreadcrumbPayload(mode, interceptedAction) : undefined;
-            if (payload) {
-                client.breadcrumbs?.info(`REDUX Action: ${payload.type}`, {
-                    action: JSON.stringify(payload, jsonEscaper()),
-                });
+            if (!interceptedAction) {
+                return response;
             }
+
+            const payload = getBreadcrumbPayload(mode, interceptedAction);
+            client.breadcrumbs?.info(`REDUX Action: ${interceptedAction.type}`, payload);
 
             return response;
         } catch (err) {

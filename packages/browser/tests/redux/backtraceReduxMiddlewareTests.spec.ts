@@ -59,7 +59,17 @@ const createLoggingMiddleware = (whatToLog: string) => {
 const hiLoggingMiddleware = createLoggingMiddleware('hi');
 const holaLoggingMiddleware = createLoggingMiddleware('hola');
 
-const getExpectedBreadcrumb = (action: Action) => [`REDUX Action: ${action.type}`, { action: JSON.stringify(action) }];
+const getExpectedBreadcrumb = (action: Action, mode?: BacktraceReduxMiddlewareOptions['mode']) => {
+    switch (mode) {
+        case undefined:
+        case 'all':
+            return [`REDUX Action: ${action.type}`, { action: JSON.stringify(action) }];
+        case 'omit-values':
+            return [`REDUX Action: ${action.type}`, undefined];
+        default:
+            return [];
+    }
+};
 
 const { addToTestArray, toggleTestBool, throwErrorForTest } = testSlice.actions;
 
@@ -191,7 +201,7 @@ describe('createBacktraceReduxMiddleware', () => {
                 const interceptedAction = { type: 'expected-type', payload: { abc: '123' } };
                 const store = getStore({ interceptAction: () => interceptedAction });
                 const breadcrumbsSpy = getBreadcrumbsSpy('info');
-                const expected = getExpectedBreadcrumb(interceptedAction);
+                const expected = getExpectedBreadcrumb(interceptedAction, 'all');
                 store.dispatch(addToTestArray('Message to add'));
                 expect(breadcrumbsSpy).toHaveBeenCalledWith(...expected);
             });
@@ -200,7 +210,7 @@ describe('createBacktraceReduxMiddleware', () => {
                 const interceptedAction = { type: 'expected-type', payload: { abc: '123' } };
                 const store = getStore({ interceptAction: () => interceptedAction, mode: 'all' });
                 const breadcrumbsSpy = getBreadcrumbsSpy('info');
-                const expected = getExpectedBreadcrumb(interceptedAction);
+                const expected = getExpectedBreadcrumb(interceptedAction, 'all');
                 store.dispatch(addToTestArray('Message to add'));
                 expect(breadcrumbsSpy).toHaveBeenCalledWith(...expected);
             });
@@ -209,7 +219,7 @@ describe('createBacktraceReduxMiddleware', () => {
                 const interceptedAction = { type: 'expected-type', payload: { abc: '123' } };
                 const store = getStore({ interceptAction: () => interceptedAction, mode: 'omit-values' });
                 const breadcrumbsSpy = getBreadcrumbsSpy('info');
-                const expected = getExpectedBreadcrumb({ type: interceptedAction.type });
+                const expected = getExpectedBreadcrumb({ type: interceptedAction.type }, 'omit-values');
                 store.dispatch(addToTestArray('Message to add'));
                 expect(breadcrumbsSpy).toHaveBeenCalledWith(...expected);
             });
