@@ -61,9 +61,9 @@ const holaLoggingMiddleware = createLoggingMiddleware('hola');
 
 const getExpectedBreadcrumb = (action: Action, mode?: BacktraceReduxMiddlewareOptions['mode']) => {
     switch (mode) {
-        case undefined:
         case 'all':
             return [`REDUX Action: ${action.type}`, { action: JSON.stringify(action) }];
+        case undefined:
         case 'omit-values':
             return [`REDUX Action: ${action.type}`, undefined];
         default:
@@ -197,11 +197,11 @@ describe('createBacktraceReduxMiddleware', () => {
         });
 
         describe('modes', () => {
-            it('Should add whole action as JSON to breadcrumb attributes by default', () => {
+            it('Should add only action type as JSON to breadcrumb attributes by default', () => {
                 const interceptedAction = { type: 'expected-type', payload: { abc: '123' } };
                 const store = getStore({ interceptAction: () => interceptedAction });
                 const breadcrumbsSpy = getBreadcrumbsSpy('info');
-                const expected = getExpectedBreadcrumb(interceptedAction, 'all');
+                const expected = getExpectedBreadcrumb(interceptedAction, 'omit-values');
                 store.dispatch(addToTestArray('Message to add'));
                 expect(breadcrumbsSpy).toHaveBeenCalledWith(...expected);
             });

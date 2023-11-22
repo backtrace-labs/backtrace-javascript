@@ -15,6 +15,8 @@ export interface BacktraceReduxMiddlewareOptions {
      * * `all` - include everything by default,
      * * `omit-values` - add the breadcrumb, but omit the values,
      * * `off` - disable the middleware.
+     *
+     * @default 'omit-values'
      */
     readonly mode?: 'all' | 'omit-values' | 'off';
 }
@@ -74,7 +76,7 @@ export function createBacktraceReduxMiddleware(
               };
 
     const interceptAction = options.interceptAction ?? ((action) => action);
-    const mode = options.mode ?? 'all';
+    const mode = options.mode ?? 'omit-values';
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const middleware: Middleware = () => (next) => (action: Action) => {
