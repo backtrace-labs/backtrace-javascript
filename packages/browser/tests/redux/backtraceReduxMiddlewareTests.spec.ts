@@ -1,7 +1,10 @@
 import { BacktraceBreadcrumbs } from '@backtrace/sdk-core/src';
 import { Action, configureStore, createSlice, Middleware, PayloadAction } from '@reduxjs/toolkit';
 import { BacktraceClient } from '../../src/BacktraceClient';
-import { createBacktraceReduxMiddleware } from '../../src/redux/BacktraceReduxMiddleware';
+import {
+    BacktraceReduxMiddlewareOptions,
+    createBacktraceReduxMiddleware,
+} from '../../src/redux/BacktraceReduxMiddleware';
 
 const clientBreadcrumbsEnabled = BacktraceClient.initialize({
     name: 'test-cleint',
@@ -56,7 +59,7 @@ const createLoggingMiddleware = (whatToLog: string) => {
 const hiLoggingMiddleware = createLoggingMiddleware('hi');
 const holaLoggingMiddleware = createLoggingMiddleware('hola');
 
-const getExpectedBreadcrumb = (action: Action) => `REDUX Action: ${JSON.stringify(action)}`;
+const getExpectedBreadcrumb = (action: Action) => [`REDUX Action: ${action.type}`, { action: JSON.stringify(action) }];
 
 const { addToTestArray, toggleTestBool, throwErrorForTest } = testSlice.actions;
 
@@ -64,13 +67,13 @@ const getBreadcrumbsSpy = (method: 'info' | 'warn') => {
     return jest.spyOn(clientBreadcrumbsEnabled.breadcrumbs as BacktraceBreadcrumbs, method);
 };
 
-const getStore = (interceptAction?: (action: Action) => Action | undefined) =>
+const getStore = (options?: BacktraceReduxMiddlewareOptions | ((action: Action) => Action | undefined)) =>
     configureStore({
         reducer: {
             test: testSlice.reducer,
         },
         middleware: (getDefaultMiddleware) => {
-            const backtraceMiddleware = createBacktraceReduxMiddleware(clientBreadcrumbsEnabled, interceptAction);
+            const backtraceMiddleware = createBacktraceReduxMiddleware(clientBreadcrumbsEnabled, options);
             return getDefaultMiddleware().concat(backtraceMiddleware);
         },
     });
@@ -116,8 +119,24 @@ describe('createBacktraceReduxMiddleware', () => {
             jest.restoreAllMocks();
         });
 
+        it('Should run interceptAction when passed in options', () => {
+            const fn = jest.fn(() => undefined);
+            const store = getStore({ interceptAction: fn });
+            store.dispatch(addToTestArray('test'));
+            store.dispatch(toggleTestBool());
+            expect(fn).toBeCalledTimes(2);
+        });
+
+        it('Should run interceptAction when passed as arg', () => {
+            const fn = jest.fn(() => undefined);
+            const store = getStore(fn);
+            store.dispatch(addToTestArray('test'));
+            store.dispatch(toggleTestBool());
+            expect(fn).toBeCalledTimes(2);
+        });
+
         it('Should not save a breadcrumb if undefined is returned by interceptAction', () => {
-            const store = getStore(() => undefined);
+            const store = getStore({ interceptAction: () => undefined });
             const breadcrumbsSpy = getBreadcrumbsSpy('info');
             store.dispatch(addToTestArray('test'));
             store.dispatch(toggleTestBool());
@@ -130,16 +149,16 @@ describe('createBacktraceReduxMiddleware', () => {
             const toggleAction = toggleTestBool();
             const expected = getExpectedBreadcrumb(toggleAction);
             store.dispatch(toggleAction);
-            expect(breadcrumbsSpy).toBeCalledWith(expected);
+            expect(breadcrumbsSpy).toBeCalledWith(...expected);
         });
 
         it('Should only save a breadcrumb for what is returned from interceptAction', () => {
             const interceptedAction = { type: 'expected-type' };
-            const store = getStore(() => interceptedAction);
+            const store = getStore({ interceptAction: () => interceptedAction });
             const breadcrumbsSpy = getBreadcrumbsSpy('info');
             const expected = getExpectedBreadcrumb(interceptedAction);
             store.dispatch(addToTestArray('Message to add'));
-            expect(breadcrumbsSpy).toHaveBeenCalledWith(expected);
+            expect(breadcrumbsSpy).toHaveBeenCalledWith(...expected);
         });
 
         it('Should have access to update the action via interceptAction', () => {
@@ -149,20 +168,59 @@ describe('createBacktraceReduxMiddleware', () => {
                 type: expectedType,
                 payload,
             };
-            const store = getStore((action: Action) => {
-                if (action.type === 'test/addToTestArray') {
-                    return {
-                        ...action,
-                        type: expectedType,
-                    };
-                } else {
-                    throw new Error("action.type 'test/addToTestArray' never called");
-                }
+            const store = getStore({
+                interceptAction: (action: Action) => {
+                    if (action.type === 'test/addToTestArray') {
+                        return {
+                            ...action,
+                            type: expectedType,
+                        };
+                    } else {
+                        throw new Error("action.type 'test/addToTestArray' never called");
+                    }
+                },
             });
             const breadcrumbsSpy = getBreadcrumbsSpy('info');
             const expected = getExpectedBreadcrumb(expectedAction);
             store.dispatch(addToTestArray(payload));
-            expect(breadcrumbsSpy).toHaveBeenCalledWith(expected);
+            expect(breadcrumbsSpy).toHaveBeenCalledWith(...expected);
+        });
+
+        describe('modes', () => {
+            it('Should add whole action as JSON to breadcrumb attributes by default', () => {
+                const interceptedAction = { type: 'expected-type', payload: { abc: '123' } };
+                const store = getStore({ interceptAction: () => interceptedAction });
+                const breadcrumbsSpy = getBreadcrumbsSpy('info');
+                const expected = getExpectedBreadcrumb(interceptedAction);
+                store.dispatch(addToTestArray('Message to add'));
+                expect(breadcrumbsSpy).toHaveBeenCalledWith(...expected);
+            });
+
+            it('Should add whole action as JSON to breadcrumb attributes when mode=all', () => {
+                const interceptedAction = { type: 'expected-type', payload: { abc: '123' } };
+                const store = getStore({ interceptAction: () => interceptedAction, mode: 'all' });
+                const breadcrumbsSpy = getBreadcrumbsSpy('info');
+                const expected = getExpectedBreadcrumb(interceptedAction);
+                store.dispatch(addToTestArray('Message to add'));
+                expect(breadcrumbsSpy).toHaveBeenCalledWith(...expected);
+            });
+
+            it('Should add only action type as JSON to breadcrumb attributes when mode=omit-values', () => {
+                const interceptedAction = { type: 'expected-type', payload: { abc: '123' } };
+                const store = getStore({ interceptAction: () => interceptedAction, mode: 'omit-values' });
+                const breadcrumbsSpy = getBreadcrumbsSpy('info');
+                const expected = getExpectedBreadcrumb({ type: interceptedAction.type });
+                store.dispatch(addToTestArray('Message to add'));
+                expect(breadcrumbsSpy).toHaveBeenCalledWith(...expected);
+            });
+
+            it('Should not add any breadcrumb when mode=off', () => {
+                const interceptedAction = { type: 'expected-type', payload: { abc: '123' } };
+                const store = getStore({ interceptAction: () => interceptedAction, mode: 'off' });
+                const breadcrumbsSpy = getBreadcrumbsSpy('info');
+                store.dispatch(addToTestArray('Message to add'));
+                expect(breadcrumbsSpy).not.toBeCalled();
+            });
         });
     });
 });
@@ -183,7 +241,7 @@ describe('Multiple middleware interaction', () => {
         const expectedBreadcrumb = getExpectedBreadcrumb(toggleAction);
         const expectedConsoleLogs = ['hi before', 'hi after', 'hola before', 'hola after'];
         store.dispatch(toggleAction);
-        expect(breadcrumbsSpy).toHaveBeenCalledWith(expectedBreadcrumb);
+        expect(breadcrumbsSpy).toHaveBeenCalledWith(...expectedBreadcrumb);
         for (const expectedStr of expectedConsoleLogs) {
             expect(consoleSpy).toHaveBeenCalledWith(expectedStr);
         }
