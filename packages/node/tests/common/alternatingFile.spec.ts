@@ -84,16 +84,22 @@ describe('AlternatingFileWriter', () => {
         await expect(writer.writeLine('value-x')).rejects.toThrowError('This instance has been disposed.');
     });
 
-    it('should throw when fileCapacity is 0', () => {
-        expect(() => new AlternatingFileWriter(file1, file2, 0, new FsNodeFileSystem())).toThrowError(
-            'File capacity may not be less or equal to 0.',
-        );
+    it('should not write when fileCapacity is 0', () => {
+        const writer = new AlternatingFileWriter(file1, file2, 0, new FsNodeFileSystem());
+        writer.writeLine('abc');
+        writer.dispose();
+
+        expect(fs.existsSync(file1)).toEqual(false);
+        expect(fs.existsSync(file2)).toEqual(false);
     });
 
-    it('should throw when fileCapacity is less than 0', () => {
-        expect(() => new AlternatingFileWriter(file1, file2, -1, new FsNodeFileSystem())).toThrowError(
-            'File capacity may not be less or equal to 0.',
-        );
+    it('should not write fileCapacity is less than 0', () => {
+        const writer = new AlternatingFileWriter(file1, file2, -1, new FsNodeFileSystem());
+        writer.writeLine('abc');
+        writer.dispose();
+
+        expect(fs.existsSync(file1)).toEqual(false);
+        expect(fs.existsSync(file2)).toEqual(false);
     });
 
     describe('stress test', () => {
