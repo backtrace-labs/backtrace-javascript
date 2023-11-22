@@ -10,13 +10,13 @@ export class AlternatingFileWriter {
         private readonly _fallbackFile: string,
         private readonly _fileCapacity: number,
         private readonly _fileSystem: NodeFileSystem,
-    ) {
-        if (this._fileCapacity <= 0) {
-            throw new Error('File capacity may not be less or equal to 0.');
-        }
-    }
+    ) {}
 
     public async writeLine(value: string): Promise<this> {
+        if (this._fileCapacity <= 0) {
+            return this;
+        }
+
         if (this._disposed) {
             throw new Error('This instance has been disposed.');
         }
