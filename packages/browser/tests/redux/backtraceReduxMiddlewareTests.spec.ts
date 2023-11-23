@@ -219,7 +219,7 @@ describe('createBacktraceReduxMiddleware', () => {
                 const interceptedAction = { type: 'expected-type', payload: { abc: '123' } };
                 const store = getStore({ interceptAction: () => interceptedAction, mode: 'omit-values' });
                 const breadcrumbsSpy = getBreadcrumbsSpy('info');
-                const expected = getExpectedBreadcrumb({ type: interceptedAction.type }, 'omit-values');
+                const expected = getExpectedBreadcrumb(interceptedAction, 'omit-values');
                 store.dispatch(addToTestArray('Message to add'));
                 expect(breadcrumbsSpy).toHaveBeenCalledWith(...expected);
             });
