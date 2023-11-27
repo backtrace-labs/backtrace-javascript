@@ -1,10 +1,10 @@
 import {
     anySignal,
-    BacktraceAttachment,
     BacktraceReportSubmissionResult,
-    BacktraceRequestHandler,
     ConnectionError,
     DEFAULT_TIMEOUT,
+    type BacktraceAttachment,
+    type BacktraceRequestHandler,
 } from '@backtrace/sdk-core';
 
 export class ReactNativeRequestHandler implements BacktraceRequestHandler {

@@ -1,4 +1,8 @@
-import { BacktraceStackFrame, BacktraceStackTraceConverter, JavaScriptEngine } from '@backtrace/sdk-core';
+import {
+    type BacktraceStackFrame,
+    type BacktraceStackTraceConverter,
+    type JavaScriptEngine,
+} from '@backtrace/sdk-core';
 
 export class ReactStackTraceConverter implements BacktraceStackTraceConverter {
     constructor(private readonly stackTraceConverter: BacktraceStackTraceConverter) {}
