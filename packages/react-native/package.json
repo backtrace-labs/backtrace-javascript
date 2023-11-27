@@ -90,7 +90,6 @@
         "typescript": "^5.0.2"
     },
     "dependencies": {
-        "@backtrace/react": "^0.1.0",
         "@backtrace/sdk-core": "^0.1.0"
     }
 }

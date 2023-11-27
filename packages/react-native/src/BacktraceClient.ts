@@ -1,4 +1,3 @@
-import { BacktraceBrowserRequestHandler, ReactStackTraceConverter } from '@backtrace/react';
 import {
     BacktraceCoreClient,
     BreadcrumbsManager,
@@ -18,6 +17,8 @@ import { version } from './common/platformHelper';
 import { CrashReporter } from './crashReporter/CrashReporter';
 import { generateUnhandledExceptionHandler } from './handlers';
 import { type ExceptionHandler } from './handlers/ExceptionHandler';
+import { ReactNativeRequestHandler } from './ReactNativeRequestHandler';
+import { ReactStackTraceConverter } from './ReactStackTraceConverter';
 import { type FileSystem } from './storage/FileSystem';
 
 export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration> {
@@ -40,7 +41,7 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
                 langName: 'react-native',
                 langVersion: version(),
             },
-            requestHandler: new BacktraceBrowserRequestHandler(clientSetup.options),
+            requestHandler: new ReactNativeRequestHandler(clientSetup.options),
             debugIdMapProvider: new VariableDebugIdMapProvider(global as DebugIdContainer),
             stackTraceConverter: new ReactStackTraceConverter(new V8StackTraceConverter('address at')),
             sessionProvider: new SingleSessionProvider(),
