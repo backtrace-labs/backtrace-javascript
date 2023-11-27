@@ -73,6 +73,19 @@ describe('Breadcrumbs creation tests', () => {
         expect(breadcrumb.message).toEqual(expectedBreadcrumbValueOutput);
     });
 
+    it('Should correctly handle null breadcrumb value', () => {
+        const input = null;
+        const expectedBreadcrumbValueOutput = '';
+
+        const storage = new InMemoryBreadcrumbsStorage(100);
+        const breadcrumbsManager = new BreadcrumbsManager(undefined, { storage });
+        breadcrumbsManager.initialize();
+        breadcrumbsManager.info(input as unknown as string);
+        const [breadcrumb] = JSON.parse(storage.get() as string);
+
+        expect(breadcrumb.message).toEqual(expectedBreadcrumbValueOutput);
+    });
+
     it('Should set expected breadcrumb level', () => {
         const message = 'test';
         const level = BreadcrumbLogLevel.Warning;
