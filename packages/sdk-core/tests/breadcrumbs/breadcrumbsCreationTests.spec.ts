@@ -47,6 +47,32 @@ describe('Breadcrumbs creation tests', () => {
         expect(breadcrumb.message).toEqual(message);
     });
 
+    it('Should convert number to string and treat it as a breadcrumb message', () => {
+        const input = 1;
+        const expectedBreadcrumbValueOutput = input.toString();
+
+        const storage = new InMemoryBreadcrumbsStorage(100);
+        const breadcrumbsManager = new BreadcrumbsManager(undefined, { storage });
+        breadcrumbsManager.initialize();
+        breadcrumbsManager.info(input as unknown as string);
+        const [breadcrumb] = JSON.parse(storage.get() as string);
+
+        expect(breadcrumb.message).toEqual(expectedBreadcrumbValueOutput);
+    });
+
+    it('Should convert object to JSON and treat it as a breadcrumb message', () => {
+        const input = { foo: 1, bar: true, baz: undefined };
+        const expectedBreadcrumbValueOutput = JSON.stringify(input);
+
+        const storage = new InMemoryBreadcrumbsStorage(100);
+        const breadcrumbsManager = new BreadcrumbsManager(undefined, { storage });
+        breadcrumbsManager.initialize();
+        breadcrumbsManager.info(input as unknown as string);
+        const [breadcrumb] = JSON.parse(storage.get() as string);
+
+        expect(breadcrumb.message).toEqual(expectedBreadcrumbValueOutput);
+    });
+
     it('Should set expected breadcrumb level', () => {
         const message = 'test';
         const level = BreadcrumbLogLevel.Warning;
