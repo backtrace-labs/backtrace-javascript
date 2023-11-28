@@ -34,14 +34,14 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         return { error };
     }
 
-    public async componentDidCatch(error: Error, info: ErrorInfo) {
+    public componentDidCatch(error: Error, info: ErrorInfo) {
         const { name } = this.props;
         const report = new BacktraceReport(error, {
             'errorboundary.name': name ?? 'main',
             'error.type': 'Unhandled exception',
         });
         report.addStackTrace(this.COMPONENT_THREAD_NAME, info.componentStack);
-        await this._client.send(report);
+        this._client.send(report);
     }
 
     render() {
