@@ -8,6 +8,8 @@ export class V8StackTraceConverter implements BacktraceStackTraceConverter {
         return 'v8';
     }
 
+    constructor(public readonly addressSeparator: string = '') {}
+
     convert(stackTrace: string, message: string): BacktraceStackFrame[] {
         const result: BacktraceStackFrame[] = [];
         let stackFrames = stackTrace.split('\n');
@@ -63,6 +65,9 @@ export class V8StackTraceConverter implements BacktraceStackTraceConverter {
     ): Omit<BacktraceStackFrame, 'funcName' | 'sourceCode'> {
         if (sourceCodeInformation.startsWith('eval')) {
             return this.extractEvalInformation(sourceCodeInformation);
+        }
+        if (this.addressSeparator && sourceCodeInformation.startsWith(this.addressSeparator)) {
+            sourceCodeInformation = sourceCodeInformation.substring(this.addressSeparator.length).trimStart();
         }
         const sourceCodeParts = sourceCodeInformation.split(':');
         const column = parseInt(sourceCodeParts[sourceCodeParts.length - 1]);

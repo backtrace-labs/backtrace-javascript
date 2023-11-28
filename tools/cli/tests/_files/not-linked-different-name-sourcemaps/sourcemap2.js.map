@@ -1,0 +1,11 @@
+{
+    "version": 3,
+    "file": "entry2.js",
+    "mappings": "",
+    "sources": [
+        "../sources/dependency.ts",
+        "../sources/entry2.ts"
+    ],
+    "names": [],
+    "sourceRoot": ""
+}

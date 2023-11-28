@@ -11,7 +11,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(get) {
     
     [dictionary setObject: [NSString stringWithCString:systemInfo.machine
                                               encoding:NSUTF8StringEncoding] forKey: @"device.model"];
-    [dictionary setObject: @"Applie Inc" forKey: @"device.brand"];
+    [dictionary setObject: @"Apple Inc" forKey: @"device.brand"];
     [dictionary setObject: [[UIDevice currentDevice] model] forKey: @"device.product"];
     [dictionary setObject: @"Apple Inc" forKey: @"device.manufacturer"];
     [dictionary setObject: [[NSBundle mainBundle] infoDictionary][@"DTSDKName"] forKey: @"device.sdk"];

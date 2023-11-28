@@ -1,10 +1,10 @@
 import {
+    anySignal,
     BacktraceAttachment,
     BacktraceReportSubmissionResult,
     BacktraceRequestHandler,
     ConnectionError,
     DEFAULT_TIMEOUT,
-    anySignal,
 } from '@backtrace/sdk-core';
 
 export class BacktraceBrowserRequestHandler implements BacktraceRequestHandler {
@@ -29,8 +29,8 @@ export class BacktraceBrowserRequestHandler implements BacktraceRequestHandler {
         attachments: BacktraceAttachment<Blob | string>[],
         abortSignal?: AbortSignal,
     ): Promise<BacktraceReportSubmissionResult<T>> {
-        const formData = this.createFormData(dataJson, attachments);
-        return this.post(submissionUrl, formData, abortSignal);
+        const payload = attachments.length === 0 ? dataJson : this.createFormData(dataJson, attachments);
+        return this.post(submissionUrl, payload, abortSignal);
     }
 
     public async post<T>(

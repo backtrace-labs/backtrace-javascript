@@ -29,7 +29,7 @@ export async function statFile(path: string) {
     try {
         return Ok(await fs.promises.stat(path));
     } catch (err) {
-        return Err(`failed to write file: ${err}`);
+        return Err(`failed to stat file: ${err}`);
     }
 }
 
@@ -85,6 +85,15 @@ export function failIfEmpty<E>(error: E) {
 export function map<T, B>(fn: (t: T) => B) {
     return function map(t: T[]) {
         return t.map(fn);
+    };
+}
+
+export function flatMap<T, B>(fn: (t: T) => B[]) {
+    return function flatMap(t: T[]) {
+        return t.reduce((res, v) => {
+            res.push(...fn(v));
+            return res;
+        }, [] as B[]);
     };
 }
 

@@ -35,7 +35,7 @@ export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
         attachments: BacktraceAttachment<Buffer | Readable | string | Uint8Array>[],
         abortSignal?: AbortSignal,
     ): Promise<BacktraceReportSubmissionResult<BacktraceSubmissionResponse>> {
-        const formData = this.createFormData(dataJson, attachments);
+        const formData = attachments.length === 0 ? dataJson : this.createFormData(dataJson, attachments);
         return this.send<BacktraceSubmissionResponse>(submissionUrl, formData, abortSignal);
     }
 

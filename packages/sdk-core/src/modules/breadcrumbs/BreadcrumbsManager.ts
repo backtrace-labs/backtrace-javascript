@@ -1,12 +1,13 @@
 import {
     BacktraceBreadcrumbs,
     BreadcrumbLogLevel,
-    BreadcrumbType,
     BreadcrumbsSetup,
     BreadcrumbsStorage,
+    BreadcrumbType,
     defaultBreadcrumbsLogLevel,
     defaultBreadcurmbType,
 } from '.';
+import { jsonEscaper } from '../../common/jsonEscaper';
 import { BacktraceBreadcrumbsSettings } from '../../model/configuration/BacktraceConfiguration';
 import { AttributeType } from '../../model/data/BacktraceData';
 import { BacktraceReport } from '../../model/report/BacktraceReport';
@@ -124,8 +125,9 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
         if (!this._enabled) {
             return false;
         }
+
         let rawBreadcrumb: RawBreadcrumb = {
-            message,
+            message: this.prepareBreadcrumbMessage(message),
             level,
             type,
             attributes,
@@ -148,5 +150,32 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
 
         this._storage.add(rawBreadcrumb);
         return true;
+    }
+
+    /**
+     * The expectation is, message should always be defined and passed as string.
+     * However, logger can pass as a message an object or any other unknown type.
+     * To be sure the code won't break, this method ensures the message is always a string
+     * no matter what the logger gives us.
+     * @param message breadcrumb message
+     */
+    private prepareBreadcrumbMessage(message: unknown): string {
+        if (message == null) {
+            return '';
+        }
+
+        const messageType = typeof message;
+
+        switch (messageType) {
+            case 'string': {
+                return message as string;
+            }
+            case 'object': {
+                return JSON.stringify(message, jsonEscaper());
+            }
+            default: {
+                return message.toString();
+            }
+        }
     }
 }

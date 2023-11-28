@@ -4,11 +4,32 @@ export const SOURCEMAP_DEBUG_ID_KEY = 'debugId';
 
 export class DebugIdGenerator {
     public generateSourceSnippet(uuid: string) {
-        return `;!function(){try{var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof self?self:{},n=(new Error).stack;n&&(e.${SOURCE_DEBUG_ID_VARIABLE}=e.${SOURCE_DEBUG_ID_VARIABLE}||{},e.${SOURCE_DEBUG_ID_VARIABLE}[n]="${uuid}")}catch(e){}}();`;
+        return `;!function(){try{var k="${SOURCE_DEBUG_ID_VARIABLE}",u="undefined",v="${uuid}",a=function(x){try{x[k]=x[k]||{};x[k][n]=v}catch{}},n=(new Error).stack;n&&(u!=typeof window?a(window):u);n&&(u!=typeof global?a(global):u);n&&(u!=typeof self?a(self):u);n&&(u!=typeof globalThis?a(globalThis):u)}catch{}}();`;
     }
 
     public generateSourceComment(uuid: string) {
         return `//# ${SOURCE_DEBUG_ID_COMMENT}=${uuid}`;
+    }
+
+    public replaceDebugId(source: string, oldDebugId: string, newDebugId: string) {
+        const replaceAll = () => source.replace(oldDebugId, newDebugId);
+
+        // Try to replace more safely first
+        const oldSourceSnippet = this.generateSourceSnippet(oldDebugId);
+        if (source.indexOf(oldSourceSnippet) !== -1) {
+            source = source.replace(oldSourceSnippet, this.generateSourceSnippet(newDebugId));
+        } else {
+            return replaceAll();
+        }
+
+        const oldCommentSnippet = this.generateSourceComment(oldDebugId);
+        if (source.indexOf(oldCommentSnippet) !== -1) {
+            source = source.replace(oldCommentSnippet, this.generateSourceComment(newDebugId));
+        } else {
+            return replaceAll();
+        }
+
+        return source;
     }
 
     public getSourceDebugId(source: string): string | undefined {
