@@ -1,3 +1,10 @@
+# Version 0.2.0
+
+-   update `@backtrace/browser` to `0.2.0`
+-   add middleware modes to redux middleware, move JSON action to breadcrumb attributes
+-   fix global is undefined error (#187)
+-   add abort support to metrics and request handlers
+
 # Version 0.1.0
 
 -   library rename to `@backtrace/react`
