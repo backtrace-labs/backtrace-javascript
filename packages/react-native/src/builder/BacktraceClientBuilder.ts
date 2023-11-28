@@ -3,6 +3,9 @@ import { Platform } from 'react-native';
 import { NativeAttributeProvider } from '../attributes/NativeAttributeProvider';
 import { ReactNativeAttributeProvider } from '../attributes/ReactNativeAttributeProvider';
 import { BacktraceClient } from '../BacktraceClient';
+import { AppStateBreadcrumbSubscriber } from '../breadcrumbs/events/AppStateBreadcrumbSubscriber';
+import { DimensionChangeBreadcrumbSubscriber } from '../breadcrumbs/events/DimensionChangeBreadcrumbSubscriber';
+import { WebRequestEventSubscriber } from '../breadcrumbs/events/WebRequestEventSubscriber';
 import { DebuggerHelper } from '../common/DebuggerHelper';
 import { ReactNativeFileSystem } from '../storage';
 import type { BacktraceClientSetup } from './BacktraceClientSetup';
@@ -14,6 +17,10 @@ export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<Backtrace
         const debuggerAvailable = DebuggerHelper.isConnected();
         this.addAttributeProvider(new ReactNativeAttributeProvider());
         if (debuggerAvailable) {
+            return;
+        }
+
+        if (Platform.OS !== 'android' && Platform.OS !== 'ios') {
             return;
         }
 
@@ -38,9 +45,11 @@ export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<Backtrace
         for (const provider of attributeProviders) {
             this.addAttributeProvider(provider);
         }
-        if ((Platform.OS === 'android' || Platform.OS === 'ios') && !DebuggerHelper.isConnected()) {
-            this.useFileSystem(new ReactNativeFileSystem());
-        }
+
+        this.useFileSystem(new ReactNativeFileSystem());
+        this.useBreadcrumbSubscriber(new AppStateBreadcrumbSubscriber());
+        this.useBreadcrumbSubscriber(new DimensionChangeBreadcrumbSubscriber());
+        this.useBreadcrumbSubscriber(new WebRequestEventSubscriber());
     }
 
     public useFileSystem(fileSystem: ReactNativeFileSystem): this {
