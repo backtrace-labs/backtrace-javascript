@@ -57,7 +57,7 @@
         "webpack-node-externals": "^3.0.0"
     },
     "dependencies": {
-        "@backtrace/node": "^0.1.0"
+        "@backtrace/node": "^0.2.0"
     },
     "peerDependencies": {
         "@nestjs/common": "^9 || ^10"
