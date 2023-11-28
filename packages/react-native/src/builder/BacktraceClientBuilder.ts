@@ -50,7 +50,6 @@ export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<Backtrace
         this.useBreadcrumbSubscriber(new AppStateBreadcrumbSubscriber());
         this.useBreadcrumbSubscriber(new DimensionChangeBreadcrumbSubscriber());
         this.useBreadcrumbSubscriber(new WebRequestEventSubscriber());
-        // this.useBreadcrumbSubscriber(new NativeBreadcrumbSubsriber());
     }
 
     public useFileSystem(fileSystem: ReactNativeFileSystem): this {
