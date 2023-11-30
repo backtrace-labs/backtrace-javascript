@@ -199,28 +199,24 @@ export function processSource(force: boolean) {
         sourceMapDebugId: getSourceMapDebugId(sourceAndSourceMap),
     });
 
-    const shouldProcess = (sourceDebugId: string | undefined, sourceMapDebugId: string | undefined) =>
-        force || !sourceDebugId || !sourceMapDebugId || sourceDebugId !== sourceMapDebugId;
-
     return async function processSource(asset: SourceAndSourceMap): Promise<ProcessedSourceAndSourceMap> {
         return pipe(asset, getDebugIds, ({ sourceDebugId, sourceMapDebugId }) =>
-            shouldProcess(sourceDebugId, sourceMapDebugId)
-                ? pipe(
-                      asset,
-                      (asset) =>
-                          sourceProcessor.processSourceAndSourceMap(
-                              asset.source.content,
-                              asset.sourceMap.content,
-                              sourceDebugId ?? sourceMapDebugId,
-                          ),
-                      (result) =>
-                          ({
-                              source: { ...asset.source, content: result.source },
-                              sourceMap: { ...asset.sourceMap, content: result.sourceMap },
-                              debugId: result.debugId,
-                          } as ProcessedSourceAndSourceMap),
-                  )
-                : ({ ...asset, debugId: sourceDebugId } as ProcessedSourceAndSourceMap),
+            pipe(
+                asset,
+                (asset) =>
+                    sourceProcessor.processSourceAndSourceMap(
+                        asset.source.content,
+                        asset.sourceMap.content,
+                        sourceDebugId ?? sourceMapDebugId,
+                        force,
+                    ),
+                (result) =>
+                    ({
+                        source: { ...asset.source, content: result.source },
+                        sourceMap: { ...asset.sourceMap, content: result.sourceMap },
+                        debugId: result.debugId,
+                    } as ProcessedSourceAndSourceMap),
+            ),
         );
     };
 }
