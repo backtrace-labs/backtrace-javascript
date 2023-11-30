@@ -270,7 +270,7 @@ describe('add-sources', () => {
                 });
 
                 assert(result.isErr(), 'result should be an error');
-                expect(result.data).toMatch(/invalid1\.js\.map/);
+                expect(result.data).toMatch(/invalid11\.js\.map/);
             }),
         );
 
