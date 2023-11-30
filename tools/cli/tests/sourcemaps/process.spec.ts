@@ -84,7 +84,12 @@ describe('process', () => {
                 assert(result.isOk(), result.data as string);
 
                 for (const source of Object.values(originalSources)) {
-                    expect(spy).toBeCalledWith(source, expect.anything(), expectAnythingOrNothing());
+                    expect(spy).toBeCalledWith(
+                        source,
+                        expect.anything(),
+                        expectAnythingOrNothing(),
+                        expectAnythingOrNothing(),
+                    );
                 }
             }),
         );
@@ -194,7 +199,12 @@ describe('process', () => {
                 assert(result.isOk(), result.data as string);
 
                 for (const source of Object.values(originalSources)) {
-                    expect(spy).toBeCalledWith(source, expect.anything(), expectAnythingOrNothing());
+                    expect(spy).toBeCalledWith(
+                        source,
+                        expect.anything(),
+                        expectAnythingOrNothing(),
+                        expectAnythingOrNothing(),
+                    );
                 }
             }),
         );
@@ -358,7 +368,12 @@ describe('process', () => {
                 assert(result.isOk(), result.data as string);
 
                 for (const source of Object.values(originalSources)) {
-                    expect(spy).toBeCalledWith(source, expect.anything(), expectAnythingOrNothing());
+                    expect(spy).toBeCalledWith(
+                        source,
+                        expect.anything(),
+                        expectAnythingOrNothing(),
+                        expectAnythingOrNothing(),
+                    );
                 }
             }),
         );
@@ -439,7 +454,12 @@ describe('process', () => {
                 assert(result.isOk(), result.data as string);
 
                 for (const source of Object.values(originalSources)) {
-                    expect(spy).toBeCalledWith(source, expect.anything(), expectAnythingOrNothing());
+                    expect(spy).toBeCalledWith(
+                        source,
+                        expect.anything(),
+                        expectAnythingOrNothing(),
+                        expectAnythingOrNothing(),
+                    );
                 }
             }),
         );
@@ -520,7 +540,12 @@ describe('process', () => {
                 assert(result.isOk(), result.data as string);
 
                 for (const source of Object.values(originalSources)) {
-                    expect(spy).toBeCalledWith(source, expect.anything(), expectAnythingOrNothing());
+                    expect(spy).toBeCalledWith(
+                        source,
+                        expect.anything(),
+                        expectAnythingOrNothing(),
+                        expectAnythingOrNothing(),
+                    );
                 }
             }),
         );
@@ -601,7 +626,12 @@ describe('process', () => {
                 assert(result.isOk(), result.data as string);
 
                 for (const source of Object.values(originalSources)) {
-                    expect(spy).toBeCalledWith(source, expect.anything(), expectAnythingOrNothing());
+                    expect(spy).toBeCalledWith(
+                        source,
+                        expect.anything(),
+                        expectAnythingOrNothing(),
+                        expectAnythingOrNothing(),
+                    );
                 }
             }),
         );
@@ -688,7 +718,12 @@ describe('process', () => {
                 assert(result.isOk(), result.data as string);
 
                 for (const source of Object.values(originalSources)) {
-                    expect(spy).toBeCalledWith(source, expect.anything(), expectAnythingOrNothing());
+                    expect(spy).toBeCalledWith(
+                        source,
+                        expect.anything(),
+                        expectAnythingOrNothing(),
+                        expectAnythingOrNothing(),
+                    );
                 }
             }),
         );
