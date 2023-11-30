@@ -15,7 +15,7 @@ export class DebugIdGenerator {
         const replaceAll = () => source.replace(oldDebugId, newDebugId);
 
         // Try to replace more safely first
-        const oldSourceSnippet = this.generateSourceSnippet(oldDebugId);
+        const oldSourceSnippet = this.generateSourceSnippet(oldDebugId).replace(/^;+|;+$/g, '');
         if (source.indexOf(oldSourceSnippet) !== -1) {
             source = source.replace(oldSourceSnippet, this.generateSourceSnippet(newDebugId));
         } else {
@@ -32,7 +32,17 @@ export class DebugIdGenerator {
         return source;
     }
 
-    public getSourceDebugId(source: string): string | undefined {
+    public hasCodeSnippet(source: string, debugId: string) {
+        const sourceSnippet = this.generateSourceSnippet(debugId).replace(/^;+|;+$/g, '');
+        return source.includes(sourceSnippet);
+    }
+
+    public hasCommentSnippet(source: string, debugId: string) {
+        const commentSnippet = this.generateSourceComment(debugId);
+        return source.includes(commentSnippet);
+    }
+
+    public getSourceDebugIdFromComment(source: string): string | undefined {
         const regex = new RegExp(`^//# ${SOURCE_DEBUG_ID_COMMENT}=(.+)$`, 'm');
         const match = source.match(regex);
         if (!match) {

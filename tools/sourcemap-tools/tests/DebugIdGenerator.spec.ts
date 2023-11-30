@@ -156,7 +156,7 @@ describe('DebugIdGenerator', () => {
             ].join('\n');
 
             const debugIdGenerator = new DebugIdGenerator();
-            const actual = debugIdGenerator.getSourceDebugId(source);
+            const actual = debugIdGenerator.getSourceDebugIdFromComment(source);
 
             expect(actual).toEqual(expected);
         });
@@ -167,7 +167,7 @@ describe('DebugIdGenerator', () => {
             );
 
             const debugIdGenerator = new DebugIdGenerator();
-            const actual = debugIdGenerator.getSourceDebugId(source);
+            const actual = debugIdGenerator.getSourceDebugIdFromComment(source);
 
             expect(actual).toBeUndefined();
         });

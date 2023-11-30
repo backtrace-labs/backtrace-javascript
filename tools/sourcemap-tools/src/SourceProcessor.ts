@@ -41,7 +41,7 @@ export class SourceProcessor {
     constructor(private readonly _debugIdGenerator: DebugIdGenerator) {}
 
     public isSourceProcessed(source: string): boolean {
-        return !!this._debugIdGenerator.getSourceDebugId(source);
+        return !!this._debugIdGenerator.getSourceDebugIdFromComment(source);
     }
 
     public isSourceMapProcessed(sourceMap: RawSourceMap): boolean {
@@ -66,7 +66,7 @@ export class SourceProcessor {
     }
 
     public getSourceDebugId(source: string): string | undefined {
-        return this._debugIdGenerator.getSourceDebugId(source);
+        return this._debugIdGenerator.getSourceDebugIdFromComment(source);
     }
 
     public getSourceMapDebugId(sourceMap: RawSourceMap): string | undefined {
@@ -93,28 +93,28 @@ export class SourceProcessor {
         source: string,
         sourceMap: RawSourceMap,
         debugId?: string,
+        force?: boolean,
     ): Promise<ProcessResult> {
         const sourceDebugId = this.getSourceDebugId(source);
         if (!debugId) {
             debugId = sourceDebugId ?? stringToUuid(source);
         }
 
-        let newSource: string | undefined;
+        let newSource = source;
         let offsetSourceMap: RawSourceMap | undefined;
 
         // If source has debug ID, but it is different, we need to only replace it
         if (sourceDebugId && debugId !== sourceDebugId) {
             newSource = this._debugIdGenerator.replaceDebugId(source, sourceDebugId, debugId);
-        } else if (!sourceDebugId) {
+        }
+
+        if (force || !sourceDebugId || !this._debugIdGenerator.hasCodeSnippet(source, debugId)) {
             const sourceSnippet = this._debugIdGenerator.generateSourceSnippet(debugId);
 
             const shebang = source.match(/^(#!.+\n)/)?.[1];
-            const sourceWithSnippet = shebang
+            newSource = shebang
                 ? shebang + sourceSnippet + '\n' + source.substring(shebang.length)
                 : sourceSnippet + '\n' + source;
-
-            const sourceComment = this._debugIdGenerator.generateSourceComment(debugId);
-            newSource = appendBeforeWhitespaces(sourceWithSnippet, '\n' + sourceComment);
 
             // We need to offset the source map by amount of lines that we're inserting to the source code
             // Sourcemaps map code like this:
@@ -126,8 +126,13 @@ export class SourceProcessor {
             offsetSourceMap = await this.offsetSourceMap(sourceMap, sourceSnippetNewlineCount + 1);
         }
 
+        if (force || !sourceDebugId || !this._debugIdGenerator.hasCommentSnippet(source, debugId)) {
+            const sourceComment = this._debugIdGenerator.generateSourceComment(debugId);
+            newSource = appendBeforeWhitespaces(newSource, '\n' + sourceComment);
+        }
+
         const newSourceMap = this._debugIdGenerator.addSourceMapDebugId(offsetSourceMap ?? sourceMap, debugId);
-        return { debugId, source: newSource ?? source, sourceMap: newSourceMap };
+        return { debugId, source: newSource, sourceMap: newSourceMap };
     }
 
     /**
@@ -142,6 +147,7 @@ export class SourceProcessor {
         sourcePath: string,
         sourceMapPath?: string,
         debugId?: string,
+        force?: boolean,
     ): ResultPromise<ProcessResultWithPaths, string> {
         const sourceReadResult = await readFile(sourcePath);
         if (sourceReadResult.isErr()) {
@@ -171,7 +177,7 @@ export class SourceProcessor {
         }
         const sourceMap = parseResult.data;
 
-        const processResult = await this.processSourceAndSourceMap(source, sourceMap, debugId);
+        const processResult = await this.processSourceAndSourceMap(source, sourceMap, debugId, force);
         return Ok({
             ...processResult,
             sourcePath,
