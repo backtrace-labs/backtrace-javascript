@@ -170,18 +170,54 @@ export class SourceProcessor {
     }
 
     public async getSourceMapPathFromSource(source: string, sourcePath: string): Promise<string | undefined> {
-        const resolveFile = (filePath: string) =>
-            pipe(filePath, statFile, (result) =>
-                !result.isOk() || result.data.isFile()
-                    ? filePath
-                    : (path.join(filePath, path.basename(sourcePath) + '.map') as string | undefined),
+        const matchAll = (str: string, regex: RegExp) => {
+            const result: RegExpMatchArray[] = [];
+            // eslint-disable-next-line no-constant-condition
+            while (true) {
+                const match = regex.exec(str);
+                if (!match) {
+                    return result;
+                }
+                result.push(match);
+            }
+        };
+
+        const checkFile = (filePath: string) =>
+            pipe(filePath, statFile, (result) => (result.isOk() && result.data.isFile() ? filePath : undefined));
+
+        const sourceMapName = path.basename(sourcePath) + '.map';
+        const checkFileInDir = (dir: string) =>
+            pipe(dir, statFile, (result) =>
+                result.isOk() && result.data.isDirectory()
+                    ? // If path exists and is a directory, check if file exists in that dir
+                      checkFile(path.join(dir, sourceMapName))
+                    : // If path does not exist or is not a directory, check if file exists in dir of that path
+                      checkFile(path.join(path.dirname(dir), sourceMapName)),
             );
 
-        return pipe(source.match(/^\/\/# sourceMappingURL=(.+)$/m), (match) =>
-            !match || !match[1]
-                ? undefined
-                : pipe(match[1], (match) => path.resolve(path.dirname(sourcePath), match), resolveFile),
-        );
+        const matches = matchAll(source, /^\s*\/\/# sourceMappingURL=(.+)$/gm);
+        if (!matches.length) {
+            return checkFileInDir(sourcePath);
+        }
+
+        for (const match of matches.reverse()) {
+            const file = match[1];
+            if (!file) {
+                continue;
+            }
+
+            const fullPath = path.resolve(path.dirname(sourcePath), file);
+            if (await checkFile(fullPath)) {
+                return fullPath;
+            }
+
+            const fileInDir = await checkFileInDir(fullPath);
+            if (fileInDir) {
+                return fileInDir;
+            }
+        }
+
+        return checkFileInDir(sourcePath);
     }
 
     public async addSourcesToSourceMap(
