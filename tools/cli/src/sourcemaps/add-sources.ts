@@ -27,7 +27,7 @@ import { Command, CommandContext } from '../commands/Command';
 import { readSourceMapFromPathOrFromSource, toAsset, writeAsset } from '../helpers/common';
 import { ErrorBehaviors, filterBehaviorSkippedElements, getErrorBehavior, handleError } from '../helpers/errorBehavior';
 import { buildIncludeExclude, file2Or1FromTuple, findTuples } from '../helpers/find';
-import { logAsset } from '../helpers/logs';
+import { createAssetLogger } from '../helpers/logs';
 import { normalizePaths, relativePaths } from '../helpers/normalizePaths';
 import { CliLogger } from '../logger';
 import { findConfig, loadOptionsForCommand } from '../options/loadOptions';
@@ -123,8 +123,9 @@ export async function addSourcesToSourcemaps({ opts, logger, getHelpMessage }: C
 
     const logDebug = log(logger, 'debug');
     const logTrace = log(logger, 'trace');
-    const logDebugAsset = logAsset(logger, 'debug');
-    const logTraceAsset = logAsset(logger, 'trace');
+    const logAsset = createAssetLogger(logger);
+    const logDebugAsset = logAsset('debug');
+    const logTraceAsset = logAsset('trace');
 
     const assetErrorBehaviorResult = getErrorBehavior(opts['asset-error-behavior'] ?? 'exit');
     if (assetErrorBehaviorResult.isErr()) {
