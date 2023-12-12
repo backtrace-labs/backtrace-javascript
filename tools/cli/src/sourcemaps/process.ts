@@ -26,7 +26,7 @@ import { Command, CommandContext } from '../commands/Command';
 import { readSourceAndSourceMap, toSourceAndSourceMapPaths, writeSourceAndSourceMap } from '../helpers/common';
 import { ErrorBehaviors, filterBehaviorSkippedElements, getErrorBehavior, handleError } from '../helpers/errorBehavior';
 import { buildIncludeExclude, findTuples } from '../helpers/find';
-import { logAsset, logAssets } from '../helpers/logs';
+import { createAssetLogger, logAssets } from '../helpers/logs';
 import { normalizePaths, relativePaths } from '../helpers/normalizePaths';
 import { CliLogger } from '../logger';
 import { SourceAndSourceMapPaths } from '../models/Asset';
@@ -135,7 +135,7 @@ export async function processSources({ opts, logger, getHelpMessage }: CommandCo
     const handleFailedAsset = handleError(assetErrorBehavior);
 
     const logAssetBehaviorError = (asset: Asset) => (err: string, level: LogLevel) =>
-        logAsset(logger, level)(err)(asset);
+        createAssetLogger(logger, level)(err)(asset);
 
     const processAssetCommand = (asset: SourceAndSourceMapPaths) =>
         pipe(

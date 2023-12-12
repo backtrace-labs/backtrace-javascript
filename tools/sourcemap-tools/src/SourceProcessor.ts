@@ -18,6 +18,25 @@ export interface ProcessResultWithPaths extends ProcessResult {
     readonly sourceMapPath: string;
 }
 
+export interface AddSourcesResult {
+    readonly sourceMap: RawSourceMap;
+
+    /**
+     * Source paths that were successfully added.
+     */
+    readonly succeeded: string[];
+
+    /**
+     * Source paths that failed to read, but source content was already in the sourcemap.
+     */
+    readonly skipped: string[];
+
+    /**
+     * Source paths that failed to read and the sources content was not in the sourcemap.
+     */
+    readonly failed: string[];
+}
+
 export class SourceProcessor {
     constructor(private readonly _debugIdGenerator: DebugIdGenerator) {}
 
@@ -223,7 +242,8 @@ export class SourceProcessor {
     public async addSourcesToSourceMap(
         sourceMap: string | RawSourceMap,
         sourceMapPath: string,
-    ): ResultPromise<RawSourceMap, string> {
+        force: boolean,
+    ): ResultPromise<AddSourcesResult, string> {
         if (typeof sourceMap === 'string') {
             const parseResult = parseJSON<RawSourceMap>(sourceMap);
             if (parseResult.isErr()) {
@@ -236,19 +256,35 @@ export class SourceProcessor {
             ? path.resolve(path.dirname(sourceMapPath), sourceMap.sourceRoot)
             : path.resolve(path.dirname(sourceMapPath));
 
-        const sourcesContent: string[] = [];
-        for (const sourcePath of sourceMap.sources) {
-            const readResult = await readFile(path.resolve(sourceRoot, sourcePath));
-            if (readResult.isErr()) {
-                return readResult;
+        const succeeded: string[] = [];
+        const skipped: string[] = [];
+        const failed: string[] = [];
+
+        const sourcesContent: string[] = sourceMap.sourcesContent ?? [];
+        for (let i = 0; i < sourceMap.sources.length; i++) {
+            const sourcePath = sourceMap.sources[i];
+            if (sourcesContent[i] && !force) {
+                skipped.push(sourcePath);
+                continue;
             }
 
-            sourcesContent.push(readResult.data);
+            const readResult = await readFile(path.resolve(sourceRoot, sourcePath));
+            if (readResult.isErr()) {
+                failed.push(sourcePath);
+            } else {
+                sourcesContent[i] = readResult.data;
+                succeeded.push(sourcePath);
+            }
         }
 
         return Ok({
-            ...sourceMap,
-            sourcesContent,
+            sourceMap: {
+                ...sourceMap,
+                sourcesContent,
+            },
+            succeeded,
+            skipped,
+            failed,
         });
     }
 

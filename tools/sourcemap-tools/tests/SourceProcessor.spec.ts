@@ -303,13 +303,26 @@ function foo(){console.log("Hello World!")}foo();`;
             const sourceMapContent = await fs.promises.readFile(sourceMapPath, 'utf-8');
 
             const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
-            const result = await sourceProcessor.addSourcesToSourceMap(sourceMapContent, sourceMapPath);
+            const result = await sourceProcessor.addSourcesToSourceMap(sourceMapContent, sourceMapPath, false);
             assert(result.isOk());
 
-            expect(result.data.sourcesContent).toEqual([sourceContent]);
+            expect(result.data.sourceMap.sourcesContent).toEqual([sourceContent]);
         });
 
-        it('should overwrite sources in source map', async () => {
+        it('should not overwrite sources in source map when force is false', async () => {
+            const sourceMapPath = path.join(__dirname, './testFiles/source.js.map');
+
+            const sourceMapContent = JSON.parse(await fs.promises.readFile(sourceMapPath, 'utf-8')) as RawSourceMap;
+            sourceMapContent.sourcesContent = ['abc'];
+
+            const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
+            const result = await sourceProcessor.addSourcesToSourceMap(sourceMapContent, sourceMapPath, false);
+            assert(result.isOk());
+
+            expect(result.data.sourceMap.sourcesContent).toEqual(['abc']);
+        });
+
+        it('should overwrite sources in source map when force is true', async () => {
             const originalSourcePath = path.join(__dirname, './testFiles/source.ts');
             const sourceMapPath = path.join(__dirname, './testFiles/source.js.map');
 
@@ -318,10 +331,10 @@ function foo(){console.log("Hello World!")}foo();`;
             sourceMapContent.sourcesContent = ['abc'];
 
             const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
-            const result = await sourceProcessor.addSourcesToSourceMap(sourceMapContent, sourceMapPath);
+            const result = await sourceProcessor.addSourcesToSourceMap(sourceMapContent, sourceMapPath, true);
             assert(result.isOk());
 
-            expect(result.data.sourcesContent).toEqual([sourceContent]);
+            expect(result.data.sourceMap.sourcesContent).toEqual([sourceContent]);
         });
     });
 

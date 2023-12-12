@@ -2,19 +2,30 @@ import { Asset, log, LogLevel, ProcessAssetResult } from '@backtrace/sourcemap-t
 import { CliLogger } from '../logger';
 import { SourceAndSourceMapPaths } from '../models/Asset';
 
-export function logAsset(logger: CliLogger, level: LogLevel) {
-    const logFn = log(logger, level);
+export function createAssetLogger(
+    logger: CliLogger,
+): (level: LogLevel) => <T extends Asset | ProcessAssetResult>(message: string | ((t: T) => string)) => (asset: T) => T;
+export function createAssetLogger(
+    logger: CliLogger,
+    level: LogLevel,
+): <T extends Asset | ProcessAssetResult>(message: string | ((t: T) => string)) => (asset: T) => T;
+export function createAssetLogger(logger: CliLogger, level?: LogLevel) {
+    function logAsset(level: LogLevel) {
+        const logFn = log(logger, level);
 
-    return function logAsset<T extends Asset | ProcessAssetResult>(message: string | ((t: T) => string)) {
-        return function logAsset(asset: T) {
-            return logFn<T>(
-                (t) =>
-                    `${'name' in t ? t.name : t.asset.name}: ${
-                        typeof message === 'function' ? message(asset) : message
-                    }`,
-            )(asset);
+        return function logAsset<T extends Asset | ProcessAssetResult>(message: string | ((t: T) => string)) {
+            return function logAsset(asset: T) {
+                return logFn<T>(
+                    (t) =>
+                        `${'name' in t ? t.name : t.asset.name}: ${
+                            typeof message === 'function' ? message(asset) : message
+                        }`,
+                )(asset);
+            };
         };
-    };
+    }
+
+    return level ? logAsset(level) : logAsset;
 }
 
 export const logAssets =

@@ -7,6 +7,10 @@ import { expectAllKeysToChange, filterKeys, getHelpMessage } from '../_helpers/c
 import { expectHashesToChange, hashEachFile, hashFiles, withWorkingCopy } from '../_helpers/testFiles';
 
 describe('add-sources', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
     describe('returning value', () => {
         it(
             'should return processed sourcemaps',
@@ -79,7 +83,7 @@ describe('add-sources', () => {
                 const files = await glob(`${workingDir}/*.js.map`);
 
                 for (const file of files) {
-                    expect(spy).toBeCalledWith(expect.anything(), file);
+                    expect(spy).toBeCalledWith(expect.anything(), file, expect.any(Boolean));
                 }
             }),
         );
@@ -167,7 +171,7 @@ describe('add-sources', () => {
                 const files = await glob(`${workingDir}/*.js.map`);
 
                 for (const file of files) {
-                    expect(spy).toBeCalledWith(expect.anything(), file);
+                    expect(spy).toBeCalledWith(expect.anything(), file, expect.any(Boolean));
                 }
             }),
         );
@@ -226,7 +230,7 @@ describe('add-sources', () => {
                 const files = await glob(`${workingDir}/*.js.map`);
 
                 for (const file of files) {
-                    expect(spy).toBeCalledWith(expect.anything(), file);
+                    expect(spy).toBeCalledWith(expect.anything(), file, expect.any(Boolean));
                 }
             }),
         );
@@ -266,6 +270,7 @@ describe('add-sources', () => {
                     getHelpMessage,
                     opts: {
                         path: workingDir,
+                        'source-error-behavior': 'exit',
                     },
                 });
 
@@ -286,6 +291,7 @@ describe('add-sources', () => {
                     getHelpMessage,
                     opts: {
                         path: [workingDir],
+                        'source-error-behavior': 'exit',
                     },
                 });
 
@@ -309,6 +315,7 @@ describe('add-sources', () => {
                     getHelpMessage,
                     opts: {
                         path: [workingDir],
+                        'source-error-behavior': 'exit',
                     },
                 });
 
@@ -329,6 +336,22 @@ describe('add-sources', () => {
                     opts: {
                         path: workingDir,
                         'asset-error-behavior': 'skip',
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+            }),
+        );
+
+        it(
+            'should not fail with source-error-behavior=skip',
+            withWorkingCopy('invalid', async (workingDir) => {
+                const result = await addSourcesToSourcemaps({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: workingDir,
+                        'source-error-behavior': 'skip',
                     },
                 });
 
@@ -390,7 +413,7 @@ describe('add-sources', () => {
                 const files = await glob(`${workingDir}/*.js.map`);
 
                 for (const file of files) {
-                    expect(spy).toBeCalledWith(expect.anything(), file);
+                    expect(spy).toBeCalledWith(expect.anything(), file, expect.any(Boolean));
                 }
             }),
         );
@@ -449,7 +472,7 @@ describe('add-sources', () => {
                 const files = await glob(`${workingDir}/*.js.map`);
 
                 for (const file of files) {
-                    expect(spy).toBeCalledWith(expect.anything(), file);
+                    expect(spy).toBeCalledWith(expect.anything(), file, expect.any(Boolean));
                 }
             }),
         );
@@ -514,7 +537,7 @@ describe('add-sources', () => {
                 const files = await glob(`${workingDir}/*.js.map`);
 
                 for (const file of files) {
-                    expect(spy).toBeCalledWith(expect.anything(), file);
+                    expect(spy).toBeCalledWith(expect.anything(), file, expect.any(Boolean));
                 }
             }),
         );
