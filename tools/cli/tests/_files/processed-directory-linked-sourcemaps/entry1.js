@@ -1,4 +1,4 @@
-;!function(){try{var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof self?self:{},n=(new Error).stack;n&&(e._btDebugIds=e._btDebugIds||{},e._btDebugIds[n]="4fe9a5c9-ab48-b240-9469-04aa2db251b6")}catch(e){}}();
+;!function(){try{var k="_btDebugIds",u="undefined",v="4fe9a5c9-ab48-b240-9469-04aa2db251b6",a=function(x){try{x[k]=x[k]||{};x[k][n]=v}catch{}},n=(new Error).stack;n&&(u!=typeof window?a(window):u);n&&(u!=typeof global?a(global):u);n&&(u!=typeof self?a(self):u);n&&(u!=typeof globalThis?a(globalThis):u)}catch{}}();
 function doSomething() {
     console.log('Done something');
 }

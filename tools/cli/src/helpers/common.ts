@@ -119,7 +119,6 @@ function resolveSourceMapPath(sourceProcessor: SourceProcessor) {
         return pipe(
             asset.path,
             (path) => sourceProcessor.getSourceMapPathFromSourceFile(path),
-            R.map((result) => result ?? pathIfExists(`${asset.path}.map`)),
             R.map((path) => (path ? Ok(path) : Err('could not find source map for source'))),
             R.map((path) => ({
                 ...asset,
