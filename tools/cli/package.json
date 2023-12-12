@@ -1,6 +1,6 @@
 {
     "name": "@backtrace/javascript-cli",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "description": "Backtrace CLI for working with Javascript files.",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
