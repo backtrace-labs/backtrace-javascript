@@ -13,6 +13,9 @@ export class ReactNativeRequestHandler implements BacktraceRequestHandler {
     private readonly JSON_HEADERS = {
         'Content-type': 'application/json',
     };
+    private readonly MULTIPART_HEADERS = {
+        'Transfer-Encoding': 'chunked',
+    };
 
     constructor(
         private readonly _options: {
@@ -45,7 +48,7 @@ export class ReactNativeRequestHandler implements BacktraceRequestHandler {
             const response = await fetch(submissionUrl, {
                 method: 'POST',
                 body: payload,
-                headers: typeof payload === 'string' ? this.JSON_HEADERS : {},
+                headers: typeof payload === 'string' ? this.JSON_HEADERS : this.MULTIPART_HEADERS,
                 signal: anySignal(abortSignal, controller.signal),
             });
 
