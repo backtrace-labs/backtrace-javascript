@@ -3,8 +3,8 @@ import { Text, TouchableOpacity, View } from 'react-native';
 
 export type CustomizableButtonOptions = {
     title: string;
-    backgroundColor: string;
-    textColor: string;
+    backgroundColor?: string;
+    textColor?: string;
     callback: () => void | Promise<void>;
 };
 export function CustomizableButton({
