@@ -13,6 +13,9 @@ export class ReactNativeRequestHandler implements BacktraceRequestHandler {
     private readonly JSON_HEADERS = {
         'Content-type': 'application/json',
     };
+    private readonly MULTIPART_HEADERS = {
+        'Transfer-Encoding': 'chunked',
+    };
 
     constructor(
         private readonly _options: {
@@ -29,8 +32,8 @@ export class ReactNativeRequestHandler implements BacktraceRequestHandler {
         attachments: BacktraceAttachment<Blob | string>[],
         abortSignal?: AbortSignal,
     ): Promise<BacktraceReportSubmissionResult<T>> {
-        const formData = this.createFormData(dataJson, attachments);
-        return this.post(submissionUrl, formData, abortSignal);
+        const payload = this.createSubmissionPayload(dataJson, attachments);
+        return this.post(submissionUrl, payload, abortSignal);
     }
 
     public async post<T>(
@@ -45,7 +48,7 @@ export class ReactNativeRequestHandler implements BacktraceRequestHandler {
             const response = await fetch(submissionUrl, {
                 method: 'POST',
                 body: payload,
-                headers: typeof payload === 'string' ? this.JSON_HEADERS : {},
+                headers: typeof payload === 'string' ? this.JSON_HEADERS : this.MULTIPART_HEADERS,
                 signal: anySignal(abortSignal, controller.signal),
             });
 
@@ -83,13 +86,15 @@ export class ReactNativeRequestHandler implements BacktraceRequestHandler {
         }
     }
 
-    private createFormData(json: string, attachments: BacktraceAttachment<Blob | string>[]) {
+    private createSubmissionPayload(
+        json: string,
+        attachments: BacktraceAttachment<Blob | string>[],
+    ): FormData | string {
+        if (!attachments || attachments.length === 0) {
+            return json;
+        }
         const formData = new FormData();
         formData.append(this.UPLOAD_FILE_NAME, json);
-
-        if (!attachments || attachments.length === 0) {
-            return formData;
-        }
         for (const attachment of attachments) {
             const data = attachment.get();
             if (!data) {

@@ -257,7 +257,14 @@ describe('run', () => {
                 type InnerAddSources = ReturnType<typeof addSourcesCmd.addSourceToSourceMap>;
                 const innerAddSources = jest
                     .fn<ReturnType<InnerAddSources>, Parameters<InnerAddSources>>()
-                    .mockImplementation((asset) => Promise.resolve(Ok(asset)));
+                    .mockImplementation((asset) =>
+                        Promise.resolve(
+                            Ok({
+                                ...asset,
+                                result: { sourceMap: {} as never, succeeded: [], skipped: [], failed: [] },
+                            }),
+                        ),
+                    );
 
                 const addSourcesSpy = jest
                     .spyOn(addSourcesCmd, 'addSourceToSourceMap')

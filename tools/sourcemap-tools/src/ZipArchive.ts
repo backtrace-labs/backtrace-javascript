@@ -1,6 +1,6 @@
-import zlib from 'node:zlib';
 import { TransformOptions } from 'stream';
 import tar from 'tar-stream';
+import zlib from 'zlib';
 
 export class ZipArchive {
     private readonly _pack: tar.Pack;

@@ -36,11 +36,12 @@ function foo(){console.log("Hello World!")}foo();`;
     };
 
     const processedSource = (
+        debugIdGenerator: DebugIdGenerator,
         debugId: string,
-    ) => `;!function(){try{var e="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof self?self:{},n=(new Error).stack;n&&(e._btDebugIds=e._btDebugIds||{},e._btDebugIds[n]="${debugId}")}catch(e){}}();
+    ) => `${debugIdGenerator.generateSourceSnippet(debugId)}
 (()=>{"use strict";console.log("Hello World!")})();
 //# sourceMappingURL=source.js.map
-//# debugId=${debugId}
+${debugIdGenerator.generateSourceComment(debugId)}
 `;
 
     const processedSourceMap = (debugId: string) => ({
@@ -225,7 +226,7 @@ function foo(){console.log("Hello World!")}foo();`;
 
             await sourceProcessor.processSourceAndSourceMapFiles(sourcePath, sourceMapPath, debugId);
 
-            expect(processFn).toBeCalledWith(sourceContent, sourceMapContent, debugId);
+            expect(processFn).toBeCalledWith(sourceContent, sourceMapContent, debugId, undefined);
         });
 
         it('should call process function with sourcemap detected from source', async () => {
@@ -246,13 +247,14 @@ function foo(){console.log("Hello World!")}foo();`;
 
             await sourceProcessor.processSourceAndSourceMapFiles(sourcePath, undefined, debugId);
 
-            expect(processFn).toBeCalledWith(sourceContent, sourceMapContent, debugId);
+            expect(processFn).toBeCalledWith(sourceContent, sourceMapContent, debugId, undefined);
         });
 
         it('should return unmodified source when source has debug ID', async () => {
             const debugId = randomUUID();
-            const source = processedSource(debugId);
-            const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
+            const debugIdGenerator = new DebugIdGenerator();
+            const source = processedSource(debugIdGenerator, debugId);
+            const sourceProcessor = new SourceProcessor(debugIdGenerator);
             const result = await sourceProcessor.processSourceAndSourceMap(source, processedSourceMap(debugId));
 
             expect(result.source).toEqual(source);
@@ -260,8 +262,9 @@ function foo(){console.log("Hello World!")}foo();`;
 
         it('should return unmodified source when source has same debug ID as provided', async () => {
             const debugId = randomUUID();
-            const source = processedSource(debugId);
-            const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
+            const debugIdGenerator = new DebugIdGenerator();
+            const source = processedSource(debugIdGenerator, debugId);
+            const sourceProcessor = new SourceProcessor(debugIdGenerator);
             const result = await sourceProcessor.processSourceAndSourceMap(
                 source,
                 processedSourceMap(debugId),
@@ -273,8 +276,12 @@ function foo(){console.log("Hello World!")}foo();`;
 
         it("should return sourcemap with source's debug ID when source has debug ID", async () => {
             const debugId = randomUUID();
-            const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
-            const result = await sourceProcessor.processSourceAndSourceMap(processedSource(debugId), sourceMap);
+            const debugIdGenerator = new DebugIdGenerator();
+            const sourceProcessor = new SourceProcessor(debugIdGenerator);
+            const result = await sourceProcessor.processSourceAndSourceMap(
+                processedSource(debugIdGenerator, debugId),
+                sourceMap,
+            );
 
             expect(result.sourceMap.debugId).toEqual(debugId);
         });
@@ -282,8 +289,8 @@ function foo(){console.log("Hello World!")}foo();`;
         it('should call replace debug ID when source has different debug ID than provided', async () => {
             const oldDebugId = randomUUID();
             const newDebugId = randomUUID();
-            const source = processedSource(oldDebugId);
             const debugIdGenerator = new DebugIdGenerator();
+            const source = processedSource(debugIdGenerator, oldDebugId);
 
             const spy = jest.spyOn(debugIdGenerator, 'replaceDebugId');
 
@@ -303,13 +310,26 @@ function foo(){console.log("Hello World!")}foo();`;
             const sourceMapContent = await fs.promises.readFile(sourceMapPath, 'utf-8');
 
             const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
-            const result = await sourceProcessor.addSourcesToSourceMap(sourceMapContent, sourceMapPath);
+            const result = await sourceProcessor.addSourcesToSourceMap(sourceMapContent, sourceMapPath, false);
             assert(result.isOk());
 
-            expect(result.data.sourcesContent).toEqual([sourceContent]);
+            expect(result.data.sourceMap.sourcesContent).toEqual([sourceContent]);
         });
 
-        it('should overwrite sources in source map', async () => {
+        it('should not overwrite sources in source map when force is false', async () => {
+            const sourceMapPath = path.join(__dirname, './testFiles/source.js.map');
+
+            const sourceMapContent = JSON.parse(await fs.promises.readFile(sourceMapPath, 'utf-8')) as RawSourceMap;
+            sourceMapContent.sourcesContent = ['abc'];
+
+            const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
+            const result = await sourceProcessor.addSourcesToSourceMap(sourceMapContent, sourceMapPath, false);
+            assert(result.isOk());
+
+            expect(result.data.sourceMap.sourcesContent).toEqual(['abc']);
+        });
+
+        it('should overwrite sources in source map when force is true', async () => {
             const originalSourcePath = path.join(__dirname, './testFiles/source.ts');
             const sourceMapPath = path.join(__dirname, './testFiles/source.js.map');
 
@@ -318,10 +338,10 @@ function foo(){console.log("Hello World!")}foo();`;
             sourceMapContent.sourcesContent = ['abc'];
 
             const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
-            const result = await sourceProcessor.addSourcesToSourceMap(sourceMapContent, sourceMapPath);
+            const result = await sourceProcessor.addSourcesToSourceMap(sourceMapContent, sourceMapPath, true);
             assert(result.isOk());
 
-            expect(result.data.sourcesContent).toEqual([sourceContent]);
+            expect(result.data.sourceMap.sourcesContent).toEqual([sourceContent]);
         });
     });
 

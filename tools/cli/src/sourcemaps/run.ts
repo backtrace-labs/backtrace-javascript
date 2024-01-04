@@ -37,7 +37,7 @@ import {
 } from '../helpers/common';
 import { ErrorBehaviors, filterBehaviorSkippedElements, getErrorBehavior, handleError } from '../helpers/errorBehavior';
 import { buildIncludeExclude, findTuples } from '../helpers/find';
-import { logAsset, logAssets } from '../helpers/logs';
+import { createAssetLogger, logAssets } from '../helpers/logs';
 import { normalizePaths, relativePaths } from '../helpers/normalizePaths';
 import { SourceAndSourceMapPaths } from '../models/Asset';
 import { findConfig, joinOptions, loadOptions } from '../options/loadOptions';
@@ -225,8 +225,8 @@ export async function runSourcemapCommands({ opts, logger, getHelpMessage }: Com
     const logInfo = log(logger, 'info');
     const logDebug = log(logger, 'debug');
     const logTrace = log(logger, 'trace');
-    const logDebugAsset = logAsset(logger, 'trace');
-    const logTraceAsset = logAsset(logger, 'trace');
+    const logDebugAsset = createAssetLogger(logger, 'trace');
+    const logTraceAsset = createAssetLogger(logger, 'trace');
     const logDebugAssets = logAssets(logger, 'debug');
     const logTraceAssets = logAssets(logger, 'trace');
 
@@ -241,7 +241,7 @@ export async function runSourcemapCommands({ opts, logger, getHelpMessage }: Com
     const handleFailedAsset = handleError(assetErrorBehavior);
 
     const logAssetBehaviorError = (asset: Asset) => (err: string, level: LogLevel) =>
-        logAsset(logger, level)(err)(asset);
+        createAssetLogger(logger, level)(err)(asset);
 
     const readAssetCommand = (asset: SourceAndSourceMapPaths) =>
         pipe(

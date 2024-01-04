@@ -1,4 +1,4 @@
-import { Err, Ok, Result, ResultErr } from '@backtrace/sourcemap-tools';
+import { Err, LogLevel, Ok, Result, ResultErr } from '@backtrace/sourcemap-tools';
 
 export const ErrorBehaviors = {
     exit: 'exit',
@@ -51,4 +51,18 @@ export function filterBehaviorSkippedElements<T>(asset: Array<T | BehaviorSkippe
     return asset.filter(
         (a) => !(typeof a === 'object' && !!a && 'reason' in a && a.reason instanceof ResultErr),
     ) as T[];
+}
+
+export function isFatal(behavior: ErrorBehavior) {
+    return behavior === 'exit';
+}
+
+export function shouldLog(behavior: ErrorBehavior): behavior is LogLevel {
+    switch (behavior) {
+        case 'exit':
+        case 'skip':
+            return false;
+        default:
+            return true;
+    }
 }

@@ -18,11 +18,30 @@ export interface ProcessResultWithPaths extends ProcessResult {
     readonly sourceMapPath: string;
 }
 
+export interface AddSourcesResult {
+    readonly sourceMap: RawSourceMap;
+
+    /**
+     * Source paths that were successfully added.
+     */
+    readonly succeeded: string[];
+
+    /**
+     * Source paths that failed to read, but source content was already in the sourcemap.
+     */
+    readonly skipped: string[];
+
+    /**
+     * Source paths that failed to read and the sources content was not in the sourcemap.
+     */
+    readonly failed: string[];
+}
+
 export class SourceProcessor {
     constructor(private readonly _debugIdGenerator: DebugIdGenerator) {}
 
     public isSourceProcessed(source: string): boolean {
-        return !!this._debugIdGenerator.getSourceDebugId(source);
+        return !!this._debugIdGenerator.getSourceDebugIdFromComment(source);
     }
 
     public isSourceMapProcessed(sourceMap: RawSourceMap): boolean {
@@ -47,7 +66,7 @@ export class SourceProcessor {
     }
 
     public getSourceDebugId(source: string): string | undefined {
-        return this._debugIdGenerator.getSourceDebugId(source);
+        return this._debugIdGenerator.getSourceDebugIdFromComment(source);
     }
 
     public getSourceMapDebugId(sourceMap: RawSourceMap): string | undefined {
@@ -74,28 +93,28 @@ export class SourceProcessor {
         source: string,
         sourceMap: RawSourceMap,
         debugId?: string,
+        force?: boolean,
     ): Promise<ProcessResult> {
         const sourceDebugId = this.getSourceDebugId(source);
         if (!debugId) {
             debugId = sourceDebugId ?? stringToUuid(source);
         }
 
-        let newSource: string | undefined;
+        let newSource = source;
         let offsetSourceMap: RawSourceMap | undefined;
 
         // If source has debug ID, but it is different, we need to only replace it
         if (sourceDebugId && debugId !== sourceDebugId) {
             newSource = this._debugIdGenerator.replaceDebugId(source, sourceDebugId, debugId);
-        } else if (!sourceDebugId) {
+        }
+
+        if (force || !sourceDebugId || !this._debugIdGenerator.hasCodeSnippet(source, debugId)) {
             const sourceSnippet = this._debugIdGenerator.generateSourceSnippet(debugId);
 
             const shebang = source.match(/^(#!.+\n)/)?.[1];
-            const sourceWithSnippet = shebang
+            newSource = shebang
                 ? shebang + sourceSnippet + '\n' + source.substring(shebang.length)
                 : sourceSnippet + '\n' + source;
-
-            const sourceComment = this._debugIdGenerator.generateSourceComment(debugId);
-            newSource = appendBeforeWhitespaces(sourceWithSnippet, '\n' + sourceComment);
 
             // We need to offset the source map by amount of lines that we're inserting to the source code
             // Sourcemaps map code like this:
@@ -107,8 +126,13 @@ export class SourceProcessor {
             offsetSourceMap = await this.offsetSourceMap(sourceMap, sourceSnippetNewlineCount + 1);
         }
 
+        if (force || !sourceDebugId || !this._debugIdGenerator.hasCommentSnippet(source, debugId)) {
+            const sourceComment = this._debugIdGenerator.generateSourceComment(debugId);
+            newSource = appendBeforeWhitespaces(newSource, '\n' + sourceComment);
+        }
+
         const newSourceMap = this._debugIdGenerator.addSourceMapDebugId(offsetSourceMap ?? sourceMap, debugId);
-        return { debugId, source: newSource ?? source, sourceMap: newSourceMap };
+        return { debugId, source: newSource, sourceMap: newSourceMap };
     }
 
     /**
@@ -123,6 +147,7 @@ export class SourceProcessor {
         sourcePath: string,
         sourceMapPath?: string,
         debugId?: string,
+        force?: boolean,
     ): ResultPromise<ProcessResultWithPaths, string> {
         const sourceReadResult = await readFile(sourcePath);
         if (sourceReadResult.isErr()) {
@@ -152,7 +177,7 @@ export class SourceProcessor {
         }
         const sourceMap = parseResult.data;
 
-        const processResult = await this.processSourceAndSourceMap(source, sourceMap, debugId);
+        const processResult = await this.processSourceAndSourceMap(source, sourceMap, debugId, force);
         return Ok({
             ...processResult,
             sourcePath,
@@ -170,24 +195,61 @@ export class SourceProcessor {
     }
 
     public async getSourceMapPathFromSource(source: string, sourcePath: string): Promise<string | undefined> {
-        const resolveFile = (filePath: string) =>
-            pipe(filePath, statFile, (result) =>
-                !result.isOk() || result.data.isFile()
-                    ? filePath
-                    : (path.join(filePath, path.basename(sourcePath) + '.map') as string | undefined),
+        const matchAll = (str: string, regex: RegExp) => {
+            const result: RegExpMatchArray[] = [];
+            // eslint-disable-next-line no-constant-condition
+            while (true) {
+                const match = regex.exec(str);
+                if (!match) {
+                    return result;
+                }
+                result.push(match);
+            }
+        };
+
+        const checkFile = (filePath: string) =>
+            pipe(filePath, statFile, (result) => (result.isOk() && result.data.isFile() ? filePath : undefined));
+
+        const sourceMapName = path.basename(sourcePath) + '.map';
+        const checkFileInDir = (dir: string) =>
+            pipe(dir, statFile, (result) =>
+                result.isOk() && result.data.isDirectory()
+                    ? // If path exists and is a directory, check if file exists in that dir
+                      checkFile(path.join(dir, sourceMapName))
+                    : // If path does not exist or is not a directory, check if file exists in dir of that path
+                      checkFile(path.join(path.dirname(dir), sourceMapName)),
             );
 
-        return pipe(source.match(/^\/\/# sourceMappingURL=(.+)$/m), (match) =>
-            !match || !match[1]
-                ? undefined
-                : pipe(match[1], (match) => path.resolve(path.dirname(sourcePath), match), resolveFile),
-        );
+        const matches = matchAll(source, /^\s*\/\/# sourceMappingURL=(.+)$/gm);
+        if (!matches.length) {
+            return checkFileInDir(sourcePath);
+        }
+
+        for (const match of matches.reverse()) {
+            const file = match[1];
+            if (!file) {
+                continue;
+            }
+
+            const fullPath = path.resolve(path.dirname(sourcePath), file);
+            if (await checkFile(fullPath)) {
+                return fullPath;
+            }
+
+            const fileInDir = await checkFileInDir(fullPath);
+            if (fileInDir) {
+                return fileInDir;
+            }
+        }
+
+        return checkFileInDir(sourcePath);
     }
 
     public async addSourcesToSourceMap(
         sourceMap: string | RawSourceMap,
         sourceMapPath: string,
-    ): ResultPromise<RawSourceMap, string> {
+        force: boolean,
+    ): ResultPromise<AddSourcesResult, string> {
         if (typeof sourceMap === 'string') {
             const parseResult = parseJSON<RawSourceMap>(sourceMap);
             if (parseResult.isErr()) {
@@ -200,19 +262,35 @@ export class SourceProcessor {
             ? path.resolve(path.dirname(sourceMapPath), sourceMap.sourceRoot)
             : path.resolve(path.dirname(sourceMapPath));
 
-        const sourcesContent: string[] = [];
-        for (const sourcePath of sourceMap.sources) {
-            const readResult = await readFile(path.resolve(sourceRoot, sourcePath));
-            if (readResult.isErr()) {
-                return readResult;
+        const succeeded: string[] = [];
+        const skipped: string[] = [];
+        const failed: string[] = [];
+
+        const sourcesContent: string[] = sourceMap.sourcesContent ?? [];
+        for (let i = 0; i < sourceMap.sources.length; i++) {
+            const sourcePath = sourceMap.sources[i];
+            if (sourcesContent[i] && !force) {
+                skipped.push(sourcePath);
+                continue;
             }
 
-            sourcesContent.push(readResult.data);
+            const readResult = await readFile(path.resolve(sourceRoot, sourcePath));
+            if (readResult.isErr()) {
+                failed.push(sourcePath);
+            } else {
+                sourcesContent[i] = readResult.data;
+                succeeded.push(sourcePath);
+            }
         }
 
         return Ok({
-            ...sourceMap,
-            sourcesContent,
+            sourceMap: {
+                ...sourceMap,
+                sourcesContent,
+            },
+            succeeded,
+            skipped,
+            failed,
         });
     }
 

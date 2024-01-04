@@ -1,3 +1,7 @@
+# Version 0.3.2
+
+-   update @backtrace/sourcemap-tools to 0.2.2
+
 # Version 0.3.0
 
 -   update @backtrace/sourcemap-tools to 0.2.1
