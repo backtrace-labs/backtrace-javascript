@@ -6,6 +6,122 @@ export const v8StackTraceTests: Array<{
     expectation: BacktraceStackFrame[];
 }> = [
     {
+        name: 'async function',
+        test: {
+            message: 'TypeError: invalid function invocation',
+            stackTrace:
+                'TypeError: invalid function invocation \n' +
+                'at getLsTree2 (/path/to/code/dist/src/lib/file_routines.js:232:42)\n' +
+                'at new Promise (<anonymous>)\n' +
+                'at getFilePath (/path/to/code/dist/src/lib/file_routines.js:480:24)\n' +
+                'at getFileDirectory (/path/to/code/dist/src/lib/file_routines.js:621:40)\n' +
+                'at async getFile (/path/to/code/dist/src/lib/file_routines.js:837:22)\n' +
+                'at async /path/to/code/dist/src/controller/controller-name.js:70:30',
+        },
+        expectation: [
+            {
+                funcName: 'getLsTree2',
+                library: '/path/to/code/dist/src/lib/file_routines.js',
+                line: 232,
+                column: 42,
+            },
+            {
+                funcName: 'new Promise (<anonymous>)',
+                library: '',
+            },
+            {
+                funcName: 'getFilePath',
+                library: '/path/to/code/dist/src/lib/file_routines.js',
+                line: 480,
+                column: 24,
+            },
+            {
+                funcName: 'getFileDirectory',
+                library: '/path/to/code/dist/src/lib/file_routines.js',
+                line: 621,
+                column: 40,
+            },
+            {
+                funcName: 'getFile',
+                library: '/path/to/code/dist/src/lib/file_routines.js',
+                line: 837,
+                column: 22,
+            },
+            {
+                funcName: 'anonymous',
+                library: '/path/to/code/dist/src/controller/controller-name.js',
+                line: 70,
+                column: 30,
+            },
+        ],
+    },
+    {
+        name: 'generic anonymous',
+        test: {
+            message: `Cannot read properties of undefined (reading 'split')`,
+            stackTrace:
+                "TypeError: Cannot read properties of undefined (reading 'split')\n" +
+                'at DifferentClass.convert (/path/to/module/lib/modules/converter/DifferentClass.js:12:37)\n' +
+                'at DataBuilder.create (/path/to/module/lib/modules/data/DataBuilder.js:45:57)\n' +
+                'at DataBuilder.build (/path/to/module/lib/modules/data/DataBuilder.js:16:59)\n' +
+                'at Client.create (/path/to/module/lib/Client.js:176:49)\n' +
+                'at Client.<anonymous> (/path/to/module/lib/Client.js:130:40)\n' +
+                'at Generator.next (<anonymous>) at /path/to/module/lib/Client.js:8:71\n' +
+                'at new Promise (<anonymous>) at /path/to/module/lib/Client.js:4:12\n' +
+                'at Client.generate (/path/to/module/lib/Client.js:114:16)',
+        },
+        expectation: [
+            {
+                funcName: 'DifferentClass.convert',
+                library: '/path/to/module/lib/modules/converter/DifferentClass.js',
+                line: 12,
+                column: 37,
+            },
+            {
+                funcName: 'DataBuilder.create',
+                library: '/path/to/module/lib/modules/data/DataBuilder.js',
+                line: 45,
+                column: 57,
+            },
+            {
+                funcName: 'DataBuilder.build',
+                library: '/path/to/module/lib/modules/data/DataBuilder.js',
+                line: 16,
+                column: 59,
+            },
+            {
+                funcName: 'Client.create',
+                library: '/path/to/module/lib/Client.js',
+                line: 176,
+                column: 49,
+            },
+            {
+                funcName: 'Client.<anonymous>',
+                library: '/path/to/module/lib/Client.js',
+                line: 130,
+                column: 40,
+            },
+            {
+                funcName: 'Generator.next (<anonymous>)',
+                library: '/path/to/module/lib/Client.js',
+                line: 8,
+                column: 71,
+            },
+            {
+                funcName: 'new Promise (<anonymous>)',
+                library: '/path/to/module/lib/Client.js',
+                line: 4,
+                column: 12,
+            },
+            {
+                funcName: 'Client.generate',
+                library: '/path/to/module/lib/Client.js',
+                line: 114,
+                column: 16,
+            },
+        ],
+    },
+    {
         name: 'old source code syntax',
         test: {
             message: "Object #<Object> has no method 'foobar'",
