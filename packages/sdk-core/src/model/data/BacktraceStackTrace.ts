@@ -5,8 +5,13 @@ export interface BacktraceStackFrame {
     sourceCode?: string;
     library: string;
     debug_identifier?: string;
+    variables?: BacktraceStackFrameValue[];
 }
-
+export interface BacktraceStackFrameValue {
+    type: string;
+    name: string;
+    value: unknown;
+}
 /**
  * Backtrace Stack Trace object definition.
  * For more info visit: https://api.backtrace.io

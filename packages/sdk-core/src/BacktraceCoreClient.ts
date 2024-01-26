@@ -364,6 +364,7 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
 
     protected generateSubmissionData(report: BacktraceReport): BacktraceData | undefined {
         const backtraceData = this._dataBuilder.build(report);
+        this.reportEvents.emit('after-data', report, backtraceData);
         if (!this.options.beforeSend) {
             return backtraceData;
         }
