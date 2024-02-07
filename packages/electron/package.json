@@ -38,6 +38,6 @@
         "@backtrace/node": "^0.2.0"
     },
     "peerDependencies": {
-        "electron": "12 - 26"
+        "electron": "12 - 28"
     }
 }
