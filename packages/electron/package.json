@@ -1,6 +1,6 @@
 {
     "name": "@backtrace/electron",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "description": "Backtrace-JavaScript Electron integration",
     "main": "main/index.js",
     "types": "main/index.d.ts",
