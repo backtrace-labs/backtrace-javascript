@@ -139,8 +139,13 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
             return false;
         }
 
+        const breadcrumbMessage = this.prepareBreadcrumbMessage(message);
+
         let rawBreadcrumb: RawBreadcrumb = {
-            message: this.prepareBreadcrumbMessage(message),
+            message:
+                this._limits.maximumBreadcrumbMessageLength !== undefined
+                    ? breadcrumbMessage.substring(0, this._limits.maximumBreadcrumbMessageLength)
+                    : breadcrumbMessage,
             level,
             type,
             attributes: attributes
