@@ -1,0 +1,34 @@
+{
+    "name": "@backtrace/session-replay",
+    "version": "0.0.1",
+    "description": "",
+    "main": "lib/index.js",
+    "types": "lib/index.d.ts",
+    "scripts": {
+        "build": "tsc",
+        "clean": "tsc -b --clean && rimraf \"lib\"",
+        "format": "prettier --write '**/*.ts'",
+        "lint": "eslint . --ext .ts",
+        "watch": "tsc -w",
+        "test": "NODE_ENV=test jest"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/backtrace-labs/backtrace-javascript.git"
+    },
+    "author": "Backtrace <team@backtrace.io>",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/backtrace-labs/backtrace-javascript/issues"
+    },
+    "files": [
+        "/lib"
+    ],
+    "homepage": "https://github.com/backtrace-labs/backtrace-javascript#readme",
+    "peerDependencies": {
+        "@backtrace/sdk-core": "^0.2.0"
+    },
+    "dependencies": {
+        "rrweb": "^2.0.0-alpha.4"
+    }
+}

@@ -27,7 +27,8 @@
         "tools/rollup-plugin",
         "tools/webpack-plugin",
         "tools/vite-plugin",
-        "packages/electron"
+        "packages/electron",
+        "packages/session-replay"
     ],
     "repository": {
         "type": "git",
