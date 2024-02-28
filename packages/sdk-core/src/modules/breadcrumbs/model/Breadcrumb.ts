@@ -1,3 +1,4 @@
+import { Limited } from '../../../common/limitObjectDepth.js';
 import { AttributeType } from '../../../model/data/BacktraceData.js';
 
 export interface Breadcrumb {
@@ -6,5 +7,5 @@ export interface Breadcrumb {
     timestamp: number;
     level: string;
     type: string;
-    attributes?: Record<string, AttributeType>;
+    attributes?: Limited<Record<string, AttributeType>>;
 }
