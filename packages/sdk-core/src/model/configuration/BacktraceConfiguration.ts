@@ -51,6 +51,29 @@ export interface BacktraceBreadcrumbsSettings {
     maximumBreadcrumbs?: number;
 
     /**
+     * Specifies maximum object depth that are included in breadcrumb attributes.
+     */
+    maximumAttributesDepth?: number;
+
+    /**
+     * Specifies maximum breadcrumb message length.
+     * If the size is exceeded, message will be truncated.
+     */
+    maximumBreadcrumbMessageLength?: number;
+
+    /**
+     * Specifies maximum single breadcrumb size in bytes.
+     * If the size is exceeded, data will be removed from the breadcrumb.
+     */
+    maximumBreadcrumbSize?: number;
+
+    /**
+     * Specifies maximum breadcrumbs size in bytes.
+     * If the size is exceeded, oldest breadcrumbs will be skipped.
+     */
+    maximumBreadcrumbsSize?: number;
+
+    /**
      * Inspects breadcrumb and allows to modify it. If the undefined value is being
      * returned from the method, no breadcrumb will be added to the breadcrumb storage.
      */
