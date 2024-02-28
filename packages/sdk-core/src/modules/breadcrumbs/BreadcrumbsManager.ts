@@ -8,6 +8,7 @@ import {
     defaultBreadcurmbType,
 } from '.';
 import { jsonEscaper } from '../../common/jsonEscaper';
+import { limitObjectDepth } from '../../common/limitObjectDepth';
 import { BacktraceBreadcrumbsSettings } from '../../model/configuration/BacktraceConfiguration';
 import { AttributeType } from '../../model/data/BacktraceData';
 import { BacktraceReport } from '../../model/report/BacktraceReport';
@@ -139,8 +140,13 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
             message: this.prepareBreadcrumbMessage(message),
             level,
             type,
-            attributes,
+            attributes: attributes
+                ? this._limits.maximumAttributesDepth !== undefined
+                    ? limitObjectDepth(attributes, this._limits.maximumAttributesDepth)
+                    : attributes
+                : undefined,
         };
+
         if (this._interceptor) {
             const interceptorBreadcrumb = this._interceptor(rawBreadcrumb);
             if (!interceptorBreadcrumb) {
