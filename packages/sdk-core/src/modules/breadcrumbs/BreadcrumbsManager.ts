@@ -14,6 +14,7 @@ import {
     defaultBreadcrumbsLogLevel,
     defaultBreadcurmbType,
 } from './index.js';
+import { BreadcrumbLimits } from './model/BreadcrumbLimits.js';
 import { RawBreadcrumb } from './model/RawBreadcrumb.js';
 import { InMemoryBreadcrumbsStorage } from './storage/InMemoryBreadcrumbsStorage.js';
 
@@ -34,6 +35,7 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
      */
     private _enabled = false;
 
+    private readonly _limits: BreadcrumbLimits;
     private readonly _eventSubscribers: BreadcrumbsEventSubscriber[] = [new ConsoleEventSubscriber()];
     private readonly _interceptor?: (breadcrumb: RawBreadcrumb) => RawBreadcrumb | undefined;
     private _storage: BreadcrumbsStorage;
@@ -46,6 +48,13 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
         if (options?.subscribers) {
             this._eventSubscribers.push(...options.subscribers);
         }
+
+        this._limits = {
+            maximumAttributesDepth: configuration?.maximumAttributesDepth,
+            maximumBreadcrumbMessageLength: configuration?.maximumBreadcrumbMessageLength,
+            maximumBreadcrumbSize: configuration?.maximumBreadcrumbSize,
+            maximumBreadcrumbsSize: configuration?.maximumBreadcrumbsSize,
+        };
     }
 
     public addEventSubscriber(subscriber: BreadcrumbsEventSubscriber) {
