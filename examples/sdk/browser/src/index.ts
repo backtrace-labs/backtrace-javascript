@@ -1,8 +1,9 @@
 import { BacktraceClient, BacktraceStringAttachment, createBacktraceReduxMiddleware } from '@backtrace/browser';
+import { BacktraceSessionReplayModule } from '@backtrace/session-replay';
 import { configureStore, createSlice } from '@reduxjs/toolkit';
 import { SUBMISSION_URL } from './consts';
 
-const client = BacktraceClient.initialize({
+const client = BacktraceClient.builder({
     url: SUBMISSION_URL,
     name: '@backtrace/browser-example',
     version: '0.0.1',
@@ -13,7 +14,13 @@ const client = BacktraceClient.initialize({
             prop2: 123,
         },
     },
-});
+})
+    .useModule(
+        new BacktraceSessionReplayModule({
+            maxEventCount: 100,
+        }),
+    )
+    .build();
 
 interface DemoState {
     count: number;
