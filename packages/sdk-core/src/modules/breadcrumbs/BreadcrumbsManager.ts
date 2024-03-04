@@ -8,6 +8,7 @@ import {
     defaultBreadcurmbType,
 } from '.';
 import { jsonEscaper } from '../../common/jsonEscaper';
+import { jsonSize } from '../../common/jsonSize';
 import { limitObjectDepth } from '../../common/limitObjectDepth';
 import { BacktraceBreadcrumbsSettings } from '../../model/configuration/BacktraceConfiguration';
 import { AttributeType } from '../../model/data/BacktraceData';
@@ -16,7 +17,7 @@ import { BacktraceModule, BacktraceModuleBindData } from '../BacktraceModule';
 import { BreadcrumbsEventSubscriber } from './events/BreadcrumbsEventSubscriber';
 import { ConsoleEventSubscriber } from './events/ConsoleEventSubscriber';
 import { BreadcrumbLimits } from './model/BreadcrumbLimits';
-import { RawBreadcrumb } from './model/RawBreadcrumb';
+import { LimitedRawBreadcrumb, RawBreadcrumb } from './model/RawBreadcrumb';
 import { InMemoryBreadcrumbsStorage } from './storage/InMemoryBreadcrumbsStorage';
 
 const BREADCRUMB_ATTRIBUTE_NAME = 'breadcrumbs.lastId';
@@ -136,20 +137,11 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
             return false;
         }
 
-        const breadcrumbMessage = this.prepareBreadcrumbMessage(message);
-
         let rawBreadcrumb: RawBreadcrumb = {
-            message:
-                this._limits.maximumBreadcrumbMessageLength !== undefined
-                    ? breadcrumbMessage.substring(0, this._limits.maximumBreadcrumbMessageLength)
-                    : breadcrumbMessage,
+            message: this.prepareBreadcrumbMessage(message),
             level,
             type,
-            attributes: attributes
-                ? this._limits.maximumAttributesDepth !== undefined
-                    ? limitObjectDepth(attributes, this._limits.maximumAttributesDepth)
-                    : attributes
-                : undefined,
+            attributes,
         };
 
         if (this._interceptor) {
@@ -168,7 +160,32 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
             return false;
         }
 
-        this._storage.add(rawBreadcrumb);
+        if (this._limits.maximumBreadcrumbMessageLength !== undefined) {
+            rawBreadcrumb = {
+                ...rawBreadcrumb,
+                message: rawBreadcrumb.message.substring(0, this._limits.maximumBreadcrumbMessageLength),
+            };
+        }
+
+        let limitedBreadcrumb: RawBreadcrumb | LimitedRawBreadcrumb;
+        if (this._limits.maximumAttributesDepth !== undefined && rawBreadcrumb.attributes) {
+            limitedBreadcrumb = {
+                ...rawBreadcrumb,
+                attributes: limitObjectDepth(rawBreadcrumb.attributes, this._limits.maximumAttributesDepth),
+            };
+        } else {
+            limitedBreadcrumb = rawBreadcrumb;
+        }
+
+        if (this._limits.maximumBreadcrumbSize !== undefined) {
+            const breadcrumbSize = jsonSize(limitedBreadcrumb, jsonEscaper());
+            if (breadcrumbSize > this._limits.maximumBreadcrumbSize) {
+                // TODO: Trim the breadcrumb
+                return false;
+            }
+        }
+
+        this._storage.add(limitedBreadcrumb);
         return true;
     }
 
