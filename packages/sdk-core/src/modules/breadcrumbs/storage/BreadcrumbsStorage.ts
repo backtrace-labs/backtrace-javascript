@@ -1,6 +1,6 @@
 import { BacktraceAttachment } from '../../../model/attachment/index.js';
 import { BacktraceAttachmentProvider } from '../../attachments/BacktraceAttachmentProvider.js';
-import { RawBreadcrumb } from '../model/RawBreadcrumb.js';
+import { LimitedRawBreadcrumb, RawBreadcrumb } from '../model/RawBreadcrumb.js';
 
 export interface BreadcrumbsStorage {
     /**
@@ -12,7 +12,7 @@ export interface BreadcrumbsStorage {
      * Adds breadcrumb to the storage
      * @param rawBreadcrumb breadcrumb data
      */
-    add(rawBreadcrumb: RawBreadcrumb): number;
+    add(rawBreadcrumb: RawBreadcrumb | LimitedRawBreadcrumb): number;
 
     /**
      * Gets attachments associated with this storage.
