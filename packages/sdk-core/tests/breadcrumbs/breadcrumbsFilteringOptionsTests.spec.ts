@@ -6,13 +6,13 @@ describe('Breadcrumbs filtering options tests', () => {
     describe('Event type tests', () => {
         it('Should filter out breadcrumbs based on the event type', () => {
             const message = 'test';
-            const storage = new InMemoryBreadcrumbsStorage(100);
+            const storage = new InMemoryBreadcrumbsStorage({ maximumBreadcrumbs: 100 });
             const breadcrumbsManager = new BreadcrumbsManager(
                 {
                     eventType: BreadcrumbType.Configuration,
                 },
                 {
-                    storage,
+                    storage: () => storage,
                 },
             );
             breadcrumbsManager.initialize();
@@ -26,13 +26,13 @@ describe('Breadcrumbs filtering options tests', () => {
         it('Should allow to add a breadcrumb with allowed event type', () => {
             const message = 'test';
             const allowedBreadcrumbType = BreadcrumbType.Configuration;
-            const storage = new InMemoryBreadcrumbsStorage(100);
+            const storage = new InMemoryBreadcrumbsStorage({ maximumBreadcrumbs: 100 });
             const breadcrumbsManager = new BreadcrumbsManager(
                 {
                     eventType: allowedBreadcrumbType,
                 },
                 {
-                    storage,
+                    storage: () => storage,
                 },
             );
             breadcrumbsManager.initialize();
@@ -47,13 +47,13 @@ describe('Breadcrumbs filtering options tests', () => {
     describe('Log level tests', () => {
         it('Should filter out breadcrumbs based on the log level', () => {
             const message = 'test';
-            const storage = new InMemoryBreadcrumbsStorage(100);
+            const storage = new InMemoryBreadcrumbsStorage({ maximumBreadcrumbs: 100 });
             const breadcrumbsManager = new BreadcrumbsManager(
                 {
                     logLevel: BreadcrumbLogLevel.Error,
                 },
                 {
-                    storage,
+                    storage: () => storage,
                 },
             );
             breadcrumbsManager.initialize();
@@ -67,13 +67,13 @@ describe('Breadcrumbs filtering options tests', () => {
         it('Should allow to add a breadcrumb with allowed log level', () => {
             const message = 'test';
             const allowedLogLevel = BreadcrumbLogLevel.Debug;
-            const storage = new InMemoryBreadcrumbsStorage(100);
+            const storage = new InMemoryBreadcrumbsStorage({ maximumBreadcrumbs: 100 });
             const breadcrumbsManager = new BreadcrumbsManager(
                 {
                     logLevel: allowedLogLevel,
                 },
                 {
-                    storage,
+                    storage: () => storage,
                 },
             );
             breadcrumbsManager.initialize();
@@ -123,13 +123,13 @@ describe('Breadcrumbs filtering options tests', () => {
     describe('Breadcrumbs overflow tests', () => {
         it('Should always store maximum breadcrumbs', () => {
             const maximumBreadcrumbs = 2;
-            const storage = new InMemoryBreadcrumbsStorage(maximumBreadcrumbs);
+            const storage = new InMemoryBreadcrumbsStorage({ maximumBreadcrumbs });
             const breadcrumbsManager = new BreadcrumbsManager(
                 {
                     maximumBreadcrumbs,
                 },
                 {
-                    storage,
+                    storage: () => storage,
                 },
             );
             breadcrumbsManager.initialize();
@@ -151,13 +151,13 @@ describe('Breadcrumbs filtering options tests', () => {
 
         it('Should drop the oldest event to free up the space for the new one', () => {
             const maximumBreadcrumbs = 2;
-            const storage = new InMemoryBreadcrumbsStorage(maximumBreadcrumbs);
+            const storage = new InMemoryBreadcrumbsStorage({ maximumBreadcrumbs });
             const breadcrumbsManager = new BreadcrumbsManager(
                 {
                     maximumBreadcrumbs,
                 },
                 {
-                    storage,
+                    storage: () => storage,
                 },
             );
             breadcrumbsManager.initialize();
