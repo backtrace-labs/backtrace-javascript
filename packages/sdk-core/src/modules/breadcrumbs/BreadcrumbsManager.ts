@@ -12,6 +12,7 @@ import {
     BreadcrumbLogLevel,
     BreadcrumbsSetup,
     BreadcrumbsStorage,
+    BreadcrumbsStorageFactory,
     BreadcrumbType,
     defaultBreadcrumbsLogLevel,
     defaultBreadcurmbType,
@@ -43,20 +44,21 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
     private _storage: BreadcrumbsStorage;
 
     constructor(configuration?: BacktraceBreadcrumbsSettings, options?: BreadcrumbsSetup) {
+        this._limits = {
+            maximumBreadcrumbs: configuration?.maximumBreadcrumbs ?? 100,
+            maximumAttributesDepth: configuration?.maximumAttributesDepth ?? 2,
+            maximumBreadcrumbMessageLength: configuration?.maximumBreadcrumbMessageLength ?? 255,
+            maximumBreadcrumbSize: configuration?.maximumBreadcrumbSize ?? 64 * 1024,
+            maximumBreadcrumbsSize: configuration?.maximumBreadcrumbsSize ?? 1024 * 1024,
+        };
+
         this.breadcrumbsType = configuration?.eventType ?? defaultBreadcurmbType;
         this.logLevel = configuration?.logLevel ?? defaultBreadcrumbsLogLevel;
-        this._storage = options?.storage ?? new InMemoryBreadcrumbsStorage(configuration?.maximumBreadcrumbs);
+        this._storage = (options?.storage ?? InMemoryBreadcrumbsStorage.factory)({ limits: this._limits });
         this._interceptor = configuration?.intercept;
         if (options?.subscribers) {
             this._eventSubscribers.push(...options.subscribers);
         }
-
-        this._limits = {
-            maximumAttributesDepth: configuration?.maximumAttributesDepth,
-            maximumBreadcrumbMessageLength: configuration?.maximumBreadcrumbMessageLength,
-            maximumBreadcrumbSize: configuration?.maximumBreadcrumbSize,
-            maximumBreadcrumbsSize: configuration?.maximumBreadcrumbsSize,
-        };
     }
 
     public addEventSubscriber(subscriber: BreadcrumbsEventSubscriber) {
@@ -66,8 +68,17 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
         this._eventSubscribers.push(subscriber);
     }
 
-    public setStorage(storage: BreadcrumbsStorage) {
-        this._storage = storage;
+    public setStorage(storageFactory: BreadcrumbsStorageFactory): void;
+    /**
+     * @deprecated Use `useStorage` with `BreadcrumbsStorageFactory`.
+     */
+    public setStorage(storage: BreadcrumbsStorage): void;
+    public setStorage(storage: BreadcrumbsStorage | BreadcrumbsStorageFactory) {
+        if (typeof storage === 'function') {
+            this._storage = storage({ limits: this._limits });
+        } else {
+            this._storage = storage;
+        }
     }
 
     public dispose(): void {

@@ -7,7 +7,7 @@ import { Breadcrumb } from '../model/Breadcrumb.js';
 import { BreadcrumbLogLevel } from '../model/BreadcrumbLogLevel.js';
 import { BreadcrumbType } from '../model/BreadcrumbType.js';
 import { RawBreadcrumb } from '../model/RawBreadcrumb.js';
-import { BreadcrumbsStorage } from './BreadcrumbsStorage.js';
+import { BreadcrumbsStorage, BreadcrumbsStorageOptions } from './BreadcrumbsStorage.js';
 
 export class InMemoryBreadcrumbsStorage implements BreadcrumbsStorage, BacktraceAttachment {
     public get lastBreadcrumbId(): number {
@@ -36,6 +36,10 @@ export class InMemoryBreadcrumbsStorage implements BreadcrumbsStorage, Backtrace
                 type: 'scoped',
             },
         ];
+    }
+
+    public static factory({ limits }: BreadcrumbsStorageOptions) {
+        return new InMemoryBreadcrumbsStorage(limits.maximumBreadcrumbs);
     }
 
     /**
