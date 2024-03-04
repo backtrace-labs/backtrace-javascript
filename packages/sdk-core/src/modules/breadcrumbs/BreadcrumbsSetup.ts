@@ -1,7 +1,7 @@
 import { BreadcrumbsEventSubscriber } from './events/BreadcrumbsEventSubscriber';
-import { BreadcrumbsStorage } from './storage/BreadcrumbsStorage';
+import { BreadcrumbsStorageFactory } from './storage/BreadcrumbsStorage';
 
 export interface BreadcrumbsSetup {
-    storage?: BreadcrumbsStorage;
+    storage?: BreadcrumbsStorageFactory;
     subscribers?: BreadcrumbsEventSubscriber[];
 }
