@@ -1,5 +1,5 @@
 import { BacktraceAttachment } from '../../../model/attachment';
-import { RawBreadcrumb } from '../model/RawBreadcrumb';
+import { LimitedRawBreadcrumb, RawBreadcrumb } from '../model/RawBreadcrumb';
 
 export interface BreadcrumbsStorage {
     /**
@@ -11,7 +11,7 @@ export interface BreadcrumbsStorage {
      * Adds breadcrumb to the storage
      * @param rawBreadcrumb breadcrumb data
      */
-    add(rawBreadcrumb: RawBreadcrumb): number;
+    add(rawBreadcrumb: RawBreadcrumb | LimitedRawBreadcrumb): number;
 
     /**
      * Gets attachments associated with this storage.
