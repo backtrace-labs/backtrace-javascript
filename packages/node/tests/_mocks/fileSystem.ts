@@ -1,7 +1,7 @@
-import { MockedFileSystem, mockFileSystem } from '@backtrace/sdk-core/tests/_mocks/fileSystem';
+import { MockedFileSystem, mockFileSystem } from '@backtrace/sdk-core/tests/_mocks/fileSystem.js';
 import path from 'path';
-import { Writable } from 'stream';
-import { NodeFileSystem, WritableStream } from '../../src/storage/interfaces/NodeFileSystem.js';
+import { Readable, Writable } from 'stream';
+import { NodeFileSystem } from '../../src/storage/interfaces/NodeFileSystem.js';
 
 export function mockStreamFileSystem(files?: Record<string, string>): MockedFileSystem<NodeFileSystem> {
     const fs = mockFileSystem(files);
@@ -22,7 +22,7 @@ export function mockStreamFileSystem(files?: Record<string, string>): MockedFile
         }),
 
         createWriteStream: jest.fn().mockImplementation((p: string) => {
-            const writable = new Writable({
+            return new Writable({
                 write(chunk, encoding, callback) {
                     const str = Buffer.isBuffer(chunk)
                         ? chunk.toString('utf-8')
@@ -40,11 +40,27 @@ export function mockStreamFileSystem(files?: Record<string, string>): MockedFile
                     callback && callback();
                 },
             });
+        }),
 
-            (writable as Partial<WritableStream>).close = () => writable.end();
-            (writable as Partial<WritableStream>).writeSync = (chunk) => writable.write(chunk);
+        createReadStream: jest.fn().mockImplementation((p: string) => {
+            const fullPath = path.resolve(p);
+            const file = fs.files[fullPath];
+            if (!file) {
+                throw new Error(`File ${p} does not exist`);
+            }
 
-            return writable;
+            let position = 0;
+            return new Readable({
+                read(size) {
+                    const chunk = file.substring(position, position + size);
+                    if (!chunk) {
+                        this.push(null);
+                    } else {
+                        this.push(Buffer.from(chunk));
+                        position += size;
+                    }
+                },
+            });
         }),
     };
 }
