@@ -1,16 +1,19 @@
 import {
     BreadcrumbLogLevel,
     BreadcrumbType,
-    jsonEscaper,
     SessionFiles,
     TimeHelper,
+    jsonEscaper,
     type BacktraceAttachment,
     type Breadcrumb,
     type BreadcrumbsStorage,
+    type BreadcrumbsStorageFactory,
+    type BreadcrumbsStorageLimits,
     type RawBreadcrumb,
 } from '@backtrace/sdk-core';
 import { BacktraceFileAttachment } from '..';
 import { type FileSystem } from '../storage';
+import type { FileLocation } from '../types/FileLocation';
 import { AlternatingFileWriter } from './AlternatingFileWriter';
 
 const FILE_PREFIX = 'bt-breadcrumbs';
@@ -27,23 +30,26 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
         private readonly _fileSystem: FileSystem,
         private readonly _mainFile: string,
         private readonly _fallbackFile: string,
-        maximumBreadcrumbs: number,
+        private readonly _limits: BreadcrumbsStorageLimits,
     ) {
         this._writer = new AlternatingFileWriter(
+            _fileSystem,
             _mainFile,
             _fallbackFile,
-            Math.floor(maximumBreadcrumbs / 2),
-            _fileSystem,
+            Math.floor((this._limits.maximumBreadcrumbs ?? 100) / 2),
+            this._limits.maximumTotalBreadcrumbsSize,
         );
     }
 
-    public static create(fileSystem: FileSystem, session: SessionFiles, maximumBreadcrumbs: number) {
-        const file1 = session.getFileName(this.getFileName(0));
-        const file2 = session.getFileName(this.getFileName(1));
-        return new FileBreadcrumbsStorage(fileSystem, file1, file2, maximumBreadcrumbs);
+    public static factory(fileSystem: FileSystem, session: SessionFiles): BreadcrumbsStorageFactory {
+        return ({ limits }) => {
+            const file1 = session.getFileName(this.getFileName(0));
+            const file2 = session.getFileName(this.getFileName(1));
+            return new FileBreadcrumbsStorage(fileSystem, file1, file2, limits);
+        };
     }
 
-    public getAttachments(): BacktraceAttachment<unknown>[] {
+    public getAttachments(): [BacktraceAttachment<FileLocation>, BacktraceAttachment<FileLocation>] {
         return [
             new BacktraceFileAttachment(this._fileSystem, this._mainFile, 'bt-breadcrumbs-0'),
             new BacktraceFileAttachment(this._fileSystem, this._fallbackFile, 'bt-breadcrumbs-1'),
@@ -73,6 +79,14 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
         };
 
         const breadcrumbJson = JSON.stringify(breadcrumb, jsonEscaper());
+        const jsonLength = breadcrumbJson.length + 1; // newline
+        const sizeLimit = this._limits.maximumTotalBreadcrumbsSize;
+        if (sizeLimit !== undefined) {
+            if (jsonLength > sizeLimit) {
+                return id;
+            }
+        }
+
         this._writer.writeLine(breadcrumbJson);
 
         return id;
