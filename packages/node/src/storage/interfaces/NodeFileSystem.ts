@@ -1,13 +1,9 @@
 import { FileSystem } from '@backtrace/sdk-core';
-
-export interface WritableStream {
-    write(chunk: string, callback?: (err?: Error | null) => void): void;
-    writeSync(chunk: string): void;
-    close(): void;
-}
+import { Readable, Writable } from 'stream';
 
 export interface NodeFileSystem extends FileSystem {
-    createWriteStream(path: string): WritableStream;
+    createReadStream(path: string): Readable;
+    createWriteStream(path: string): Writable;
     rename(oldPath: string, newPath: string): Promise<void>;
     renameSync(oldPath: string, newPath: string): void;
 }
