@@ -18,7 +18,7 @@ export interface BreadcrumbLimits {
 
     /**
      * Specifies maximum single breadcrumb size in bytes.
-     * If the size is exceeded, attributes will be removed.
+     * If the size is exceeded, the breadcrumb will be skipped.
      */
     readonly maximumBreadcrumbSize?: number;
 

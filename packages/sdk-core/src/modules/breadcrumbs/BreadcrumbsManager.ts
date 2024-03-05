@@ -23,6 +23,13 @@ import { InMemoryBreadcrumbsStorage } from './storage/InMemoryBreadcrumbsStorage
 
 const BREADCRUMB_ATTRIBUTE_NAME = 'breadcrumbs.lastId';
 
+/**
+ * @returns `undefined` if value is `false`, else `value` if defined, else `defaultValue`
+ */
+const defaultIfNotFalse = <T>(value: T | false, defaultValue: T) => {
+    return value === false ? undefined : value !== undefined ? value : defaultValue;
+};
+
 export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule {
     /**
      * Breadcrumbs type
@@ -45,11 +52,11 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
 
     constructor(configuration?: BacktraceBreadcrumbsSettings, options?: BreadcrumbsSetup) {
         this._limits = {
-            maximumBreadcrumbs: configuration?.maximumBreadcrumbs ?? 100,
-            maximumAttributesDepth: configuration?.maximumAttributesDepth ?? 2,
-            maximumBreadcrumbMessageLength: configuration?.maximumBreadcrumbMessageLength ?? 255,
-            maximumBreadcrumbSize: configuration?.maximumBreadcrumbSize ?? 64 * 1024,
-            maximumBreadcrumbsSize: configuration?.maximumBreadcrumbsSize ?? 1024 * 1024,
+            maximumBreadcrumbs: defaultIfNotFalse(configuration?.maximumBreadcrumbs, 100),
+            maximumAttributesDepth: defaultIfNotFalse(configuration?.maximumAttributesDepth, 2),
+            maximumBreadcrumbMessageLength: defaultIfNotFalse(configuration?.maximumBreadcrumbMessageLength, 255),
+            maximumBreadcrumbSize: defaultIfNotFalse(configuration?.maximumBreadcrumbSize, 64 * 1024),
+            maximumBreadcrumbsSize: defaultIfNotFalse(configuration?.maximumBreadcrumbsSize, 1024 * 1024),
         };
 
         this.breadcrumbsType = configuration?.eventType ?? defaultBreadcurmbType;
