@@ -36,7 +36,7 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
             _fileSystem,
             _mainFile,
             _fallbackFile,
-            Math.floor((this._limits.maximumBreadcrumbs ?? 100) / 2),
+            this._limits.maximumBreadcrumbs ? Math.floor(this._limits.maximumBreadcrumbs / 2) : undefined,
             this._limits.maximumTotalBreadcrumbsSize,
         );
     }
