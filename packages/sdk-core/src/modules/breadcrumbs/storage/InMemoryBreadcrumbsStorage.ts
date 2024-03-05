@@ -6,7 +6,7 @@ import { Breadcrumb } from '../model/Breadcrumb';
 import { BreadcrumbLogLevel } from '../model/BreadcrumbLogLevel';
 import { BreadcrumbType } from '../model/BreadcrumbType';
 import { RawBreadcrumb } from '../model/RawBreadcrumb';
-import { BreadcrumbsStorage } from './BreadcrumbsStorage';
+import { BreadcrumbsStorage, BreadcrumbsStorageLimits, BreadcrumbsStorageOptions } from './BreadcrumbsStorage';
 
 export class InMemoryBreadcrumbsStorage implements BreadcrumbsStorage, BacktraceAttachment {
     public get lastBreadcrumbId(): number {
@@ -20,12 +20,16 @@ export class InMemoryBreadcrumbsStorage implements BreadcrumbsStorage, Backtrace
     private _lastBreadcrumbId: number = TimeHelper.toTimestampInSec(TimeHelper.now());
     private _breadcrumbs: OverwritingArray<Breadcrumb>;
 
-    constructor(maximumBreadcrumbs = 100) {
-        this._breadcrumbs = new OverwritingArray<Breadcrumb>(maximumBreadcrumbs);
+    constructor(private readonly _limits: BreadcrumbsStorageLimits) {
+        this._breadcrumbs = new OverwritingArray<Breadcrumb>(_limits.maximumBreadcrumbs ?? Infinity);
     }
 
     public getAttachments(): BacktraceAttachment<unknown>[] {
         return [this];
+    }
+
+    public static factory({ limits }: BreadcrumbsStorageOptions) {
+        return new InMemoryBreadcrumbsStorage(limits);
     }
 
     /**
@@ -33,7 +37,26 @@ export class InMemoryBreadcrumbsStorage implements BreadcrumbsStorage, Backtrace
      * @returns Breadcrumbs JSON
      */
     public get(): string {
-        return JSON.stringify([...this._breadcrumbs.values()], jsonEscaper());
+        const sizeLimit = this._limits.maximumBreadcrumbsSize;
+        const breadcrumbs = [...this._breadcrumbs.values()];
+        if (sizeLimit === undefined) {
+            return JSON.stringify(breadcrumbs, jsonEscaper());
+        }
+
+        let breadcrumbsSize = 2;
+        const breadcrumbsToSubmit: string[] = [];
+        for (let i = breadcrumbs.length - 1; i >= 0; i--) {
+            const json = JSON.stringify(breadcrumbs[i], jsonEscaper());
+            const length = json.length + (i === 0 ? 0 : 1); // Add the comma if not first element
+            if (breadcrumbsSize + length > sizeLimit) {
+                break;
+            }
+
+            breadcrumbsToSubmit.unshift(json);
+            breadcrumbsSize += length;
+        }
+
+        return `[${breadcrumbsToSubmit.join(',')}]`;
     }
 
     public add(rawBreadcrumb: RawBreadcrumb): number {

@@ -1,7 +1,7 @@
 import { BacktraceReportSubmission } from '../model/http/BacktraceReportSubmission';
 import { BacktraceRequestHandler } from '../model/http/BacktraceRequestHandler';
 import { BacktraceAttributeProvider } from '../modules/attribute/BacktraceAttributeProvider';
-import { BreadcrumbsEventSubscriber, BreadcrumbsStorage } from '../modules/breadcrumbs';
+import { BreadcrumbsEventSubscriber, BreadcrumbsStorage, BreadcrumbsStorageFactory } from '../modules/breadcrumbs';
 import { BacktraceStackTraceConverter } from '../modules/converter';
 import { BacktraceSessionProvider } from '../modules/metrics/BacktraceSessionProvider';
 import { MetricsQueue } from '../modules/metrics/MetricsQueue';
@@ -38,12 +38,22 @@ export abstract class BacktraceCoreClientBuilder<S extends Partial<CoreClientSet
         return this;
     }
 
-    public useBreadcrumbsStorage(storage: BreadcrumbsStorage): this {
+    public useBreadcrumbsStorage(storageFactory: BreadcrumbsStorageFactory): this;
+    /**
+     * @deprecated Use `useBreadcrumbsStorage` with `BreadcrumbsStorageFactory`.
+     */
+    public useBreadcrumbsStorage(storage: BreadcrumbsStorage): this;
+    public useBreadcrumbsStorage(storage: BreadcrumbsStorage | BreadcrumbsStorageFactory): this {
         if (!this.clientSetup.breadcrumbsSetup) {
             this.clientSetup.breadcrumbsSetup = {};
         }
 
-        this.clientSetup.breadcrumbsSetup.storage = storage;
+        if (typeof storage === 'function') {
+            this.clientSetup.breadcrumbsSetup.storage = storage;
+        } else {
+            this.clientSetup.breadcrumbsSetup.storage = () => storage;
+        }
+
         return this;
     }
 

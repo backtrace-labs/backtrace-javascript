@@ -4,7 +4,7 @@ import { FileSystem } from '../../src/modules/storage/FileSystem';
 
 export type MockedFileSystem<T extends FileSystem> = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    [K in keyof T]: T[K] extends (...args: any) => any ? jest.Mock<ReturnType<T[K]>, Parameters<T[K]>> : never;
+    [K in keyof T]: T[K] extends (...args: any) => any ? jest.Mock<ReturnType<T[K]>, Parameters<T[K]>> : T[K];
 } & { files: Record<string, string> };
 
 export function mockFileSystem(files?: Record<string, string>): MockedFileSystem<FileSystem> {
