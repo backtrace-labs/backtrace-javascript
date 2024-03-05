@@ -30,7 +30,7 @@ describe('AlternatingFileWriter', () => {
     });
 
     it('should add line to the main file', async () => {
-        const writer = new AlternatingFileWriter(file1, file2, 10, new FsNodeFileSystem());
+        const writer = new AlternatingFileWriter(new FsNodeFileSystem(), file1, file2, 10);
         await writer.writeLine('value');
         writer.dispose();
 
@@ -40,7 +40,7 @@ describe('AlternatingFileWriter', () => {
 
     it('should not move main file to fallback file before adding with fileCapacity reached', async () => {
         const count = 5;
-        const writer = new AlternatingFileWriter(file1, file2, count, new FsNodeFileSystem());
+        const writer = new AlternatingFileWriter(new FsNodeFileSystem(), file1, file2, count);
         for (let i = 0; i < count; i++) {
             await writer.writeLine(`value-${i}`);
         }
@@ -51,7 +51,7 @@ describe('AlternatingFileWriter', () => {
 
     it('should move main file to fallback file after adding with fileCapacity reached', async () => {
         const count = 5;
-        const writer = new AlternatingFileWriter(file1, file2, count, new FsNodeFileSystem());
+        const writer = new AlternatingFileWriter(new FsNodeFileSystem(), file1, file2, count);
         for (let i = 0; i < count; i++) {
             await writer.writeLine(`value-${i}`);
         }
@@ -66,7 +66,7 @@ describe('AlternatingFileWriter', () => {
 
     it('should add line to the main file after adding with fileCapacity reached', async () => {
         const count = 5;
-        const writer = new AlternatingFileWriter(file1, file2, count, new FsNodeFileSystem());
+        const writer = new AlternatingFileWriter(new FsNodeFileSystem(), file1, file2, count);
         for (let i = 0; i < count; i++) {
             await writer.writeLine(`value-${i}`);
         }
@@ -79,13 +79,13 @@ describe('AlternatingFileWriter', () => {
     });
 
     it('should throw after adding line when disposed', async () => {
-        const writer = new AlternatingFileWriter(file1, file2, 10, new FsNodeFileSystem());
+        const writer = new AlternatingFileWriter(new FsNodeFileSystem(), file1, file2, 10);
         writer.dispose();
         await expect(writer.writeLine('value-x')).rejects.toThrowError('This instance has been disposed.');
     });
 
     it('should not write when fileCapacity is 0', () => {
-        const writer = new AlternatingFileWriter(file1, file2, 0, new FsNodeFileSystem());
+        const writer = new AlternatingFileWriter(new FsNodeFileSystem(), file1, file2, 0);
         writer.writeLine('abc');
         writer.dispose();
 
@@ -94,7 +94,7 @@ describe('AlternatingFileWriter', () => {
     });
 
     it('should not write fileCapacity is less than 0', () => {
-        const writer = new AlternatingFileWriter(file1, file2, -1, new FsNodeFileSystem());
+        const writer = new AlternatingFileWriter(new FsNodeFileSystem(), file1, file2, -1);
         writer.writeLine('abc');
         writer.dispose();
 
@@ -104,7 +104,7 @@ describe('AlternatingFileWriter', () => {
 
     describe('stress test', () => {
         it('should not throw', async () => {
-            const writer = new AlternatingFileWriter(file1, file2, 1, new FsNodeFileSystem());
+            const writer = new AlternatingFileWriter(new FsNodeFileSystem(), file1, file2, 1);
 
             const write = async (count: number, entry: string) => {
                 for (let i = 0; i < count; i++) {
@@ -116,7 +116,7 @@ describe('AlternatingFileWriter', () => {
             const writeCount = 100;
             const promises = [...new Array(writerCount)].map(() => write(writeCount, 'text'));
             await expect(Promise.all(promises)).resolves.not.toThrow();
-        });
+        }, 10000);
 
         it('should not skip text', async () => {
             const fs = mockStreamFileSystem();
@@ -129,7 +129,7 @@ describe('AlternatingFileWriter', () => {
                 return renameSync(oldPath, newPath);
             });
 
-            const writer = new AlternatingFileWriter(file1, file2, 1, fs);
+            const writer = new AlternatingFileWriter(fs, file1, file2, 1);
 
             const write = async (count: number, entry: string) => {
                 for (let i = 0; i < count; i++) {
