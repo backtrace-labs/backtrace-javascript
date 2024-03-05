@@ -14,7 +14,7 @@ export class AlternatingFileWriter {
         private readonly _fileSystem: NodeFileSystem,
         private readonly _mainFile: string,
         private readonly _fallbackFile: string,
-        private readonly _maxLines: number,
+        private readonly _maxLines?: number,
         private readonly _maxSize?: number,
     ) {}
 
@@ -64,11 +64,11 @@ export class AlternatingFileWriter {
 
             const logLength = log.length + 1;
 
-            if (currentCount + 1 > this._maxLines) {
+            if (currentCount + 1 > (this._maxLines ?? Infinity)) {
                 break;
             }
 
-            if (this._maxSize && currentSize + logLength >= this._maxSize) {
+            if (currentSize + logLength >= (this._maxSize ?? Infinity)) {
                 break;
             }
 
@@ -106,7 +106,7 @@ export class AlternatingFileWriter {
     private prepareBreadcrumbStream(newSize: number) {
         if (!this._fileStream) {
             this._fileStream = this.safeCreateStream(this._mainFile);
-        } else if (this._count >= this._maxLines || (this._maxSize && this._size + newSize >= this._maxSize)) {
+        } else if (this._count >= (this._maxLines ?? Infinity) || this._size + newSize >= (this._maxSize ?? Infinity)) {
             this.switchFile();
         }
     }
