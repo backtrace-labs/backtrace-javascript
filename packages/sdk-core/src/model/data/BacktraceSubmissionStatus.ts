@@ -8,11 +8,11 @@ export type BacktraceSubmissionStatus =
      */
     | 'Ok'
     /**
-     * Set on networking error (for example: connection reset )
+     * Set on networking error (for example: connection reset)
      */
     | 'Network Error'
     /**
-     * Set on internal server error.
+     * Set on internal server error
      */
     | 'Server Error'
     /**
@@ -22,4 +22,12 @@ export type BacktraceSubmissionStatus =
     /**
      * Unknown error
      */
-    | 'Unknown';
+    | 'Unknown'
+    /**
+     * SDK is disabled
+     */
+    | 'Disabled SDK'
+    /**
+     * Due to before skip event or skipReport callback the user decided to skip the report
+     */
+    | 'Report skipped';

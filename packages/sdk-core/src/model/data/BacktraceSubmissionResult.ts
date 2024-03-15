@@ -18,8 +18,16 @@ export class BacktraceReportSubmissionResult<T> {
         this._result = statusOrResponse;
     }
 
-    public static OnLimitReached<T>(): BacktraceReportSubmissionResult<T> {
-        return new BacktraceReportSubmissionResult('Limit reached', 'Client report limit reached');
+    public static OnLimitReached<T>(target: 'Server' | 'Client' = 'Server'): BacktraceReportSubmissionResult<T> {
+        return new BacktraceReportSubmissionResult('Limit reached', `${target} report limit reached`);
+    }
+
+    public static SdkDisabled<T>(): BacktraceReportSubmissionResult<T> {
+        return new BacktraceReportSubmissionResult<T>('Disabled SDK');
+    }
+
+    public static ReportSkipped<T>(): BacktraceReportSubmissionResult<T> {
+        return new BacktraceReportSubmissionResult<T>('Report skipped');
     }
 
     public static OnInternalServerError<T>(message: string): BacktraceReportSubmissionResult<T> {
