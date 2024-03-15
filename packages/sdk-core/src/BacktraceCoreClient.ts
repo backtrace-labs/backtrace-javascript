@@ -3,8 +3,10 @@ import {
     BacktraceAttributeProvider,
     BacktraceBreadcrumbs,
     BacktraceConfiguration,
+    BacktraceReportSubmissionResult,
     BacktraceRequestHandler,
     BacktraceSessionProvider,
+    BacktraceSubmissionResponse,
     DebugIdProvider,
     FileSystem,
     SdkOptions,
@@ -16,11 +18,11 @@ import { ReportEvents } from './events/ReportEvents';
 import { AttributeType, BacktraceData } from './model/data/BacktraceData';
 import { BacktraceReportSubmission, RequestBacktraceReportSubmission } from './model/http/BacktraceReportSubmission';
 import { BacktraceReport } from './model/report/BacktraceReport';
-import { BacktraceModule, BacktraceModuleBindData } from './modules/BacktraceModule';
-import { BacktraceModuleCtor, BacktraceModules, ReadonlyBacktraceModules } from './modules/BacktraceModules';
 import { AttributeManager } from './modules/attribute/AttributeManager';
 import { ClientAttributeProvider } from './modules/attribute/ClientAttributeProvider';
 import { UserAttributeProvider } from './modules/attribute/UserAttributeProvider';
+import { BacktraceModule, BacktraceModuleBindData } from './modules/BacktraceModule';
+import { BacktraceModuleCtor, BacktraceModules, ReadonlyBacktraceModules } from './modules/BacktraceModules';
 import { BreadcrumbsManager } from './modules/breadcrumbs/BreadcrumbsManager';
 import { V8StackTraceConverter } from './modules/converter/V8StackTraceConverter';
 import { BacktraceDataBuilder } from './modules/data/BacktraceDataBuilder';
@@ -270,25 +272,28 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
         attributes?: Record<string, unknown>,
         attachments?: BacktraceAttachment[],
         abortSignal?: AbortSignal,
-    ): Promise<void>;
+    ): Promise<BacktraceReportSubmissionResult<BacktraceSubmissionResponse>>;
     /**
      * Asynchronously sends error data to Backtrace
      * @param report Backtrace Report
      * @param abortSignal Signal to abort sending
      */
-    public send(report: BacktraceReport, abortSignal?: AbortSignal): Promise<void>;
+    public send(
+        report: BacktraceReport,
+        abortSignal?: AbortSignal,
+    ): Promise<BacktraceReportSubmissionResult<BacktraceSubmissionResponse>>;
     // This function CANNOT be an async function due to possible async state machine stack frame inclusion, which breaks the skip stacks
     public send(
         data: BacktraceReport | Error | string,
         reportAttributesOrAbortSignal?: Record<string, unknown> | AbortSignal,
         reportAttachments: BacktraceAttachment[] = [],
         abortSignal?: AbortSignal,
-    ): Promise<void> {
+    ): Promise<BacktraceReportSubmissionResult<BacktraceSubmissionResponse>> {
         if (!this._enabled) {
-            return Promise.resolve();
+            return Promise.resolve(BacktraceReportSubmissionResult.DisabledSdk());
         }
         if (this._rateLimitWatcher.skipReport()) {
-            return Promise.resolve();
+            return Promise.resolve(BacktraceReportSubmissionResult.OnLimitReached('Client'));
         }
 
         // If data is BacktraceReport, we know that the second argument should be only AbortSignal
@@ -308,12 +313,12 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
         this.reportEvents.emit('before-skip', report);
 
         if (this.options.skipReport && this.options.skipReport(report)) {
-            return Promise.resolve();
+            return Promise.resolve(BacktraceReportSubmissionResult.ReportSkipped());
         }
 
         const backtraceData = this.generateSubmissionData(report);
         if (!backtraceData) {
-            return Promise.resolve();
+            return Promise.resolve(BacktraceReportSubmissionResult.ReportSkipped());
         }
 
         const submissionAttachments = this.generateSubmissionAttachments(report, reportAttachments);
@@ -324,6 +329,7 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
             .send(backtraceData, submissionAttachments, abortSignal)
             .then((submissionResult) => {
                 this.reportEvents.emit('after-send', report, backtraceData, submissionAttachments, submissionResult);
+                return submissionResult;
             });
     }
 
