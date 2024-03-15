@@ -290,7 +290,7 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
         abortSignal?: AbortSignal,
     ): Promise<BacktraceReportSubmissionResult<BacktraceSubmissionResponse>> {
         if (!this._enabled) {
-            return Promise.resolve(BacktraceReportSubmissionResult.DisabledSdk());
+            return Promise.resolve(BacktraceReportSubmissionResult.SdkDisabled());
         }
         if (this._rateLimitWatcher.skipReport()) {
             return Promise.resolve(BacktraceReportSubmissionResult.OnLimitReached('Client'));

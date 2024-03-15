@@ -22,7 +22,7 @@ export class BacktraceReportSubmissionResult<T> {
         return new BacktraceReportSubmissionResult('Limit reached', `${target} report limit reached`);
     }
 
-    public static DisabledSdk<T>(): BacktraceReportSubmissionResult<T> {
+    public static SdkDisabled<T>(): BacktraceReportSubmissionResult<T> {
         return new BacktraceReportSubmissionResult<T>('Disabled SDK');
     }
 
