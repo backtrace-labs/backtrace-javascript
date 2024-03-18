@@ -20,6 +20,9 @@ const client = BacktraceClient.initialize({
             prop2: 123,
         },
     },
+    metrics: {
+        enable: false
+    },
     database: {
         enable: true,
         path: path.join(process.cwd(), 'database'),
