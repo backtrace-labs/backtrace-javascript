@@ -343,6 +343,8 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
                 module.dispose();
             }
         }
+
+        BacktraceCoreClient.destroy();
     }
 
     protected addModule<T extends BacktraceModule>(module: T): void;
@@ -401,5 +403,9 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
             requestHandler: this._requestHandler,
             sessionFiles: this.sessionFiles,
         };
+    }
+
+    private static destroy() {
+        this._instance = undefined;
     }
 }
