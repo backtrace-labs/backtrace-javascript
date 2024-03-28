@@ -332,8 +332,8 @@ export function uploadAssets(uploadUrl: string, options: SymbolUploaderOptions) 
         assets: AssetWithContent<RawSourceMapWithDebugId>[],
     ): ResultPromise<UploadResult, string> {
         const { request, promise } = uploader.createUploadRequest();
-
-        return pipe(request, pipeAssets(assets), () => promise);
+        pipeAssets(assets)(request);
+        return promise;
     };
 }
 

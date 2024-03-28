@@ -1,6 +1,6 @@
 {
     "name": "@backtrace/node",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "description": "Backtrace-JavaScript Node.JS integration",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
@@ -49,7 +49,7 @@
         "webpack-node-externals": "^3.0.0"
     },
     "dependencies": {
-        "@backtrace/sdk-core": "^0.2.0",
+        "@backtrace/sdk-core": "^0.3.0",
         "form-data": "^4.0.0",
         "native-reg": "^1.1.1"
     }

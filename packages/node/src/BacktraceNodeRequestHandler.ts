@@ -142,7 +142,7 @@ export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
     }
 
     private getHttpClient(submissionUrl: URL) {
-        return submissionUrl.protocol === 'http' ? http : https;
+        return submissionUrl.protocol === 'https:' ? https : http;
     }
     private createFormData(json: string, attachments?: BacktraceAttachment<Buffer | Readable | string | Uint8Array>[]) {
         const formData = new FormData();

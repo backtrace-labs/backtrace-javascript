@@ -1,3 +1,11 @@
+# Version 0.3.1
+
+-   allow to destroy the client instance on dispose()
+
+# Version 0.3.0
+
+-   return submission result from the `send` method (#233)
+
 # Version 0.2.0
 
 -   fix global is undefined error (#187)

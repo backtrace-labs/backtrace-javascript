@@ -1,6 +1,6 @@
 {
     "name": "@backtrace/electron",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "description": "Backtrace-JavaScript Electron integration",
     "main": "main/index.js",
     "types": "main/index.d.ts",
@@ -35,9 +35,9 @@
         "/renderer"
     ],
     "dependencies": {
-        "@backtrace/node": "^0.2.0"
+        "@backtrace/node": "^0.3.0"
     },
     "peerDependencies": {
-        "electron": "12 - 26"
+        "electron": "12 - 28"
     }
 }

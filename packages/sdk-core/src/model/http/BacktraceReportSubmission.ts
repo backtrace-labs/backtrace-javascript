@@ -2,10 +2,10 @@ import { jsonEscaper } from '../../common/jsonEscaper';
 import { BacktraceAttachment } from '../attachment';
 import { BacktraceConfiguration } from '../configuration/BacktraceConfiguration';
 import { BacktraceData } from '../data/BacktraceData';
+import { BacktraceReportSubmissionResult } from '../data/BacktraceSubmissionResult';
 import { BacktraceRequestHandler } from './BacktraceRequestHandler';
-import { SubmissionUrlInformation } from './SubmissionUrlInformation';
 import { BacktraceSubmissionResponse } from './model/BacktraceSubmissionResponse';
-import { BacktraceReportSubmissionResult } from './model/BacktraceSubmissionResult';
+import { SubmissionUrlInformation } from './SubmissionUrlInformation';
 
 export interface BacktraceReportSubmission {
     send(

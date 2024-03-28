@@ -43,20 +43,44 @@ export class V8StackTraceConverter implements BacktraceStackTraceConverter {
         }
 
         stackFrame = stackFrame.substring(stackFrame.indexOf(frameSeparator) + frameSeparator.length);
+        const asyncKeyword = 'async ';
         const sourceCodeSeparator = ' (';
-        const sourceCodeStartIndex = stackFrame.indexOf(sourceCodeSeparator);
+        let sourceCodeStartIndex = stackFrame.indexOf(sourceCodeSeparator);
         const anonymousFunction = sourceCodeStartIndex === -1;
         if (anonymousFunction) {
+            if (stackFrame.startsWith(asyncKeyword)) {
+                stackFrame = stackFrame.substring(asyncKeyword.length);
+            }
             return {
                 funcName: ANONYMOUS_FUNCTION,
                 ...this.parseSourceCodeInformation(stackFrame),
             };
         }
+
+        let sourceCodeInformation = stackFrame.substring(
+            sourceCodeStartIndex + sourceCodeSeparator.length - 1,
+            stackFrame.length,
+        );
+        const anonymousGenericSymbol = '(<anonymous>)';
+        if (sourceCodeInformation.startsWith(anonymousGenericSymbol)) {
+            sourceCodeStartIndex += anonymousGenericSymbol.length + 1;
+            sourceCodeInformation = sourceCodeInformation.substring(anonymousGenericSymbol.length);
+        }
+
+        if (sourceCodeInformation.startsWith(` ${frameSeparator}`)) {
+            sourceCodeInformation = sourceCodeInformation.substring(frameSeparator.length + 1);
+        } else {
+            sourceCodeInformation = sourceCodeInformation.substring(1, sourceCodeInformation.length - 1);
+        }
+
+        let functionName = stackFrame.substring(0, sourceCodeStartIndex);
+        if (functionName.startsWith(asyncKeyword)) {
+            functionName = functionName.substring(asyncKeyword.length);
+        }
+
         return {
-            funcName: stackFrame.substring(0, sourceCodeStartIndex),
-            ...this.parseSourceCodeInformation(
-                stackFrame.substring(sourceCodeStartIndex + sourceCodeSeparator.length, stackFrame.length - 1),
-            ),
+            funcName: functionName,
+            ...this.parseSourceCodeInformation(sourceCodeInformation),
         };
     }
 
