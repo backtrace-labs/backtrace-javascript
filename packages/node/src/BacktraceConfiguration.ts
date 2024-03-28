@@ -3,8 +3,10 @@ import { Readable } from 'stream';
 
 export interface BacktraceSetupConfiguration extends Omit<CoreConfiguration, 'attachments'> {
     attachments?: Array<BacktraceAttachment<Buffer | Readable | string | Uint8Array> | string>;
+    localVariable?: boolean;
 }
 
 export interface BacktraceConfiguration extends Omit<CoreConfiguration, 'attachments'> {
     attachments?: BacktraceAttachment<Buffer | Readable | string | Uint8Array>[];
+    localVariable?: boolean;
 }

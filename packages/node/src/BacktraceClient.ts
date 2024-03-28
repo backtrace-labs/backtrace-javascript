@@ -8,15 +8,16 @@ import {
     VariableDebugIdMapProvider,
 } from '@backtrace/sdk-core';
 import path from 'path';
-import { BacktraceConfiguration, BacktraceSetupConfiguration } from './BacktraceConfiguration';
-import { BacktraceNodeRequestHandler } from './BacktraceNodeRequestHandler';
 import { AGENT } from './agentDefinition';
 import { transformAttachment } from './attachment/transformAttachments';
+import { BacktraceConfiguration, BacktraceSetupConfiguration } from './BacktraceConfiguration';
+import { BacktraceNodeRequestHandler } from './BacktraceNodeRequestHandler';
 import { FileBreadcrumbsStorage } from './breadcrumbs/FileBreadcrumbsStorage';
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 import { BacktraceNodeClientSetup } from './builder/BacktraceClientSetup';
 import { NodeOptionReader } from './common/NodeOptionReader';
 import { NodeDiagnosticReportConverter } from './converter/NodeDiagnosticReportConverter';
+import { LocalVariableProvider } from './LocalVariableProvider';
 import { FsNodeFileSystem } from './storage/FsNodeFileSystem';
 import { NodeFileSystem } from './storage/interfaces/NodeFileSystem';
 
@@ -54,6 +55,9 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
 
         if (this.sessionFiles && clientSetup.options.database?.captureNativeCrashes) {
             this.addModule(FileAttributeManager, FileAttributeManager.create(fileSystem));
+        }
+        if (clientSetup.options.localVariable) {
+            this.addModule(LocalVariableProvider, new LocalVariableProvider());
         }
     }
 
