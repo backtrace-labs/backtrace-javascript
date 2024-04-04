@@ -1,5 +1,6 @@
 import { BacktraceModule, BacktraceModuleBindData } from '@backtrace/sdk-core';
-import { BacktraceSessionRecorder, BacktraceSessionRecorderOptions } from './BacktraceSessionRecorder';
+import { BacktraceSessionRecorder } from './BacktraceSessionRecorder';
+import { BacktraceSessionRecorderOptions } from './options';
 
 /**
  * Adds session recorder module to `BacktraceClient`.
