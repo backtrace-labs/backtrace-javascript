@@ -6,7 +6,7 @@ import { recordOptions } from 'rrweb/typings/types';
 export interface BacktraceSessionRecorderOptions {
     readonly maxEventCount?: number;
     readonly maxTime?: number;
-    readonly rrOptions?: recordOptions<Event>;
+    readonly advancedOptions?: recordOptions<Event>;
 }
 
 export class BacktraceSessionRecorder implements BacktraceAttachment {
@@ -24,7 +24,7 @@ export class BacktraceSessionRecorder implements BacktraceAttachment {
 
     public start() {
         const stop = record({
-            ...this._options.rrOptions,
+            ...this._options.advancedOptions,
             emit: (event, isCheckout) => {
                 if (isCheckout || !this._events) {
                     this._previousEvents = this._events;
@@ -32,6 +32,10 @@ export class BacktraceSessionRecorder implements BacktraceAttachment {
                 }
 
                 this._events.push(event);
+
+                if (this._options.advancedOptions?.emit) {
+                    this._options.advancedOptions.emit(event as never, isCheckout);
+                }
             },
             checkoutEveryNth: this._options.maxEventCount,
             checkoutEveryNms: this._options.maxTime,
