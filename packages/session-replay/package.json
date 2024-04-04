@@ -9,8 +9,7 @@
         "clean": "tsc -b --clean && rimraf \"lib\"",
         "format": "prettier --write '**/*.ts'",
         "lint": "eslint . --ext .ts",
-        "watch": "tsc -w",
-        "test": "NODE_ENV=test jest"
+        "watch": "tsc -w"
     },
     "repository": {
         "type": "git",
