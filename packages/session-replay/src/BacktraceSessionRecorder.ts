@@ -53,12 +53,7 @@ export class BacktraceSessionRecorder implements BacktraceAttachment {
     }
 
     public get(): string {
-        let events = [...(this._events ?? []), ...(this._previousEvents ?? [])];
-        if (this._options.maxTime) {
-            const cutout = Date.now() - this._options.maxTime;
-            events = events.filter((e) => e.timestamp >= cutout);
-        }
-
+        const events = [...(this._events ?? []), ...(this._previousEvents ?? [])];
         return JSON.stringify(events);
     }
 
