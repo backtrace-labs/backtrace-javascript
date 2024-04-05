@@ -1,6 +1,17 @@
-import { Asset } from '@backtrace/sourcemap-tools';
+import { Asset, AssetWithContent, RawSourceMap, RawSourceMapWithDebugId } from '@backtrace/sourcemap-tools';
 
-export interface SourceAndSourceMapPaths {
+export interface SourceAndOptionalSourceMapPaths {
     readonly source: Asset;
     readonly sourceMap?: Asset;
+}
+
+export interface SourceAndOptionalSourceMap {
+    readonly source: AssetWithContent<string>;
+    readonly sourceMap?: AssetWithContent<RawSourceMap>;
+}
+
+export interface ProcessedSourceAndOptionalSourceMap {
+    readonly source: AssetWithContent<string>;
+    readonly sourceMap?: AssetWithContent<RawSourceMapWithDebugId>;
+    readonly debugId: string;
 }

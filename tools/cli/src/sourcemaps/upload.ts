@@ -1,29 +1,28 @@
 import {
     Asset,
-    AssetWithContent,
     DebugIdGenerator,
     Err,
     failIfEmpty,
     filter,
     filterAsync,
     flow,
+    inspect,
     log,
     LogLevel,
     map,
     mapAsync,
-    matchSourceMapExtension,
+    matchSourceExtension,
     not,
     Ok,
     pass,
     pipe,
     pipeStream,
+    ProcessedSourceAndSourceMap,
     R,
-    RawSourceMap,
-    RawSourceMapWithDebugId,
     Result,
     ResultPromise,
+    SourceAndSourceMap,
     SourceProcessor,
-    stripSourcesContent,
     SymbolUploader,
     SymbolUploaderOptions,
     UploadResult,
@@ -34,12 +33,20 @@ import path from 'path';
 import { Writable } from 'stream';
 import { GlobalOptions } from '..';
 import { Command, CommandContext } from '../commands/Command';
-import { isAssetProcessed, readSourceMapFromPathOrFromSource, toAsset, uniqueBy, validateUrl } from '../helpers/common';
+import {
+    loadAssetsDebugId,
+    readSourceAndSourceMap,
+    stripSourcesFromAssets,
+    toSourceAndSourceMapPaths,
+    uniqueBy,
+    validateUrl,
+} from '../helpers/common';
 import { ErrorBehaviors, filterBehaviorSkippedElements, getErrorBehavior, handleError } from '../helpers/errorBehavior';
-import { buildIncludeExclude, file2Or1FromTuple, findTuples } from '../helpers/find';
-import { createAssetLogger } from '../helpers/logs';
+import { buildIncludeExclude, findTuples } from '../helpers/find';
+import { createAssetLogger, logAssets } from '../helpers/logs';
 import { normalizePaths, relativePaths } from '../helpers/normalizePaths';
 import { CliLogger } from '../logger';
+import { SourceAndOptionalSourceMap, SourceAndOptionalSourceMapPaths } from '../models/Asset';
 import { findConfig, loadOptionsForCommand } from '../options/loadOptions';
 
 export interface UploadOptions extends GlobalOptions {
@@ -59,7 +66,7 @@ export interface UploadOptions extends GlobalOptions {
 }
 
 export interface UploadResultWithAssets extends UploadResult {
-    readonly assets: Asset[];
+    readonly assets: SourceAndOptionalSourceMap[];
 }
 
 export const uploadCmd = new Command<UploadOptions>({
@@ -196,7 +203,8 @@ export async function uploadSourcemaps({ opts, logger, getHelpMessage }: Command
 
     const logDebug = log(logger, 'debug');
     const logTrace = log(logger, 'trace');
-    const logDebugAsset = createAssetLogger(logger, 'debug');
+    const logDebugAssets = logAssets(logger, 'debug');
+    const logTraceAssets = logAssets(logger, 'trace');
     const logTraceAsset = createAssetLogger(logger, 'trace');
 
     const assetErrorBehaviorResult = getErrorBehavior(opts['asset-error-behavior'] ?? 'exit');
@@ -212,32 +220,38 @@ export async function uploadSourcemaps({ opts, logger, getHelpMessage }: Command
     const logAssetBehaviorError = (asset: Asset) => (err: string, level: LogLevel) =>
         createAssetLogger(logger, level)(err)(asset);
 
-    const isAssetProcessedCommand = (asset: AssetWithContent<RawSourceMap>) =>
+    const isAssetProcessedCommand = (asset: SourceAndOptionalSourceMap) =>
         pipe(
             asset,
-            logTraceAsset('checking if asset is processed'),
-            isAssetProcessed(sourceProcessor),
+            inspect((asset) => logTraceAsset('checking if asset is processed')(asset.source)),
+            loadAssetsDebugId(sourceProcessor),
             logDebug(
-                ({ asset, result }) => `${asset.name}: ` + (result ? 'asset is processed' : 'asset is not processed'),
+                ({ source, debugId }) =>
+                    `${source.name}: ` + (debugId ? 'asset is processed' : 'asset is not processed'),
             ),
         );
 
-    const filterProcessedAssetsCommand = (assets: AssetWithContent<RawSourceMap>[]) =>
+    const filterProcessedAssetsCommand = (assets: SourceAndSourceMap[]) =>
         pipe(
             assets,
             mapAsync(isAssetProcessedCommand),
-            filter((f) => f.result),
-            map((f) => f.asset as AssetWithContent<RawSourceMapWithDebugId>),
+            filter((f): f is ProcessedSourceAndSourceMap => !!f.debugId),
         );
 
-    const loadSourceMapCommand = (asset: Asset) =>
+    const filterAssetsWithSourceMaps = (assets: SourceAndOptionalSourceMap[]) =>
+        pipe(
+            assets,
+            filter((source): source is SourceAndSourceMap => !!source.sourceMap),
+        );
+
+    const readAssetCommand = (asset: SourceAndOptionalSourceMapPaths) =>
         pipe(
             asset,
-            logTraceAsset('loading sourcemap'),
-            readSourceMapFromPathOrFromSource(sourceProcessor),
-            R.map(logDebugAsset('loaded sourcemap')),
-            R.mapErr((error) => `${asset.name}: ${error}`),
-            handleFailedAsset(logAssetBehaviorError(asset)),
+            logTraceAssets('reading source and sourcemap'),
+            readSourceAndSourceMap(sourceProcessor),
+            R.map(logDebugAssets('read source and sourcemap')),
+            R.mapErr((err) => `${asset.source.name}: ${err}`),
+            handleFailedAsset(logAssetBehaviorError(asset.source)),
         );
 
     const saveArchiveCommandResult = await uploadOrSaveAssets(
@@ -262,27 +276,26 @@ export async function uploadSourcemaps({ opts, logger, getHelpMessage }: Command
         findTuples,
         R.map(
             flow(
-                map(file2Or1FromTuple),
                 logDebug((r) => `found ${r.length} files`),
-                map(logTrace((result) => `found file: ${result.path}`)),
-                isIncluded ? filterAsync(isIncluded) : pass,
-                isExcluded ? filterAsync(flow(isExcluded, not)) : pass,
-                filter((t) => t.direct || matchSourceMapExtension(t.path)),
-                map((t) => t.path),
+                map(logTrace((result) => `found file: ${result.file1.path}`)),
+                isIncluded ? filterAsync((x) => isIncluded(x.file1)) : pass,
+                isExcluded ? filterAsync(flow((x) => isExcluded(x.file1), not)) : pass,
+                filter((t) => t.file1.direct || matchSourceExtension(t.file1.path)),
                 logDebug((r) => `found ${r.length} files for upload`),
                 map(logTrace((path) => `file for upload: ${path}`)),
-                map(toAsset),
+                map(toSourceAndSourceMapPaths),
                 opts['pass-with-no-files'] ? Ok : failIfEmpty('no sourcemaps found'),
-                R.map(flow(mapAsync(loadSourceMapCommand), R.flatMap)),
+                R.map(flow(mapAsync(readAssetCommand), R.flatMap)),
                 R.map(filterBehaviorSkippedElements),
+                R.map(filterAssetsWithSourceMaps),
                 R.map(filterProcessedAssetsCommand),
                 R.map(
                     opts['pass-with-no-files']
                         ? Ok
                         : failIfEmpty('no processed sourcemaps found, make sure to run process first'),
                 ),
-                R.map(uniqueBy((asset) => asset.content.debugId)),
-                R.map(opts['include-sources'] ? pass : map(stripSourcesContent)),
+                R.map(uniqueBy((asset) => asset.debugId)),
+                R.map(opts['include-sources'] ? pass : map(stripSourcesFromAssets)),
                 R.map((assets) =>
                     opts['dry-run']
                         ? Ok<UploadResultWithAssets>({
@@ -302,12 +315,8 @@ export async function uploadSourcemaps({ opts, logger, getHelpMessage }: Command
 export function uploadOrSaveAssets(
     uploadUrl: string | undefined,
     outputPath: string | undefined,
-    upload: (
-        url: string,
-    ) => (assets: AssetWithContent<RawSourceMapWithDebugId>[]) => ResultPromise<UploadResult, string>,
-    save: (
-        outputPath: string,
-    ) => (assets: AssetWithContent<RawSourceMapWithDebugId>[]) => ResultPromise<UploadResult, string>,
+    upload: (url: string) => (assets: ProcessedSourceAndSourceMap[]) => ResultPromise<UploadResult, string>,
+    save: (outputPath: string) => (assets: ProcessedSourceAndSourceMap[]) => ResultPromise<UploadResult, string>,
 ) {
     if (uploadUrl && outputPath) {
         return Err('outputting archive and uploading are exclusive');
@@ -328,9 +337,7 @@ export function uploadOrSaveAssets(
 
 export function uploadAssets(uploadUrl: string, options: SymbolUploaderOptions) {
     const uploader = new SymbolUploader(uploadUrl, options);
-    return function uploadAssets(
-        assets: AssetWithContent<RawSourceMapWithDebugId>[],
-    ): ResultPromise<UploadResult, string> {
+    return function uploadAssets(assets: ProcessedSourceAndSourceMap[]): ResultPromise<UploadResult, string> {
         const { request, promise } = uploader.createUploadRequest();
         pipeAssets(assets)(request);
         return promise;
@@ -338,17 +345,17 @@ export function uploadAssets(uploadUrl: string, options: SymbolUploaderOptions) 
 }
 
 export function saveAssets(outputPath: string) {
-    return function saveAssets(assets: AssetWithContent<RawSourceMapWithDebugId>[]): Promise<UploadResult> {
+    return function saveAssets(assets: ProcessedSourceAndSourceMap[]): Promise<UploadResult> {
         const stream = fs.createWriteStream(outputPath);
         return pipe(stream, pipeAssets(assets), () => ({ rxid: outputPath } as UploadResult));
     };
 }
 
-function pipeAssets(assets: AssetWithContent<RawSourceMapWithDebugId>[]) {
+function pipeAssets(assets: ProcessedSourceAndSourceMap[]) {
     function appendToArchive(archive: ZipArchive) {
-        return function appendToArchive(asset: AssetWithContent<RawSourceMapWithDebugId>) {
-            const filename = `${asset.content.debugId}-${path.basename(asset.name)}`;
-            archive.append(filename, JSON.stringify(asset.content));
+        return function appendToArchive(asset: ProcessedSourceAndSourceMap) {
+            const filename = `${asset.debugId}-${path.basename(asset.sourceMap.name)}`;
+            archive.append(filename, JSON.stringify(asset.sourceMap.content));
             return archive;
         };
     }
@@ -361,7 +368,7 @@ function pipeAssets(assets: AssetWithContent<RawSourceMapWithDebugId>[]) {
         return pipe(
             writable,
             pipeStream(archive.stream),
-            () => assets.map(appendToArchive(archive)),
+            () => pipe(assets, map(appendToArchive(archive))),
             () => archive.finalize(),
             () => waitForFinish,
         );

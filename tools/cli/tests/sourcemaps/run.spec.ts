@@ -11,7 +11,7 @@ import * as processCmd from '../../src/sourcemaps/process';
 import { runSourcemapCommands } from '../../src/sourcemaps/run';
 import * as uploadCmd from '../../src/sourcemaps/upload';
 import { getHelpMessage, mockUploader } from '../_helpers/common';
-import { hashFiles, withWorkingCopy } from '../_helpers/testFiles';
+import { withWorkingCopy } from '../_helpers/testFiles';
 
 async function mockOptions(workingDir: string, options: CliOptions) {
     const configName = `${randomUUID()}.backtracejsrc`;
@@ -52,7 +52,7 @@ describe('run', () => {
                 assert(result.isOk(), result.data as string);
 
                 const expected = [...(await glob(`${workingDir}/*.js`)), ...(await glob(`${workingDir}/*.js.map`))];
-                expect(result.data.flatMap((d) => [d.source.path, d.sourceMap.path])).toEqual(
+                expect(result.data.flatMap((d) => [d.source.path, d.sourceMap?.path])).toEqual(
                     expect.arrayContaining(expected),
                 );
             }),
@@ -88,7 +88,7 @@ describe('run', () => {
                     ...(await glob(`${workingDir}/entry*.js`)),
                     ...(await glob(`${workingDir}/entry*.js.map`)),
                 ];
-                expect(result.data.flatMap((d) => [d.source.path, d.sourceMap.path])).toEqual(
+                expect(result.data.flatMap((d) => [d.source.path, d.sourceMap?.path])).toEqual(
                     expect.arrayContaining(expected),
                 );
             }),
@@ -147,10 +147,12 @@ describe('run', () => {
                     .mockImplementation((asset) =>
                         Promise.resolve({
                             source: asset.source,
-                            sourceMap: {
-                                ...asset.sourceMap,
-                                content: { ...asset.sourceMap.content, debugId: 'debugId' },
-                            },
+                            sourceMap: asset.sourceMap
+                                ? {
+                                      ...asset.sourceMap,
+                                      content: { ...asset.sourceMap.content, debugId: 'debugId' },
+                                  }
+                                : undefined,
                             debugId: 'debugId',
                         }),
                     );
@@ -410,7 +412,7 @@ describe('run', () => {
 
     describe('invalid files', () => {
         it(
-            'should fail with first invalid file',
+            'should not fail',
             withWorkingCopy('invalid', async (workingDir) => {
                 const config = await mockOptions(workingDir, {
                     run: {
@@ -432,41 +434,7 @@ describe('run', () => {
                     },
                 });
 
-                assert(result.isErr(), 'result should be an error');
-                expect(result.data).toMatch(/invalid1\.js/);
-            }),
-        );
-
-        it(
-            'should not change anything with invalid files',
-            withWorkingCopy('invalid', async (workingDir) => {
-                const files = await glob(`${workingDir}/*`);
-                const expected = await hashFiles(files);
-
-                const config = await mockOptions(workingDir, {
-                    run: {
-                        'add-sources': true,
-                        process: true,
-                        upload: true,
-                    },
-                    upload: {
-                        url: 'https://test',
-                    },
-                });
-
-                const result = await runSourcemapCommands({
-                    logger: new CliLogger({ level: 'output', silent: true }),
-                    getHelpMessage,
-                    opts: {
-                        path: workingDir,
-                        config,
-                    },
-                });
-
-                assert(result.isErr(), 'result should be an error');
-
-                const actual = await hashFiles(files);
-                expect(actual).toEqual(expected);
+                assert(result.isOk(), result.data as string);
             }),
         );
     });
@@ -498,7 +466,7 @@ describe('run', () => {
                 assert(result.isOk(), result.data as string);
 
                 const expected = [...(await glob(`${workingDir}/*.js`)), ...(await glob(`${workingDir}/*.js.map`))];
-                expect(result.data.flatMap((d) => [d.source.path, d.sourceMap.path])).toEqual(
+                expect(result.data.flatMap((d) => [d.source.path, d.sourceMap?.path])).toEqual(
                     expect.arrayContaining(expected),
                 );
             }),
@@ -532,7 +500,7 @@ describe('run', () => {
                 assert(result.isOk(), result.data as string);
 
                 const expected = [...(await glob(`${workingDir}/*.js`)), ...(await glob(`${workingDir}/*.js.map`))];
-                expect(result.data.flatMap((d) => [d.source.path, d.sourceMap.path])).toEqual(
+                expect(result.data.flatMap((d) => [d.source.path, d.sourceMap?.path])).toEqual(
                     expect.arrayContaining(expected),
                 );
             }),
@@ -571,7 +539,7 @@ describe('run', () => {
                 assert(result.isOk(), result.data as string);
 
                 const expected = [entry1Path, entry2Path, sourcemap1Path, sourcemap2Path];
-                expect(result.data.flatMap((d) => [d.source.path, d.sourceMap.path])).toEqual(
+                expect(result.data.flatMap((d) => [d.source.path, d.sourceMap?.path])).toEqual(
                     expect.arrayContaining(expected),
                 );
             }),

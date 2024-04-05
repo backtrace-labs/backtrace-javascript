@@ -10,6 +10,10 @@ import { expectHashesToChange, hashEachFile, hashFiles, readEachFile, withWorkin
 export const expectAnythingOrNothing = () => expect.toBeOneOf([expect.anything(), undefined, null]);
 
 describe('process', () => {
+    beforeEach(() => {
+        jest.restoreAllMocks();
+    });
+
     describe('returning value', () => {
         it(
             'should return processed sources',
@@ -68,7 +72,7 @@ describe('process', () => {
         it(
             'should call SourceProcessor with sources',
             withWorkingCopy('original', async (workingDir) => {
-                const spy = jest.spyOn(SourceProcessor.prototype, 'processSourceAndSourceMap');
+                const processSourceSpy = jest.spyOn(SourceProcessor.prototype, 'processSource');
 
                 const files = await glob(`${workingDir}/*.js`);
                 const originalSources = await readEachFile(files);
@@ -84,11 +88,38 @@ describe('process', () => {
                 assert(result.isOk(), result.data as string);
 
                 for (const source of Object.values(originalSources)) {
-                    expect(spy).toBeCalledWith(
+                    expect(processSourceSpy).toHaveBeenCalledWith(
                         source,
-                        expect.anything(),
                         expectAnythingOrNothing(),
                         expectAnythingOrNothing(),
+                    );
+                }
+            }),
+        );
+
+        it(
+            'should call SourceProcessor with source maps',
+            withWorkingCopy('original', async (workingDir) => {
+                const processSourceMapSpy = jest.spyOn(SourceProcessor.prototype, 'processSourceMap');
+
+                const files = await glob(`${workingDir}/*.js.map`);
+                const originalSources = await readEachFile(files);
+
+                const result = await processSources({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: workingDir,
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+
+                for (const sourceMap of Object.values(originalSources)) {
+                    expect(processSourceMapSpy).toHaveBeenCalledWith(
+                        JSON.parse(sourceMap),
+                        expect.any(Number),
+                        expect.any(String),
                     );
                 }
             }),
@@ -182,7 +213,7 @@ describe('process', () => {
         it(
             'should call SourceProcessor with sources with force',
             withWorkingCopy('processed', async (workingDir) => {
-                const spy = jest.spyOn(SourceProcessor.prototype, 'processSourceAndSourceMap');
+                const processSourceSpy = jest.spyOn(SourceProcessor.prototype, 'processSource');
 
                 const files = await glob(`${workingDir}/*.js`);
                 const originalSources = await readEachFile(files);
@@ -199,13 +230,125 @@ describe('process', () => {
                 assert(result.isOk(), result.data as string);
 
                 for (const source of Object.values(originalSources)) {
-                    expect(spy).toBeCalledWith(
+                    expect(processSourceSpy).toHaveBeenCalledWith(
                         source,
-                        expect.anything(),
                         expectAnythingOrNothing(),
                         expectAnythingOrNothing(),
                     );
                 }
+            }),
+        );
+
+        it(
+            'should call SourceProcessor with source maps with force',
+            withWorkingCopy('processed', async (workingDir) => {
+                const processSourceMapSpy = jest.spyOn(SourceProcessor.prototype, 'processSourceMap');
+
+                const files = await glob(`${workingDir}/*.js.map`);
+                const originalSources = await readEachFile(files);
+
+                const result = await processSources({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: workingDir,
+                        force: true,
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+
+                for (const sourceMap of Object.values(originalSources)) {
+                    expect(processSourceMapSpy).toHaveBeenCalledWith(
+                        JSON.parse(sourceMap),
+                        expect.any(Number),
+                        expect.any(String),
+                    );
+                }
+            }),
+        );
+    });
+
+    describe('sources without sourcemaps', () => {
+        it(
+            'should not fail',
+            withWorkingCopy('no-sourcemaps', async (workingDir) => {
+                const result = await processSources({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: workingDir,
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+            }),
+        );
+
+        it(
+            'should call SourceProcessor with sources',
+            withWorkingCopy('no-sourcemaps', async (workingDir) => {
+                const processSourceSpy = jest.spyOn(SourceProcessor.prototype, 'processSource');
+
+                const files = await glob(`${workingDir}/*.js`);
+                const originalSources = await readEachFile(files);
+
+                const result = await processSources({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: workingDir,
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+
+                for (const source of Object.values(originalSources)) {
+                    expect(processSourceSpy).toHaveBeenCalledWith(
+                        source,
+                        expectAnythingOrNothing(),
+                        expectAnythingOrNothing(),
+                    );
+                }
+            }),
+        );
+
+        it(
+            'should not call SourceProcessor with source maps',
+            withWorkingCopy('no-sourcemaps', async (workingDir) => {
+                const processSourceMapSpy = jest.spyOn(SourceProcessor.prototype, 'processSourceMap');
+
+                const result = await processSources({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: workingDir,
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+
+                expect(processSourceMapSpy).not.toHaveBeenCalled();
+            }),
+        );
+
+        it(
+            'should modify sources in place',
+            withWorkingCopy('no-sourcemaps', async (workingDir) => {
+                const preHashes = await hashEachFile(await glob(`${workingDir}/*.js`));
+
+                const result = await processSources({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: workingDir,
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+                const postHashes = await hashEachFile(await glob(`${workingDir}/*.js`));
+
+                expectHashesToChange(preHashes, postHashes);
             }),
         );
     });
@@ -237,7 +380,7 @@ describe('process', () => {
 
     describe('invalid files', () => {
         it(
-            'should fail with first invalid file',
+            'should not fail',
             withWorkingCopy('invalid', async (workingDir) => {
                 const result = await processSources({
                     logger: new CliLogger({ level: 'output', silent: true }),
@@ -247,16 +390,14 @@ describe('process', () => {
                     },
                 });
 
-                assert(result.isErr(), 'result should be an error');
-                expect(result.data).toMatch(/invalid1\.js/);
+                assert(result.isOk(), result.data as string);
             }),
         );
 
         it(
-            'should not modify invalid files',
+            'should process invalid source files',
             withWorkingCopy('invalid', async (workingDir) => {
-                const files = await glob(`${workingDir}/*`);
-                const expected = await hashFiles(files);
+                const preHashes = await hashEachFile(await glob(`${workingDir}/*.js`));
 
                 const result = await processSources({
                     logger: new CliLogger({ level: 'output', silent: true }),
@@ -266,10 +407,10 @@ describe('process', () => {
                     },
                 });
 
-                assert(result.isErr(), 'result should be an error');
+                assert(result.isOk(), result.data as string);
 
-                const actual = await hashFiles(files);
-                expect(actual).toEqual(expected);
+                const postHashes = await hashEachFile(await glob(`${workingDir}/*.js`));
+                expectHashesToChange(preHashes, postHashes);
             }),
         );
 
@@ -288,7 +429,7 @@ describe('process', () => {
                     },
                 });
 
-                assert(result.isErr(), 'result should be an error');
+                assert(result.isOk(), result.data as string);
 
                 const postHash = await hashEachFile(files);
                 const actual = filterKeys(postHash, (k) => !k.includes('invalid'));
@@ -352,7 +493,7 @@ describe('process', () => {
         it(
             'should call SourceProcessor with sources',
             withWorkingCopy('not-linked-sourcemaps', async (workingDir) => {
-                const spy = jest.spyOn(SourceProcessor.prototype, 'processSourceAndSourceMap');
+                const processSourceSpy = jest.spyOn(SourceProcessor.prototype, 'processSource');
 
                 const files = await glob(`${workingDir}/*.js`);
                 const originalSources = await readEachFile(files);
@@ -368,11 +509,38 @@ describe('process', () => {
                 assert(result.isOk(), result.data as string);
 
                 for (const source of Object.values(originalSources)) {
-                    expect(spy).toBeCalledWith(
+                    expect(processSourceSpy).toHaveBeenCalledWith(
                         source,
-                        expect.anything(),
                         expectAnythingOrNothing(),
                         expectAnythingOrNothing(),
+                    );
+                }
+            }),
+        );
+
+        it(
+            'should call SourceProcessor with source maps',
+            withWorkingCopy('not-linked-sourcemaps', async (workingDir) => {
+                const processSourceMapSpy = jest.spyOn(SourceProcessor.prototype, 'processSourceMap');
+
+                const files = await glob(`${workingDir}/*.js.map`);
+                const originalSources = await readEachFile(files);
+
+                const result = await processSources({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: workingDir,
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+
+                for (const sourceMap of Object.values(originalSources)) {
+                    expect(processSourceMapSpy).toHaveBeenCalledWith(
+                        JSON.parse(sourceMap),
+                        expect.any(Number),
+                        expect.any(String),
                     );
                 }
             }),
@@ -438,7 +606,7 @@ describe('process', () => {
         it(
             'should call SourceProcessor with sources',
             withWorkingCopy('directory-linked-sourcemaps', async (workingDir) => {
-                const spy = jest.spyOn(SourceProcessor.prototype, 'processSourceAndSourceMap');
+                const processSourceSpy = jest.spyOn(SourceProcessor.prototype, 'processSource');
 
                 const files = await glob(`${workingDir}/*.js`);
                 const originalSources = await readEachFile(files);
@@ -454,11 +622,38 @@ describe('process', () => {
                 assert(result.isOk(), result.data as string);
 
                 for (const source of Object.values(originalSources)) {
-                    expect(spy).toBeCalledWith(
+                    expect(processSourceSpy).toHaveBeenCalledWith(
                         source,
-                        expect.anything(),
                         expectAnythingOrNothing(),
                         expectAnythingOrNothing(),
+                    );
+                }
+            }),
+        );
+
+        it(
+            'should call SourceProcessor with source maps',
+            withWorkingCopy('directory-linked-sourcemaps', async (workingDir) => {
+                const processSourceMapSpy = jest.spyOn(SourceProcessor.prototype, 'processSourceMap');
+
+                const files = await glob(`${workingDir}/*.js.map`);
+                const originalSources = await readEachFile(files);
+
+                const result = await processSources({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: workingDir,
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+
+                for (const sourceMap of Object.values(originalSources)) {
+                    expect(processSourceMapSpy).toHaveBeenCalledWith(
+                        JSON.parse(sourceMap),
+                        expect.any(Number),
+                        expect.any(String),
                     );
                 }
             }),
@@ -524,7 +719,7 @@ describe('process', () => {
         it(
             'should call SourceProcessor with sources',
             withWorkingCopy('processed-sources', async (workingDir) => {
-                const spy = jest.spyOn(SourceProcessor.prototype, 'processSourceAndSourceMap');
+                const processSourceSpy = jest.spyOn(SourceProcessor.prototype, 'processSource');
 
                 const files = await glob(`${workingDir}/*.js`);
                 const originalSources = await readEachFile(files);
@@ -540,11 +735,38 @@ describe('process', () => {
                 assert(result.isOk(), result.data as string);
 
                 for (const source of Object.values(originalSources)) {
-                    expect(spy).toBeCalledWith(
+                    expect(processSourceSpy).toHaveBeenCalledWith(
                         source,
-                        expect.anything(),
                         expectAnythingOrNothing(),
                         expectAnythingOrNothing(),
+                    );
+                }
+            }),
+        );
+
+        it(
+            'should call SourceProcessor with source maps',
+            withWorkingCopy('processed-sources', async (workingDir) => {
+                const processSourceMapSpy = jest.spyOn(SourceProcessor.prototype, 'processSourceMap');
+
+                const files = await glob(`${workingDir}/*.js.map`);
+                const originalSources = await readEachFile(files);
+
+                const result = await processSources({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: workingDir,
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+
+                for (const sourceMap of Object.values(originalSources)) {
+                    expect(processSourceMapSpy).toHaveBeenCalledWith(
+                        JSON.parse(sourceMap),
+                        expect.any(Number),
+                        expect.any(String),
                     );
                 }
             }),
@@ -610,7 +832,7 @@ describe('process', () => {
         it(
             'should call SourceProcessor with sourcemaps',
             withWorkingCopy('processed-sourcemaps', async (workingDir) => {
-                const spy = jest.spyOn(SourceProcessor.prototype, 'processSourceAndSourceMap');
+                const processSourceSpy = jest.spyOn(SourceProcessor.prototype, 'processSource');
 
                 const files = await glob(`${workingDir}/*.js`);
                 const originalSources = await readEachFile(files);
@@ -626,11 +848,66 @@ describe('process', () => {
                 assert(result.isOk(), result.data as string);
 
                 for (const source of Object.values(originalSources)) {
-                    expect(spy).toBeCalledWith(
+                    expect(processSourceSpy).toHaveBeenCalledWith(
                         source,
-                        expect.anything(),
                         expectAnythingOrNothing(),
                         expectAnythingOrNothing(),
+                    );
+                }
+            }),
+        );
+
+        it(
+            'should call SourceProcessor with sources',
+            withWorkingCopy('processed-sourcemaps', async (workingDir) => {
+                const processSourceSpy = jest.spyOn(SourceProcessor.prototype, 'processSource');
+
+                const files = await glob(`${workingDir}/*.js`);
+                const originalSources = await readEachFile(files);
+
+                const result = await processSources({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: workingDir,
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+
+                for (const source of Object.values(originalSources)) {
+                    expect(processSourceSpy).toHaveBeenCalledWith(
+                        source,
+                        expectAnythingOrNothing(),
+                        expectAnythingOrNothing(),
+                    );
+                }
+            }),
+        );
+
+        it(
+            'should call SourceProcessor with source maps',
+            withWorkingCopy('processed-sourcemaps', async (workingDir) => {
+                const processSourceMapSpy = jest.spyOn(SourceProcessor.prototype, 'processSourceMap');
+
+                const files = await glob(`${workingDir}/*.js.map`);
+                const originalSources = await readEachFile(files);
+
+                const result = await processSources({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: workingDir,
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+
+                for (const sourceMap of Object.values(originalSources)) {
+                    expect(processSourceMapSpy).toHaveBeenCalledWith(
+                        JSON.parse(sourceMap),
+                        expect.any(Number),
+                        expect.any(String),
                     );
                 }
             }),
@@ -699,7 +976,7 @@ describe('process', () => {
         it(
             'should call SourceProcessor with sources',
             withWorkingCopy('not-linked-different-name-sourcemaps', async (workingDir) => {
-                const spy = jest.spyOn(SourceProcessor.prototype, 'processSourceAndSourceMap');
+                const processSourceSpy = jest.spyOn(SourceProcessor.prototype, 'processSource');
 
                 const files = await glob(`${workingDir}/*.js`);
                 const originalSources = await readEachFile(files);
@@ -718,11 +995,41 @@ describe('process', () => {
                 assert(result.isOk(), result.data as string);
 
                 for (const source of Object.values(originalSources)) {
-                    expect(spy).toBeCalledWith(
+                    expect(processSourceSpy).toHaveBeenCalledWith(
                         source,
-                        expect.anything(),
                         expectAnythingOrNothing(),
                         expectAnythingOrNothing(),
+                    );
+                }
+            }),
+        );
+
+        it(
+            'should call SourceProcessor with source maps',
+            withWorkingCopy('not-linked-different-name-sourcemaps', async (workingDir) => {
+                const processSourceMapSpy = jest.spyOn(SourceProcessor.prototype, 'processSourceMap');
+
+                const files = await glob(`${workingDir}/*.js.map`);
+                const originalSources = await readEachFile(files);
+
+                const result = await processSources({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: [
+                            `${workingDir}/entry1.js:${workingDir}/sourcemap1.js.map`,
+                            `${workingDir}/entry2.js:${workingDir}/sourcemap2.js.map`,
+                        ],
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+
+                for (const sourceMap of Object.values(originalSources)) {
+                    expect(processSourceMapSpy).toHaveBeenCalledWith(
+                        JSON.parse(sourceMap),
+                        expect.any(Number),
+                        expect.any(String),
                     );
                 }
             }),

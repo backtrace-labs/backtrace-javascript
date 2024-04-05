@@ -12,18 +12,19 @@ import {
     ResultPromise,
     SourceAndSourceMap,
     SourceProcessor,
+    stripSourcesContent,
     writeFile,
 } from '@backtrace/sourcemap-tools';
 import fs from 'fs';
 import { CliLogger } from '../logger';
-import { SourceAndSourceMapPaths } from '../models/Asset';
+import { SourceAndOptionalSourceMap, SourceAndOptionalSourceMapPaths } from '../models/Asset';
 import { FindFileTuple } from './find';
 
 export function toAsset(file: string): Asset {
     return { name: file, path: file };
 }
 
-export function toSourceAndSourceMapPaths(tuple: FindFileTuple): SourceAndSourceMapPaths {
+export function toSourceAndSourceMapPaths(tuple: FindFileTuple): SourceAndOptionalSourceMapPaths {
     return {
         source: toAsset(tuple.file1.path),
         sourceMap: tuple.file2 ? toAsset(tuple.file2) : undefined,
@@ -60,7 +61,7 @@ export function readSourceAndSourceMap(sourceProcessor: SourceProcessor) {
     return async function _readSourceAndSourceMap({
         source,
         sourceMap,
-    }: SourceAndSourceMapPaths): ResultPromise<SourceAndSourceMap, string> {
+    }: SourceAndOptionalSourceMapPaths): ResultPromise<SourceAndOptionalSourceMap, string> {
         const sourceResult = await readSource(source);
         if (sourceResult.isErr()) {
             return sourceResult;
@@ -74,8 +75,7 @@ export function readSourceAndSourceMap(sourceProcessor: SourceProcessor) {
                   loadedSource,
                   ({ content }) => sourceProcessor.getSourceMapPathFromSource(content, source.path),
                   (result) => result ?? pathIfExists(`${source.path}.map`),
-                  (path) => (path ? Ok(toAsset(path)) : Err('could not find source map for source')),
-                  R.map(readSourceMap),
+                  async (path) => (path ? await pipe(path, toAsset, readSourceMap) : Ok(undefined)),
               );
 
         if (sourceMapResult.isErr()) {
@@ -100,6 +100,17 @@ export function writeSourceAndSourceMap<T extends SourceAndSourceMap>(asset: T) 
         asset,
         () => pipe(asset.source.content, writeFile(asset.source.path)),
         R.map(() => pipe(JSON.stringify(asset.sourceMap.content), writeFile(asset.sourceMap.path))),
+        R.map(() => asset),
+    );
+}
+
+export function writeSourceAndOptionalSourceMap<T extends SourceAndOptionalSourceMap>(asset: T) {
+    return pipe(
+        asset,
+        () => pipe(asset.source.content, writeFile(asset.source.path)),
+        R.map(async () =>
+            asset.sourceMap ? await pipe(JSON.stringify(asset.sourceMap.content), writeFile(asset.sourceMap.path)) : Ok,
+        ),
         R.map(() => asset),
     );
 }
@@ -139,11 +150,37 @@ export function validateUrl(url: string) {
     }
 }
 
-export function isAssetProcessed(sourceProcessor: SourceProcessor) {
-    return function isAssetProcessed(asset: AssetWithContent<RawSourceMap>) {
-        const result = sourceProcessor.isSourceMapProcessed(asset.content);
-        return { asset, result } as const;
+export function loadAssetsDebugId(sourceProcessor: SourceProcessor) {
+    return function loadAssetsDebugId<T extends SourceAndOptionalSourceMap>(
+        asset: T & { readonly debugId?: string },
+    ): T & { readonly debugId?: string } {
+        if (asset.debugId) {
+            return asset;
+        }
+
+        const sourceDebugId = sourceProcessor.getSourceDebugId(asset.source.content);
+        const sourceMapDebugId = asset.sourceMap
+            ? sourceProcessor.getSourceMapDebugId(asset.sourceMap.content)
+            : undefined;
+
+        if (sourceMapDebugId && sourceDebugId !== sourceMapDebugId) {
+            return asset;
+        }
+
+        const debugId = sourceDebugId ?? sourceMapDebugId;
+        return { ...asset, debugId };
     };
+}
+
+export function stripSourcesFromAssets<T extends SourceAndOptionalSourceMap>(assets: T): T {
+    if (assets.sourceMap) {
+        return {
+            ...assets,
+            sourceMap: stripSourcesContent(assets.sourceMap),
+        };
+    }
+
+    return assets;
 }
 
 export function uniqueBy<T, U>(fn: (t: T) => U) {
@@ -161,9 +198,9 @@ export function uniqueBy<T, U>(fn: (t: T) => U) {
 }
 
 export function printAssetInfo(logger: CliLogger) {
-    return function printAssetInfo<T extends SourceAndSourceMap>(asset: T) {
+    return function printAssetInfo<T extends SourceAndOptionalSourceMap>(asset: T) {
         logger.debug(`${asset.source.path}`);
-        logger.debug(`└── ${asset.sourceMap.path}`);
+        logger.debug(`└── ${asset.sourceMap?.path ?? '<no sourcemap>'}`);
         return asset;
     };
 }

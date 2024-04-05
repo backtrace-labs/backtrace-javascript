@@ -1,5 +1,6 @@
 import {
     Asset,
+    AssetWithContent,
     DebugIdGenerator,
     Err,
     failIfEmpty,
@@ -15,21 +16,24 @@ import {
     Ok,
     pass,
     pipe,
-    ProcessedSourceAndSourceMap,
     R,
-    SourceAndSourceMap,
+    RawSourceMap,
     SourceProcessor,
 } from '@backtrace/sourcemap-tools';
 import path from 'path';
 import { GlobalOptions } from '..';
 import { Command, CommandContext } from '../commands/Command';
-import { readSourceAndSourceMap, toSourceAndSourceMapPaths, writeSourceAndSourceMap } from '../helpers/common';
+import { readSourceAndSourceMap, toSourceAndSourceMapPaths, writeSourceAndOptionalSourceMap } from '../helpers/common';
 import { ErrorBehaviors, filterBehaviorSkippedElements, getErrorBehavior, handleError } from '../helpers/errorBehavior';
 import { buildIncludeExclude, findTuples } from '../helpers/find';
 import { createAssetLogger, logAssets } from '../helpers/logs';
 import { normalizePaths, relativePaths } from '../helpers/normalizePaths';
 import { CliLogger } from '../logger';
-import { SourceAndSourceMapPaths } from '../models/Asset';
+import {
+    ProcessedSourceAndOptionalSourceMap,
+    SourceAndOptionalSourceMap,
+    SourceAndOptionalSourceMapPaths,
+} from '../models/Asset';
 import { findConfig, loadOptionsForCommand } from '../options/loadOptions';
 
 export interface ProcessOptions extends GlobalOptions {
@@ -137,7 +141,7 @@ export async function processSources({ opts, logger, getHelpMessage }: CommandCo
     const logAssetBehaviorError = (asset: Asset) => (err: string, level: LogLevel) =>
         createAssetLogger(logger, level)(err)(asset);
 
-    const processAssetCommand = (asset: SourceAndSourceMapPaths) =>
+    const processAssetCommand = (asset: SourceAndOptionalSourceMapPaths) =>
         pipe(
             asset,
             logTraceAssets('reading source and sourcemap'),
@@ -151,7 +155,7 @@ export async function processSources({ opts, logger, getHelpMessage }: CommandCo
                     ? Ok
                     : flow(
                           logTraceAssets('writing source and sourcemap'),
-                          writeSourceAndSourceMap,
+                          writeSourceAndOptionalSourceMap,
                           R.map(logDebugAssets('wrote source and sourcemap')),
                       ),
             ),
@@ -188,41 +192,48 @@ export async function processSources({ opts, logger, getHelpMessage }: CommandCo
 export function processSource(force: boolean) {
     const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
 
-    const getSourceDebugId = (sourceAndSourceMap: SourceAndSourceMap) =>
-        sourceProcessor.getSourceDebugId(sourceAndSourceMap.source.content);
+    const getSourceDebugId = (asset: AssetWithContent<string>) => sourceProcessor.getSourceDebugId(asset.content);
 
-    const getSourceMapDebugId = (sourceAndSourceMap: SourceAndSourceMap) =>
-        sourceProcessor.getSourceMapDebugId(sourceAndSourceMap.sourceMap.content);
+    const getSourceMapDebugId = (asset: AssetWithContent<RawSourceMap>) =>
+        sourceProcessor.getSourceMapDebugId(asset.content);
 
-    const getDebugIds = (sourceAndSourceMap: SourceAndSourceMap) => ({
-        sourceDebugId: getSourceDebugId(sourceAndSourceMap),
-        sourceMapDebugId: getSourceMapDebugId(sourceAndSourceMap),
+    const getDebugIds = (sourceAndSourceMap: SourceAndOptionalSourceMap) => ({
+        sourceDebugId: getSourceDebugId(sourceAndSourceMap.source),
+        sourceMapDebugId: sourceAndSourceMap.sourceMap ? getSourceMapDebugId(sourceAndSourceMap.sourceMap) : undefined,
     });
 
-    return async function processSource(asset: SourceAndSourceMap): Promise<ProcessedSourceAndSourceMap> {
+    return async function processSource(
+        asset: SourceAndOptionalSourceMap,
+    ): Promise<ProcessedSourceAndOptionalSourceMap> {
         return pipe(asset, getDebugIds, ({ sourceDebugId, sourceMapDebugId }) =>
-            pipe(
-                asset,
-                (asset) =>
-                    sourceProcessor.processSourceAndSourceMap(
-                        asset.source.content,
-                        asset.sourceMap.content,
-                        sourceDebugId ?? sourceMapDebugId,
-                        force,
-                    ),
-                (result) =>
-                    ({
-                        source: { ...asset.source, content: result.source },
-                        sourceMap: { ...asset.sourceMap, content: result.sourceMap },
-                        debugId: result.debugId,
-                    } as ProcessedSourceAndSourceMap),
-            ),
+            pipe(asset, async (asset): Promise<ProcessedSourceAndOptionalSourceMap> => {
+                const debugId = sourceDebugId ?? sourceMapDebugId;
+
+                const {
+                    source,
+                    sourceMapOffset,
+                    debugId: newDebugId,
+                } = await sourceProcessor.processSource(asset.source.content, debugId, force);
+
+                const processedSourceMap = asset.sourceMap
+                    ? await sourceProcessor.processSourceMap(asset.sourceMap.content, sourceMapOffset, newDebugId)
+                    : undefined;
+
+                return {
+                    source: { ...asset.source, content: source },
+                    sourceMap:
+                        processedSourceMap && asset.sourceMap
+                            ? { ...asset.sourceMap, content: processedSourceMap }
+                            : undefined,
+                    debugId: newDebugId,
+                };
+            }),
         );
     };
 }
 
 function output(logger: CliLogger) {
-    return function output(result: ProcessedSourceAndSourceMap) {
+    return function output(result: ProcessedSourceAndOptionalSourceMap) {
         logger.output(result.source.path);
         return result;
     };
