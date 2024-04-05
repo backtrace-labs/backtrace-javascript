@@ -103,10 +103,16 @@ export function mapAsync<T, B>(fn: (t: T) => B | Promise<B>) {
     };
 }
 
+export function filter<T, S extends T>(fn: (t: T) => t is S): (t: T[]) => S[];
+export function filter<T>(fn: (t: T) => boolean): (t: T[]) => T[];
 export function filter<T>(fn: (t: T) => boolean) {
     return function filter(t: T[]) {
         return t.filter(fn);
     };
+}
+
+export function isDefined<T>(t: T | undefined): t is T {
+    return t !== undefined;
 }
 
 export function filterAsync<T>(fn: (t: T) => boolean | Promise<boolean>) {
