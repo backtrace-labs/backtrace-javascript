@@ -1,5 +1,5 @@
 import path from 'path';
-import { DebugIdGenerator } from './DebugIdGenerator';
+import { DebugIdGenerator, DebugMetadata } from './DebugIdGenerator';
 import { parseJSON, readFile, statFile } from './helpers/common';
 import { pipe } from './helpers/flow';
 import { appendBeforeWhitespaces } from './helpers/stringHelpers';
@@ -51,7 +51,7 @@ export class SourceProcessor {
     constructor(private readonly _debugIdGenerator: DebugIdGenerator) {}
 
     public isSourceProcessed(source: string): boolean {
-        return !!this._debugIdGenerator.getSourceDebugIdFromComment(source);
+        return !!this._debugIdGenerator.getSourceDebugMetadata(source);
     }
 
     public isSourceMapProcessed(sourceMap: RawSourceMap): boolean {
@@ -75,8 +75,8 @@ export class SourceProcessor {
         );
     }
 
-    public getSourceDebugId(source: string): string | undefined {
-        return this._debugIdGenerator.getSourceDebugIdFromComment(source);
+    public getSourceDebugMetadata(source: string): DebugMetadata | undefined {
+        return this._debugIdGenerator.getSourceDebugMetadata(source);
     }
 
     public getSourceMapDebugId(sourceMap: RawSourceMap): string | undefined {
@@ -92,8 +92,15 @@ export class SourceProcessor {
         );
     }
 
-    public async processSource(source: string, debugId?: string, force?: boolean): Promise<ProcessSourceResult> {
-        const sourceDebugId = this.getSourceDebugId(source);
+    public async processSource(
+        source: string,
+        symbolicationSource: string,
+        debugId?: string,
+        force?: boolean,
+    ): Promise<ProcessSourceResult> {
+        const sourceDebugMetadata = this.getSourceDebugMetadata(source);
+        const sourceDebugId = sourceDebugMetadata?.debugId;
+        const sourceSymblicationSource = sourceDebugMetadata?.symbolicationSource;
         if (!debugId) {
             debugId = sourceDebugId ?? stringToUuid(source);
         }
@@ -102,12 +109,16 @@ export class SourceProcessor {
         let sourceMapOffset = 0;
 
         // If source has debug ID, but it is different, we need to only replace it
-        if (sourceDebugId && debugId !== sourceDebugId) {
-            newSource = this._debugIdGenerator.replaceDebugId(source, sourceDebugId, debugId);
+        if (sourceDebugMetadata && (debugId !== sourceDebugId || symbolicationSource !== sourceSymblicationSource)) {
+            newSource = this._debugIdGenerator.replaceDebugMetadata(
+                source,
+                { debugId, symbolicationSource },
+                sourceDebugId,
+            );
         }
 
-        if (force || !sourceDebugId || !this._debugIdGenerator.hasCodeSnippet(source, debugId)) {
-            const sourceSnippet = this._debugIdGenerator.generateSourceSnippet(debugId);
+        if (force || !sourceDebugMetadata || !this._debugIdGenerator.hasCodeSnippet(source, debugId)) {
+            const sourceSnippet = this._debugIdGenerator.generateSourceSnippet({ debugId, symbolicationSource });
 
             const shebang = source.match(/^(#!.+\n)/)?.[1];
             newSource = shebang
@@ -124,8 +135,8 @@ export class SourceProcessor {
             sourceMapOffset = sourceSnippetNewlineCount + 1;
         }
 
-        if (force || !sourceDebugId || !this._debugIdGenerator.hasCommentSnippet(source, debugId)) {
-            const sourceComment = this._debugIdGenerator.generateSourceComment(debugId);
+        if (force || !sourceDebugMetadata || !this._debugIdGenerator.hasCommentSnippet(source, debugId)) {
+            const sourceComment = this._debugIdGenerator.generateSourceDebugIdComment(debugId);
             newSource = appendBeforeWhitespaces(newSource, '\n' + sourceComment);
         }
 
@@ -158,7 +169,7 @@ export class SourceProcessor {
         debugId?: string,
         force?: boolean,
     ): Promise<ProcessResult> {
-        const processSourceResult = await this.processSource(source, debugId, force);
+        const processSourceResult = await this.processSource(source, 'sourcemap', debugId, force);
         const { source: newSource, sourceMapOffset } = processSourceResult;
         debugId = processSourceResult.debugId;
 

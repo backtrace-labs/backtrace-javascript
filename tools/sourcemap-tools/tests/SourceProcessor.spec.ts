@@ -3,7 +3,7 @@ import { randomUUID } from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { RawSourceMap, SourceMapConsumer } from 'source-map';
-import { DebugIdGenerator, SOURCEMAP_DEBUG_ID_KEY, SourceProcessor } from '../src';
+import { DebugIdGenerator, DebugMetadata, SOURCEMAP_DEBUG_ID_KEY, SourceProcessor } from '../src';
 
 describe('SourceProcessor', () => {
     const source = `function foo(){console.log("Hello World!")}foo();`;
@@ -37,11 +37,21 @@ function foo(){console.log("Hello World!")}foo();`;
 
     const processedSource = (
         debugIdGenerator: DebugIdGenerator,
+        symbolicationSource: string,
         debugId: string,
-    ) => `${debugIdGenerator.generateSourceSnippet(debugId)}
+    ) => `${debugIdGenerator.generateSourceSnippet({ debugId, symbolicationSource })}
 (()=>{"use strict";console.log("Hello World!")})();
 //# sourceMappingURL=source.js.map
-${debugIdGenerator.generateSourceComment(debugId)}
+${debugIdGenerator.generateSourceDebugIdComment(debugId)}
+`;
+
+    const oldProcessedSource = (
+        debugIdGenerator: DebugIdGenerator,
+        debugId: string,
+    ) => `${debugIdGenerator.generateOldSourceSnippet(debugId)}
+(()=>{"use strict";console.log("Hello World!")})();
+//# sourceMappingURL=source.js.map
+${debugIdGenerator.generateSourceDebugIdComment(debugId)}
 `;
 
     // const processedSourceMap = (debugId: string) => ({
@@ -61,7 +71,7 @@ ${debugIdGenerator.generateSourceComment(debugId)}
             jest.spyOn(debugIdGenerator, 'generateSourceSnippet').mockReturnValue(expected);
 
             const sourceProcessor = new SourceProcessor(debugIdGenerator);
-            const result = await sourceProcessor.processSource(source);
+            const result = await sourceProcessor.processSource(source, 'original');
 
             expect(result.source).toMatch(new RegExp(`^${expected}\n`));
         });
@@ -73,7 +83,7 @@ ${debugIdGenerator.generateSourceComment(debugId)}
             jest.spyOn(debugIdGenerator, 'generateSourceSnippet').mockReturnValue(expected);
 
             const sourceProcessor = new SourceProcessor(debugIdGenerator);
-            const result = await sourceProcessor.processSource(sourceWithShebangElsewhere);
+            const result = await sourceProcessor.processSource(sourceWithShebangElsewhere, 'original');
 
             expect(result.source).toMatch(new RegExp(`^${expected}\n`));
         });
@@ -85,7 +95,7 @@ ${debugIdGenerator.generateSourceComment(debugId)}
             jest.spyOn(debugIdGenerator, 'generateSourceSnippet').mockReturnValue(expected);
 
             const sourceProcessor = new SourceProcessor(debugIdGenerator);
-            const result = await sourceProcessor.processSource(sourceWithShebang);
+            const result = await sourceProcessor.processSource(sourceWithShebang, 'original');
 
             expect(result.source).toMatch(new RegExp(`^(#!.+\n)${expected}\n`));
         });
@@ -94,10 +104,10 @@ ${debugIdGenerator.generateSourceComment(debugId)}
             const expected = 'APPENDED_COMMENT';
             const debugIdGenerator = new DebugIdGenerator();
 
-            jest.spyOn(debugIdGenerator, 'generateSourceComment').mockReturnValue(expected);
+            jest.spyOn(debugIdGenerator, 'generateSourceDebugIdComment').mockReturnValue(expected);
 
             const sourceProcessor = new SourceProcessor(debugIdGenerator);
-            const result = await sourceProcessor.processSource(source);
+            const result = await sourceProcessor.processSource(source, 'original');
 
             expect(result.source).toMatch(new RegExp(`\n${expected}$`));
         });
@@ -107,10 +117,10 @@ ${debugIdGenerator.generateSourceComment(debugId)}
             const expected = 'APPENDED_COMMENT';
             const debugIdGenerator = new DebugIdGenerator();
 
-            jest.spyOn(debugIdGenerator, 'generateSourceComment').mockReturnValue(expected);
+            jest.spyOn(debugIdGenerator, 'generateSourceDebugIdComment').mockReturnValue(expected);
 
             const sourceProcessor = new SourceProcessor(debugIdGenerator);
-            const result = await sourceProcessor.processSource(source);
+            const result = await sourceProcessor.processSource(source, 'original');
 
             expect(result.source).not.toMatch(/\s+$/);
         });
@@ -121,10 +131,10 @@ ${debugIdGenerator.generateSourceComment(debugId)}
             const expected = 'APPENDED_COMMENT';
             const debugIdGenerator = new DebugIdGenerator();
 
-            jest.spyOn(debugIdGenerator, 'generateSourceComment').mockReturnValue(expected);
+            jest.spyOn(debugIdGenerator, 'generateSourceDebugIdComment').mockReturnValue(expected);
 
             const sourceProcessor = new SourceProcessor(debugIdGenerator);
-            const result = await sourceProcessor.processSource(source);
+            const result = await sourceProcessor.processSource(source, 'original');
 
             expect(result.source).toMatch(new RegExp(`${whitespaces}$`));
         });
@@ -135,7 +145,7 @@ ${debugIdGenerator.generateSourceComment(debugId)}
             jest.spyOn(debugIdGenerator, 'generateSourceSnippet').mockReturnValue('APPENDED_SOURCE');
 
             const sourceProcessor = new SourceProcessor(debugIdGenerator);
-            const result = await sourceProcessor.processSource(source);
+            const result = await sourceProcessor.processSource(source, 'original');
 
             expect(result.source).toContain(source);
         });
@@ -143,9 +153,9 @@ ${debugIdGenerator.generateSourceComment(debugId)}
         it('should return unmodified source when source has debug ID', async () => {
             const debugId = randomUUID();
             const debugIdGenerator = new DebugIdGenerator();
-            const source = processedSource(debugIdGenerator, debugId);
+            const source = processedSource(debugIdGenerator, 'original', debugId);
             const sourceProcessor = new SourceProcessor(debugIdGenerator);
-            const result = await sourceProcessor.processSource(source);
+            const result = await sourceProcessor.processSource(source, 'original');
 
             expect(result.source).toEqual(source);
         });
@@ -153,25 +163,65 @@ ${debugIdGenerator.generateSourceComment(debugId)}
         it('should return unmodified source when source has same debug ID as provided', async () => {
             const debugId = randomUUID();
             const debugIdGenerator = new DebugIdGenerator();
-            const source = processedSource(debugIdGenerator, debugId);
+            const source = processedSource(debugIdGenerator, 'original', debugId);
             const sourceProcessor = new SourceProcessor(debugIdGenerator);
-            const result = await sourceProcessor.processSource(source, debugId);
+            const result = await sourceProcessor.processSource(source, 'original', debugId);
 
             expect(result.source).toEqual(source);
         });
 
-        it('should call replace debug ID when source has different debug ID than provided', async () => {
+        it('should call replace debug metadata when source has different debug ID than provided', async () => {
             const oldDebugId = randomUUID();
-            const newDebugId = randomUUID();
+            const newDebugMetadata: DebugMetadata = { debugId: randomUUID(), symbolicationSource: 'sourcemap' };
             const debugIdGenerator = new DebugIdGenerator();
-            const source = processedSource(debugIdGenerator, oldDebugId);
+            const source = processedSource(debugIdGenerator, 'original', oldDebugId);
 
-            const spy = jest.spyOn(debugIdGenerator, 'replaceDebugId');
+            const spy = jest.spyOn(debugIdGenerator, 'replaceDebugMetadata');
 
             const sourceProcessor = new SourceProcessor(debugIdGenerator);
-            await sourceProcessor.processSource(source, newDebugId);
+            await sourceProcessor.processSource(
+                source,
+                newDebugMetadata.symbolicationSource as string,
+                newDebugMetadata.debugId,
+            );
 
-            expect(spy).toHaveBeenCalledWith(source, oldDebugId, newDebugId);
+            expect(spy).toHaveBeenCalledWith(source, newDebugMetadata, oldDebugId);
+        });
+
+        it('should call replace debug metadata when source has different symbolication source than provided', async () => {
+            const oldDebugId = randomUUID();
+            const newDebugMetadata: DebugMetadata = { debugId: oldDebugId, symbolicationSource: 'sourcemap' };
+            const debugIdGenerator = new DebugIdGenerator();
+            const source = processedSource(debugIdGenerator, 'original', oldDebugId);
+
+            const spy = jest.spyOn(debugIdGenerator, 'replaceDebugMetadata');
+
+            const sourceProcessor = new SourceProcessor(debugIdGenerator);
+            await sourceProcessor.processSource(
+                source,
+                newDebugMetadata.symbolicationSource as string,
+                newDebugMetadata.debugId,
+            );
+
+            expect(spy).toHaveBeenCalledWith(source, newDebugMetadata, oldDebugId);
+        });
+
+        it('should call replace debug metadata when source has old snippet', async () => {
+            const oldDebugId = randomUUID();
+            const newDebugMetadata: DebugMetadata = { debugId: oldDebugId, symbolicationSource: 'sourcemap' };
+            const debugIdGenerator = new DebugIdGenerator();
+            const source = oldProcessedSource(debugIdGenerator, oldDebugId);
+
+            const spy = jest.spyOn(debugIdGenerator, 'replaceDebugMetadata');
+
+            const sourceProcessor = new SourceProcessor(debugIdGenerator);
+            await sourceProcessor.processSource(
+                source,
+                newDebugMetadata.symbolicationSource as string,
+                newDebugMetadata.debugId,
+            );
+
+            expect(spy).toHaveBeenCalledWith(source, newDebugMetadata, oldDebugId);
         });
 
         it('should return sourcemap offset equal to number of newlines in source snippet + 1', async () => {
@@ -182,7 +232,7 @@ ${debugIdGenerator.generateSourceComment(debugId)}
 
             jest.spyOn(debugIdGenerator, 'generateSourceSnippet').mockReturnValue(snippet);
 
-            const { sourceMapOffset } = await sourceProcessor.processSource(source);
+            const { sourceMapOffset } = await sourceProcessor.processSource(source, 'original');
 
             expect(sourceMapOffset).toEqual(expectedNewLineCount);
         });
@@ -195,7 +245,7 @@ ${debugIdGenerator.generateSourceComment(debugId)}
 
             jest.spyOn(debugIdGenerator, 'generateSourceSnippet').mockReturnValue(snippet);
 
-            const { sourceMapOffset } = await sourceProcessor.processSource(source);
+            const { sourceMapOffset } = await sourceProcessor.processSource(source, 'original');
 
             expect(sourceMapOffset).toEqual(expectedNewLineCount);
         });
@@ -208,7 +258,7 @@ ${debugIdGenerator.generateSourceComment(debugId)}
 
             jest.spyOn(debugIdGenerator, 'generateSourceSnippet').mockReturnValue(snippet);
 
-            const { sourceMapOffset } = await sourceProcessor.processSource(source);
+            const { sourceMapOffset } = await sourceProcessor.processSource(source, 'original');
 
             expect(sourceMapOffset).toEqual(expectedNewLineCount);
         });
@@ -263,7 +313,7 @@ ${debugIdGenerator.generateSourceComment(debugId)}
             const debugIdGenerator = new DebugIdGenerator();
             const sourceProcessor = new SourceProcessor(debugIdGenerator);
             const result = await sourceProcessor.processSourceAndSourceMap(
-                processedSource(debugIdGenerator, debugId),
+                processedSource(debugIdGenerator, 'original', debugId),
                 sourceMap,
             );
 

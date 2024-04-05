@@ -1,7 +1,22 @@
 import crypto from 'crypto';
-import { DebugIdGenerator, SOURCEMAP_DEBUG_ID_KEY, SOURCE_DEBUG_ID_COMMENT, SOURCE_DEBUG_ID_VARIABLE } from '../src';
+import {
+    DebugIdGenerator,
+    DebugMetadata,
+    SOURCEMAP_DEBUG_ID_KEY,
+    SOURCE_DEBUG_DATA_VARIABLE,
+    SOURCE_DEBUG_ID_COMMENT,
+    SOURCE_DEBUG_METADATA_PREFIX,
+    SOURCE_DEBUG_METADATA_SUFFIX,
+} from '../src';
 
 describe('DebugIdGenerator', () => {
+    function genDebugMetadata(): DebugMetadata {
+        return {
+            debugId: crypto.randomUUID(),
+            symbolicationSource: crypto.randomUUID(),
+        };
+    }
+
     describe('source snippet generation', () => {
         /**
          * Makes the `global` variable `undefined` in the callback.
@@ -22,63 +37,69 @@ describe('DebugIdGenerator', () => {
 
         beforeEach(() => {
             // Clean the debug container from the global variable
-            delete global[SOURCE_DEBUG_ID_VARIABLE as never];
+            delete global[SOURCE_DEBUG_DATA_VARIABLE as never];
 
             // Sanity checks
             expect(typeof window).toEqual('undefined');
             expect(typeof self).toEqual('undefined');
         });
 
-        it('should return snippet containing passed UUID in quotes', () => {
-            const expected = crypto.randomUUID();
+        it('should return snippet containing passed debug metadata', () => {
+            const debugMetadata = genDebugMetadata();
+            const expected = JSON.stringify([
+                SOURCE_DEBUG_METADATA_PREFIX,
+                debugMetadata.debugId,
+                debugMetadata.symbolicationSource,
+                SOURCE_DEBUG_METADATA_SUFFIX,
+            ]);
 
             const debugIdGenerator = new DebugIdGenerator();
-            const snippet = debugIdGenerator.generateSourceSnippet(expected);
+            const snippet = debugIdGenerator.generateSourceSnippet(debugMetadata);
 
-            expect(snippet).toContain(`"${expected}"`);
+            expect(snippet).toContain(expected);
         });
 
-        it('should return snippet that is evaulable without exceptions', () => {
+        it('should return snippet that is evaluable without exceptions', () => {
             const debugIdGenerator = new DebugIdGenerator();
-            const snippet = debugIdGenerator.generateSourceSnippet(crypto.randomUUID());
+            const snippet = debugIdGenerator.generateSourceSnippet(genDebugMetadata());
 
             expect(() => eval(snippet)).not.toThrow();
         });
 
-        it('should assign debug ID container to "window" global variable when it is available', () => {
+        it('should assign debug metadata container to "window" global variable when it is available', () => {
             const debugIdGenerator = new DebugIdGenerator();
-            const snippet = debugIdGenerator.generateSourceSnippet(crypto.randomUUID());
+            const snippet = debugIdGenerator.generateSourceSnippet(genDebugMetadata());
 
             const window = {};
             // Node.JS defines global, we need to make it undefined so the snippet won't pick it up
             undefineGlobal(() => eval(snippet));
 
-            expect(Object.keys(window)).toContain(SOURCE_DEBUG_ID_VARIABLE);
+            expect(Object.keys(window)).toContain(SOURCE_DEBUG_DATA_VARIABLE);
         });
 
-        it('should assign debug ID container to "global" global variable when it is available', () => {
+        it('should assign debug metadata container to "global" global variable when it is available', () => {
             const debugIdGenerator = new DebugIdGenerator();
-            const snippet = debugIdGenerator.generateSourceSnippet(crypto.randomUUID());
+            const snippet = debugIdGenerator.generateSourceSnippet(genDebugMetadata());
 
             eval(snippet);
 
-            expect(Object.keys(global)).toContain(SOURCE_DEBUG_ID_VARIABLE);
+            expect(Object.keys(global)).toContain(SOURCE_DEBUG_DATA_VARIABLE);
         });
 
-        it('should assign debug ID container to "self" global variable when it is available', () => {
+        it('should assign debug metadata container to "self" global variable when it is available', () => {
             const debugIdGenerator = new DebugIdGenerator();
-            const snippet = debugIdGenerator.generateSourceSnippet(crypto.randomUUID());
+            const snippet = debugIdGenerator.generateSourceSnippet(genDebugMetadata());
 
             const self = {};
             // Node.JS defines global, we need to make it undefined so the snippet won't pick it up
             undefineGlobal(() => eval(snippet));
 
-            expect(Object.keys(self)).toContain(SOURCE_DEBUG_ID_VARIABLE);
+            expect(Object.keys(self)).toContain(SOURCE_DEBUG_DATA_VARIABLE);
         });
 
         it('should not fail when "window", "self", "global" are undefined', () => {
             const debugIdGenerator = new DebugIdGenerator();
-            const snippet = debugIdGenerator.generateSourceSnippet(crypto.randomUUID());
+            const snippet = debugIdGenerator.generateSourceSnippet(genDebugMetadata());
 
             const self = undefined;
             const window = undefined;
@@ -91,13 +112,13 @@ describe('DebugIdGenerator', () => {
             expect(() => undefineGlobal(() => eval(snippet))).not.toThrow();
         });
 
-        it('should assign error stack as key to debug ID container', () => {
+        it('should assign error stack as key to debug metadata container', () => {
             const debugIdGenerator = new DebugIdGenerator();
-            const snippet = debugIdGenerator.generateSourceSnippet(crypto.randomUUID());
+            const snippet = debugIdGenerator.generateSourceSnippet(genDebugMetadata());
 
             eval(snippet);
 
-            const container = global[SOURCE_DEBUG_ID_VARIABLE as never];
+            const container = global[SOURCE_DEBUG_DATA_VARIABLE as never];
             const keys = Object.keys(container);
             for (const key of keys) {
                 expect(key).toMatch(/Error:/);
@@ -105,16 +126,21 @@ describe('DebugIdGenerator', () => {
             }
         });
 
-        it('should assign provided debug ID as value to debug ID container', () => {
-            const expected = crypto.randomUUID();
+        it('should assign provided debug ID as value to debug metadata container', () => {
+            const expected = genDebugMetadata();
 
             const debugIdGenerator = new DebugIdGenerator();
             const snippet = debugIdGenerator.generateSourceSnippet(expected);
 
             eval(snippet);
 
-            const container = global[SOURCE_DEBUG_ID_VARIABLE as never];
-            expect(Object.values(container)).toContain(expected);
+            const container = global[SOURCE_DEBUG_DATA_VARIABLE as never];
+            expect(Object.values(container)).toContainEqual([
+                SOURCE_DEBUG_METADATA_PREFIX,
+                expected.debugId,
+                expected.symbolicationSource,
+                SOURCE_DEBUG_METADATA_SUFFIX,
+            ]);
         });
     });
 
@@ -123,7 +149,7 @@ describe('DebugIdGenerator', () => {
             const regex = new RegExp(`^//# ${SOURCE_DEBUG_ID_COMMENT}=[a-fA-F0-9-]{36}$`);
 
             const debugIdGenerator = new DebugIdGenerator();
-            const comment = debugIdGenerator.generateSourceComment(crypto.randomUUID());
+            const comment = debugIdGenerator.generateSourceDebugIdComment(crypto.randomUUID());
 
             expect(comment).toMatch(regex);
         });
@@ -132,14 +158,14 @@ describe('DebugIdGenerator', () => {
             const expected = crypto.randomUUID();
 
             const debugIdGenerator = new DebugIdGenerator();
-            const comment = debugIdGenerator.generateSourceComment(expected);
+            const comment = debugIdGenerator.generateSourceDebugIdComment(expected);
 
             expect(comment).toContain(expected);
         });
 
         it('should return a comment that is evaluable without exceptions', () => {
             const debugIdGenerator = new DebugIdGenerator();
-            const comment = debugIdGenerator.generateSourceComment(crypto.randomUUID());
+            const comment = debugIdGenerator.generateSourceDebugIdComment(crypto.randomUUID());
 
             expect(() => eval(comment)).not.toThrow();
         });
@@ -147,18 +173,18 @@ describe('DebugIdGenerator', () => {
 
     describe('source comment get', () => {
         it('should return debugId from source with valid comment', () => {
-            const expected = crypto.randomUUID();
+            const expected = genDebugMetadata();
             const source = [
                 'foo',
                 'bar',
-                `//# ${SOURCE_DEBUG_ID_COMMENT}=${expected}`,
+                `//# ${SOURCE_DEBUG_ID_COMMENT}=${expected.debugId}`,
                 `//# sourceMappingURL=baz.js`,
             ].join('\n');
 
             const debugIdGenerator = new DebugIdGenerator();
-            const actual = debugIdGenerator.getSourceDebugIdFromComment(source);
+            const actual = debugIdGenerator.getSourceDebugMetadata(source);
 
-            expect(actual).toEqual(expected);
+            expect(actual?.debugId).toEqual(expected.debugId);
         });
 
         it('should return undefined from source without valid comment', () => {
@@ -167,7 +193,29 @@ describe('DebugIdGenerator', () => {
             );
 
             const debugIdGenerator = new DebugIdGenerator();
-            const actual = debugIdGenerator.getSourceDebugIdFromComment(source);
+            const actual = debugIdGenerator.getSourceDebugMetadata(source);
+
+            expect(actual).toBeUndefined();
+        });
+    });
+
+    describe('source snippet get', () => {
+        it('should return debugId from source with valid snippet', () => {
+            const expected = genDebugMetadata();
+            const debugIdGenerator = new DebugIdGenerator();
+            const source = [debugIdGenerator.generateSourceSnippet(expected), 'foo', 'bar'].join('\n');
+
+            const actual = debugIdGenerator.getSourceDebugMetadata(source);
+
+            expect(actual?.debugId).toEqual(expected.debugId);
+            expect(actual?.symbolicationSource).toEqual(expected.symbolicationSource);
+        });
+
+        it('should return undefined from source without valid snippet', () => {
+            const source = ['foo', 'bar'].join('\n');
+
+            const debugIdGenerator = new DebugIdGenerator();
+            const actual = debugIdGenerator.getSourceDebugMetadata(source);
 
             expect(actual).toBeUndefined();
         });
@@ -232,6 +280,142 @@ describe('DebugIdGenerator', () => {
             const actual = debugIdGenerator.getSourceMapDebugId(sourcemap);
 
             expect(actual).toBeUndefined();
+        });
+    });
+
+    describe('replaceDebugMetadata', () => {
+        it('should replace old debugId with new debugId', () => {
+            const oldDebugId = crypto.randomUUID();
+            const newDebugId = crypto.randomUUID();
+
+            const debugIdGenerator = new DebugIdGenerator();
+            const oldSource = [
+                debugIdGenerator.generateSourceSnippet({ debugId: oldDebugId, symbolicationSource: 'original' }),
+                'foo',
+                'bar',
+            ].join('\n');
+
+            const newSource = debugIdGenerator.replaceDebugMetadata(oldSource, {
+                debugId: newDebugId,
+                symbolicationSource: 'original',
+            });
+
+            expect(newSource).not.toContain(oldDebugId);
+            expect(newSource).toContain(newDebugId);
+        });
+
+        it('should replace old symbolication source with new symbolication source', () => {
+            const debugId = crypto.randomUUID();
+            const oldSymbolicationSource = 'original';
+            const newSymbolicationSource = crypto.randomUUID();
+
+            const debugIdGenerator = new DebugIdGenerator();
+            const oldSource = [
+                debugIdGenerator.generateSourceSnippet({ debugId, symbolicationSource: oldSymbolicationSource }),
+                'foo',
+                'bar',
+            ].join('\n');
+
+            const newSource = debugIdGenerator.replaceDebugMetadata(oldSource, {
+                debugId,
+                symbolicationSource: newSymbolicationSource,
+            });
+
+            expect(newSource).not.toContain(oldSymbolicationSource);
+            expect(newSource).toContain(newSymbolicationSource);
+        });
+
+        it('should replace old snippet with new snippet', () => {
+            const debugId = crypto.randomUUID();
+            const symbolicationSource = crypto.randomUUID();
+
+            const debugIdGenerator = new DebugIdGenerator();
+            const oldSource = [debugIdGenerator.generateOldSourceSnippet(debugId), 'foo', 'bar'].join('\n');
+
+            const newSource = debugIdGenerator.replaceDebugMetadata(
+                oldSource,
+                {
+                    debugId,
+                    symbolicationSource,
+                },
+                debugId,
+            );
+
+            const expected = JSON.stringify([
+                SOURCE_DEBUG_METADATA_PREFIX,
+                debugId,
+                symbolicationSource,
+                SOURCE_DEBUG_METADATA_SUFFIX,
+            ]);
+
+            expect(newSource).toContain(expected);
+        });
+
+        it('should replace old debugId with new debugId with non 1-1 snippet', () => {
+            const oldDebugId = crypto.randomUUID();
+            const newDebugId = crypto.randomUUID();
+
+            const debugIdGenerator = new DebugIdGenerator();
+            const oldSource = [
+                debugIdGenerator.generateSourceSnippet({ debugId: oldDebugId, symbolicationSource: 'original' }).replace('new Error', 'new Error()'),
+                'foo',
+                'bar',
+            ].join('\n');
+
+            const newSource = debugIdGenerator.replaceDebugMetadata(oldSource, {
+                debugId: newDebugId,
+                symbolicationSource: 'original',
+            });
+
+            expect(newSource).not.toContain(oldDebugId);
+            expect(newSource).toContain(newDebugId);
+        });
+
+        it('should replace old symbolication source with new symbolication source with non 1-1 snippet', () => {
+            const debugId = crypto.randomUUID();
+            const oldSymbolicationSource = 'original';
+            const newSymbolicationSource = crypto.randomUUID();
+
+            const debugIdGenerator = new DebugIdGenerator();
+            const oldSource = [
+                debugIdGenerator.generateSourceSnippet({ debugId, symbolicationSource: oldSymbolicationSource }).replace('new Error', 'new Error()'),
+                'foo',
+                'bar',
+            ].join('\n');
+
+            const newSource = debugIdGenerator.replaceDebugMetadata(oldSource, {
+                debugId,
+                symbolicationSource: newSymbolicationSource,
+            });
+
+            expect(newSource).not.toContain(oldSymbolicationSource);
+            expect(newSource).toContain(newSymbolicationSource);
+        });
+
+        it('should replace old snippet with new snippet with non 1-1 snippet', () => {
+            const debugId = crypto.randomUUID();
+            const symbolicationSource = crypto.randomUUID();
+
+            const debugIdGenerator = new DebugIdGenerator();
+            const oldSource = [debugIdGenerator.generateOldSourceSnippet(debugId).replace('new Error', 'new Error()'), 'foo', 'bar'].join('\n');
+
+            const newSource = debugIdGenerator.replaceDebugMetadata(
+                oldSource,
+                {
+                    debugId,
+                    symbolicationSource,
+                },
+                debugId,
+            );
+
+            const expected = JSON.stringify([
+                SOURCE_DEBUG_METADATA_PREFIX,
+                debugId,
+                symbolicationSource,
+                SOURCE_DEBUG_METADATA_SUFFIX,
+            ]);
+
+            expect(newSource).toContain(expected);
         });
     });
 });
