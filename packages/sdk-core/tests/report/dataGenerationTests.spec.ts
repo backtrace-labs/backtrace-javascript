@@ -1,9 +1,10 @@
-import { BacktraceReport, DebugIdProvider } from '../../src';
+import { BacktraceReport, DebugMetadataProvider } from '../../src';
 import { TimeHelper } from '../../src/common/TimeHelper';
 import { BacktraceStackFrame } from '../../src/model/data/BacktraceStackTrace';
 import { AttributeManager } from '../../src/modules/attribute/AttributeManager';
 import { V8StackTraceConverter } from '../../src/modules/converter/V8StackTraceConverter';
 import { BacktraceDataBuilder } from '../../src/modules/data/BacktraceDataBuilder';
+import { DebugMetadata } from '../../src/sourcemaps/models/DebugMetadata';
 
 describe('Data generation tests', () => {
     const sdkOptions = {
@@ -16,7 +17,7 @@ describe('Data generation tests', () => {
         sdkOptions,
         new V8StackTraceConverter(),
         new AttributeManager([]),
-        new DebugIdProvider(new V8StackTraceConverter()),
+        new DebugMetadataProvider(new V8StackTraceConverter()),
     );
 
     it('Should set sdk options in the Backtrace data', () => {
@@ -76,7 +77,7 @@ describe('Data generation tests', () => {
 
     it('Should append debug_identifier to each frame', () => {
         const stackTraceConverter = new V8StackTraceConverter();
-        const debugIdProvider = new DebugIdProvider(stackTraceConverter);
+        const debugIdProvider = new DebugMetadataProvider(stackTraceConverter);
 
         const frames: BacktraceStackFrame[] = [
             {
@@ -89,11 +90,56 @@ describe('Data generation tests', () => {
             },
         ];
 
-        const expected = 'DEBUG_ID';
-        const expectedFrames = frames.map((m) => ({ ...m, debug_identifier: expected }));
+        const expected: DebugMetadata = {
+            debugId: 'DEBUG_ID',
+        };
+
+        const expectedFrames = frames.map((m) => ({ ...m, debug_identifier: expected.debugId }));
 
         jest.spyOn(stackTraceConverter, 'convert').mockReturnValue(frames);
-        jest.spyOn(debugIdProvider, 'getDebugId').mockReturnValue(expected);
+        jest.spyOn(debugIdProvider, 'getDebugMetadata').mockReturnValue(expected);
+
+        const dataBuilder = new BacktraceDataBuilder(
+            sdkOptions,
+            stackTraceConverter,
+            new AttributeManager([]),
+            debugIdProvider,
+        );
+
+        const errorReport = new BacktraceReport(new Error());
+        const backtraceData = dataBuilder.build(errorReport);
+
+        expect(backtraceData.threads[backtraceData.mainThread].stack).toEqual(expectedFrames);
+    });
+
+    it('Should append symbolication_source to each frame', () => {
+        const stackTraceConverter = new V8StackTraceConverter();
+        const debugIdProvider = new DebugMetadataProvider(stackTraceConverter);
+
+        const frames: BacktraceStackFrame[] = [
+            {
+                funcName: 'x',
+                library: 'x',
+            },
+            {
+                funcName: 'y',
+                library: 'y',
+            },
+        ];
+
+        const expected: DebugMetadata = {
+            debugId: 'DEBUG_ID',
+            symbolicationSource: 'SYMBOLICATION_SOURCE',
+        };
+
+        const expectedFrames = frames.map((m) => ({
+            ...m,
+            debug_identifier: expected.debugId,
+            symbolication_source: expected.symbolicationSource,
+        }));
+
+        jest.spyOn(stackTraceConverter, 'convert').mockReturnValue(frames);
+        jest.spyOn(debugIdProvider, 'getDebugMetadata').mockReturnValue(expected);
 
         const dataBuilder = new BacktraceDataBuilder(
             sdkOptions,
@@ -149,7 +195,7 @@ describe('Data generation tests', () => {
                     get: () => providerAttributes,
                 },
             ]),
-            new DebugIdProvider(new V8StackTraceConverter()),
+            new DebugMetadataProvider(new V8StackTraceConverter()),
         );
 
         const data = dataBuilder.build(new BacktraceReport(new Error(), reportAttributes));
@@ -180,7 +226,7 @@ describe('Data generation tests', () => {
                     get: () => providerAnnotations,
                 },
             ]),
-            new DebugIdProvider(new V8StackTraceConverter()),
+            new DebugMetadataProvider(new V8StackTraceConverter()),
         );
 
         const data = dataBuilder.build(new BacktraceReport(new Error(), reportAnnotations));

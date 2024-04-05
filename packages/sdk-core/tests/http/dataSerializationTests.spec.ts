@@ -1,4 +1,4 @@
-import { BacktraceReport, DebugIdProvider } from '../../src';
+import { BacktraceReport, DebugMetadataProvider } from '../../src';
 import { jsonEscaper } from '../../src/common/jsonEscaper';
 import { AttributeManager } from '../../src/modules/attribute/AttributeManager';
 import { V8StackTraceConverter } from '../../src/modules/converter/V8StackTraceConverter';
@@ -15,7 +15,7 @@ describe('Data serialization tests', () => {
         sdkOptions,
         new V8StackTraceConverter(),
         new AttributeManager([]),
-        new DebugIdProvider(new V8StackTraceConverter()),
+        new DebugMetadataProvider(new V8StackTraceConverter()),
     );
 
     it('Should serialize basic BacktraceData object', () => {

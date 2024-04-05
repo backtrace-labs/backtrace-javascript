@@ -1,4 +1,4 @@
-import { BacktraceStackTraceConverter, DebugIdProvider } from '../..';
+import { BacktraceStackTraceConverter, DebugMetadataProvider } from '../..';
 import { SdkOptions } from '../../builder/SdkOptions';
 import { IdGenerator } from '../../common/IdGenerator';
 import { TimeHelper } from '../../common/TimeHelper';
@@ -15,14 +15,14 @@ export class BacktraceDataBuilder {
         private readonly _sdkOptions: SdkOptions,
         private readonly _stackTraceConverter: BacktraceStackTraceConverter,
         private readonly _attributeManager: AttributeManager,
-        private readonly _debugIdProvider: DebugIdProvider,
+        private readonly _debugMetadataProvider: DebugMetadataProvider,
     ) {}
 
     public build(report: BacktraceReport): BacktraceData {
         const { annotations, attributes } = this._attributeManager.get();
 
         const reportData = ReportDataBuilder.build(report.attributes);
-        const { threads, detectedDebugIdentifier } = this.getThreads(report);
+        const { threads, detectedDebugMetadata } = this.getThreads(report);
 
         const result: BacktraceData = {
             uuid: IdGenerator.uuid(),
@@ -45,7 +45,7 @@ export class BacktraceDataBuilder {
             },
         };
 
-        if (detectedDebugIdentifier) {
+        if (detectedDebugMetadata) {
             result.symbolication = 'sourcemap';
         }
 
@@ -54,7 +54,7 @@ export class BacktraceDataBuilder {
 
     private getThreads(report: BacktraceReport) {
         const threads: Record<string, BacktraceStackTrace> = {};
-        let detectedDebugIdentifier = false;
+        let detectedDebugMetadata = false;
 
         for (const [name, traceInfo] of Object.entries(report.stackTrace)) {
             let stackFrames: BacktraceStackFrame[];
@@ -69,12 +69,16 @@ export class BacktraceDataBuilder {
             }
 
             for (const frame of stackFrames) {
-                const debugIdentifier = this._debugIdProvider.getDebugId(frame.library);
-                if (!debugIdentifier) {
+                const debugMetadata = this._debugMetadataProvider.getDebugMetadata(frame.library);
+                if (!debugMetadata) {
                     continue;
                 }
-                detectedDebugIdentifier = true;
-                frame.debug_identifier = debugIdentifier;
+
+                const { debugId, symbolicationSource } = debugMetadata;
+
+                detectedDebugMetadata = true;
+                frame.debug_identifier = debugId;
+                frame.symbolication_source = symbolicationSource;
             }
 
             threads[name] = {
@@ -85,7 +89,7 @@ export class BacktraceDataBuilder {
         }
         return {
             threads,
-            detectedDebugIdentifier,
+            detectedDebugMetadata,
         };
     }
 }

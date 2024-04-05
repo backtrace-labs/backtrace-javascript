@@ -5,6 +5,7 @@ export interface BacktraceStackFrame {
     sourceCode?: string;
     library: string;
     debug_identifier?: string;
+    symbolication_source?: string;
 }
 
 /**

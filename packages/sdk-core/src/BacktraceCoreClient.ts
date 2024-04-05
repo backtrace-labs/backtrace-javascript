@@ -7,7 +7,7 @@ import {
     BacktraceRequestHandler,
     BacktraceSessionProvider,
     BacktraceSubmissionResponse,
-    DebugIdProvider,
+    DebugMetadataProvider,
     FileSystem,
     SdkOptions,
     SessionFiles,
@@ -159,7 +159,7 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
             this._sdkOptions,
             stackTraceConverter,
             this.attributeManager,
-            new DebugIdProvider(stackTraceConverter, setup.debugIdMapProvider),
+            new DebugMetadataProvider(stackTraceConverter, setup.debugMetadataMapProvider ?? setup.debugIdMapProvider),
         );
 
         if (this.options?.database?.enable === true && setup.fileSystem) {

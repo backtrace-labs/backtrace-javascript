@@ -10,7 +10,7 @@ import { MetricsQueue } from '../modules/metrics/MetricsQueue';
 import { SummedEvent } from '../modules/metrics/model/SummedEvent';
 import { UniqueEvent } from '../modules/metrics/model/UniqueEvent';
 import { FileSystem } from '../modules/storage';
-import { DebugIdMapProvider } from '../sourcemaps';
+import { DebugIdMapProvider, DebugMetadataMapProvider } from '../sourcemaps';
 import { SdkOptions } from './SdkOptions';
 
 export type PartialCoreClientSetup<
@@ -25,7 +25,11 @@ export interface CoreClientSetup<O extends BacktraceConfiguration = BacktraceCon
     readonly attributeProviders?: BacktraceAttributeProvider[];
     readonly stackTraceConverter?: BacktraceStackTraceConverter;
     readonly sessionProvider?: BacktraceSessionProvider;
+    /**
+     * @deprecated use `debugMetadataMapProvider` instead.
+     */
     readonly debugIdMapProvider?: DebugIdMapProvider;
+    readonly debugMetadataMapProvider?: DebugMetadataMapProvider;
     readonly breadcrumbsSetup?: BreadcrumbsSetup;
     readonly reportSubmission?: BacktraceReportSubmission;
     readonly fileSystem?: FileSystem;

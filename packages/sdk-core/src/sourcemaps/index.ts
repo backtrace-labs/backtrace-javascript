@@ -1,3 +1,3 @@
-export * from './DebugIdProvider';
-export * from './VariableDebugIdMapProvider';
-export * from './interfaces/DebugIdMapProvider';
+export * from './DebugMetadataProvider';
+export * from './VariableDebugMetadataMapProvider';
+export * from './interfaces/DebugMetadataMapProvider';
