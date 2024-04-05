@@ -1,6 +1,7 @@
 import {
     Asset,
     AssetWithContent,
+    DebugMetadata,
     Err,
     loadSourceMap,
     Ok,
@@ -152,13 +153,16 @@ export function validateUrl(url: string) {
 
 export function loadAssetsDebugId(sourceProcessor: SourceProcessor) {
     return function loadAssetsDebugId<T extends SourceAndOptionalSourceMap>(
-        asset: T & { readonly debugId?: string },
-    ): T & { readonly debugId?: string } {
+        asset: T & Partial<DebugMetadata>,
+    ): T & Partial<DebugMetadata> {
         if (asset.debugId) {
             return asset;
         }
 
-        const sourceDebugId = sourceProcessor.getSourceDebugId(asset.source.content);
+        const sourceDebugMetadata = sourceProcessor.getSourceDebugMetadata(asset.source.content);
+        const sourceDebugId = sourceDebugMetadata?.debugId;
+        const sourceSymbolicationSource = sourceDebugMetadata?.symbolicationSource;
+
         const sourceMapDebugId = asset.sourceMap
             ? sourceProcessor.getSourceMapDebugId(asset.sourceMap.content)
             : undefined;
@@ -168,7 +172,7 @@ export function loadAssetsDebugId(sourceProcessor: SourceProcessor) {
         }
 
         const debugId = sourceDebugId ?? sourceMapDebugId;
-        return { ...asset, debugId };
+        return { ...asset, debugId, symbolicationSource: sourceSymbolicationSource };
     };
 }
 

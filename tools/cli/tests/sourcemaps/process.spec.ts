@@ -92,6 +92,7 @@ describe('process', () => {
                         source,
                         expectAnythingOrNothing(),
                         expectAnythingOrNothing(),
+                        expectAnythingOrNothing(),
                     );
                 }
             }),
@@ -234,6 +235,7 @@ describe('process', () => {
                         source,
                         expectAnythingOrNothing(),
                         expectAnythingOrNothing(),
+                        expectAnythingOrNothing(),
                     );
                 }
             }),
@@ -306,6 +308,7 @@ describe('process', () => {
                 for (const source of Object.values(originalSources)) {
                     expect(processSourceSpy).toHaveBeenCalledWith(
                         source,
+                        expectAnythingOrNothing(),
                         expectAnythingOrNothing(),
                         expectAnythingOrNothing(),
                     );
@@ -513,6 +516,7 @@ describe('process', () => {
                         source,
                         expectAnythingOrNothing(),
                         expectAnythingOrNothing(),
+                        expectAnythingOrNothing(),
                     );
                 }
             }),
@@ -624,6 +628,7 @@ describe('process', () => {
                 for (const source of Object.values(originalSources)) {
                     expect(processSourceSpy).toHaveBeenCalledWith(
                         source,
+                        expectAnythingOrNothing(),
                         expectAnythingOrNothing(),
                         expectAnythingOrNothing(),
                     );
@@ -739,6 +744,7 @@ describe('process', () => {
                         source,
                         expectAnythingOrNothing(),
                         expectAnythingOrNothing(),
+                        expectAnythingOrNothing(),
                     );
                 }
             }),
@@ -813,6 +819,120 @@ describe('process', () => {
         );
     });
 
+    describe('old processed sources', () => {
+        it(
+            'should not fail',
+            withWorkingCopy('old-processed-sources', async (workingDir) => {
+                const result = await processSources({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: workingDir,
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+            }),
+        );
+
+        it(
+            'should call SourceProcessor with sources',
+            withWorkingCopy('old-processed-sources', async (workingDir) => {
+                const processSourceSpy = jest.spyOn(SourceProcessor.prototype, 'processSource');
+
+                const files = await glob(`${workingDir}/*.js`);
+                const originalSources = await readEachFile(files);
+
+                const result = await processSources({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: workingDir,
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+
+                for (const source of Object.values(originalSources)) {
+                    expect(processSourceSpy).toHaveBeenCalledWith(
+                        source,
+                        expectAnythingOrNothing(),
+                        expectAnythingOrNothing(),
+                        expectAnythingOrNothing(),
+                    );
+                }
+            }),
+        );
+
+        it(
+            'should call SourceProcessor with source maps',
+            withWorkingCopy('old-processed-sources', async (workingDir) => {
+                const processSourceMapSpy = jest.spyOn(SourceProcessor.prototype, 'processSourceMap');
+
+                const files = await glob(`${workingDir}/*.js.map`);
+                const originalSources = await readEachFile(files);
+
+                const result = await processSources({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: workingDir,
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+
+                for (const sourceMap of Object.values(originalSources)) {
+                    expect(processSourceMapSpy).toHaveBeenCalledWith(
+                        JSON.parse(sourceMap),
+                        expect.any(Number),
+                        expect.any(String),
+                    );
+                }
+            }),
+        );
+
+        it(
+            'should modify sources in place',
+            withWorkingCopy('old-processed-sources', async (workingDir) => {
+                const preHashes = await hashEachFile(await glob(`${workingDir}/*.js`));
+
+                const result = await processSources({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: workingDir,
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+                const postHashes = await hashEachFile(await glob(`${workingDir}/*.js`));
+
+                expectHashesToChange(preHashes, postHashes);
+            }),
+        );
+
+        it(
+            'should modify sourcemaps in place',
+            withWorkingCopy('processed-sources', async (workingDir) => {
+                const preHashes = await hashEachFile(await glob(`${workingDir}/*.js.map`));
+
+                const result = await processSources({
+                    logger: new CliLogger({ level: 'output', silent: true }),
+                    getHelpMessage,
+                    opts: {
+                        path: workingDir,
+                    },
+                });
+
+                assert(result.isOk(), result.data as string);
+                const postHashes = await hashEachFile(await glob(`${workingDir}/*.js.map`));
+
+                expectHashesToChange(preHashes, postHashes);
+            }),
+        );
+    });
+
     describe('processed sourcemaps', () => {
         it(
             'should not fail',
@@ -852,6 +972,7 @@ describe('process', () => {
                         source,
                         expectAnythingOrNothing(),
                         expectAnythingOrNothing(),
+                        expectAnythingOrNothing(),
                     );
                 }
             }),
@@ -878,6 +999,7 @@ describe('process', () => {
                 for (const source of Object.values(originalSources)) {
                     expect(processSourceSpy).toHaveBeenCalledWith(
                         source,
+                        expectAnythingOrNothing(),
                         expectAnythingOrNothing(),
                         expectAnythingOrNothing(),
                     );
@@ -997,6 +1119,7 @@ describe('process', () => {
                 for (const source of Object.values(originalSources)) {
                     expect(processSourceSpy).toHaveBeenCalledWith(
                         source,
+                        expectAnythingOrNothing(),
                         expectAnythingOrNothing(),
                         expectAnythingOrNothing(),
                     );

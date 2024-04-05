@@ -1,4 +1,10 @@
-import { Asset, AssetWithContent, RawSourceMap, RawSourceMapWithDebugId } from '@backtrace/sourcemap-tools';
+import {
+    Asset,
+    AssetWithContent,
+    DebugMetadata,
+    RawSourceMap,
+    RawSourceMapWithDebugId,
+} from '@backtrace/sourcemap-tools';
 
 export interface SourceAndOptionalSourceMapPaths {
     readonly source: Asset;
@@ -10,8 +16,7 @@ export interface SourceAndOptionalSourceMap {
     readonly sourceMap?: AssetWithContent<RawSourceMap>;
 }
 
-export interface ProcessedSourceAndOptionalSourceMap {
+export interface ProcessedSourceAndOptionalSourceMap extends DebugMetadata {
     readonly source: AssetWithContent<string>;
     readonly sourceMap?: AssetWithContent<RawSourceMapWithDebugId>;
-    readonly debugId: string;
 }

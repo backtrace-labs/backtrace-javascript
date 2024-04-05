@@ -192,15 +192,22 @@ export async function processSources({ opts, logger, getHelpMessage }: CommandCo
 export function processSource(force: boolean) {
     const sourceProcessor = new SourceProcessor(new DebugIdGenerator());
 
-    const getSourceDebugId = (asset: AssetWithContent<string>) => sourceProcessor.getSourceDebugId(asset.content);
+    const getSourceDebugMetadata = (asset: AssetWithContent<string>) =>
+        sourceProcessor.getSourceDebugMetadata(asset.content);
 
     const getSourceMapDebugId = (asset: AssetWithContent<RawSourceMap>) =>
         sourceProcessor.getSourceMapDebugId(asset.content);
 
-    const getDebugIds = (sourceAndSourceMap: SourceAndOptionalSourceMap) => ({
-        sourceDebugId: getSourceDebugId(sourceAndSourceMap.source),
-        sourceMapDebugId: sourceAndSourceMap.sourceMap ? getSourceMapDebugId(sourceAndSourceMap.sourceMap) : undefined,
-    });
+    const getDebugIds = (sourceAndSourceMap: SourceAndOptionalSourceMap) => {
+        const sourceDebugMetadata = getSourceDebugMetadata(sourceAndSourceMap.source);
+        return {
+            sourceDebugId: sourceDebugMetadata?.debugId,
+            sourceSymbolicationSource: sourceDebugMetadata?.symbolicationSource,
+            sourceMapDebugId: sourceAndSourceMap.sourceMap
+                ? getSourceMapDebugId(sourceAndSourceMap.sourceMap)
+                : undefined,
+        };
+    };
 
     return async function processSource(
         asset: SourceAndOptionalSourceMap,
@@ -209,11 +216,13 @@ export function processSource(force: boolean) {
             pipe(asset, async (asset): Promise<ProcessedSourceAndOptionalSourceMap> => {
                 const debugId = sourceDebugId ?? sourceMapDebugId;
 
+                const symbolicationSource = asset.sourceMap ? 'sourcemap' : 'original';
+
                 const {
                     source,
                     sourceMapOffset,
                     debugId: newDebugId,
-                } = await sourceProcessor.processSource(asset.source.content, debugId, force);
+                } = await sourceProcessor.processSource(asset.source.content, symbolicationSource, debugId, force);
 
                 const processedSourceMap = asset.sourceMap
                     ? await sourceProcessor.processSourceMap(asset.sourceMap.content, sourceMapOffset, newDebugId)

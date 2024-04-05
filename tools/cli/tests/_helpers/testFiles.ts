@@ -15,6 +15,7 @@ export type TestFiles =
     | 'original'
     | 'processed'
     | 'processed-sources'
+    | 'old-processed-sources'
     | 'processed-sourcemaps'
     | 'processed-with-sources'
     | 'with-sources'
