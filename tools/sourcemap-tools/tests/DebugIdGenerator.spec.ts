@@ -357,7 +357,9 @@ describe('DebugIdGenerator', () => {
 
             const debugIdGenerator = new DebugIdGenerator();
             const oldSource = [
-                debugIdGenerator.generateSourceSnippet({ debugId: oldDebugId, symbolicationSource: 'original' }).replace('new Error', 'new Error()'),
+                debugIdGenerator
+                    .generateSourceSnippet({ debugId: oldDebugId, symbolicationSource: 'original' })
+                    .replace('new Error', 'new Error()'),
                 'foo',
                 'bar',
             ].join('\n');
@@ -378,7 +380,9 @@ describe('DebugIdGenerator', () => {
 
             const debugIdGenerator = new DebugIdGenerator();
             const oldSource = [
-                debugIdGenerator.generateSourceSnippet({ debugId, symbolicationSource: oldSymbolicationSource }).replace('new Error', 'new Error()'),
+                debugIdGenerator
+                    .generateSourceSnippet({ debugId, symbolicationSource: oldSymbolicationSource })
+                    .replace('new Error', 'new Error()'),
                 'foo',
                 'bar',
             ].join('\n');
@@ -397,7 +401,11 @@ describe('DebugIdGenerator', () => {
             const symbolicationSource = crypto.randomUUID();
 
             const debugIdGenerator = new DebugIdGenerator();
-            const oldSource = [debugIdGenerator.generateOldSourceSnippet(debugId).replace('new Error', 'new Error()'), 'foo', 'bar'].join('\n');
+            const oldSource = [
+                debugIdGenerator.generateOldSourceSnippet(debugId).replace('new Error', 'new Error()'),
+                'foo',
+                'bar',
+            ].join('\n');
 
             const newSource = debugIdGenerator.replaceDebugMetadata(
                 oldSource,
