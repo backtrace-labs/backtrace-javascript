@@ -17,7 +17,10 @@ export class VariableDebugMetadataMapProvider implements DebugMetadataMapProvide
     constructor(private readonly _variable: DebugMetadataContainer) {}
 
     public getDebugMetadataMap(): Record<string, unknown> {
-        return this._variable[SOURCE_DEBUG_METADATA_VARIABLE] ?? this.getDebugIdMap();
+        return {
+            ...this.getDebugIdMap(),
+            ...this._variable[SOURCE_DEBUG_METADATA_VARIABLE],
+        };
     }
 
     public getDebugIdMap(): Record<string, unknown> {
