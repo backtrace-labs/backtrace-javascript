@@ -180,16 +180,34 @@ export interface BacktraceSessionReplayPrivacyOptions {
 
 export interface BacktraceSessionRecorderOptions {
     /**
-     * Maximum recorded event count to be sent with the report. Use `false` to disable the limit.
+     * Maximum recorded event count to be sent with the report.
+     *
+     * Set `disableMaxEventCount` to `true` to disable the limit.
      * @default 100
      */
-    readonly maxEventCount?: number | false;
+    readonly maxEventCount?: number;
 
     /**
-     * Maximum timeframe for recorded events to be sent with the report. Use `false` to disable the limit.
+     * Disables `maxEventCount` limit.
+     *
      * @default false
      */
-    readonly maxTime?: number | false;
+    readonly disableMaxEventCount?: boolean;
+
+    /**
+     * Maximum timeframe for recorded events to be sent with the report.
+     *
+     * Set `disableMaxTime` to `true` to disable the limit.
+     * @default undefined
+     */
+    readonly maxTime?: number;
+
+    /**
+     * Disables `maxEventCount` limit.
+     *
+     * @default false
+     */
+    readonly disableMaxTime?: boolean;
 
     /**
      * Sampling options. Use those to reduce event count or size.

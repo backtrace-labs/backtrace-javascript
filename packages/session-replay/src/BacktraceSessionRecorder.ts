@@ -3,14 +3,6 @@ import { eventWithTime } from '@rrweb/types';
 import { record } from 'rrweb';
 import { BacktraceSessionRecorderOptions } from './options';
 
-function defaultIfNotFalse<T>(value: T | false, defaultValue?: T) {
-    if (value === false) {
-        return undefined;
-    }
-
-    return value ?? defaultValue;
-}
-
 export class BacktraceSessionRecorder implements BacktraceAttachment {
     public readonly name = 'bt-session-replay-0';
     public readonly type = 'dynamic';
@@ -25,8 +17,8 @@ export class BacktraceSessionRecorder implements BacktraceAttachment {
 
     constructor(private readonly _options: BacktraceSessionRecorderOptions) {
         this._events = [];
-        this._maxEventCount = defaultIfNotFalse(_options.maxEventCount, 100);
-        this._maxTime = defaultIfNotFalse(_options.maxTime, undefined);
+        this._maxEventCount = !_options.disableMaxEventCount ? _options.maxEventCount ?? 100 : undefined;
+        this._maxTime = !_options.disableMaxTime ? _options.maxTime : undefined;
     }
 
     public start() {
