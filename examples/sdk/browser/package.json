@@ -41,6 +41,7 @@
     },
     "dependencies": {
         "@reduxjs/toolkit": "^1.9.5",
-        "@backtrace/browser": "^0.1.0"
+        "@backtrace/browser": "^0.2.0",
+        "@backtrace/session-replay": "^0.0.1"
     }
 }

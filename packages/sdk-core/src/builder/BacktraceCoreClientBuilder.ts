@@ -1,5 +1,6 @@
 import { BacktraceReportSubmission } from '../model/http/BacktraceReportSubmission';
 import { BacktraceRequestHandler } from '../model/http/BacktraceRequestHandler';
+import { BacktraceModule } from '../modules/BacktraceModule';
 import { BacktraceAttributeProvider } from '../modules/attribute/BacktraceAttributeProvider';
 import { BreadcrumbsEventSubscriber, BreadcrumbsStorage } from '../modules/breadcrumbs';
 import { BacktraceStackTraceConverter } from '../modules/converter';
@@ -79,6 +80,15 @@ export abstract class BacktraceCoreClientBuilder<S extends Partial<CoreClientSet
 
     public useUniqueMetricsQueue(queue: MetricsQueue<UniqueEvent>) {
         this.clientSetup.uniqueMetricsQueue = queue;
+        return this;
+    }
+
+    public useModule(module: BacktraceModule) {
+        if (!this.clientSetup.modules) {
+            this.clientSetup.modules = [module];
+        } else {
+            this.clientSetup.modules.push(module);
+        }
         return this;
     }
 }
