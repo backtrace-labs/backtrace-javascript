@@ -24,7 +24,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(get) {
     
     [dictionary setObject: [NSString stringWithFormat:@"%0.0lu", [[NSProcessInfo processInfo] processorCount]] forKey:@"cpu.count"];
     [dictionary setObject: [NSString stringWithFormat:@"%0.0lu", [[NSProcessInfo processInfo] activeProcessorCount]] forKey:@"cpu.count.active"];
-    [dictionary setObject: [NSString stringWithFormat:@"%0.0llu", totalSystemTime] forKey:@"cpu.system"];
+    [dictionary setObject: [NSString stringWithFormat:@"%0.0llu", totalSystemTime] forKey:@"cpu.sys"];
     [dictionary setObject: [NSString stringWithFormat:@"%0.0llu", totalUserTime] forKey:@"cpu.user"];
     [dictionary setObject: [NSString stringWithFormat:@"%0.0llu", totalIdleTime] forKey:@"cpu.idle"];
     [dictionary setObject: [NSString stringWithFormat:@"%0.0llu", totalNiceTime] forKey:@"cpu.nice"];

@@ -14,9 +14,9 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(get) {
                                    (task_info_t)&info,
                                    &systemMemorySize);
     if( kerr == KERN_SUCCESS ) {
-        [dictionary setObject:[NSString stringWithFormat:@"%0.0llu", (info.resident_size / 1048576)] forKey: @"process.vm.rss.size"];
-        [dictionary setObject:[NSString stringWithFormat:@"%0.0llu", (info.virtual_size / 1048576)] forKey: @"process.vm.vma.size"];
-        [dictionary setObject:[NSString stringWithFormat:@"%0.0llu", (info.resident_size_peak / 1048576)] forKey: @"process.vm.rss.peak"];
+        [dictionary setObject:[NSString stringWithFormat:@"%0.0llu", (info.resident_size / 1048576)] forKey: @"vm.rss.size"];
+        [dictionary setObject:[NSString stringWithFormat:@"%0.0llu", (info.virtual_size / 1048576)] forKey: @"vm.vma.size"];
+        [dictionary setObject:[NSString stringWithFormat:@"%0.0llu", (info.resident_size_peak / 1048576)] forKey: @"vm.rss.peak"];
     }
     
     // read memory usage
