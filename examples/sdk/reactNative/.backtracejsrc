@@ -1,0 +1,11 @@
+{
+    "run": {
+        "process": true,
+        "upload": true,
+        "add-sources": true
+    },
+    "upload": {
+        "url": "https://<your-backtrace-url>:6098/post?format=sourcemap&token=<your-symbols-access-token>",
+        "include-sources": true
+    }
+}
