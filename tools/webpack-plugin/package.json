@@ -58,7 +58,7 @@
         "webpack-sources-webpack-4": "npm:webpack-sources@^1.4.1"
     },
     "dependencies": {
-        "@backtrace/sourcemap-tools": "^0.2.2"
+        "@backtrace/sourcemap-tools": "^0.2.3"
     },
     "peerDependencies": {
         "webpack": "^5.85.0 || ^4.46.0"

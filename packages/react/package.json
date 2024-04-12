@@ -48,7 +48,7 @@
     },
     "dependencies": {
         "@backtrace/browser": "^0.3.0",
-        "@backtrace/sdk-core": "^0.3.0"
+        "@backtrace/sdk-core": "^0.3.1"
     },
     "peerDependencies": {
         "react": ">=16.8.0"

@@ -49,7 +49,7 @@
         "typescript": "^5.0.4"
     },
     "dependencies": {
-        "@backtrace/sourcemap-tools": "^0.2.2"
+        "@backtrace/sourcemap-tools": "^0.2.3"
     },
     "peerDependencies": {
         "rollup": "^3.26.3"
