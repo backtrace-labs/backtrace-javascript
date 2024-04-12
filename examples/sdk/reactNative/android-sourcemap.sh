@@ -4,9 +4,9 @@
 # By using it, you can upload source maps to Backtrace and built a release version of the app
 # with hermesc support. This script uses .backtracejsrc file available in your react-native directory.
 # 
-# Additional information. This script prepares your bundle for you. In the relase build, to prevent "double" application build
+# Additional information: This script prepares your bundle for you. In the release build, to prevent "double" application build
 # while building final apk/aab, in the build.gradle file, please use `debuggableVariants = ["release"]`. Otherwise 
-# Gradle and react-native will try to build twice the application and override application version with source map support.
+# Gradle and react-native will try to build the application twice and override application version with source map support.
 
 BUILD_DIR=${1:-build}
 BUNDLE_PATH="$BUILD_DIR/index.android.bundle"
@@ -47,7 +47,7 @@ node ./node_modules/react-native/scripts/compose-source-maps.js \
     $HBC_MAP_OUTPUT \
     -o $SOURCE_MAP_PATH
 
-# uplaod data to Backtrace
+# upload data to Backtrace
 backtrace-js run $BUNDLE_PATH
 
 # prepare android application

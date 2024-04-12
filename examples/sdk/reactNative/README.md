@@ -17,5 +17,5 @@ android-sourcemap.sh script.
 ./android-sourcemap.sh ./optional-path-to-directory
 ```
 
-The scirpt will prepare a release APK verison of your react-native application with the source-map and hermes support.
+The script will prepare a release APK version of your React Native application with the sourcemap and Hermes support.
 The APK can be found in the ./android/app/build/outputs/apk/release/ directory.
