@@ -113,6 +113,11 @@ NSString* _oomCache;
         return NO;
     }
     
+    NSString* applicationState = [state objectForKey:@"state"];
+    if([applicationState isEqualToString: @"background"]) {
+         return NO;
+    }
+    
     NSString* osVersion = [state objectForKey:@"osVersion"];
     if(osVersion == nil || ![osVersion isEqualToString: [[NSProcessInfo processInfo] operatingSystemVersionString]]) {
         return NO;

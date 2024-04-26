@@ -71,7 +71,7 @@ static void onCrash(siginfo_t *info, ucontext_t *uap, void *context) {
         [_crashReporter setCrashCallbacks:&callback];
         
         if(enableOomSupport) {
-            _oomWatcher = [[OomWatcher alloc] init];
+            _oomWatcher = [[OomWatcher alloc] initWithDatabasePath:databasePath];
         }
         
         instance = self;
@@ -118,7 +118,6 @@ static void onCrash(siginfo_t *info, ucontext_t *uap, void *context) {
         NSLog(@"Backtrace: Cannot initialize crash reporter. Reason: %@ %@", error, [error userInfo]);
         return;
     }
-    
     if(_oomWatcher != nil) {
         if([_oomWatcher shouldReportOom:hasPendingCrashReport]) {
             NSDictionary* state = [_oomWatcher getOomState];
