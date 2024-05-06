@@ -13,7 +13,6 @@ This example app shows features available in the @backtrace/react-native package
 Before executing any step:
 
 -   Please update .backtracejsrc file with your symbols submission URL and your sourcemap settings.
--   please install @backtrace/javascript-cli library.
 
 On Android: You can verify our example app with the source map support. In order to do that, please use the
 android-sourcemap.sh script.
@@ -53,7 +52,7 @@ export HERMES_CLI_PATH="$(pwd)/../ios-hermesc.sh"
 cp "$CONFIGURATION_BUILD_DIR/main.jsbundle" $SOURCE_MAP_DIR
 
 # process source map with javascript code
-backtrace-js run --config "$(pwd)/../.backtracejsrc" --path "$SOURCE_MAP_DIR/main.jsbundle"
+npx --yes backtrace-js run --config "$(pwd)/../.backtracejsrc" --path "$SOURCE_MAP_DIR/main.jsbundle"
 
 ```
 

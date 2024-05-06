@@ -26,7 +26,7 @@ npx react-native bundle \
 
 
 # add source map identifier to final javascript bundle
-npx backtrace-js process --path=$BUNDLE_PATH
+npx --yes backtrace-js process --path=$BUNDLE_PATH
 
 HBC_OUTPUT="$BUILD_DIR/app.hbc"
 HBC_MAP_OUTPUT="$HBC_OUTPUT.map"
@@ -48,7 +48,7 @@ node ./node_modules/react-native/scripts/compose-source-maps.js \
     -o $SOURCE_MAP_PATH
 
 # upload data to Backtrace
-backtrace-js run $BUNDLE_PATH
+npx --yes backtrace-js run $BUNDLE_PATH
 
 # prepare android application
 mkdir -p ./android/app/src/main/assets
