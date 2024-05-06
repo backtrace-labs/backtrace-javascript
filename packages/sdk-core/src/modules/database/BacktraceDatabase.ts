@@ -206,6 +206,9 @@ export class BacktraceDatabase implements BacktraceModule {
             const records = [...this._databaseRecordContext.getBucket(bucketIndex)];
 
             for (const record of records) {
+                if (!this.enabled) {
+                    return;
+                }
                 if (record.locked) {
                     continue;
                 }
