@@ -16,6 +16,6 @@ if [[ ! -f "$APP_BUNDLE_FILE" ]]; then
     exit 2
 fi
 
-npx backtrace-js process --path=$APP_BUNDLE_FILE
+npx --yes @backtrace/javascript-cli process --path=$APP_BUNDLE_FILE
 
 $HERMES_CLI_PATH_OVERRIDE $@

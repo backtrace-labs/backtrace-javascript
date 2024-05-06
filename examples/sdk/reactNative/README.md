@@ -52,7 +52,7 @@ export HERMES_CLI_PATH="$(pwd)/../ios-hermesc.sh"
 cp "$CONFIGURATION_BUILD_DIR/main.jsbundle" $SOURCE_MAP_DIR
 
 # process source map with javascript code
-npx --yes backtrace-js run --config "$(pwd)/../.backtracejsrc" --path "$SOURCE_MAP_DIR/main.jsbundle"
+npx --yes @backtrace/javascript-cli run  --config "$(pwd)/../.backtracejsrc" --path "$SOURCE_MAP_DIR/main.jsbundle"
 
 ```
 
