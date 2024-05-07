@@ -203,6 +203,9 @@ export class BacktraceDatabase implements BacktraceModule {
         await this.send(abortSignal);
         const records = this.get().filter((n) => n.timestamp <= start);
         for (const record of records) {
+            if (abortSignal?.aborted) {
+                return;
+            }
             this.remove(record);
         }
     }
