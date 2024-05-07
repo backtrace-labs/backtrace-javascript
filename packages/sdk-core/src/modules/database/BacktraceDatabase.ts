@@ -18,6 +18,10 @@ export class BacktraceDatabase implements BacktraceModule {
         return this._enabled;
     }
 
+    /**
+     * Abort controller to cancel asynchronous database operations when
+     * the database is being disabled by the user.
+     */
     private readonly _abortController = new AbortController();
 
     private readonly _databaseRecordContext: BacktraceDatabaseContext;
