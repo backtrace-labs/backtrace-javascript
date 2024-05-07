@@ -1,3 +1,4 @@
+import { AbortController, anySignal } from '../../common/AbortController';
 import { IdGenerator } from '../../common/IdGenerator';
 import { TimeHelper } from '../../common/TimeHelper';
 import { BacktraceAttachment } from '../../model/attachment';
@@ -17,6 +18,12 @@ export class BacktraceDatabase implements BacktraceModule {
     public get enabled() {
         return this._enabled;
     }
+
+    /**
+     * Abort controller to cancel asynchronous database operations when
+     * the database is being disabled by the user.
+     */
+    private readonly _abortController = new AbortController();
 
     private readonly _databaseRecordContext: BacktraceDatabaseContext;
     private readonly _storageProviders: BacktraceDatabaseStorageProvider[] = [];
@@ -158,6 +165,7 @@ export class BacktraceDatabase implements BacktraceModule {
     public dispose() {
         this._enabled = false;
         clearInterval(this._intervalId);
+        this._abortController.abort();
     }
 
     /**
@@ -188,30 +196,40 @@ export class BacktraceDatabase implements BacktraceModule {
     /**
      * Sends all records available in the database to Backtrace and removes them
      * no matter if the submission process was successful or not.
+     * @param abortSignal optional abort signal to cancel sending requests
      */
-    public async flush() {
+    public async flush(abortSignal?: AbortSignal) {
         const start = TimeHelper.now();
-        await this.send();
+        await this.send(abortSignal);
         const records = this.get().filter((n) => n.timestamp <= start);
         for (const record of records) {
+            if (abortSignal?.aborted) {
+                return;
+            }
             this.remove(record);
         }
     }
+
     /**
      * Sends all records available in the database to Backtrace.
+     * @param abortSignal optional abort signal to cancel sending requests
      */
-    public async send() {
+    public async send(abortSignal?: AbortSignal) {
         for (let bucketIndex = 0; bucketIndex < this._databaseRecordContext.bucketCount; bucketIndex++) {
             // make a copy of records to not update the array after each remove
             const records = [...this._databaseRecordContext.getBucket(bucketIndex)];
+            const signal = anySignal(abortSignal, this._abortController.signal);
 
             for (const record of records) {
+                if (!this.enabled) {
+                    return;
+                }
                 if (record.locked) {
                     continue;
                 }
                 try {
                     record.locked = true;
-                    const result = await this._requestHandler.send(record.data, record.attachments);
+                    const result = await this._requestHandler.send(record.data, record.attachments, signal);
                     if (result.status === 'Ok') {
                         this.remove(record);
                         continue;
