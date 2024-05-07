@@ -196,6 +196,7 @@ export class BacktraceDatabase implements BacktraceModule {
     /**
      * Sends all records available in the database to Backtrace and removes them
      * no matter if the submission process was successful or not.
+     * @param abortSignal optional abort signal to cancel sending requests
      */
     public async flush(abortSignal?: AbortSignal) {
         const start = TimeHelper.now();
@@ -215,7 +216,7 @@ export class BacktraceDatabase implements BacktraceModule {
             // make a copy of records to not update the array after each remove
             const records = [...this._databaseRecordContext.getBucket(bucketIndex)];
             const signal = anySignal(abortSignal, this._abortController.signal);
-            
+
             for (const record of records) {
                 if (!this.enabled) {
                     return;
