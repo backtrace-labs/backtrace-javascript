@@ -1,3 +1,4 @@
+import { anySignal, AbortController } from '../../common/AbortController';
 import { IdGenerator } from '../../common/IdGenerator';
 import { TimeHelper } from '../../common/TimeHelper';
 import { BacktraceAttachment } from '../../model/attachment';
@@ -196,9 +197,9 @@ export class BacktraceDatabase implements BacktraceModule {
      * Sends all records available in the database to Backtrace and removes them
      * no matter if the submission process was successful or not.
      */
-    public async flush() {
+    public async flush(abortSignal?: AbortSignal) {
         const start = TimeHelper.now();
-        await this.send();
+        await this.send(abortSignal);
         const records = this.get().filter((n) => n.timestamp <= start);
         for (const record of records) {
             this.remove(record);
@@ -207,13 +208,14 @@ export class BacktraceDatabase implements BacktraceModule {
     /**
      * Sends all records available in the database to Backtrace.
      */
-    public async send() {
+    public async send(abortSignal?: AbortSignal) {
         for (let bucketIndex = 0; bucketIndex < this._databaseRecordContext.bucketCount; bucketIndex++) {
             // make a copy of records to not update the array after each remove
             const records = [...this._databaseRecordContext.getBucket(bucketIndex)];
-
+            const signal = anySignal(abortSignal, this._abortController.signal);
             for (const record of records) {
                 if (!this.enabled) {
+                    signal.throwIfAborted();
                     return;
                 }
                 if (record.locked) {
@@ -221,11 +223,7 @@ export class BacktraceDatabase implements BacktraceModule {
                 }
                 try {
                     record.locked = true;
-                    const result = await this._requestHandler.send(
-                        record.data,
-                        record.attachments,
-                        this._abortController.signal,
-                    );
+                    const result = await this._requestHandler.send(record.data, record.attachments, signal);
                     if (result.status === 'Ok') {
                         this.remove(record);
                         continue;
