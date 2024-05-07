@@ -18,6 +18,8 @@ export class BacktraceDatabase implements BacktraceModule {
         return this._enabled;
     }
 
+    private readonly _abortController = new AbortController();
+
     private readonly _databaseRecordContext: BacktraceDatabaseContext;
     private readonly _storageProviders: BacktraceDatabaseStorageProvider[] = [];
 
@@ -158,6 +160,7 @@ export class BacktraceDatabase implements BacktraceModule {
     public dispose() {
         this._enabled = false;
         clearInterval(this._intervalId);
+        this._abortController.abort();
     }
 
     /**
@@ -214,7 +217,11 @@ export class BacktraceDatabase implements BacktraceModule {
                 }
                 try {
                     record.locked = true;
-                    const result = await this._requestHandler.send(record.data, record.attachments);
+                    const result = await this._requestHandler.send(
+                        record.data,
+                        record.attachments,
+                        this._abortController.signal,
+                    );
                     if (result.status === 'Ok') {
                         this.remove(record);
                         continue;
