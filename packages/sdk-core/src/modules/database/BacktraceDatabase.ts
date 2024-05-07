@@ -1,4 +1,4 @@
-import { anySignal, AbortController } from '../../common/AbortController';
+import { AbortController, anySignal } from '../../common/AbortController';
 import { IdGenerator } from '../../common/IdGenerator';
 import { TimeHelper } from '../../common/TimeHelper';
 import { BacktraceAttachment } from '../../model/attachment';
@@ -205,17 +205,19 @@ export class BacktraceDatabase implements BacktraceModule {
             this.remove(record);
         }
     }
+
     /**
      * Sends all records available in the database to Backtrace.
+     * @param abortSignal optional abort signal to cancel sending requests
      */
     public async send(abortSignal?: AbortSignal) {
         for (let bucketIndex = 0; bucketIndex < this._databaseRecordContext.bucketCount; bucketIndex++) {
             // make a copy of records to not update the array after each remove
             const records = [...this._databaseRecordContext.getBucket(bucketIndex)];
             const signal = anySignal(abortSignal, this._abortController.signal);
+            
             for (const record of records) {
                 if (!this.enabled) {
-                    signal.throwIfAborted();
                     return;
                 }
                 if (record.locked) {
