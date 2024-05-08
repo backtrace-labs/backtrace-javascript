@@ -16,6 +16,11 @@ export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
 
     private readonly JSON_HEADERS = {
         'Content-type': 'application/json',
+        'Transfer-Encoding': 'chunked',
+    };
+
+    private readonly MULTIPART_HEADERS = {
+        'Transfer-Encoding': 'chunked',
     };
 
     constructor(
@@ -63,7 +68,10 @@ export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
                         rejectUnauthorized: this._options.ignoreSslCertificate === true,
                         timeout: this._timeout,
                         method: 'POST',
-                        headers: typeof payload === 'string' ? this.JSON_HEADERS : payload.getHeaders(),
+                        headers:
+                            typeof payload === 'string'
+                                ? this.JSON_HEADERS
+                                : { ...payload.getHeaders(), ...this.MULTIPART_HEADERS },
                     },
                     (response) => {
                         let result = '';
