@@ -12,6 +12,7 @@ export class ReactNativeRequestHandler implements BacktraceRequestHandler {
     private readonly _timeout: number;
     private readonly JSON_HEADERS = {
         'Content-type': 'application/json',
+        'Transfer-Encoding': 'chunked',
     };
     private readonly MULTIPART_HEADERS = {
         'Transfer-Encoding': 'chunked',
