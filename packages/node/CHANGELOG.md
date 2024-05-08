@@ -1,6 +1,6 @@
 # Version 0.3.1
 
--   added a new header to `BacktraceNodeRequestHandler`
+-   added a new HTTP header to report submission layer
 
 # Version 0.3.0
 
