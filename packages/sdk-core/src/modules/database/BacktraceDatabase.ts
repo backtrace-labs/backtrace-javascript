@@ -1,4 +1,4 @@
-import { AbortController, anySignal } from '../../common/AbortController';
+import { anySignal, createAbortController } from '../../common/AbortController';
 import { IdGenerator } from '../../common/IdGenerator';
 import { TimeHelper } from '../../common/TimeHelper';
 import { BacktraceAttachment } from '../../model/attachment';
@@ -23,7 +23,7 @@ export class BacktraceDatabase implements BacktraceModule {
      * Abort controller to cancel asynchronous database operations when
      * the database is being disabled by the user.
      */
-    private readonly _abortController = new AbortController();
+    private readonly _abortController = createAbortController();
 
     private readonly _databaseRecordContext: BacktraceDatabaseContext;
     private readonly _storageProviders: BacktraceDatabaseStorageProvider[] = [];
