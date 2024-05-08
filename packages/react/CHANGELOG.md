@@ -1,3 +1,7 @@
+# Version 0.3.1
+
+-   added a new header to `BacktraceNodeRequestHandler`
+
 # Version 0.3.0
 
 -   update `@backtrace/sdk-core` to `0.3.0`
