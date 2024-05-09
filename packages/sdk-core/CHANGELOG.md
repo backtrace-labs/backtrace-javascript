@@ -1,3 +1,8 @@
+# Version 0.3.2
+
+-   added cancellation token support to `BacktraceDatabase` send/flush methods (#245)
+-   prevent database from sending reports via send/flush methods when the client is disabled (#245)
+
 # Version 0.3.1
 
 -   allow to destroy the client instance on dispose()

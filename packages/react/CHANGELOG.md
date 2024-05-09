@@ -1,3 +1,7 @@
+# Version 0.3.1
+
+-   added a new HTTP header to report submission layer (#246)
+
 # Version 0.3.0
 
 -   update `@backtrace/sdk-core` to `0.3.0`
