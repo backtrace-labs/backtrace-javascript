@@ -15,7 +15,7 @@ const booleanSize = (value: boolean) => (value ? 4 : 5);
 const undefinedSize = 0;
 const nullSize = 'null'.length;
 
-const arraySize = (array: unknown[], replacer?: (this: unknown, key: string, value: unknown) => unknown): number => {
+function arraySize(array: unknown[], replacer?: (this: unknown, key: string, value: unknown) => unknown): number {
     const bracketLength = 2;
     const commaLength = array.length - 1;
     let elementsLength = 0;
@@ -33,7 +33,7 @@ const arraySize = (array: unknown[], replacer?: (this: unknown, key: string, val
     }
 
     return bracketLength + commaLength + elementsLength;
-};
+}
 
 const objectSize = (obj: object, replacer?: (this: unknown, key: string, value: unknown) => unknown): number => {
     let jsonObject: object;
@@ -126,6 +126,15 @@ function _jsonSize(
     return 0;
 }
 
-export function jsonSize(value: unknown, replacer?: (this: unknown, key: string, value: unknown) => unknown) {
+/**
+ * Calculates size of the object as it would be serialized into JSON.
+ *
+ * _Should_ return the same value as `JSON.stringify(value, replacer).length`.
+ * This may not be 100% accurate, but should work for our requirements.
+ * @param value Value to compute length for.
+ * @param replacer A function that transforms the results as in `JSON.stringify`.
+ * @returns Final string length.
+ */
+export function jsonSize(value: unknown, replacer?: (this: unknown, key: string, value: unknown) => unknown): number {
     return _jsonSize(undefined, '', value, replacer);
 }
