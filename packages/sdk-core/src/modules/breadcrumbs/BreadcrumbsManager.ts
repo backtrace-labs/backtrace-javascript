@@ -56,7 +56,7 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
             maximumAttributesDepth: defaultIfNotFalse(configuration?.maximumAttributesDepth, 2),
             maximumBreadcrumbMessageLength: defaultIfNotFalse(configuration?.maximumBreadcrumbMessageLength, 255),
             maximumBreadcrumbSize: defaultIfNotFalse(configuration?.maximumBreadcrumbSize, 64 * 1024),
-            maximumBreadcrumbsSize: defaultIfNotFalse(configuration?.maximumBreadcrumbsSize, 1024 * 1024),
+            maximumTotalBreadcrumbsSize: defaultIfNotFalse(configuration?.maximumTotalBreadcrumbsSize, 1024 * 1024),
         };
 
         this.breadcrumbsType = configuration?.eventType ?? defaultBreadcurmbType;
