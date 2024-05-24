@@ -86,7 +86,7 @@ export interface BacktraceBreadcrumbsSettings {
      * Use `false` to disable the limit.
      * @default 1048576 // 1MB
      */
-    maximumBreadcrumbsSize?: number | false;
+    maximumTotalBreadcrumbsSize?: number | false;
 
     /**
      * Inspects breadcrumb and allows to modify it. If the undefined value is being

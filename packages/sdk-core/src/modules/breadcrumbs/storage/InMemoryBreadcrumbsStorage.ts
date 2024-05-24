@@ -22,7 +22,7 @@ export class InMemoryBreadcrumbsStorage implements BreadcrumbsStorage, Backtrace
     private _breadcrumbs: OverwritingArray<Breadcrumb>;
 
     constructor(private readonly _limits: BreadcrumbsStorageLimits) {
-        this._breadcrumbs = new OverwritingArray<Breadcrumb>(_limits.maximumBreadcrumbs ?? Infinity);
+        this._breadcrumbs = new OverwritingArray<Breadcrumb>(_limits.maximumBreadcrumbs ?? 100);
     }
 
     public getAttachments(): BacktraceAttachment<unknown>[] {
