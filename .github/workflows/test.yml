@@ -6,7 +6,7 @@ on:
     pull_request:
 
 jobs:
-    build:
+    test_linux:
         runs-on: ubuntu-latest
 
         strategy:
@@ -44,8 +44,9 @@ jobs:
             - run: npm run lint
             - run: npm run format:check
             - run: npm test
-    
-    runs-on: windows-latest
+
+    test_windows:
+        runs-on: windows-latest
         steps:
             - uses: actions/checkout@v4
             - name: Use Node.js 18.x
