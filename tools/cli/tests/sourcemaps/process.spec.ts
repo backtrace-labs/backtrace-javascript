@@ -4,7 +4,7 @@ import { glob } from 'glob';
 import 'jest-extended';
 import { CliLogger } from '../../src/logger';
 import { processSources } from '../../src/sourcemaps/process';
-import { expectAllKeysToChange, filterKeys, getHelpMessage } from '../_helpers/common';
+import { expectAllKeysToChange, expectSamePaths, filterKeys, getHelpMessage, pathTuple } from '../_helpers/common';
 import { expectHashesToChange, hashEachFile, hashFiles, readEachFile, withWorkingCopy } from '../_helpers/testFiles';
 
 export const expectAnythingOrNothing = () => expect.toBeOneOf([expect.anything(), undefined, null]);
@@ -25,7 +25,7 @@ describe('process', () => {
                 assert(result.isOk(), result.data as string);
 
                 const expected = await glob(`${workingDir}/*.js`);
-                expect(result.data.map((d) => d.source.path)).toEqual(expect.arrayContaining(expected));
+                expectSamePaths(result.data.map((d) => d.source.path), expected)
             }),
         );
 
@@ -44,7 +44,7 @@ describe('process', () => {
                 assert(result.isOk(), result.data as string);
 
                 const expected = await glob(`${workingDir}/entry*.js`);
-                expect(result.data.map((d) => d.source.path)).toEqual(expect.arrayContaining(expected));
+                expectSamePaths(result.data.map((d) => d.source.path), expected)
             }),
         );
     });
@@ -686,8 +686,8 @@ describe('process', () => {
                     getHelpMessage,
                     opts: {
                         path: [
-                            `${workingDir}/entry1.js:${workingDir}/sourcemap1.js.map`,
-                            `${workingDir}/entry2.js:${workingDir}/sourcemap2.js.map`,
+                            pathTuple(`${workingDir}/entry1.js`, `${workingDir}/sourcemap1.js.map`),
+                            pathTuple(`${workingDir}/entry2.js`, `${workingDir}/sourcemap2.js.map`),
                         ],
                     },
                 });
@@ -709,8 +709,8 @@ describe('process', () => {
                     getHelpMessage,
                     opts: {
                         path: [
-                            `${workingDir}/entry1.js:${workingDir}/sourcemap1.js.map`,
-                            `${workingDir}/entry2.js:${workingDir}/sourcemap2.js.map`,
+                            pathTuple(`${workingDir}/entry1.js`, `${workingDir}/sourcemap1.js.map`),
+                            pathTuple(`${workingDir}/entry2.js`, `${workingDir}/sourcemap2.js.map`),
                         ],
                     },
                 });
@@ -738,8 +738,8 @@ describe('process', () => {
                     getHelpMessage,
                     opts: {
                         path: [
-                            `${workingDir}/entry1.js:${workingDir}/sourcemap1.js.map`,
-                            `${workingDir}/entry2.js:${workingDir}/sourcemap2.js.map`,
+                            pathTuple(`${workingDir}/entry1.js`, `${workingDir}/sourcemap1.js.map`),
+                            pathTuple(`${workingDir}/entry2.js`, `${workingDir}/sourcemap2.js.map`),
                         ],
                     },
                 });
@@ -761,8 +761,8 @@ describe('process', () => {
                     getHelpMessage,
                     opts: {
                         path: [
-                            `${workingDir}/entry1.js:${workingDir}/sourcemap1.js.map`,
-                            `${workingDir}/entry2.js:${workingDir}/sourcemap2.js.map`,
+                            pathTuple(`${workingDir}/entry1.js`, `${workingDir}/sourcemap1.js.map`),
+                            pathTuple(`${workingDir}/entry2.js`, `${workingDir}/sourcemap2.js.map`),
                         ],
                     },
                 });

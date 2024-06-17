@@ -10,7 +10,8 @@ import * as addSourcesCmd from '../../src/sourcemaps/add-sources';
 import * as processCmd from '../../src/sourcemaps/process';
 import { runSourcemapCommands } from '../../src/sourcemaps/run';
 import * as uploadCmd from '../../src/sourcemaps/upload';
-import { getHelpMessage, mockUploader } from '../_helpers/common';
+import { getHelpMessage, mockUploader, pathTuple } from '../_helpers/common';
+import { expectPath } from '../_helpers/matchers';
 import { hashFiles, withWorkingCopy } from '../_helpers/testFiles';
 
 async function mockOptions(workingDir: string, options: CliOptions) {
@@ -53,7 +54,7 @@ describe('run', () => {
 
                 const expected = [...(await glob(`${workingDir}/*.js`)), ...(await glob(`${workingDir}/*.js.map`))];
                 expect(result.data.flatMap((d) => [d.source.path, d.sourceMap.path])).toEqual(
-                    expect.arrayContaining(expected),
+                    expect.arrayContaining(expected.map(expectPath)),
                 );
             }),
         );
@@ -89,7 +90,7 @@ describe('run', () => {
                     ...(await glob(`${workingDir}/entry*.js.map`)),
                 ];
                 expect(result.data.flatMap((d) => [d.source.path, d.sourceMap.path])).toEqual(
-                    expect.arrayContaining(expected),
+                    expect.arrayContaining(expected.map(expectPath)),
                 );
             }),
         );
@@ -172,7 +173,7 @@ describe('run', () => {
                 const files = await glob(`${workingDir}/*.js`);
                 for (const file of files) {
                     expect(innerProcess).toBeCalledWith(
-                        expect.objectContaining({ source: expect.objectContaining({ path: file }) }),
+                        expect.objectContaining({ source: expect.objectContaining({ path: expectPath(file) }) }),
                     );
                 }
             }),
@@ -284,7 +285,7 @@ describe('run', () => {
 
                 const files = await glob(`${workingDir}/*.js.map`);
                 for (const file of files) {
-                    expect(innerAddSources).toBeCalledWith(expect.objectContaining({ path: file }));
+                    expect(innerAddSources).toBeCalledWith(expect.objectContaining({ path: expectPath(file) }));
                 }
             }),
         );
@@ -499,7 +500,7 @@ describe('run', () => {
 
                 const expected = [...(await glob(`${workingDir}/*.js`)), ...(await glob(`${workingDir}/*.js.map`))];
                 expect(result.data.flatMap((d) => [d.source.path, d.sourceMap.path])).toEqual(
-                    expect.arrayContaining(expected),
+                    expect.arrayContaining(expected.map(expectPath)),
                 );
             }),
         );
@@ -533,7 +534,7 @@ describe('run', () => {
 
                 const expected = [...(await glob(`${workingDir}/*.js`)), ...(await glob(`${workingDir}/*.js.map`))];
                 expect(result.data.flatMap((d) => [d.source.path, d.sourceMap.path])).toEqual(
-                    expect.arrayContaining(expected),
+                    expect.arrayContaining(expected.map(e => expectPath(e))),
                 );
             }),
         );
@@ -563,7 +564,7 @@ describe('run', () => {
                     logger: new CliLogger({ level: 'output', silent: true }),
                     getHelpMessage,
                     opts: {
-                        path: [`${entry1Path}:${sourcemap1Path}`, `${entry2Path}:${sourcemap2Path}`],
+                        path: [pathTuple(entry1Path, sourcemap1Path), pathTuple(entry2Path, sourcemap2Path)],
                         config,
                     },
                 });
@@ -572,7 +573,7 @@ describe('run', () => {
 
                 const expected = [entry1Path, entry2Path, sourcemap1Path, sourcemap2Path];
                 expect(result.data.flatMap((d) => [d.source.path, d.sourceMap.path])).toEqual(
-                    expect.arrayContaining(expected),
+                    expect.arrayContaining(expected.map(expectPath)),
                 );
             }),
         );

@@ -3,7 +3,8 @@ import assert from 'assert';
 import { glob } from 'glob';
 import { CliLogger } from '../../src/logger';
 import { addSourcesToSourcemaps } from '../../src/sourcemaps/add-sources';
-import { expectAllKeysToChange, filterKeys, getHelpMessage } from '../_helpers/common';
+import { expectAllKeysToChange, expectSamePaths, filterKeys, getHelpMessage, pathTuple } from '../_helpers/common';
+import { expectPath } from '../_helpers/matchers';
 import { expectHashesToChange, hashEachFile, hashFiles, withWorkingCopy } from '../_helpers/testFiles';
 
 describe('add-sources', () => {
@@ -26,7 +27,7 @@ describe('add-sources', () => {
                 assert(result.isOk(), result.data as string);
 
                 const expected = await glob(`${workingDir}/*.js.map`);
-                expect(result.data.map((d) => d.path)).toEqual(expect.arrayContaining(expected));
+                expectSamePaths(result.data.map((d) => d.path), expected)
             }),
         );
 
@@ -45,7 +46,7 @@ describe('add-sources', () => {
                 assert(result.isOk(), result.data as string);
 
                 const expected = await glob(`${workingDir}/entry*.js.map`);
-                expect(result.data.map((d) => d.path)).toEqual(expect.arrayContaining(expected));
+                expectSamePaths(result.data.map((d) => d.path), expected)
             }),
         );
     });
@@ -83,7 +84,7 @@ describe('add-sources', () => {
                 const files = await glob(`${workingDir}/*.js.map`);
 
                 for (const file of files) {
-                    expect(spy).toBeCalledWith(expect.anything(), file, expect.any(Boolean));
+                    expect(spy).toBeCalledWith(expect.anything(), expectPath(file), expect.any(Boolean));
                 }
             }),
         );
@@ -171,7 +172,7 @@ describe('add-sources', () => {
                 const files = await glob(`${workingDir}/*.js.map`);
 
                 for (const file of files) {
-                    expect(spy).toBeCalledWith(expect.anything(), file, expect.any(Boolean));
+                    expect(spy).toBeCalledWith(expect.anything(), expectPath(file), expect.any(Boolean));
                 }
             }),
         );
@@ -230,7 +231,7 @@ describe('add-sources', () => {
                 const files = await glob(`${workingDir}/*.js.map`);
 
                 for (const file of files) {
-                    expect(spy).toBeCalledWith(expect.anything(), file, expect.any(Boolean));
+                    expect(spy).toBeCalledWith(expect.anything(), expectPath(file), expect.any(Boolean));
                 }
             }),
         );
@@ -413,7 +414,7 @@ describe('add-sources', () => {
                 const files = await glob(`${workingDir}/*.js.map`);
 
                 for (const file of files) {
-                    expect(spy).toBeCalledWith(expect.anything(), file, expect.any(Boolean));
+                    expect(spy).toBeCalledWith(expect.anything(), expectPath(file), expect.any(Boolean));
                 }
             }),
         );
@@ -472,7 +473,7 @@ describe('add-sources', () => {
                 const files = await glob(`${workingDir}/*.js.map`);
 
                 for (const file of files) {
-                    expect(spy).toBeCalledWith(expect.anything(), file, expect.any(Boolean));
+                    expect(spy).toBeCalledWith(expect.anything(), expectPath(file), expect.any(Boolean));
                 }
             }),
         );
@@ -507,8 +508,8 @@ describe('add-sources', () => {
                     getHelpMessage,
                     opts: {
                         path: [
-                            `${workingDir}/entry1.js:${workingDir}/sourcemap1.js.map`,
-                            `${workingDir}/entry2.js:${workingDir}/sourcemap2.js.map`,
+                            pathTuple(`${workingDir}/entry1.js`, `${workingDir}/sourcemap1.js.map`),
+                            pathTuple(`${workingDir}/entry2.js`, `${workingDir}/sourcemap2.js.map`),
                         ],
                     },
                 });
@@ -527,8 +528,8 @@ describe('add-sources', () => {
                     getHelpMessage,
                     opts: {
                         path: [
-                            `${workingDir}/entry1.js:${workingDir}/sourcemap1.js.map`,
-                            `${workingDir}/entry2.js:${workingDir}/sourcemap2.js.map`,
+                            pathTuple(`${workingDir}/entry1.js`, `${workingDir}/sourcemap1.js.map`),
+                            pathTuple(`${workingDir}/entry2.js`, `${workingDir}/sourcemap2.js.map`),
                         ],
                     },
                 });
@@ -537,7 +538,7 @@ describe('add-sources', () => {
                 const files = await glob(`${workingDir}/*.js.map`);
 
                 for (const file of files) {
-                    expect(spy).toBeCalledWith(expect.anything(), file, expect.any(Boolean));
+                    expect(spy).toBeCalledWith(expect.anything(), expectPath(file), expect.any(Boolean));
                 }
             }),
         );
@@ -552,8 +553,8 @@ describe('add-sources', () => {
                     getHelpMessage,
                     opts: {
                         path: [
-                            `${workingDir}/entry1.js:${workingDir}/sourcemap1.js.map`,
-                            `${workingDir}/entry2.js:${workingDir}/sourcemap2.js.map`,
+                            pathTuple(`${workingDir}/entry1.js`, `${workingDir}/sourcemap1.js.map`),
+                            pathTuple(`${workingDir}/entry2.js`, `${workingDir}/sourcemap2.js.map`),
                         ],
                     },
                 });
