@@ -112,8 +112,8 @@ export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
                         this.reason instanceof Error
                             ? this.reason
                             : typeof this.reason === 'string'
-                            ? new Error(this.reason)
-                            : new Error('Operation cancelled.');
+                              ? new Error(this.reason)
+                              : new Error('Operation cancelled.');
 
                     request.destroy(reason);
                 }

@@ -17,7 +17,10 @@ export interface BacktraceReportSubmission {
 
 export class RequestBacktraceReportSubmission {
     private readonly _submissionUrl: string;
-    constructor(options: BacktraceConfiguration, private readonly _requestHandler: BacktraceRequestHandler) {
+    constructor(
+        options: BacktraceConfiguration,
+        private readonly _requestHandler: BacktraceRequestHandler,
+    ) {
         this._submissionUrl = SubmissionUrlInformation.toJsonReportSubmissionUrl(options.url, options.token);
     }
 

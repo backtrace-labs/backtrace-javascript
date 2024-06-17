@@ -10,7 +10,10 @@ export class BacktraceReportSubmissionResult<T> {
     private _result?: T;
     private constructor(response: T);
     private constructor(_status: BacktraceSubmissionStatus, _message?: string);
-    private constructor(statusOrResponse: T | BacktraceSubmissionStatus, public readonly message?: string) {
+    private constructor(
+        statusOrResponse: T | BacktraceSubmissionStatus,
+        public readonly message?: string,
+    ) {
         if (this.isSubmissionResponse(statusOrResponse)) {
             this.status = statusOrResponse;
             return;

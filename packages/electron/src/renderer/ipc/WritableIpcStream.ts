@@ -15,7 +15,10 @@ export class WritableIpcStream<W> extends WritableStream<W> {
 class WritableIpcStreamSink<W> implements UnderlyingSink<W> {
     private _isPaused = false;
 
-    constructor(private readonly _name: string, private readonly _ipc: IpcTransport) {
+    constructor(
+        private readonly _name: string,
+        private readonly _ipc: IpcTransport,
+    ) {
         this._ipc.on(IpcEvents.streamEvent(_name, 'pause'), () => (this._isPaused = true));
         this._ipc.on(IpcEvents.streamEvent(_name, 'resume'), () => (this._isPaused = false));
     }

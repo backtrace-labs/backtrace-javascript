@@ -14,7 +14,10 @@ import { IpcRpc } from '../../common/ipc/IpcRpc';
 import { WritableIpcStream } from '../ipc/WritableIpcStream';
 
 export class IpcReportSubmission implements BacktraceReportSubmission {
-    constructor(private readonly _ipcRpc: IpcRpc, private readonly _ipcTransport: IpcTransport) {}
+    constructor(
+        private readonly _ipcRpc: IpcRpc,
+        private readonly _ipcTransport: IpcTransport,
+    ) {}
 
     public send(
         data: BacktraceData,

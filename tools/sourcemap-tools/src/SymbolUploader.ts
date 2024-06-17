@@ -30,7 +30,10 @@ export interface SymbolRequest {
 export class SymbolUploader {
     private readonly _url: URL;
 
-    constructor(url: string | URL, private readonly _options?: SymbolUploaderOptions) {
+    constructor(
+        url: string | URL,
+        private readonly _options?: SymbolUploaderOptions,
+    ) {
         this._url = new URL(url);
     }
 

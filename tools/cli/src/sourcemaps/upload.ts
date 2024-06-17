@@ -290,8 +290,8 @@ export async function uploadSourcemaps({ opts, logger, getHelpMessage }: Command
                               assets,
                           })
                         : assets.length
-                        ? saveArchiveCommand(assets)
-                        : Ok<UploadResultWithAssets>({ rxid: '<no sourcemaps uploaded>', assets }),
+                          ? saveArchiveCommand(assets)
+                          : Ok<UploadResultWithAssets>({ rxid: '<no sourcemaps uploaded>', assets }),
                 ),
                 R.map(output(logger)),
             ),
@@ -340,7 +340,7 @@ export function uploadAssets(uploadUrl: string, options: SymbolUploaderOptions) 
 export function saveAssets(outputPath: string) {
     return function saveAssets(assets: AssetWithContent<RawSourceMapWithDebugId>[]): Promise<UploadResult> {
         const stream = fs.createWriteStream(outputPath);
-        return pipe(stream, pipeAssets(assets), () => ({ rxid: outputPath } as UploadResult));
+        return pipe(stream, pipeAssets(assets), () => ({ rxid: outputPath }) as UploadResult);
     };
 }
 

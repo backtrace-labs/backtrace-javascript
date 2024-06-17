@@ -7,7 +7,10 @@ export class IpcSummedMetricsQueue implements MetricsQueue<SummedEvent> {
     public readonly submissionUrl = '';
     public readonly maximumEvents = -1;
 
-    constructor(private readonly _ipcTransport: IpcTransport, private readonly _ipcRpc: IpcRpc) {}
+    constructor(
+        private readonly _ipcTransport: IpcTransport,
+        private readonly _ipcRpc: IpcRpc,
+    ) {}
 
     public add(event: SummedEvent): void {
         this._ipcTransport.emit(IpcEvents.addSummedMetric, event);

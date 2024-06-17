@@ -17,7 +17,10 @@ export interface WindowAttributeProviderOptions {
 }
 
 export class WindowAttributeProvider implements BacktraceAttributeProvider {
-    constructor(private readonly _window: BrowserWindow, private readonly _options?: WindowAttributeProviderOptions) {}
+    constructor(
+        private readonly _window: BrowserWindow,
+        private readonly _options?: WindowAttributeProviderOptions,
+    ) {}
 
     public readonly type = 'dynamic';
 
