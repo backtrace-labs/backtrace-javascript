@@ -27,7 +27,10 @@ describe('add-sources', () => {
                 assert(result.isOk(), result.data as string);
 
                 const expected = await glob(`${workingDir}/*.js.map`);
-                expectSamePaths(result.data.map((d) => d.path), expected)
+                expectSamePaths(
+                    result.data.map((d) => d.path),
+                    expected,
+                );
             }),
         );
 
@@ -46,7 +49,10 @@ describe('add-sources', () => {
                 assert(result.isOk(), result.data as string);
 
                 const expected = await glob(`${workingDir}/entry*.js.map`);
-                expectSamePaths(result.data.map((d) => d.path), expected)
+                expectSamePaths(
+                    result.data.map((d) => d.path),
+                    expected,
+                );
             }),
         );
     });

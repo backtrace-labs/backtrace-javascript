@@ -534,7 +534,7 @@ describe('run', () => {
 
                 const expected = [...(await glob(`${workingDir}/*.js`)), ...(await glob(`${workingDir}/*.js.map`))];
                 expect(result.data.flatMap((d) => [d.source.path, d.sourceMap.path])).toEqual(
-                    expect.arrayContaining(expected.map(e => expectPath(e))),
+                    expect.arrayContaining(expected.map((e) => expectPath(e))),
                 );
             }),
         );

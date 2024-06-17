@@ -25,7 +25,10 @@ describe('process', () => {
                 assert(result.isOk(), result.data as string);
 
                 const expected = await glob(`${workingDir}/*.js`);
-                expectSamePaths(result.data.map((d) => d.source.path), expected)
+                expectSamePaths(
+                    result.data.map((d) => d.source.path),
+                    expected,
+                );
             }),
         );
 
@@ -44,7 +47,10 @@ describe('process', () => {
                 assert(result.isOk(), result.data as string);
 
                 const expected = await glob(`${workingDir}/entry*.js`);
-                expectSamePaths(result.data.map((d) => d.source.path), expected)
+                expectSamePaths(
+                    result.data.map((d) => d.source.path),
+                    expected,
+                );
             }),
         );
     });
