@@ -40,16 +40,16 @@ export function expectAllKeysToChange<T extends Record<string, unknown>>(obj1: T
 }
 
 export function expectSamePaths(actual: string[], expected: string[]) {
-    const actualAbsolute = actual.map(p => path.resolve(p))
-    const expectedAbsolute = expected.map(p => path.resolve(p))
+    const actualAbsolute = actual.map((p) => path.resolve(p));
+    const expectedAbsolute = expected.map((p) => path.resolve(p));
 
-    expect(actualAbsolute).toEqual(expect.arrayContaining(expectedAbsolute))
+    expect(actualAbsolute).toEqual(expect.arrayContaining(expectedAbsolute));
 }
 
 export function pathTuple(a: string, b: string) {
     if (process.platform === 'win32') {
-        return `${a}::${b}`
+        return `${a}::${b}`;
     } else {
-        return `${a}:${b}`
+        return `${a}:${b}`;
     }
 }
