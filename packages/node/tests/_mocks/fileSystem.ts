@@ -27,8 +27,8 @@ export function mockStreamFileSystem(files?: Record<string, string>): MockedFile
                     const str = Buffer.isBuffer(chunk)
                         ? chunk.toString('utf-8')
                         : typeof chunk === 'string'
-                        ? chunk
-                        : String(chunk).toString();
+                          ? chunk
+                          : String(chunk).toString();
 
                     const fullPath = path.resolve(p);
                     if (!fs.files[fullPath]) {

@@ -7,7 +7,11 @@ import { ipcHandshake } from '../../common/ipc/ipcHandshake';
 export class ReadableIpcStream extends Readable {
     private _isConnected = false;
 
-    constructor(private readonly _name: string, private readonly _ipc: IpcTransport, opts?: ReadableOptions) {
+    constructor(
+        private readonly _name: string,
+        private readonly _ipc: IpcTransport,
+        opts?: ReadableOptions,
+    ) {
         super(opts);
 
         const close = () => this.destroy();

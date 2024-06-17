@@ -13,7 +13,7 @@
         "format": "prettier --write '**/*.ts'",
         "lint": "eslint . --ext .ts",
         "watch": "tsc -w",
-        "test": "NODE_ENV=test jest"
+        "test": "cross-env NODE_ENV=test jest"
     },
     "repository": {
         "type": "git",

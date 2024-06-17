@@ -9,7 +9,10 @@ const ATTRIBUTE_FILE_NAME = 'bt-attributes';
 export class FileAttributeManager implements BacktraceModule {
     private _attributeManager?: AttributeManager;
 
-    constructor(private readonly _fileSystem: FileSystem, private _fileName?: string) {}
+    constructor(
+        private readonly _fileSystem: FileSystem,
+        private _fileName?: string,
+    ) {}
 
     public static create(fileSystem: FileSystem) {
         return new FileAttributeManager(fileSystem);

@@ -31,7 +31,7 @@
         "clean": "rimraf \"lib\"",
         "format:check": "eslint \"**/*.{js,ts,tsx}\"",
         "prepublishOnly": "bob build",
-        "test": "NODE_ENV=test jest"
+        "test": "cross-env NODE_ENV=test jest"
     },
     "keywords": [
         "Error",

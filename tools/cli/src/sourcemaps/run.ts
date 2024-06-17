@@ -261,7 +261,7 @@ export async function runSourcemapCommands({ opts, logger, getHelpMessage }: Com
                       logTraceAssets('processing source and sourcemap'),
                       processSource(processOptions.force ?? false),
                       logDebugAssets('processed source and sourcemap'),
-                      (result) => ({ ...result, processed: true } as SourceAndSourceMap & AssetResult),
+                      (result) => ({ ...result, processed: true }) as SourceAndSourceMap & AssetResult,
                   )
                 : pass,
             addSources
@@ -273,9 +273,9 @@ export async function runSourcemapCommands({ opts, logger, getHelpMessage }: Com
                           R.map(logDebugAsset('source added to sourcemap')),
                           R.map(
                               ({ content }) =>
-                                  ({ ...assets, sourceMap: { ...assets.sourceMap, content } } as SourceAndSourceMap),
+                                  ({ ...assets, sourceMap: { ...assets.sourceMap, content } }) as SourceAndSourceMap,
                           ),
-                          R.map((result) => ({ ...result, sourceAdded: true } as SourceAndSourceMap & AssetResult)),
+                          R.map((result) => ({ ...result, sourceAdded: true }) as SourceAndSourceMap & AssetResult),
                       )
                 : Ok,
             R.map(
@@ -340,8 +340,8 @@ export async function runSourcemapCommands({ opts, logger, getHelpMessage }: Com
                       uploadOptions['dry-run']
                           ? Ok({ rxid: '<dry-run>' })
                           : assets.length
-                          ? saveArchiveCommand(assets)
-                          : Ok(null),
+                            ? saveArchiveCommand(assets)
+                            : Ok(null),
                   ),
                   R.map(
                       logInfo((result: UploadResult | null) =>

@@ -1,7 +1,11 @@
 export class OverwritingArrayIterator<T> implements IterableIterator<T> {
     private _index?: number;
 
-    constructor(private readonly _source: T[], private readonly _offset: number, private readonly _size: number) {}
+    constructor(
+        private readonly _source: T[],
+        private readonly _offset: number,
+        private readonly _size: number,
+    ) {}
 
     [Symbol.iterator](): IterableIterator<T> {
         return new OverwritingArrayIterator(this._source, this._offset, this._size);

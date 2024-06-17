@@ -11,7 +11,10 @@ export class BacktraceDatabaseFileRecord implements BacktraceDatabaseRecord {
     public readonly timestamp: number;
     public locked: boolean;
 
-    private constructor(record: BacktraceDatabaseRecord, public readonly attachments: BacktraceAttachment[]) {
+    private constructor(
+        record: BacktraceDatabaseRecord,
+        public readonly attachments: BacktraceAttachment[],
+    ) {
         this.data = record.data;
         this.id = record.id;
         this.count = record.count;

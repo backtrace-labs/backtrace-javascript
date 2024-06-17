@@ -22,16 +22,19 @@ async function main() {
         throw new Error('first argument must be a package.json path');
     }
 
-    const optionValues = options.reduce((val, k) => {
-        const opt = argv.find((v) => v.startsWith(`${k}=`));
-        if (opt) {
-            val[k] = opt.replace(`${k}=`, '');
-        } else {
-            val[k] = argv.includes(k);
-        }
+    const optionValues = options.reduce(
+        (val, k) => {
+            const opt = argv.find((v) => v.startsWith(`${k}=`));
+            if (opt) {
+                val[k] = opt.replace(`${k}=`, '');
+            } else {
+                val[k] = argv.includes(k);
+            }
 
-        return val;
-    }, {} as Record<(typeof options)[number], boolean | string>);
+            return val;
+        },
+        {} as Record<(typeof options)[number], boolean | string>,
+    );
 
     const dryRun = optionValues['--dry-run'];
     if (dryRun) {
