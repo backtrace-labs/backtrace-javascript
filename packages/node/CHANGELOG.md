@@ -1,3 +1,7 @@
+# Version 0.3.2
+
+-   remove `native-reg` and use `reg query` executable to determine Windows machine GUID (#250)
+
 # Version 0.3.1
 
 -   added a new HTTP header to report submission layer (#246)
