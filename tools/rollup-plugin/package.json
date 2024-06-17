@@ -12,7 +12,7 @@
         "build:rollup": "rollup --config rollup.config.js",
         "clean": "tsc -b ./tsconfig.build.json --clean && rimraf \"lib\"",
         "format": "prettier --write '**/*.ts'",
-        "prepublishOnly": "NODE_ENV=production npm run build",
+        "prepublishOnly": "cross-env NODE_ENV=production npm run build",
         "lint": "eslint . --ext .ts",
         "watch": "tsc -b ./tsconfig.build.json -w"
     },
