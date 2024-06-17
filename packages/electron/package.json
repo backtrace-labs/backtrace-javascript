@@ -9,9 +9,9 @@
         "clean": "rimraf common main renderer",
         "format": "prettier --write '**/*.ts'",
         "lint": "eslint src --ext .ts",
-        "prepublishOnly": "NODE_ENV=production npm run build",
+        "prepublishOnly": "cross-env NODE_ENV=production npm run build",
         "watch": "webpack -w",
-        "test": "NODE_ENV=test jest --passWithNoTests"
+        "test": "cross-env NODE_ENV=test jest --passWithNoTests"
     },
     "keywords": [
         "Error",
