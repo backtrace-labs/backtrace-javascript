@@ -9,7 +9,10 @@ export class BacktraceDatabaseFileStorageProvider implements BacktraceDatabaseSt
     private _enabled = true;
 
     private readonly RECORD_SUFFIX = '-record.json';
-    private constructor(private readonly _fileSystem: FileSystem, private readonly _path: string) {}
+    private constructor(
+        private readonly _fileSystem: FileSystem,
+        private readonly _path: string,
+    ) {}
 
     /**
      * Create a provider if provided options are valid

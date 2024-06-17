@@ -9,9 +9,9 @@
         "clean": "rimraf \"lib\"",
         "format": "prettier --write '**/*.ts'",
         "lint": "eslint . --ext .ts",
-        "prepublishOnly": "NODE_ENV=production npm run build",
+        "prepublishOnly": "cross-env NODE_ENV=production npm run build",
         "watch": "webpack -w",
-        "test": "NODE_ENV=test jest"
+        "test": "cross-env NODE_ENV=test jest"
     },
     "engines": {
         "node": ">=14"

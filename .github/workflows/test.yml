@@ -6,7 +6,7 @@ on:
     pull_request:
 
 jobs:
-    build:
+    test_linux:
         runs-on: ubuntu-latest
 
         strategy:
@@ -14,9 +14,9 @@ jobs:
                 node-version: [16.x, 18.x, 20.x]
 
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
             - name: Use Node.js ${{ matrix.node-version }}
-              uses: actions/setup-node@v3
+              uses: actions/setup-node@v4
               with:
                   node-version: ${{ matrix.node-version }}
             - run: npm ci
@@ -33,12 +33,26 @@ jobs:
                 node-version: [14.x]
 
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
             - name: Use Node.js ${{ matrix.node-version }}
-              uses: actions/setup-node@v3
+              uses: actions/setup-node@v4
               with:
                   node-version: ${{ matrix.node-version }}
             - run: npm i -g npm@8
+            - run: npm ci
+            - run: npm run build
+            - run: npm run lint
+            - run: npm run format:check
+            - run: npm test
+
+    test_windows:
+        runs-on: windows-latest
+        steps:
+            - uses: actions/checkout@v4
+            - name: Use Node.js 18.x
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 18.x
             - run: npm ci
             - run: npm run build
             - run: npm run lint

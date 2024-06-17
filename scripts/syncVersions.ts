@@ -65,10 +65,13 @@ function updateVersions(packageJson: PackageJson, currentVersions: Record<string
     const args = process.argv.slice(2);
     const packageJsonPathsToSync = args.length ? args : workspacePackageJsonPaths;
 
-    const currentVersions = workspacePackageJsons.reduce((obj, pj) => {
-        obj[pj.name] = pj.version;
-        return obj;
-    }, {} as Record<string, string>);
+    const currentVersions = workspacePackageJsons.reduce(
+        (obj, pj) => {
+            obj[pj.name] = pj.version;
+            return obj;
+        },
+        {} as Record<string, string>,
+    );
 
     for (const packageJsonPath of packageJsonPathsToSync) {
         const packageJson = await loadPackageJson(packageJsonPath);

@@ -121,8 +121,11 @@ export class BacktraceMainElectronModule implements BacktraceModule {
 }
 
 function toStringDictionary(record: Record<string, unknown>): Record<string, string> {
-    return Object.keys(record).reduce((obj, key) => {
-        obj[key] = record[key]?.toString() ?? '';
-        return obj;
-    }, {} as Record<string, string>);
+    return Object.keys(record).reduce(
+        (obj, key) => {
+            obj[key] = record[key]?.toString() ?? '';
+            return obj;
+        },
+        {} as Record<string, string>,
+    );
 }

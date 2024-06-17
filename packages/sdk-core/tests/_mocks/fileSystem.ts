@@ -10,10 +10,13 @@ export type MockedFileSystem<T extends FileSystem> = {
 export function mockFileSystem(files?: Record<string, string>): MockedFileSystem<FileSystem> {
     const fs = Object.entries(files ?? {})
         .map(([k, v]) => [path.resolve(k), v])
-        .reduce((obj, [k, v]) => {
-            obj[k] = v;
-            return obj;
-        }, {} as Record<string, string>);
+        .reduce(
+            (obj, [k, v]) => {
+                obj[k] = v;
+                return obj;
+            },
+            {} as Record<string, string>,
+        );
 
     function readDir(dir: string) {
         return Object.keys(fs)
@@ -53,7 +56,7 @@ export function mockFileSystem(files?: Record<string, string>): MockedFileSystem
                     filePath: p,
                     name: path.basename(p),
                     get: jest.fn().mockReturnValue(fs[path.resolve(p)]),
-                } as BacktraceFileAttachment),
+                }) as BacktraceFileAttachment,
         ),
     };
 }

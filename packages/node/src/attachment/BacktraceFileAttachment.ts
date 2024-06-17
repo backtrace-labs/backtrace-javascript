@@ -6,7 +6,10 @@ import { Readable } from 'stream';
 export class BacktraceFileAttachment implements CoreBacktraceFileAttachment<Readable> {
     public readonly name: string;
 
-    constructor(public readonly filePath: string, name?: string) {
+    constructor(
+        public readonly filePath: string,
+        name?: string,
+    ) {
         this.name = name ?? path.basename(this.filePath);
     }
 

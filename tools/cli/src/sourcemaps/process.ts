@@ -215,7 +215,7 @@ export function processSource(force: boolean) {
                         source: { ...asset.source, content: result.source },
                         sourceMap: { ...asset.sourceMap, content: result.sourceMap },
                         debugId: result.debugId,
-                    } as ProcessedSourceAndSourceMap),
+                    }) as ProcessedSourceAndSourceMap,
             ),
         );
     };

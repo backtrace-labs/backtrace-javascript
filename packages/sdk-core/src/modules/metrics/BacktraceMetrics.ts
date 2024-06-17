@@ -126,10 +126,13 @@ export class BacktraceMetrics implements BacktraceModule {
     private convertAttributes(attributes: Record<string, AttributeType>) {
         return Object.keys(attributes)
             .filter((n) => attributes[n] != null)
-            .reduce((acc, n) => {
-                acc[n] = attributes[n]?.toString();
-                return acc;
-            }, {} as Record<string, AttributeType>);
+            .reduce(
+                (acc, n) => {
+                    acc[n] = attributes[n]?.toString();
+                    return acc;
+                },
+                {} as Record<string, AttributeType>,
+            );
     }
 
     private async handleAbort(fn: () => Promise<unknown>): Promise<boolean> {

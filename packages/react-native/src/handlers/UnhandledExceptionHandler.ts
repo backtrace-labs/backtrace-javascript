@@ -96,8 +96,8 @@ export class UnhandledExceptionHandler implements ExceptionHandler {
                         message = cachedPrettyFormat
                             ? cachedPrettyFormat(rejection)
                             : typeof rejection === 'string'
-                            ? rejection
-                            : JSON.stringify({ ...rejection });
+                              ? rejection
+                              : JSON.stringify({ ...rejection });
                     }
 
                     const warning =
