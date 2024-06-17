@@ -55,6 +55,7 @@ jobs:
                   node-version: 18.x
             - run: npm ci
             - run: npm run build
+            - run: ls
             - run: npm run lint
             - run: npm run format:check
             - run: npm test
