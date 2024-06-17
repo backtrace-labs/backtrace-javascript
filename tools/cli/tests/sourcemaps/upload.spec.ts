@@ -6,7 +6,7 @@ import { glob } from 'glob';
 import path from 'path';
 import { CliLogger } from '../../src/logger';
 import { uploadSourcemaps } from '../../src/sourcemaps/upload';
-import { getHelpMessage, mockUploader } from '../_helpers/common';
+import { getHelpMessage, mockUploader, pathTuple } from '../_helpers/common';
 import { withWorkingCopy } from '../_helpers/testFiles';
 
 describe('upload', () => {
@@ -541,8 +541,8 @@ describe('upload', () => {
                     getHelpMessage,
                     opts: {
                         path: [
-                            `${workingDir}/entry1.js:${workingDir}/sourcemap1.js.map`,
-                            `${workingDir}/entry2.js:${workingDir}/sourcemap2.js.map`,
+                            pathTuple(`${workingDir}/entry1.js`, `${workingDir}/sourcemap1.js.map`),
+                            pathTuple(`${workingDir}/entry2.js`, `${workingDir}/sourcemap2.js.map`),
                         ],
                         url: 'https://test',
                     },
@@ -563,8 +563,8 @@ describe('upload', () => {
                     getHelpMessage,
                     opts: {
                         path: [
-                            `${workingDir}/entry1.js:${workingDir}/sourcemap1.js.map`,
-                            `${workingDir}/entry2.js:${workingDir}/sourcemap2.js.map`,
+                            pathTuple(`${workingDir}/entry1.js`, `${workingDir}/sourcemap1.js.map`),
+                            pathTuple(`${workingDir}/entry2.js`, `${workingDir}/sourcemap2.js.map`),
                         ],
                         url: 'https://test',
                     },
@@ -593,8 +593,8 @@ describe('upload', () => {
                     getHelpMessage,
                     opts: {
                         path: [
-                            `${workingDir}/entry1.js:${workingDir}/sourcemap1.js.map`,
-                            `${workingDir}/entry2.js:${workingDir}/sourcemap2.js.map`,
+                            pathTuple(`${workingDir}/entry1.js`, `${workingDir}/sourcemap1.js.map`),
+                            pathTuple(`${workingDir}/entry2.js`, `${workingDir}/sourcemap2.js.map`),
                         ],
                         url: 'https://test',
                     },

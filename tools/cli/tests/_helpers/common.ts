@@ -1,4 +1,5 @@
 import { Ok, Result, SymbolUploader, UploadResult } from '@backtrace/sourcemap-tools';
+import path from 'path';
 import { Transform } from 'stream';
 
 export function getHelpMessage() {
@@ -35,5 +36,20 @@ export function expectAllKeysToChange<T extends Record<string, unknown>>(obj1: T
         const value2 = obj2[key];
 
         expect(value1).not.toEqual(value2);
+    }
+}
+
+export function expectSamePaths(actual: string[], expected: string[]) {
+    const actualAbsolute = actual.map(p => path.resolve(p))
+    const expectedAbsolute = expected.map(p => path.resolve(p))
+
+    expect(actualAbsolute).toEqual(expect.arrayContaining(expectedAbsolute))
+}
+
+export function pathTuple(a: string, b: string) {
+    if (process.platform === 'win32') {
+        return `${a}::${b}`
+    } else {
+        return `${a}:${b}`
     }
 }
