@@ -59,4 +59,3 @@ jobs:
             - run: npm run format:check
             - run: npm install -g win-node-env
             - run: npm test
-              shell: pwsh
