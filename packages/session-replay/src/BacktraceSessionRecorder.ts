@@ -8,7 +8,6 @@ export class BacktraceSessionRecorder implements BacktraceAttachment {
     public readonly type = 'dynamic';
 
     private readonly _maxEventCount?: number;
-    private readonly _maxTime?: number;
 
     private readonly _previousEvents: OverwritingArray<eventWithTime>;
     private _events: eventWithTime[] = [];
@@ -18,7 +17,6 @@ export class BacktraceSessionRecorder implements BacktraceAttachment {
     constructor(private readonly _options: BacktraceSessionRecorderOptions) {
         this._events = [];
         this._maxEventCount = !_options.disableMaxEventCount ? _options.maxEventCount ?? 100 : undefined;
-        this._maxTime = !_options.disableMaxTime ? _options.maxTime : undefined;
         this._previousEvents = new OverwritingArray<eventWithTime>(this._maxEventCount ?? 100);
     }
 
@@ -35,7 +33,6 @@ export class BacktraceSessionRecorder implements BacktraceAttachment {
             },
             emit: (event, isCheckout) => this.onEmit(event, isCheckout),
             checkoutEveryNth: this._maxEventCount && Math.ceil(this._maxEventCount / 2),
-            checkoutEveryNms: this._maxTime && Math.ceil(this._maxTime / 2),
         });
     }
 

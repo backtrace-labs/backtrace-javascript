@@ -195,21 +195,6 @@ export interface BacktraceSessionRecorderOptions {
     readonly disableMaxEventCount?: boolean;
 
     /**
-     * Maximum timeframe for recorded events to be sent with the report.
-     *
-     * Set `disableMaxTime` to `true` to disable the limit.
-     * @default undefined
-     */
-    readonly maxTime?: number;
-
-    /**
-     * Disables `maxEventCount` limit.
-     *
-     * @default false
-     */
-    readonly disableMaxTime?: boolean;
-
-    /**
      * Sampling options. Use those to reduce event count or size.
      */
     readonly sampling?: BacktraceSessionRecorderSamplingOptions;
