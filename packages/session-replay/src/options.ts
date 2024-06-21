@@ -4,7 +4,9 @@ import { MaskInputFn, MaskInputOptions, MaskTextFn } from 'rrweb-snapshot';
 
 export interface BacktraceSessionRecorderSamplingOptions {
     /**
-     * Controls whether mouse movement is recorded.
+     * Controls whether mouse movement is recorded,
+     * or the interval of mouse movement events in milliseconds
+     * (i.e. will not capture more than one event every set time).
      * @default true
      */
     readonly mousemove?: boolean | number;
@@ -50,13 +52,15 @@ export interface BacktraceSessionRecorderSamplingOptions {
         | Partial<Record<string, boolean>>;
 
     /**
-     * Interval of scrolling events in milliseconds (i.e. will not capture more than one event every set time).
+     * Interval of scrolling events in milliseconds
+     * (i.e. will not capture more than one event every set time).
      * @default undefined
      */
     readonly scroll?: number;
 
     /**
-     * Interval of media events in milliseconds (i.e. will not capture more than one event every set time).
+     * Interval of media events in milliseconds
+     * (i.e. will not capture more than one event every set time).
      * @default undefined
      */
     readonly media?: number;
@@ -78,7 +82,7 @@ export interface BacktraceSessionReplayPrivacyOptions {
     readonly blockClass?: string | RegExp;
 
     /**
-     * Use a `string` to configure which selector should be blocked.
+     * Blocks elements matching this selector.
      * @default undefined
      */
     readonly blockSelector?: string;
@@ -90,21 +94,21 @@ export interface BacktraceSessionReplayPrivacyOptions {
     readonly ignoreClass?: string;
 
     /**
-     * Use a `string` to configure which selector should be ignored.
+     * Ignores elements matching this selector.
      * @default undefined
      */
     readonly ignoreSelector?: string;
 
     /**
-     * Array of CSS attributes that should be ignored.
+     * Set of CSS attributes that should be ignored.
      */
-    readonly ignoreCSSAttributes?: Set<string>;
+    readonly ignoreCSSAttributes?: Set<string> | string[];
 
     /**
      * Masks elements with this class.
      * @default "bt-mask"
      */
-    readonly maskTextClass?: string;
+    readonly maskTextClass?: string | RegExp;
 
     /**
      * Unmasks elements with this class.
@@ -167,7 +171,8 @@ export interface BacktraceSessionReplayPrivacyOptions {
      * @returns masked text
      * @default undefined
      * @example
-     * // replace text with letter A repeated for the text length if element has class "mask-a"
+     * // replace text with letter A repeated for the text length
+     * // if element has class "mask-a"
      * maskInputFn = (text, element) =>
      *   element.classList.contains('mask-a')
      *     ? 'A'.repeat(text.length)
@@ -187,7 +192,8 @@ export interface BacktraceSessionReplayPrivacyOptions {
     readonly maskTextFn?: MaskTextFn;
 
     /**
-     * Callback to inspect the added event. You must return an event for it to be included.
+     * Callback to inspect the added event.
+     * You must return an event for it to be included.
      *
      * Return `undefined` to skip this event.
      * @param event Event to be added to the report.
@@ -223,7 +229,8 @@ export interface BacktraceSessionRecorderOptions {
     readonly privacy?: BacktraceSessionReplayPrivacyOptions;
 
     /**
-     * Options passed to `rrweb.record` function. Refer to `rrweb` documentation for more information.
+     * Options passed to `rrweb.record` function.
+     * Refer to `rrweb` documentation for more information.
      */
     readonly advancedOptions?: recordOptions<Event>;
 }
