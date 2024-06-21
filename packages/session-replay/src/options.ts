@@ -1,6 +1,6 @@
 import { MouseInteractions, eventWithTime } from '@rrweb/types';
+import { recordOptions } from 'rrweb';
 import { MaskInputFn, MaskInputOptions, MaskTextFn } from 'rrweb-snapshot';
-import { recordOptions } from 'rrweb/typings/types';
 
 export interface BacktraceSessionRecorderSamplingOptions {
     /**
