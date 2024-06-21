@@ -1,4 +1,4 @@
-import { BacktraceAttachment } from '@backtrace/sdk-core';
+import { BacktraceAttachment, OverwritingArray } from '@backtrace/sdk-core';
 import { eventWithTime } from '@rrweb/types';
 import { record } from 'rrweb';
 import { BacktraceSessionRecorderOptions } from './options';
@@ -10,8 +10,8 @@ export class BacktraceSessionRecorder implements BacktraceAttachment {
     private readonly _maxEventCount?: number;
     private readonly _maxTime?: number;
 
-    private _previousEvents?: eventWithTime[] = [];
-    private _events?: eventWithTime[] = [];
+    private readonly _previousEvents: OverwritingArray<eventWithTime>;
+    private _events: eventWithTime[] = [];
 
     private _stop?: () => void;
 
@@ -19,6 +19,7 @@ export class BacktraceSessionRecorder implements BacktraceAttachment {
         this._events = [];
         this._maxEventCount = !_options.disableMaxEventCount ? _options.maxEventCount ?? 100 : undefined;
         this._maxTime = !_options.disableMaxTime ? _options.maxTime : undefined;
+        this._previousEvents = new OverwritingArray<eventWithTime>(this._maxEventCount ?? 100);
     }
 
     public start() {
@@ -45,13 +46,18 @@ export class BacktraceSessionRecorder implements BacktraceAttachment {
     }
 
     public get(): string {
-        const events = [...(this._events ?? []), ...(this._previousEvents ?? [])];
+        const events = this.getEvents();
         return JSON.stringify(events);
     }
 
     private onEmit(event: eventWithTime, isCheckout?: boolean) {
         if (isCheckout || !this._events) {
-            this._previousEvents = this._events;
+            if (this._events) {
+                for (const event of this._events) {
+                    this._previousEvents.add(event);
+                }
+            }
+
             this._events = [];
         }
 
@@ -68,5 +74,18 @@ export class BacktraceSessionRecorder implements BacktraceAttachment {
         if (this._options.advancedOptions?.emit) {
             this._options.advancedOptions.emit(event as never, isCheckout);
         }
+    }
+
+    private getEvents() {
+        // We want to always send maxCount events
+        // We take all events from main events array, and skip first `toSkip` elements
+        // to fill up to maxCount.
+
+        const maxCount = this._maxEventCount ?? Infinity;
+        const eventCount = this._events?.length ?? 0;
+        const allPreviousEvents = [...this._previousEvents];
+        const toSkip = Math.max(0, eventCount + allPreviousEvents.length - maxCount);
+        const previousEvents = allPreviousEvents.slice(toSkip);
+        return [...this._events, ...previousEvents];
     }
 }
