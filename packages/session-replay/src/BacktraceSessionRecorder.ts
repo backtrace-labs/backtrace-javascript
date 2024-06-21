@@ -22,6 +22,16 @@ export class BacktraceSessionRecorder implements BacktraceAttachment {
 
     public start() {
         this._stop = record({
+            blockClass: this._options.privacy?.blockClass,
+            blockSelector: this._options.privacy?.blockSelector,
+            ignoreClass: this._options.privacy?.ignoreClass,
+            ignoreSelector: this._options.privacy?.ignoreSelector,
+            ignoreCSSAttributes: this._options.privacy?.ignoreCSSAttributes,
+            maskTextClass: this._options.privacy?.maskTextClass,
+            maskTextSelector: this._options.privacy?.maskTextSelector,
+            maskAllInputs: this._options.privacy?.maskAllInputs ?? true,
+            maskInputFn: this._options.privacy?.maskInputFn,
+            maskTextFn: this._options.privacy?.maskTextFn,
             ...this._options.advancedOptions,
             sampling: {
                 mousemove: this._options.sampling?.mousemove,
@@ -29,10 +39,12 @@ export class BacktraceSessionRecorder implements BacktraceAttachment {
                 input: this._options.sampling?.input,
                 media: this._options.sampling?.media,
                 scroll: this._options.sampling?.scroll,
-                ...this._options.advancedOptions,
+                ...this._options.advancedOptions?.sampling,
             },
             emit: (event, isCheckout) => this.onEmit(event, isCheckout),
-            checkoutEveryNth: this._maxEventCount && Math.ceil(this._maxEventCount / 2),
+            checkoutEveryNth:
+                this._options.advancedOptions?.checkoutEveryNth ??
+                (this._maxEventCount && Math.ceil(this._maxEventCount / 2)),
         });
     }
 

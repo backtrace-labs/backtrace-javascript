@@ -98,7 +98,7 @@ export interface BacktraceSessionReplayPrivacyOptions {
     /**
      * Array of CSS attributes that should be ignored.
      */
-    readonly ignoreCSSAttributes?: string;
+    readonly ignoreCSSAttributes?: Set<string>;
 
     /**
      * Use a `string` or `RegExp` to configure which elements should be masked.
@@ -124,7 +124,7 @@ export interface BacktraceSessionReplayPrivacyOptions {
      * Can be an object with the following keys:
      * * `color`
      * * `date`
-     * * `'datetime-local'`
+     * * `datetime-local`
      * * `email`
      * * `month`
      * * `number`
