@@ -1,6 +1,6 @@
 import { MouseInteractions, eventWithTime } from '@rrweb/types';
+import { recordOptions } from 'rrweb';
 import { MaskInputFn, MaskInputOptions, MaskTextFn } from 'rrweb-snapshot';
-import { recordOptions } from 'rrweb/typings/types';
 
 export interface BacktraceSessionRecorderSamplingOptions {
     /**
@@ -193,21 +193,6 @@ export interface BacktraceSessionRecorderOptions {
      * @default false
      */
     readonly disableMaxEventCount?: boolean;
-
-    /**
-     * Maximum timeframe for recorded events to be sent with the report.
-     *
-     * Set `disableMaxTime` to `true` to disable the limit.
-     * @default undefined
-     */
-    readonly maxTime?: number;
-
-    /**
-     * Disables `maxEventCount` limit.
-     *
-     * @default false
-     */
-    readonly disableMaxTime?: boolean;
 
     /**
      * Sampling options. Use those to reduce event count or size.
