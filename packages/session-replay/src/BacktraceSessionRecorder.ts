@@ -22,12 +22,12 @@ export class BacktraceSessionRecorder implements BacktraceAttachment {
 
     public start() {
         this._stop = record({
-            blockClass: this._options.privacy?.blockClass,
+            blockClass: this._options.privacy?.blockClass ?? 'bt-block',
             blockSelector: this._options.privacy?.blockSelector,
-            ignoreClass: this._options.privacy?.ignoreClass,
+            ignoreClass: this._options.privacy?.ignoreClass ?? 'bt-ignore',
             ignoreSelector: this._options.privacy?.ignoreSelector,
-            ignoreCSSAttributes: this._options.privacy?.ignoreCSSAttributes,
-            maskTextClass: this._options.privacy?.maskTextClass,
+            ignoreCSSAttributes: new Set(this._options.privacy?.ignoreCSSAttributes),
+            maskTextClass: this._options.privacy?.maskTextClass ?? 'bt-mask',
             maskTextSelector: this._options.privacy?.maskTextSelector,
             maskAllInputs: this._options.privacy?.maskAllInputs ?? true,
             maskInputFn: this._options.privacy?.maskInputFn,

@@ -72,8 +72,8 @@ export interface BacktraceSessionRecorderSamplingOptions {
 
 export interface BacktraceSessionReplayPrivacyOptions {
     /**
-     * Use a `string` or `RegExp` to configure which elements should be blocked.
-     * @default "rr-block"
+     * Blocks elements with this class.
+     * @default "bt-block"
      */
     readonly blockClass?: string | RegExp;
 
@@ -84,8 +84,8 @@ export interface BacktraceSessionReplayPrivacyOptions {
     readonly blockSelector?: string;
 
     /**
-     * Use a `string` or `RegExp` to configure which elements should be ignored.
-     * @default "rr-ignore"
+     * Ignores elements with this class.
+     * @default "bt-ignore"
      */
     readonly ignoreClass?: string;
 
@@ -101,8 +101,8 @@ export interface BacktraceSessionReplayPrivacyOptions {
     readonly ignoreCSSAttributes?: Set<string>;
 
     /**
-     * Use a `string` or `RegExp` to configure which elements should be masked.
-     * @default "rr-mask"
+     * Masks elements with this class.
+     * @default "bt-mask"
      */
     readonly maskTextClass?: string;
 
