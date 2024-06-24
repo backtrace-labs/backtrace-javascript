@@ -72,8 +72,8 @@ export interface BacktraceSessionRecorderSamplingOptions {
 
 export interface BacktraceSessionReplayPrivacyOptions {
     /**
-     * Use a `string` or `RegExp` to configure which elements should be blocked.
-     * @default "rr-block"
+     * Blocks elements with this class.
+     * @default "bt-block"
      */
     readonly blockClass?: string | RegExp;
 
@@ -84,8 +84,8 @@ export interface BacktraceSessionReplayPrivacyOptions {
     readonly blockSelector?: string;
 
     /**
-     * Use a `string` or `RegExp` to configure which elements should be ignored.
-     * @default "rr-ignore"
+     * Ignores elements with this class.
+     * @default "bt-ignore"
      */
     readonly ignoreClass?: string;
 
@@ -98,33 +98,51 @@ export interface BacktraceSessionReplayPrivacyOptions {
     /**
      * Array of CSS attributes that should be ignored.
      */
-    readonly ignoreCSSAttributes?: string;
+    readonly ignoreCSSAttributes?: Set<string>;
 
     /**
-     * Use a `string` or `RegExp` to configure which elements should be masked.
-     * @default "rr-mask"
+     * Masks elements with this class.
+     * @default "bt-mask"
      */
     readonly maskTextClass?: string;
 
     /**
-     * Use a `string` to configure which selector should be masked.
+     * Unmasks elements with this class.
+     * @default "bt-unmask"
+     */
+    readonly unmaskTextClass?: string | RegExp;
+
+    /**
+     * Masks elements matching this selector.
      * @default undefined
      */
     readonly maskTextSelector?: string;
 
     /**
+     * Unmasks elements matching this selector.
+     * @default undefined
+     */
+    readonly unmaskTextSelector?: string;
+
+    /**
      * If `true`, will mask all inputs.
-     * @default false
+     * @default true
      */
     readonly maskAllInputs?: boolean;
 
     /**
-     * Mask specific kinds of input.
+     * If `true`, will mask all text.
+     * @default true
+     */
+    readonly maskAllText?: boolean;
+
+    /**
+     * Mask specific kinds of inputs.
      *
      * Can be an object with the following keys:
      * * `color`
      * * `date`
-     * * `'datetime-local'`
+     * * `datetime-local`
      * * `email`
      * * `month`
      * * `number`
