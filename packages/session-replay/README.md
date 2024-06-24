@@ -7,18 +7,18 @@ The [`@backtrace/session-replay`](#) module allows your browser application to r
 
 ## Table of Contents
 
-1. [Integration with browser package](#integration-with-browser-package)
+1. [Integration](#integration)
     - [Install the package](#install-the-package)
     - [Integrate the module](#integrate-the-module)
-2. [Session Replay features](#session-replay-features)
+2. [Features](#features)
     - [Event limiting](#event-limiting)
     - [Sampling options](#sampling-options)
     - [Privacy options](#privacy-options)
-3. [Advanced Session Replay features](#advanced-session-replay-features)
+3. [Advanced features](#advanced-features)
 
-## Integration with browser package
+## Integration
 
-`@backtrace/session-replay` can be integrated with any Backtrace SDK that derives from `@backtrace/browser` SDK.
+`@backtrace/session-replay` can be integrated with any Backtrace SDK that derives from the `@backtrace/browser` SDK.
 
 ### Install the package
 
@@ -57,7 +57,7 @@ const client = BacktraceClient.builder(options)
     .build();
 ```
 
-## Session Replay features
+## Features
 
 ### Event limiting
 
@@ -153,7 +153,7 @@ new BacktraceSessionReplayModule({
 -   `select`
 -   `password`
 
-## Advanced Session Replay features
+## Advanced features
 
 `@backtrace/session-replay` is based on `rrweb`. You can use `advancedOptions` to pass options directly to `rrweb`:
 
