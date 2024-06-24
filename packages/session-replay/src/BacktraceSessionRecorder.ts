@@ -2,6 +2,7 @@ import { BacktraceAttachment, OverwritingArray } from '@backtrace/sdk-core';
 import { eventWithTime } from '@rrweb/types';
 import { record } from 'rrweb';
 import { BacktraceSessionRecorderOptions } from './options';
+import { maskTextFn } from './privacy/maskTextFn';
 
 export class BacktraceSessionRecorder implements BacktraceAttachment {
     public readonly name = 'bt-session-replay-0';
@@ -27,11 +28,17 @@ export class BacktraceSessionRecorder implements BacktraceAttachment {
             ignoreClass: this._options.privacy?.ignoreClass ?? 'bt-ignore',
             ignoreSelector: this._options.privacy?.ignoreSelector,
             ignoreCSSAttributes: new Set(this._options.privacy?.ignoreCSSAttributes),
-            maskTextClass: this._options.privacy?.maskTextClass ?? 'bt-mask',
-            maskTextSelector: this._options.privacy?.maskTextSelector,
+            maskTextSelector: '*', // Pass all text to maskTextFn
             maskAllInputs: this._options.privacy?.maskAllInputs ?? true,
             maskInputFn: this._options.privacy?.maskInputFn,
-            maskTextFn: this._options.privacy?.maskTextFn,
+            maskTextFn: maskTextFn({
+                maskAllText: this._options.privacy?.maskAllText ?? true,
+                maskTextClass: this._options.privacy?.maskTextClass ?? 'bt-mask',
+                unmaskTextClass: this._options.privacy?.maskTextClass ?? 'bt-unmask',
+                maskTextSelector: this._options.privacy?.maskTextSelector,
+                unmaskTextSelector: this._options.privacy?.unmaskTextSelector,
+                maskTextFn: this._options.privacy?.maskTextFn,
+            }),
             ...this._options.advancedOptions,
             sampling: {
                 mousemove: this._options.sampling?.mousemove,

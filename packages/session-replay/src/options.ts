@@ -107,19 +107,37 @@ export interface BacktraceSessionReplayPrivacyOptions {
     readonly maskTextClass?: string;
 
     /**
-     * Use a `string` to configure which selector should be masked.
+     * Unmasks elements with this class.
+     * @default "bt-unmask"
+     */
+    readonly unmaskTextClass?: string | RegExp;
+
+    /**
+     * Masks elements matching this selector.
      * @default undefined
      */
     readonly maskTextSelector?: string;
 
     /**
+     * Unmasks elements matching this selector.
+     * @default undefined
+     */
+    readonly unmaskTextSelector?: string;
+
+    /**
      * If `true`, will mask all inputs.
-     * @default false
+     * @default true
      */
     readonly maskAllInputs?: boolean;
 
     /**
-     * Mask specific kinds of input.
+     * If `true`, will mask all text.
+     * @default true
+     */
+    readonly maskAllText?: boolean;
+
+    /**
+     * Mask specific kinds of inputs.
      *
      * Can be an object with the following keys:
      * * `color`
