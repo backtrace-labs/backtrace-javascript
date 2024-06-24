@@ -34,7 +34,7 @@ export class BacktraceSessionRecorder implements BacktraceAttachment {
             maskTextFn: maskTextFn({
                 maskAllText: this._options.privacy?.maskAllText ?? true,
                 maskTextClass: this._options.privacy?.maskTextClass ?? 'bt-mask',
-                unmaskTextClass: this._options.privacy?.maskTextClass ?? 'bt-unmask',
+                unmaskTextClass: this._options.privacy?.unmaskTextClass ?? 'bt-unmask',
                 maskTextSelector: this._options.privacy?.maskTextSelector,
                 unmaskTextSelector: this._options.privacy?.unmaskTextSelector,
                 maskTextFn: this._options.privacy?.maskTextFn,
