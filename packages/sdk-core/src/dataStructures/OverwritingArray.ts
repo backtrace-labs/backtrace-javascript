@@ -1,47 +1,111 @@
-import { OverwritingArrayIterator } from './OverwritingArrayIterator.js';
+import { ConstrainedNumber, clamped, wrapped } from './numbers.js';
 
 export class OverwritingArray<T> {
     private _array: T[];
-    private _index = 0;
-    private _size = 0;
-    private _startIndex = 0;
-    constructor(public readonly capacity: number) {
-        this._array = this.createArray();
-    }
-    public add(value: T): this {
-        this._array[this._index] = value;
-        this._index = this.incrementIndex(this._index);
-        this._startIndex = this.incrementStartingIndex();
-        this._size = this.incrementSize();
-        return this;
+
+    private readonly _headConstraint: ConstrainedNumber;
+    private readonly _lengthConstraint: ConstrainedNumber;
+
+    private _head = 0;
+    private _length = 0;
+
+    private get head() {
+        return this._head;
     }
 
-    public clear(): void {
-        this._array = this.createArray();
+    private set head(value: number) {
+        this._head = this._headConstraint(value);
     }
 
-    public values(): IterableIterator<T> {
-        return new OverwritingArrayIterator<T>(this._array, this._startIndex, this._size);
+    public get length() {
+        return this._length;
     }
 
-    [Symbol.iterator](): IterableIterator<T> {
-        return new OverwritingArrayIterator<T>(this._array, this._startIndex, this._size);
+    public set length(value: number) {
+        this._length = this._lengthConstraint(value);
     }
 
-    private incrementIndex(index: number) {
-        return (index + 1) % this.capacity;
+    private get start() {
+        return this._headConstraint(this.head - this.length);
     }
 
-    private incrementStartingIndex() {
-        if (this._size !== this.capacity) {
-            return this._startIndex;
+    constructor(
+        public readonly capacity: number,
+        items?: T[],
+    ) {
+        this._array = new Array(capacity);
+        this._headConstraint = wrapped(0, capacity);
+        this._lengthConstraint = clamped(0, capacity);
+
+        if (items) {
+            this.push(...items);
         }
-        return this.incrementIndex(this._startIndex);
     }
-    private incrementSize() {
-        return Math.min(this.capacity, this._size + 1);
+
+    public add(item: T) {
+        return this.pushOne(item);
     }
-    private createArray() {
-        return new Array(this.capacity);
+
+    public push(...items: T[]): number {
+        for (const item of items) {
+            this.pushOne(item);
+        }
+        return this.length;
+    }
+
+    public pop(): T | undefined {
+        this.head--;
+        const element = this._array[this.head];
+        this.length--;
+        return element;
+    }
+
+    public shift(): T | undefined {
+        const element = this._array[this.start];
+        this.length--;
+        return element;
+    }
+
+    public at(index: number): T | undefined {
+        return this._array[this.index(index)];
+    }
+
+    public *values(): IterableIterator<T> {
+        for (let i = 0; i < this.length; i++) {
+            const index = this.index(i);
+            yield this._array[index];
+        }
+    }
+
+    public *keys(): IterableIterator<number> {
+        for (let i = 0; i < this.length; i++) {
+            yield i;
+        }
+    }
+
+    public *entries(): IterableIterator<[number, T]> {
+        for (let i = 0; i < this.length; i++) {
+            const index = this.index(i);
+            yield [i, this._array[index]];
+        }
+    }
+
+    public [Symbol.iterator]() {
+        return this.values();
+    }
+
+    private pushOne(item: T) {
+        this._array[this.head] = item;
+        this.head++;
+        this.length++;
+    }
+
+    private index(value: number) {
+        if (!this.length) {
+            return this._headConstraint(value);
+        }
+
+        const index = (value % this.length) + this.start;
+        return this._headConstraint(index);
     }
 }
