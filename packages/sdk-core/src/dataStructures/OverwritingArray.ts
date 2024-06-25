@@ -56,12 +56,14 @@ export class OverwritingArray<T> {
     public pop(): T | undefined {
         this.head--;
         const element = this._array[this.head];
+        this._array[this.head] = undefined as never;
         this.length--;
         return element;
     }
 
     public shift(): T | undefined {
         const element = this._array[this.start];
+        this._array[this.start] = undefined as never;
         this.length--;
         return element;
     }
