@@ -36,14 +36,7 @@ function arraySize(array: unknown[], replacer?: (this: unknown, key: string, val
 }
 
 const objectSize = (obj: object, replacer?: (this: unknown, key: string, value: unknown) => unknown): number => {
-    let jsonObject: object;
-    if ('toJSON' in obj && typeof obj.toJSON === 'function') {
-        jsonObject = obj.toJSON() as object;
-    } else {
-        jsonObject = obj;
-    }
-
-    const entries = Object.entries(jsonObject);
+    const entries = Object.entries(obj);
     const bracketLength = 2;
 
     let entryCount = 0;
@@ -93,6 +86,10 @@ function _jsonSize(
     value: unknown,
     replacer?: (this: unknown, key: string, value: unknown) => unknown,
 ): number {
+    if (value && typeof value === 'object' && 'toJSON' in value && typeof value.toJSON === 'function') {
+        value = value.toJSON() as object;
+    }
+
     value = replacer ? replacer.call(parent, key, value) : value;
     if (value === null) {
         return nullSize;
