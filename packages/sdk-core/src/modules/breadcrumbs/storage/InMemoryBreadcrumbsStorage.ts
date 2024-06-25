@@ -1,4 +1,5 @@
 import { jsonEscaper } from '../../../common/jsonEscaper.js';
+import { jsonSize } from '../../../common/jsonSize.js';
 import { TimeHelper } from '../../../common/TimeHelper.js';
 import { OverwritingArray } from '../../../dataStructures/OverwritingArray.js';
 import { BacktraceAttachment } from '../../../model/attachment/index.js';
@@ -20,9 +21,11 @@ export class InMemoryBreadcrumbsStorage implements BreadcrumbsStorage, Backtrace
 
     private _lastBreadcrumbId: number = TimeHelper.toTimestampInSec(TimeHelper.now());
     private _breadcrumbs: OverwritingArray<Breadcrumb>;
+    private _breadcrumbSizes: OverwritingArray<number>;
 
     constructor(private readonly _limits: BreadcrumbsStorageLimits) {
         this._breadcrumbs = new OverwritingArray<Breadcrumb>(_limits.maximumBreadcrumbs ?? 100);
+        this._breadcrumbSizes = new OverwritingArray<number>(this._breadcrumbs.capacity);
     }
 
     public getAttachments(): BacktraceAttachment<unknown>[] {
@@ -47,26 +50,7 @@ export class InMemoryBreadcrumbsStorage implements BreadcrumbsStorage, Backtrace
      * @returns Breadcrumbs JSON
      */
     public get(): string {
-        const sizeLimit = this._limits.maximumBreadcrumbsSize;
-        const breadcrumbs = [...this._breadcrumbs.values()];
-        if (sizeLimit === undefined) {
-            return JSON.stringify(breadcrumbs, jsonEscaper());
-        }
-
-        let breadcrumbsSize = 2;
-        const breadcrumbsToSubmit: string[] = [];
-        for (let i = breadcrumbs.length - 1; i >= 0; i--) {
-            const json = JSON.stringify(breadcrumbs[i], jsonEscaper());
-            const length = json.length + (i === 0 ? 0 : 1); // Add the comma if not first element
-            if (breadcrumbsSize + length > sizeLimit) {
-                break;
-            }
-
-            breadcrumbsToSubmit.unshift(json);
-            breadcrumbsSize += length;
-        }
-
-        return `[${breadcrumbsToSubmit.join(',')}]`;
+        return JSON.stringify([...this._breadcrumbs], jsonEscaper());
     }
 
     public add(rawBreadcrumb: RawBreadcrumb): number {
@@ -86,6 +70,33 @@ export class InMemoryBreadcrumbsStorage implements BreadcrumbsStorage, Backtrace
 
         this._breadcrumbs.add(breadcrumb);
 
+        if (this._limits.maximumBreadcrumbsSize) {
+            const size = jsonSize(breadcrumb, jsonEscaper());
+            this._breadcrumbSizes.add(size);
+
+            let totalSize = this.totalSize();
+            while (totalSize > this._limits.maximumBreadcrumbsSize) {
+                this._breadcrumbs.shift();
+                const removedSize = this._breadcrumbSizes.shift() ?? 0;
+
+                // We subtract removedSize plus comma in JSON
+                totalSize -= removedSize + 1;
+            }
+        }
+
         return id;
+    }
+
+    private totalSize() {
+        let sum = 0;
+        for (const size of this._breadcrumbSizes) {
+            sum += size;
+        }
+
+        // Sum of:
+        // - all breadcrumbs
+        // - comma count
+        // - brackets
+        return sum + Math.max(0, this._breadcrumbSizes.length - 1) + 2;
     }
 }
