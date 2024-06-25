@@ -328,6 +328,17 @@ describe('jsonSize', () => {
             expect(actual).toEqual(expected);
         });
 
+        it('should compute object size with Date value', () => {
+            const value = {
+                date: new Date(),
+            };
+
+            const expected = JSON.stringify(value).length;
+
+            const actual = jsonSize(value);
+            expect(actual).toEqual(expected);
+        });
+
         it('should compute object size with every key type', () => {
             const value = {
                 num: 123,
@@ -458,6 +469,15 @@ describe('jsonSize', () => {
             expect(actual).toEqual(expected);
         });
 
+        it('should compute array size with Date value', () => {
+            const value = [new Date()];
+
+            const expected = JSON.stringify(value).length;
+
+            const actual = jsonSize(value);
+            expect(actual).toEqual(expected);
+        });
+
         it('should compute array size with every value type', () => {
             const value = [
                 123,
@@ -466,6 +486,7 @@ describe('jsonSize', () => {
                 false,
                 null,
                 undefined,
+                new Date(),
                 Symbol.for('symbol'),
                 (arg: number) => {},
                 ['123'],
@@ -507,24 +528,21 @@ describe('jsonSize', () => {
             expect(actual).toEqual(expected);
         });
 
-        // TODO: This case reports invalid size (36 vs expected 28)
-        // As most likely this will be rarely used, and the difference is not that large,
-        // I'm leaving this commented for now
-        // it('should compute object size for self-referencing object with toJSON', () => {
-        //     const value = {
-        //         a: {
-        //             b: {
-        //                 toJSON() {
-        //                     return value;
-        //                 },
-        //             },
-        //         },
-        //     };
+        it('should compute object size for self-referencing object with toJSON', () => {
+            const value = {
+                a: {
+                    b: {
+                        toJSON() {
+                            return value;
+                        },
+                    },
+                },
+            };
 
-        //     const expected = JSON.stringify(value, jsonEscaper()).length;
-        //     const actual = jsonSize(value, jsonEscaper());
+            const expected = JSON.stringify(value, jsonEscaper()).length;
+            const actual = jsonSize(value, jsonEscaper());
 
-        //     expect(actual).toEqual(expected);
-        // });
+            expect(actual).toEqual(expected);
+        });
     });
 });
