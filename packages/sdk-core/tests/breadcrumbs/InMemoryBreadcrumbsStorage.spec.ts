@@ -162,7 +162,7 @@ describe('InMemoryBreadcrumbsStorage', () => {
         const size = JSON.stringify(expected).length;
         const storage = new InMemoryBreadcrumbsStorage({
             maximumBreadcrumbs: 100,
-            maximumBreadcrumbsSize: size,
+            maximumTotalBreadcrumbsSize: size,
         });
 
         for (const breadcrumb of breadcrumbs) {

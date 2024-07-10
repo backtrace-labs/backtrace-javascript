@@ -1,3 +1,5 @@
+type JsonReplacer = (this: unknown, key: string, value: unknown) => unknown;
+
 function stringifiedSize<T>(value: T): number {
     return JSON.stringify(value).length;
 }
@@ -15,7 +17,7 @@ const booleanSize = (value: boolean) => (value ? 4 : 5);
 const undefinedSize = 0;
 const nullSize = 'null'.length;
 
-function arraySize(array: unknown[], replacer?: (this: unknown, key: string, value: unknown) => unknown): number {
+function arraySize(array: unknown[], replacer?: JsonReplacer): number {
     const bracketLength = 2;
     const commaLength = array.length - 1;
     let elementsLength = 0;
@@ -35,7 +37,7 @@ function arraySize(array: unknown[], replacer?: (this: unknown, key: string, val
     return bracketLength + commaLength + elementsLength;
 }
 
-const objectSize = (obj: object, replacer?: (this: unknown, key: string, value: unknown) => unknown): number => {
+const objectSize = (obj: object, replacer?: JsonReplacer): number => {
     const entries = Object.entries(obj);
     const bracketLength = 2;
 
@@ -49,9 +51,12 @@ const objectSize = (obj: object, replacer?: (this: unknown, key: string, value: 
         }
 
         entryCount++;
+
+        // +1 adds the comma size
         entriesLength += keySize(k) + valueSize + 1;
     }
 
+    // -1 removes previously added last comma size (there is no trailing comma)
     const commaLength = Math.max(0, entryCount - 1);
 
     return bracketLength + commaLength + entriesLength;
@@ -74,18 +79,13 @@ function keySize(key: unknown): number {
         case 'boolean':
             return booleanSize(key) + QUOTE_SIZE;
         case 'symbol':
-            return 0; // key not used in JSON
+            return symbolSize; // key not used in JSON
         default:
             return stringSize(key.toString());
     }
 }
 
-function _jsonSize(
-    parent: unknown,
-    key: string,
-    value: unknown,
-    replacer?: (this: unknown, key: string, value: unknown) => unknown,
-): number {
+function _jsonSize(parent: unknown, key: string, value: unknown, replacer?: JsonReplacer): number {
     if (value && typeof value === 'object' && 'toJSON' in value && typeof value.toJSON === 'function') {
         value = value.toJSON() as object;
     }
@@ -132,6 +132,6 @@ function _jsonSize(
  * @param replacer A function that transforms the results as in `JSON.stringify`.
  * @returns Final string length.
  */
-export function jsonSize(value: unknown, replacer?: (this: unknown, key: string, value: unknown) => unknown): number {
+export function jsonSize(value: unknown, replacer?: JsonReplacer): number {
     return _jsonSize(undefined, '', value, replacer);
 }

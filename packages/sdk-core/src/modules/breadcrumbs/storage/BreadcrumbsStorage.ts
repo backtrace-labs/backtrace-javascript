@@ -17,7 +17,7 @@ export interface BreadcrumbsStorageLimits {
      * Specifies maximum breadcrumbs size in bytes.
      * If the size is exceeded, oldest breadcrumbs will be skipped.
      */
-    readonly maximumBreadcrumbsSize?: number;
+    readonly maximumTotalBreadcrumbsSize?: number;
 }
 
 export type BreadcrumbsStorageFactory = (options: BreadcrumbsStorageOptions) => BreadcrumbsStorage;

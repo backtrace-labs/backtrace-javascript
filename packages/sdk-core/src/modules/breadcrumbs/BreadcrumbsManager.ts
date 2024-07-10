@@ -182,10 +182,7 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
         }
 
         if (this._limits.maximumBreadcrumbMessageLength !== undefined) {
-            rawBreadcrumb = {
-                ...rawBreadcrumb,
-                message: rawBreadcrumb.message.substring(0, this._limits.maximumBreadcrumbMessageLength),
-            };
+            rawBreadcrumb.message = rawBreadcrumb.message.substring(0, this._limits.maximumBreadcrumbMessageLength);
         }
 
         let limitedBreadcrumb: RawBreadcrumb | LimitedRawBreadcrumb;
