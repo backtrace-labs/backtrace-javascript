@@ -3,21 +3,32 @@ import {
     BreadcrumbLogLevel,
     BreadcrumbsSetup,
     BreadcrumbsStorage,
+    BreadcrumbsStorageFactory,
     BreadcrumbType,
     defaultBreadcrumbsLogLevel,
     defaultBreadcurmbType,
 } from '.';
 import { jsonEscaper } from '../../common/jsonEscaper';
+import { jsonSize } from '../../common/jsonSize';
+import { limitObjectDepth } from '../../common/limitObjectDepth';
 import { BacktraceBreadcrumbsSettings } from '../../model/configuration/BacktraceConfiguration';
 import { AttributeType } from '../../model/data/BacktraceData';
 import { BacktraceReport } from '../../model/report/BacktraceReport';
 import { BacktraceModule, BacktraceModuleBindData } from '../BacktraceModule';
 import { BreadcrumbsEventSubscriber } from './events/BreadcrumbsEventSubscriber';
 import { ConsoleEventSubscriber } from './events/ConsoleEventSubscriber';
-import { RawBreadcrumb } from './model/RawBreadcrumb';
+import { BreadcrumbLimits } from './model/BreadcrumbLimits';
+import { LimitedRawBreadcrumb, RawBreadcrumb } from './model/RawBreadcrumb';
 import { InMemoryBreadcrumbsStorage } from './storage/InMemoryBreadcrumbsStorage';
 
 const BREADCRUMB_ATTRIBUTE_NAME = 'breadcrumbs.lastId';
+
+/**
+ * @returns `undefined` if value is `false`, else `value` if defined, else `defaultValue`
+ */
+const defaultIfNotFalse = <T>(value: T | false, defaultValue: T) => {
+    return value === false ? undefined : value !== undefined ? value : defaultValue;
+};
 
 export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule {
     /**
@@ -34,14 +45,23 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
      */
     private _enabled = false;
 
+    private readonly _limits: BreadcrumbLimits;
     private readonly _eventSubscribers: BreadcrumbsEventSubscriber[] = [new ConsoleEventSubscriber()];
     private readonly _interceptor?: (breadcrumb: RawBreadcrumb) => RawBreadcrumb | undefined;
     private _storage: BreadcrumbsStorage;
 
     constructor(configuration?: BacktraceBreadcrumbsSettings, options?: BreadcrumbsSetup) {
+        this._limits = {
+            maximumBreadcrumbs: defaultIfNotFalse(configuration?.maximumBreadcrumbs, 100),
+            maximumAttributesDepth: defaultIfNotFalse(configuration?.maximumAttributesDepth, 2),
+            maximumBreadcrumbMessageLength: defaultIfNotFalse(configuration?.maximumBreadcrumbMessageLength, 255),
+            maximumBreadcrumbSize: defaultIfNotFalse(configuration?.maximumBreadcrumbSize, 64 * 1024),
+            maximumTotalBreadcrumbsSize: defaultIfNotFalse(configuration?.maximumTotalBreadcrumbsSize, 1024 * 1024),
+        };
+
         this.breadcrumbsType = configuration?.eventType ?? defaultBreadcurmbType;
         this.logLevel = configuration?.logLevel ?? defaultBreadcrumbsLogLevel;
-        this._storage = options?.storage ?? new InMemoryBreadcrumbsStorage(configuration?.maximumBreadcrumbs);
+        this._storage = (options?.storage ?? InMemoryBreadcrumbsStorage.factory)({ limits: this._limits });
         this._interceptor = configuration?.intercept;
         if (options?.subscribers) {
             this._eventSubscribers.push(...options.subscribers);
@@ -55,8 +75,17 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
         this._eventSubscribers.push(subscriber);
     }
 
-    public setStorage(storage: BreadcrumbsStorage) {
-        this._storage = storage;
+    public setStorage(storageFactory: BreadcrumbsStorageFactory): void;
+    /**
+     * @deprecated Use `useStorage` with `BreadcrumbsStorageFactory`.
+     */
+    public setStorage(storage: BreadcrumbsStorage): void;
+    public setStorage(storage: BreadcrumbsStorage | BreadcrumbsStorageFactory) {
+        if (typeof storage === 'function') {
+            this._storage = storage({ limits: this._limits });
+        } else {
+            this._storage = storage;
+        }
     }
 
     public dispose(): void {
@@ -132,6 +161,7 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
             type,
             attributes,
         };
+
         if (this._interceptor) {
             const interceptorBreadcrumb = this._interceptor(rawBreadcrumb);
             if (!interceptorBreadcrumb) {
@@ -148,7 +178,29 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
             return false;
         }
 
-        this._storage.add(rawBreadcrumb);
+        if (this._limits.maximumBreadcrumbMessageLength !== undefined) {
+            rawBreadcrumb.message = rawBreadcrumb.message.substring(0, this._limits.maximumBreadcrumbMessageLength);
+        }
+
+        let limitedBreadcrumb: RawBreadcrumb | LimitedRawBreadcrumb;
+        if (this._limits.maximumAttributesDepth !== undefined && rawBreadcrumb.attributes) {
+            limitedBreadcrumb = {
+                ...rawBreadcrumb,
+                attributes: limitObjectDepth(rawBreadcrumb.attributes, this._limits.maximumAttributesDepth),
+            };
+        } else {
+            limitedBreadcrumb = rawBreadcrumb;
+        }
+
+        if (this._limits.maximumBreadcrumbSize !== undefined) {
+            const breadcrumbSize = jsonSize(limitedBreadcrumb, jsonEscaper());
+            if (breadcrumbSize > this._limits.maximumBreadcrumbSize) {
+                // TODO: Trim the breadcrumb
+                return false;
+            }
+        }
+
+        this._storage.add(limitedBreadcrumb);
         return true;
     }
 
