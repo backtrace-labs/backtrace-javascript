@@ -60,12 +60,12 @@ export class InMemoryBreadcrumbsStorage implements BreadcrumbsStorage, Backtrace
 
         this._breadcrumbs.add(breadcrumb);
 
-        if (this._limits.maximumBreadcrumbsSize) {
+        if (this._limits.maximumTotalBreadcrumbsSize) {
             const size = jsonSize(breadcrumb, jsonEscaper());
             this._breadcrumbSizes.add(size);
 
             let totalSize = this.totalSize();
-            while (totalSize > this._limits.maximumBreadcrumbsSize) {
+            while (totalSize > this._limits.maximumTotalBreadcrumbsSize) {
                 this._breadcrumbs.shift();
                 const removedSize = this._breadcrumbSizes.shift() ?? 0;
 

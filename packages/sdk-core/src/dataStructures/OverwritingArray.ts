@@ -34,7 +34,14 @@ export class OverwritingArray<T> {
         items?: T[],
     ) {
         this._array = new Array(capacity);
+
+        // Head must be always between 0 and capacity.
+        // If lower than 0, it needs to go from the end
+        // If larger than capacity, it needs to go from the start
+        // Wrapping solves this
         this._headConstraint = wrapped(0, capacity);
+
+        // Length must be always no less than 0 and no larger than capacity
         this._lengthConstraint = clamped(0, capacity);
 
         if (items) {
