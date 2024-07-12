@@ -99,7 +99,10 @@ export class BacktraceMainElectronModule implements BacktraceModule {
             crashReporter.start({
                 submitURL: SubmissionUrlInformation.toMinidumpSubmissionUrl(options.url),
                 uploadToServer: true,
-                extra: toStringDictionary(attributeManager.get('scoped').attributes),
+                extra: {
+                    ...toStringDictionary(attributeManager.get('scoped').attributes),
+                    'error.type': 'Crash',
+                },
             });
 
             attributeManager.attributeEvents.on('scoped-attributes-updated', ({ attributes }) => {
