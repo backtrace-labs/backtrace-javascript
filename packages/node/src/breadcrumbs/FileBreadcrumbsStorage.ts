@@ -39,7 +39,7 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
             _mainFile,
             _fallbackFile,
             this._limits.maximumBreadcrumbs ? Math.floor(this._limits.maximumBreadcrumbs / 2) : undefined,
-            this._limits.maximumBreadcrumbsSize,
+            this._limits.maximumTotalBreadcrumbsSize,
         );
     }
 
@@ -58,7 +58,7 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
 
         return new FileBreadcrumbsStorage(files[0], files[1], fileSystem, {
             maximumBreadcrumbs: 0,
-            maximumBreadcrumbsSize: 0,
+            maximumTotalBreadcrumbsSize: 0,
         });
     }
 
@@ -91,7 +91,7 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
 
         const breadcrumbJson = JSON.stringify(breadcrumb, jsonEscaper());
         const jsonLength = breadcrumbJson.length + 1; // newline
-        const sizeLimit = this._limits.maximumBreadcrumbsSize;
+        const sizeLimit = this._limits.maximumTotalBreadcrumbsSize;
         if (sizeLimit !== undefined) {
             if (jsonLength > sizeLimit) {
                 return id;
