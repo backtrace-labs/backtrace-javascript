@@ -4,7 +4,7 @@ import {
     BacktraceModuleBindData,
     RawBreadcrumb,
     SubmissionUrlInformation,
-    SummedEvent
+    SummedEvent,
 } from '@backtrace/sdk-core';
 import { app, crashReporter } from 'electron';
 import { IpcAttachmentReference } from '../../common/ipc/IpcAttachmentReference';
@@ -101,8 +101,8 @@ export class BacktraceMainElectronModule implements BacktraceModule {
                 uploadToServer: true,
                 extra: {
                     ...toStringDictionary(attributeManager.get('scoped').attributes),
-                    'error.type': 'Crash'
-                }
+                    'error.type': 'Crash',
+                },
             });
 
             attributeManager.attributeEvents.on('scoped-attributes-updated', ({ attributes }) => {
