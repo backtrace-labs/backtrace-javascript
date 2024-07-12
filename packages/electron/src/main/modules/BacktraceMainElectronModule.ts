@@ -105,7 +105,6 @@ export class BacktraceMainElectronModule implements BacktraceModule {
                 }
             });
 
-
             attributeManager.attributeEvents.on('scoped-attributes-updated', ({ attributes }) => {
                 const dict = toStringDictionary(attributes);
                 for (const key in dict) {
