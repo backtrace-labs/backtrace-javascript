@@ -3,6 +3,7 @@ import crypto, { randomBytes } from 'crypto';
 import fs from 'fs';
 import fsExtra from 'fs-extra';
 import path from 'path';
+import { promisify } from 'util';
 
 export type TestFiles =
     | 'no-sourcemaps'
@@ -42,10 +43,31 @@ export function withWorkingCopy(sources: TestFiles | TestFiles[], fn: (path: str
         try {
             await fn(workingCopy);
         } finally {
-            fs.rmSync(workingCopy, { recursive: true, force: true });
+            await retry(() => fs.rmSync(workingCopy, { recursive: true, force: true }));
         }
     };
 }
+
+function retry<T>(fn: () => T | Promise<T>, retries = 5, delay = 100, factor = 2) {
+    const wait = promisify(setTimeout);
+
+    const retry = async (fn: () => T | Promise<T>, retries: number, delay: number): Promise<T> => {
+        try {
+            return await fn();
+        } catch (err) {
+            if (retries === 0) {
+                throw err;
+            }
+
+            console.error(`retry failed, ${retries} retries left, waiting for ${delay}`);
+            await wait(delay);
+            return retry(fn, retries - 1, delay * factor);
+        }
+    };
+
+    return retry(fn, retries, delay);
+}
+
 export async function hashFiles(files: string[]) {
     const hashes = await Promise.all(files.map(hashFile));
 
