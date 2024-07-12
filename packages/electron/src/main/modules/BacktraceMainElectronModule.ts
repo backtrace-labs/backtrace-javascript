@@ -1,5 +1,4 @@
 import {
-    AttributeType,
     BacktraceData,
     BacktraceModule,
     BacktraceModuleBindData,
@@ -97,19 +96,18 @@ export class BacktraceMainElectronModule implements BacktraceModule {
                 app.setPath('crashDumps', options.database.path);
             }
 
-            const getElectronDefaultAttributes = (attributes: Record<string, AttributeType> = attributeManager.get('scoped').attributes) => {
-                attributes['error.type'] = 'Crash';
-                return toStringDictionary(attributes);
-            }
-
             crashReporter.start({
                 submitURL: SubmissionUrlInformation.toMinidumpSubmissionUrl(options.url),
                 uploadToServer: true,
-                extra: getElectronDefaultAttributes(),
+                extra: {
+                    ...toStringDictionary(attributeManager.get('scoped').attributes),
+                    'error.type': 'Crash'
+                }
             });
 
+
             attributeManager.attributeEvents.on('scoped-attributes-updated', ({ attributes }) => {
-                const dict = getElectronDefaultAttributes(attributes);
+                const dict = toStringDictionary(attributes);
                 for (const key in dict) {
                     crashReporter.addExtraParameter(key, dict[key]);
                 }
