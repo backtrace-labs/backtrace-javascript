@@ -1,10 +1,11 @@
 import {
+    AttributeType,
     BacktraceData,
     BacktraceModule,
     BacktraceModuleBindData,
     RawBreadcrumb,
     SubmissionUrlInformation,
-    SummedEvent,
+    SummedEvent
 } from '@backtrace/sdk-core';
 import { app, crashReporter } from 'electron';
 import { IpcAttachmentReference } from '../../common/ipc/IpcAttachmentReference';
@@ -96,14 +97,19 @@ export class BacktraceMainElectronModule implements BacktraceModule {
                 app.setPath('crashDumps', options.database.path);
             }
 
+            const getElectronDefaultAttributes = (attributes: Record<string, AttributeType> = attributeManager.get('scoped').attributes) => {
+                attributes['error.type'] = 'Crash';
+                return toStringDictionary(attributes);
+            }
+
             crashReporter.start({
                 submitURL: SubmissionUrlInformation.toMinidumpSubmissionUrl(options.url),
                 uploadToServer: true,
-                extra: toStringDictionary(attributeManager.get('scoped').attributes),
+                extra: getElectronDefaultAttributes(),
             });
 
             attributeManager.attributeEvents.on('scoped-attributes-updated', ({ attributes }) => {
-                const dict = toStringDictionary(attributes);
+                const dict = getElectronDefaultAttributes(attributes);
                 for (const key in dict) {
                     crashReporter.addExtraParameter(key, dict[key]);
                 }
