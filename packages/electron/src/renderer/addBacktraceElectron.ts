@@ -56,7 +56,7 @@ export function addBacktraceElectron<T extends BacktraceCoreClientBuilder>(
     builder
         .useRequestHandler(new IpcRequestHandler(ipcRpc))
         .useReportSubmission(new IpcReportSubmission(ipcRpc, ipcTransport))
-        .useBreadcrumbsStorage(new IpcBreadcrumbsStorage(ipcTransport))
+        .useBreadcrumbsStorage(IpcBreadcrumbsStorage.factory(ipcTransport))
         .useSummedMetricsQueue(new IpcSummedMetricsQueue(ipcTransport, ipcRpc))
         .useUniqueMetricsQueue(new StubMetricsQueue());
 
