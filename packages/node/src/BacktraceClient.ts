@@ -293,10 +293,9 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
         for (const [recordPath, report, session] of reports) {
             try {
                 if (session) {
-                    const breadcrumbsStorage = FileBreadcrumbsStorage.createFromSession(session, this.nodeFileSystem);
-                    if (breadcrumbsStorage) {
-                        report.attachments.push(...breadcrumbsStorage.getAttachments());
-                    }
+                    report.attachments.push(
+                        ...FileBreadcrumbsStorage.getSessionAttachments(session, this.nodeFileSystem),
+                    );
 
                     const fileAttributes = FileAttributeManager.createFromSession(session, this.nodeFileSystem);
                     Object.assign(report.attributes, await fileAttributes.get());
