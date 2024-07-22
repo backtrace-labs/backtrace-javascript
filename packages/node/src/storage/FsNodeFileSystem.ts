@@ -1,6 +1,5 @@
 import { BacktraceAttachment } from '@backtrace/sdk-core';
 import fs from 'fs';
-import { Readable, Writable } from 'stream';
 import { BacktraceFileAttachment } from '../attachment/index.js';
 import { NodeFileSystem } from './interfaces/NodeFileSystem.js';
 
@@ -53,11 +52,11 @@ export class FsNodeFileSystem implements NodeFileSystem {
         fs.renameSync(oldPath, newPath);
     }
 
-    public createWriteStream(path: string): Writable {
+    public createWriteStream(path: string): fs.WriteStream {
         return fs.createWriteStream(path, 'utf-8');
     }
 
-    public createReadStream(path: string): Readable {
+    public createReadStream(path: string): fs.ReadStream {
         return fs.createReadStream(path, 'utf-8');
     }
 

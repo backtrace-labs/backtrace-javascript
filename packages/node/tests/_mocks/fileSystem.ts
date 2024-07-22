@@ -1,4 +1,5 @@
 import { MockedFileSystem, mockFileSystem } from '@backtrace/sdk-core/tests/_mocks/fileSystem.js';
+import { ReadStream, WriteStream } from 'fs';
 import path from 'path';
 import { Readable, Writable } from 'stream';
 import { NodeFileSystem } from '../../src/storage/interfaces/NodeFileSystem.js';
@@ -22,7 +23,7 @@ export function mockStreamFileSystem(files?: Record<string, string>): MockedFile
         }),
 
         createWriteStream: jest.fn().mockImplementation((p: string) => {
-            return new Writable({
+            const writable = new Writable({
                 write(chunk, encoding, callback) {
                     const str = Buffer.isBuffer(chunk)
                         ? chunk.toString('utf-8')
@@ -40,6 +41,8 @@ export function mockStreamFileSystem(files?: Record<string, string>): MockedFile
                     callback && callback();
                 },
             });
+            (writable as WriteStream).path = p;
+            return writable;
         }),
 
         createReadStream: jest.fn().mockImplementation((p: string) => {
@@ -50,7 +53,7 @@ export function mockStreamFileSystem(files?: Record<string, string>): MockedFile
             }
 
             let position = 0;
-            return new Readable({
+            const readable = new Readable({
                 read(size) {
                     const chunk = file.substring(position, position + size);
                     if (!chunk) {
@@ -61,6 +64,8 @@ export function mockStreamFileSystem(files?: Record<string, string>): MockedFile
                     }
                 },
             });
+            (readable as ReadStream).path = p;
+            return readable;
         }),
     };
 }
