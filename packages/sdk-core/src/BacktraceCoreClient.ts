@@ -259,8 +259,10 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
      * Add attachment to the client
      * @param attachment attachment
      */
-    public addAttachment(attachment: BacktraceAttachment): void {
-        this.attachmentManager.add(attachment);
+    public addAttachment(...attachments: BacktraceAttachment[]): void;
+    public addAttachment(...attachments: Array<() => BacktraceAttachment>): void;
+    public addAttachment(...attachments: Array<BacktraceAttachment | (() => BacktraceAttachment)>): void {
+        this.attachmentManager.add(...attachments);
     }
 
     /**
