@@ -1,5 +1,6 @@
 import {
     BacktraceAttachment,
+    BacktraceAttachmentProvider,
     Breadcrumb,
     BreadcrumbLogLevel,
     BreadcrumbsStorage,
@@ -14,7 +15,7 @@ import { BacktraceFileAttachment } from '../attachment';
 import { AlternatingFileWriter } from '../common/AlternatingFileWriter';
 import { NodeFileSystem } from '../storage/interfaces/NodeFileSystem';
 
-const FILE_PREFIX = 'breadcrumbs';
+const FILE_PREFIX = 'bt-breadcrumbs';
 
 export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
     public get lastBreadcrumbId(): number {
@@ -39,20 +40,13 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
         );
     }
 
-    public static createFromSession(
-        session: SessionFiles,
-        fileSystem: NodeFileSystem,
-    ): FileBreadcrumbsStorage | undefined {
+    public static getSessionAttachments(session: SessionFiles) {
         const files = session
             .getSessionFiles()
             .filter((f) => path.basename(f).startsWith(FILE_PREFIX))
             .slice(0, 2);
 
-        if (!files.length) {
-            return undefined;
-        }
-
-        return new FileBreadcrumbsStorage(files[0], files[1], fileSystem, 1);
+        return files.map((file) => new BacktraceFileAttachment(file, path.basename(file)));
     }
 
     public static create(session: SessionFiles, fileSystem: NodeFileSystem, maximumBreadcrumbs: number) {
@@ -65,6 +59,19 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
         return [
             new BacktraceFileAttachment(this._mainFile, 'bt-breadcrumbs-0'),
             new BacktraceFileAttachment(this._fallbackFile, 'bt-breadcrumbs-1'),
+        ];
+    }
+
+    public getAttachmentProviders(): BacktraceAttachmentProvider[] {
+        return [
+            {
+                get: () => new BacktraceFileAttachment(this._mainFile, 'bt-breadcrumbs-0'),
+                type: 'dynamic',
+            },
+            {
+                get: () => new BacktraceFileAttachment(this._fallbackFile, 'bt-breadcrumbs-1'),
+                type: 'dynamic',
+            },
         ];
     }
 
