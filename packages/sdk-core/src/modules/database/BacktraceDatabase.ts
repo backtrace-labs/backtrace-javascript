@@ -9,7 +9,11 @@ import { BacktraceModule, BacktraceModuleBindData } from '../BacktraceModule';
 import { SessionFiles } from '../storage';
 import { BacktraceDatabaseContext } from './BacktraceDatabaseContext';
 import { BacktraceDatabaseStorageProvider } from './BacktraceDatabaseStorageProvider';
-import { BacktraceDatabaseRecord } from './model/BacktraceDatabaseRecord';
+import {
+    AttachmentBacktraceDatabaseRecord,
+    BacktraceDatabaseRecord,
+    ReportBacktraceDatabaseRecord,
+} from './model/BacktraceDatabaseRecord';
 
 export class BacktraceDatabase implements BacktraceModule {
     /**
@@ -94,7 +98,9 @@ export class BacktraceDatabase implements BacktraceModule {
         });
 
         reportEvents.on('after-send', (_, data, __, submissionResult) => {
-            const record = this._databaseRecordContext.find((record) => record.data.uuid === data.uuid);
+            const record = this._databaseRecordContext.find(
+                (record) => record.type === 'report' && record.data.uuid === data.uuid,
+            );
             if (!record) {
                 return;
             }
@@ -115,14 +121,17 @@ export class BacktraceDatabase implements BacktraceModule {
     public add(
         backtraceData: BacktraceData,
         attachments: BacktraceAttachment<unknown>[],
-    ): BacktraceDatabaseRecord | undefined {
+    ): ReportBacktraceDatabaseRecord | undefined {
         if (!this._enabled) {
             return undefined;
         }
 
         this.prepareDatabase();
 
-        const record: BacktraceDatabaseRecord = {
+        const sessionId = backtraceData.attributes?.['application.session'];
+
+        const record: ReportBacktraceDatabaseRecord = {
+            type: 'report',
             count: 1,
             data: backtraceData,
             timestamp: TimeHelper.now(),
@@ -130,6 +139,47 @@ export class BacktraceDatabase implements BacktraceModule {
             id: IdGenerator.uuid(),
             locked: false,
             attachments: attachments,
+            sessionId: typeof sessionId === 'string' ? sessionId : undefined,
+        };
+
+        const saveResult = this._storageProvider.add(record);
+        if (!saveResult) {
+            return undefined;
+        }
+
+        this._databaseRecordContext.add(record);
+        this.lockSessionWithRecord(record);
+
+        return record;
+    }
+
+    /**
+     * Adds Bactrace attachment to the database
+     * @param backtraceData diagnostic data object
+     * @param attachments attachments
+     * @returns record if database is enabled. Otherwise undefined.
+     */
+    public addAttachment(
+        rxid: string,
+        attachment: BacktraceAttachment,
+        sessionId?: string,
+    ): AttachmentBacktraceDatabaseRecord | undefined {
+        if (!this._enabled) {
+            return undefined;
+        }
+
+        this.prepareDatabase();
+
+        const record: AttachmentBacktraceDatabaseRecord = {
+            type: 'attachment',
+            count: 1,
+            timestamp: TimeHelper.now(),
+            hash: '',
+            id: IdGenerator.uuid(),
+            rxid,
+            locked: false,
+            attachment,
+            sessionId: typeof sessionId === 'string' ? sessionId : undefined,
         };
 
         const saveResult = this._storageProvider.add(record);
@@ -229,8 +279,13 @@ export class BacktraceDatabase implements BacktraceModule {
                 }
                 try {
                     record.locked = true;
-                    const result = await this._requestHandler.send(record.data, record.attachments, signal);
-                    if (result.status === 'Ok') {
+
+                    const result =
+                        record.type === 'report'
+                            ? await this._requestHandler.send(record.data, record.attachments, signal)
+                            : await this._requestHandler.sendAttachment(record.rxid, record.attachment, signal);
+
+                    if (result.status === 'Ok' || result.status === 'Unsupported') {
                         this.remove(record);
                         continue;
                     }
@@ -287,7 +342,7 @@ export class BacktraceDatabase implements BacktraceModule {
             return;
         }
 
-        const sessionId = record.data.attributes?.['application.session'];
+        const sessionId = record.sessionId;
         if (typeof sessionId !== 'string') {
             this._sessionFiles.lockPreviousSessions(record.id);
             return;

@@ -1,3 +1,4 @@
+import assert from 'assert';
 import path from 'path';
 import { BacktraceData, BacktraceDatabaseRecord, BacktraceReportSubmissionResult } from '../../src';
 import { TimeHelper } from '../../src/common/TimeHelper';
@@ -45,6 +46,7 @@ describe('Database context memory storage tests', () => {
             const records = database.get();
 
             expect(records.length).toBe(1);
+            assert(records[0].type === 'report');
             expect(records[0].data.attributes['error.message']).toEqual(testingErrorMessage);
         });
 
@@ -96,6 +98,7 @@ describe('Database context memory storage tests', () => {
 
         it('Should load records from the storage provider to context', async () => {
             const record: BacktraceDatabaseRecord = {
+                type: 'report',
                 attachments: [],
                 timestamp: TimeHelper.now(),
                 count: 1,
