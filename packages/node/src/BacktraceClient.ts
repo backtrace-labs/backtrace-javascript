@@ -11,6 +11,7 @@ import path from 'path';
 import { BacktraceConfiguration, BacktraceSetupConfiguration } from './BacktraceConfiguration';
 import { BacktraceNodeRequestHandler } from './BacktraceNodeRequestHandler';
 import { AGENT } from './agentDefinition';
+import { FileAttachmentsManager } from './attachment/FileAttachmentsManager';
 import { transformAttachment } from './attachment/transformAttachments';
 import { FileBreadcrumbsStorage } from './breadcrumbs/FileBreadcrumbsStorage';
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
@@ -54,6 +55,7 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
 
         if (this.sessionFiles && clientSetup.options.database?.captureNativeCrashes) {
             this.addModule(FileAttributeManager, FileAttributeManager.create(fileSystem));
+            this.addModule(FileAttachmentsManager, FileAttachmentsManager.create(fileSystem));
         }
     }
 
@@ -303,6 +305,9 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
 
                     const fileAttributes = FileAttributeManager.createFromSession(session, this.nodeFileSystem);
                     Object.assign(report.attributes, await fileAttributes.get());
+
+                    const fileAttachments = FileAttachmentsManager.createFromSession(session, this.nodeFileSystem);
+                    report.attachments.push(...(await fileAttachments.get()));
 
                     report.attributes['application.session'] = session.sessionId;
                 } else {
