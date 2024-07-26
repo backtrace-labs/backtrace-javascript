@@ -407,7 +407,9 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
             attachmentManager: this.attachmentManager,
             reportSubmission: this._reportSubmission,
             requestHandler: this._requestHandler,
+            database: this.database,
             sessionFiles: this.sessionFiles,
+            fileSystem: this.fileSystem,
         };
     }
 
