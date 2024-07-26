@@ -1,11 +1,14 @@
+import { FileAttachmentsManager, FileBreadcrumbsStorage, NodeFileSystem } from '@backtrace/node';
 import {
     BacktraceData,
     BacktraceModule,
     BacktraceModuleBindData,
     RawBreadcrumb,
+    SessionFiles,
     SubmissionUrlInformation,
     SummedEvent,
 } from '@backtrace/sdk-core';
+import type { BacktraceDatabase } from '@backtrace/sdk-core/lib/modules/database/BacktraceDatabase';
 import { app, crashReporter } from 'electron';
 import { IpcAttachmentReference } from '../../common/ipc/IpcAttachmentReference';
 import { IpcEvents } from '../../common/ipc/IpcEvents';
@@ -99,7 +102,8 @@ export class BacktraceMainElectronModule implements BacktraceModule {
             return;
         }
 
-        const { options, attributeManager } = this._bindData;
+        const { options, attributeManager, sessionFiles, fileSystem, database } = this._bindData;
+
         if (options.database?.captureNativeCrashes) {
             if (options.database.path) {
                 app.setPath('crashDumps', options.database.path);
@@ -120,6 +124,13 @@ export class BacktraceMainElectronModule implements BacktraceModule {
                     crashReporter.addExtraParameter(key, dict[key]);
                 }
             });
+
+            if (sessionFiles && database && fileSystem) {
+                const lockId = sessionFiles.lockPreviousSessions();
+                this.sendPreviousCrashAttachments(database, sessionFiles, fileSystem as NodeFileSystem).finally(
+                    () => lockId && sessionFiles.unlockPreviousSessions(lockId),
+                );
+            }
         }
     }
 
@@ -129,6 +140,64 @@ export class BacktraceMainElectronModule implements BacktraceModule {
             'electron.processId': event.processId,
             'electron.process': 'renderer',
         };
+    }
+
+    private async sendPreviousCrashAttachments(
+        database: BacktraceDatabase,
+        session: SessionFiles,
+        fileSystem: NodeFileSystem,
+    ) {
+        // Sort crashes and sessions by timestamp descending
+        const crashes = crashReporter.getUploadedReports().sort((a, b) => b.date.getTime() - a.date.getTime());
+        const previousSessions = session.getPreviousSessions().sort((a, b) => b.timestamp - a.timestamp);
+
+        for (const crash of crashes) {
+            const rxid = this.getCrashRxid(crash.id);
+            if (!rxid) {
+                continue;
+            }
+
+            try {
+                // Get first session that happened before the crash
+                const session = previousSessions.find((p) => p.timestamp < crash.date.getTime());
+                // If there is no such session, there won't be any other sessions
+                if (!session) {
+                    break;
+                }
+
+                const crashLock = session.getFileName(`electron-crash-lock-${rxid}`);
+                // If crash lock exists, do not attempt to add attachments twice
+                if (await fileSystem.exists(crashLock)) {
+                    continue;
+                }
+
+                for (const attachment of FileBreadcrumbsStorage.getSessionAttachments(session)) {
+                    database.addAttachment(rxid, attachment, session.sessionId);
+                }
+
+                const fileAttachments = FileAttachmentsManager.createFromSession(session, fileSystem);
+                const attachments = await fileAttachments.get();
+
+                for (const attachment of attachments) {
+                    database.addAttachment(rxid, attachment, session.sessionId);
+                }
+
+                // Write an empty crash lock, so we know that this crash is already taken care of
+                await fileSystem.writeFile(crashLock, '');
+            } catch {
+                // Do nothing, skip the report
+            }
+        }
+
+        await database.send();
+    }
+
+    private getCrashRxid(crashId: string): string | undefined {
+        try {
+            return JSON.parse(crashId)._rxid;
+        } catch {
+            return crashId.match(/"_rxid":"([a-f0-9-]+)"/i)?.[1];
+        }
     }
 }
 
