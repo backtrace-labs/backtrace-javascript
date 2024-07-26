@@ -125,6 +125,10 @@ export class AttachmentBacktraceDatabaseFileRecord implements AttachmentBacktrac
                 return undefined;
             }
 
+            if (!fileSystem.existsSync(record.attachment.filePath)) {
+                return undefined;
+            }
+
             const attachment = fileSystem.createAttachment(record.attachment.filePath, record.attachment.name);
             return new AttachmentBacktraceDatabaseFileRecord({
                 ...record,
