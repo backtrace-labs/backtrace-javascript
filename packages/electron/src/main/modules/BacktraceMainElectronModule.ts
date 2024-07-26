@@ -53,6 +53,15 @@ export class BacktraceMainElectronModule implements BacktraceModule {
             return await reportSubmission.send(data, [...attachments, ...client.attachments]);
         });
 
+        rpc.on(IpcEvents.sendAttachment, async (event, rxid: string, attachmentRef: IpcAttachmentReference) => {
+            const attachment = new IpcAttachment(
+                attachmentRef.name,
+                attachmentRef.id,
+                new WindowIpcTransport(event.sender),
+            );
+            return await reportSubmission.sendAttachment(rxid, attachment);
+        });
+
         rpc.on(IpcEvents.sendMetrics, async () => client.metrics?.send());
 
         rpc.on(IpcEvents.ping, () => Promise.resolve('pong'));
