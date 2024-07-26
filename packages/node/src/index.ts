@@ -18,3 +18,4 @@ export * from './BacktraceNodeRequestHandler';
 export * from './breadcrumbs';
 export * from './builder/BacktraceClientBuilder';
 export * from './builder/BacktraceClientSetup';
+export * from './storage';
