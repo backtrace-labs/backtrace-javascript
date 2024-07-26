@@ -285,7 +285,11 @@ export class BacktraceDatabase implements BacktraceModule {
                             ? await this._requestHandler.send(record.data, record.attachments, signal)
                             : await this._requestHandler.sendAttachment(record.rxid, record.attachment, signal);
 
-                    if (result.status === 'Ok' || result.status === 'Unsupported') {
+                    if (
+                        result.status === 'Ok' ||
+                        result.status === 'Unsupported' ||
+                        result.status === 'Report skipped'
+                    ) {
                         this.remove(record);
                         continue;
                     }
