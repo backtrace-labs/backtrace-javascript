@@ -106,6 +106,7 @@ describe('Database context memory storage tests', () => {
                 hash: '',
                 id: '123',
                 locked: false,
+                sessionId: undefined,
             };
             const fileSystem = mockFileSystem({
                 [path.join(testDatabaseSettings.path, 'abc-record.json')]: JSON.stringify(record),
