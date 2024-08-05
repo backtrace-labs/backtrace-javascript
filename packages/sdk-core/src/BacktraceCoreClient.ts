@@ -236,6 +236,7 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
         this.sessionFiles?.clearPreviousSessions();
 
         this._enabled = true;
+        BacktraceCoreClient._instance = this;
     }
 
     /**
