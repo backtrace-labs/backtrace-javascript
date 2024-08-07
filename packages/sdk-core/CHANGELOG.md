@@ -1,3 +1,7 @@
+# Version 0.3.3
+
+-   fix `BacktraceClient.instance` not being set when the builder is used (#263)
+
 # Version 0.3.2
 
 -   added cancellation token support to `BacktraceDatabase` send/flush methods (#245)
