@@ -1,3 +1,4 @@
+import assert from 'assert';
 import path from 'path';
 import { BacktraceDatabaseConfiguration, BacktraceReportSubmissionResult } from '../../src';
 import { BacktraceDatabase } from '../../src/modules/database/BacktraceDatabase';
@@ -56,6 +57,7 @@ describe('Database context validation tests', () => {
                 for (let index = 0; index < maximumNumberOfRecords; index++) {
                     const record = records[index];
                     const expectedMessage = overflowEvents + index;
+                    assert(record.type === 'report');
                     expect(record.data.attributes['error.message']).toEqual(expectedMessage.toString());
                 }
             });

@@ -30,4 +30,8 @@ export type BacktraceSubmissionStatus =
     /**
      * Due to before skip event or skipReport callback the user decided to skip the report
      */
-    | 'Report skipped';
+    | 'Report skipped'
+    /**
+     * Feature is not supported
+     */
+    | 'Unsupported';

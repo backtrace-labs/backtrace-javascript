@@ -1,5 +1,6 @@
 import {
     BacktraceAttachment,
+    BacktraceAttachmentResponse,
     BacktraceReportSubmissionResult,
     BacktraceRequestHandler,
     BacktraceSubmissionResponse,
@@ -7,7 +8,7 @@ import {
     DEFAULT_TIMEOUT,
 } from '@backtrace/sdk-core';
 import FormData from 'form-data';
-import http from 'http';
+import http, { ClientRequest, IncomingMessage } from 'http';
 import https from 'https';
 import { Readable } from 'stream';
 export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
@@ -52,6 +53,69 @@ export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
         return this.send<T>(submissionUrl, payload, abortSignal);
     }
 
+    public async postAttachment(
+        submissionUrl: string,
+        attachment: BacktraceAttachment<Buffer | Readable | string | Uint8Array>,
+        abortSignal?: AbortSignal,
+    ): Promise<BacktraceReportSubmissionResult<BacktraceAttachmentResponse>> {
+        try {
+            const attachmentData = attachment.get();
+            if (!attachmentData) {
+                return BacktraceReportSubmissionResult.ReportSkipped();
+            }
+
+            const url = new URL(submissionUrl);
+            const httpClient = this.getHttpClient(url);
+
+            return new Promise<BacktraceReportSubmissionResult<BacktraceAttachmentResponse>>((res) => {
+                const request = httpClient.request(
+                    url,
+                    {
+                        rejectUnauthorized: this._options.ignoreSslCertificate === true,
+                        timeout: this._timeout,
+                        method: 'POST',
+                    },
+                    (response) => {
+                        let result = '';
+                        response.on('data', (d) => {
+                            result += d.toString();
+                        });
+                        response.on('end', () => {
+                            cleanup();
+                            return res(this.handleResponse(response, result));
+                        });
+                        response.on('error', () => {
+                            cleanup();
+                        });
+                    },
+                );
+
+                abortSignal?.addEventListener(
+                    'abort',
+                    () => BacktraceNodeRequestHandler.abortFn(abortSignal, request),
+                    { once: true },
+                );
+
+                function cleanup() {
+                    abortSignal?.removeEventListener('abort', cleanup);
+                }
+
+                request.on('error', (err: Error) => {
+                    cleanup();
+                    return res(this.handleRequestError(err));
+                });
+
+                if (attachmentData instanceof Readable) {
+                    attachmentData.pipe(request);
+                } else {
+                    request.write(attachmentData);
+                }
+            });
+        } catch (err) {
+            return this.handleError(err);
+        }
+    }
+
     private async send<T>(
         submissionUrl: string,
         payload: string | FormData,
@@ -79,27 +143,8 @@ export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
                             result += d.toString();
                         });
                         response.on('end', () => {
-                            switch (response.statusCode) {
-                                case 200: {
-                                    res(BacktraceReportSubmissionResult.Ok(JSON.parse(result)));
-                                    break;
-                                }
-                                case 401:
-                                case 403: {
-                                    res(BacktraceReportSubmissionResult.OnInvalidToken());
-                                    break;
-                                }
-                                case 429: {
-                                    res(BacktraceReportSubmissionResult.OnLimitReached());
-                                    break;
-                                }
-                                default: {
-                                    res(BacktraceReportSubmissionResult.OnInternalServerError(result));
-                                    break;
-                                }
-                            }
-
                             cleanup();
+                            return res(this.handleResponse(response, result));
                         });
                         response.on('error', () => {
                             cleanup();
@@ -107,18 +152,11 @@ export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
                     },
                 );
 
-                function abortFn(this: AbortSignal) {
-                    const reason =
-                        this.reason instanceof Error
-                            ? this.reason
-                            : typeof this.reason === 'string'
-                              ? new Error(this.reason)
-                              : new Error('Operation cancelled.');
-
-                    request.destroy(reason);
-                }
-
-                abortSignal?.addEventListener('abort', abortFn, { once: true });
+                abortSignal?.addEventListener(
+                    'abort',
+                    () => BacktraceNodeRequestHandler.abortFn(abortSignal, request),
+                    { once: true },
+                );
 
                 function cleanup() {
                     abortSignal?.removeEventListener('abort', cleanup);
@@ -126,10 +164,7 @@ export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
 
                 request.on('error', (err: Error) => {
                     cleanup();
-                    if (ConnectionError.isConnectionError(err)) {
-                        return res(BacktraceReportSubmissionResult.OnNetworkingError(err.message));
-                    }
-                    return res(BacktraceReportSubmissionResult.OnInternalServerError(err.message));
+                    return res(this.handleRequestError(err));
                 });
 
                 if (typeof payload === 'string') {
@@ -140,18 +175,59 @@ export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
                 }
             });
         } catch (err) {
-            if (ConnectionError.isConnectionError(err)) {
-                return BacktraceReportSubmissionResult.OnNetworkingError(err.message);
-            }
-
-            const errorMessage = err instanceof Error ? err.message : (err as string);
-            return BacktraceReportSubmissionResult.OnUnknownError(errorMessage);
+            return this.handleError(err);
         }
     }
 
     private getHttpClient(submissionUrl: URL) {
         return submissionUrl.protocol === 'https:' ? https : http;
     }
+
+    private handleResponse<T>(response: IncomingMessage, result: string) {
+        switch (response.statusCode) {
+            case 200: {
+                return BacktraceReportSubmissionResult.Ok<T>(JSON.parse(result));
+            }
+            case 401:
+            case 403: {
+                return BacktraceReportSubmissionResult.OnInvalidToken<T>();
+            }
+            case 429: {
+                return BacktraceReportSubmissionResult.OnLimitReached<T>();
+            }
+            default: {
+                return BacktraceReportSubmissionResult.OnInternalServerError<T>(result);
+            }
+        }
+    }
+
+    private handleRequestError<T>(err: Error) {
+        if (ConnectionError.isConnectionError(err)) {
+            return BacktraceReportSubmissionResult.OnNetworkingError<T>(err.message);
+        }
+        return BacktraceReportSubmissionResult.OnInternalServerError<T>(err.message);
+    }
+
+    private handleError<T>(err: unknown) {
+        if (ConnectionError.isConnectionError(err)) {
+            return BacktraceReportSubmissionResult.OnNetworkingError<T>(err.message);
+        }
+
+        const errorMessage = err instanceof Error ? err.message : (err as string);
+        return BacktraceReportSubmissionResult.OnUnknownError<T>(errorMessage);
+    }
+
+    private static abortFn(signal: AbortSignal, request: ClientRequest) {
+        const reason =
+            signal.reason instanceof Error
+                ? signal.reason
+                : typeof signal.reason === 'string'
+                  ? new Error(signal.reason)
+                  : new Error('Operation cancelled.');
+
+        request.destroy(reason);
+    }
+
     private createFormData(json: string, attachments?: BacktraceAttachment<Buffer | Readable | string | Uint8Array>[]) {
         const formData = new FormData();
         formData.append(this.UPLOAD_FILE_NAME, json, `${this.UPLOAD_FILE_NAME}.json`);

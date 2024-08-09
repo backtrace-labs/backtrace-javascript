@@ -18,6 +18,7 @@ import { ReportEvents } from './events/ReportEvents';
 import { AttributeType, BacktraceData } from './model/data/BacktraceData';
 import { BacktraceReportSubmission, RequestBacktraceReportSubmission } from './model/http/BacktraceReportSubmission';
 import { BacktraceReport } from './model/report/BacktraceReport';
+import { AttachmentManager } from './modules/attachments/AttachmentManager';
 import { AttributeManager } from './modules/attribute/AttributeManager';
 import { ClientAttributeProvider } from './modules/attribute/ClientAttributeProvider';
 import { UserAttributeProvider } from './modules/attribute/UserAttributeProvider';
@@ -96,8 +97,7 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
      * Client cached attachments
      */
     public get attachments(): readonly BacktraceAttachment[] {
-        // always return a copy of attachments
-        return [...this._attachments];
+        return this.attachmentManager.get();
     }
 
     /**
@@ -114,10 +114,10 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
     protected readonly options: O;
     protected readonly reportEvents: Events<ReportEvents>;
     protected readonly attributeManager: AttributeManager;
+    protected readonly attachmentManager: AttachmentManager;
     protected readonly fileSystem?: FileSystem;
 
     private readonly _modules: BacktraceModules = new Map();
-    private readonly _attachments: BacktraceAttachment[];
     private readonly _dataBuilder: BacktraceDataBuilder;
     private readonly _reportSubmission: BacktraceReportSubmission;
     private readonly _rateLimitWatcher: RateLimitWatcher;
@@ -133,7 +133,6 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
         this.options = setup.options;
         this.fileSystem = setup.fileSystem;
         this._sdkOptions = setup.sdkOptions;
-        this._attachments = this.options.attachments ?? [];
         this._sessionProvider = setup.sessionProvider ?? new SingleSessionProvider();
         this._reportSubmission =
             setup.reportSubmission ?? new RequestBacktraceReportSubmission(this.options, setup.requestHandler);
@@ -153,6 +152,10 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
         }
 
         this.attributeManager = new AttributeManager(attributeProviders);
+        this.attachmentManager = new AttachmentManager();
+        if (this.options.attachments) {
+            this.attachmentManager.add(...this.options.attachments);
+        }
 
         const stackTraceConverter = setup.stackTraceConverter ?? new V8StackTraceConverter();
         this._dataBuilder = new BacktraceDataBuilder(
@@ -257,8 +260,10 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
      * Add attachment to the client
      * @param attachment attachment
      */
-    public addAttachment(attachment: BacktraceAttachment): void {
-        this._attachments.push(attachment);
+    public addAttachment(...attachments: BacktraceAttachment[]): void;
+    public addAttachment(...attachments: Array<() => BacktraceAttachment>): void;
+    public addAttachment(...attachments: Array<BacktraceAttachment | (() => BacktraceAttachment)>): void {
+        this.attachmentManager.add(...attachments);
     }
 
     /**
@@ -383,7 +388,7 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
         report: BacktraceReport,
         reportAttachments: BacktraceAttachment[],
     ): BacktraceAttachment[] {
-        return [...this._attachments, ...(report.attachments ?? []), ...(reportAttachments ?? [])];
+        return [...this.attachmentManager.get(), ...(report.attachments ?? []), ...(reportAttachments ?? [])];
     }
 
     private skipFrameOnMessage(data: Error | string): number {
@@ -400,9 +405,12 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
             options: this.options,
             reportEvents: this.reportEvents,
             attributeManager: this.attributeManager,
+            attachmentManager: this.attachmentManager,
             reportSubmission: this._reportSubmission,
             requestHandler: this._requestHandler,
+            database: this.database,
             sessionFiles: this.sessionFiles,
+            fileSystem: this.fileSystem,
         };
     }
 

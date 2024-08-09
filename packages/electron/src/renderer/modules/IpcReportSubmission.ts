@@ -1,5 +1,6 @@
 import {
     BacktraceAttachment,
+    BacktraceAttachmentResponse,
     BacktraceData,
     BacktraceReportSubmission,
     BacktraceReportSubmissionResult,
@@ -32,22 +33,8 @@ export class IpcReportSubmission implements BacktraceReportSubmission {
         }
 
         for (const attachment of attachments) {
-            const id = IdGenerator.uuid() + '_' + attachment.name;
-            const content = attachment.get();
-            if (content instanceof Blob) {
-                const stream = new WritableIpcStream(id, this._ipcTransport);
-                content.stream().pipeTo(stream);
-            } else if (content instanceof ReadableStream) {
-                const stream = new WritableIpcStream(id, this._ipcTransport);
-                content.pipeTo(stream);
-            } else if (content != undefined) {
-                const stream = new WritableIpcStream(id, this._ipcTransport);
-                const writer = stream.getWriter();
-                writer
-                    .write(typeof content === 'string' ? content : JSON.stringify(content, jsonEscaper()))
-                    .then(() => writer.releaseLock())
-                    .then(() => stream.close());
-            } else {
+            const id = this.pipeAttachment(attachment);
+            if (!id) {
                 continue;
             }
 
@@ -58,5 +45,40 @@ export class IpcReportSubmission implements BacktraceReportSubmission {
         }
 
         return this._ipcRpc.invoke(IpcEvents.sendReport, data, references);
+    }
+
+    public async sendAttachment(
+        rxid: string,
+        attachment: BacktraceAttachment,
+    ): Promise<BacktraceReportSubmissionResult<BacktraceAttachmentResponse>> {
+        const id = this.pipeAttachment(attachment);
+        if (!id) {
+            return BacktraceReportSubmissionResult.ReportSkipped();
+        }
+
+        return this._ipcRpc.invoke(IpcEvents.sendAttachment, rxid, { id, name: attachment.name });
+    }
+
+    private pipeAttachment(attachment: BacktraceAttachment) {
+        const id = IdGenerator.uuid() + '_' + attachment.name;
+        const content = attachment.get();
+        if (content instanceof Blob) {
+            const stream = new WritableIpcStream(id, this._ipcTransport);
+            content.stream().pipeTo(stream);
+        } else if (content instanceof ReadableStream) {
+            const stream = new WritableIpcStream(id, this._ipcTransport);
+            content.pipeTo(stream);
+        } else if (content != undefined) {
+            const stream = new WritableIpcStream(id, this._ipcTransport);
+            const writer = stream.getWriter();
+            writer
+                .write(typeof content === 'string' ? content : JSON.stringify(content, jsonEscaper()))
+                .then(() => writer.releaseLock())
+                .then(() => stream.close());
+        } else {
+            return undefined;
+        }
+
+        return id;
     }
 }

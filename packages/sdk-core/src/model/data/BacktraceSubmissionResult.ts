@@ -29,6 +29,10 @@ export class BacktraceReportSubmissionResult<T> {
         return new BacktraceReportSubmissionResult<T>('Disabled SDK');
     }
 
+    public static Unsupported<T>(message?: string): BacktraceReportSubmissionResult<T> {
+        return new BacktraceReportSubmissionResult<T>('Unsupported', message);
+    }
+
     public static ReportSkipped<T>(): BacktraceReportSubmissionResult<T> {
         return new BacktraceReportSubmissionResult<T>('Report skipped');
     }
