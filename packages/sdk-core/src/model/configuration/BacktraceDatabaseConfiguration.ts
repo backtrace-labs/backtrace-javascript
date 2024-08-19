@@ -27,6 +27,13 @@ export interface EnabledBacktraceDatabaseConfiguration {
     maximumNumberOfRecords?: number;
 
     /**
+     * The maximum number of attachments stored in the offline database. When the limit is reached,
+     * the oldest attachments are removed. If the value is equal to '0', then no limit is set.
+     * The default value is 100.
+     */
+    maximumNumberOfAttachmentRecords?: number;
+
+    /**
      * The amount of time (in ms) to wait between retries if the database is unable to send a report.
      * The default value is 60 000
      */

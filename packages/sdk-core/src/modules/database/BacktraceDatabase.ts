@@ -12,6 +12,7 @@ import { BacktraceDatabaseStorageProvider } from './BacktraceDatabaseStorageProv
 import {
     AttachmentBacktraceDatabaseRecord,
     BacktraceDatabaseRecord,
+    BacktraceDatabaseRecordCountByType,
     ReportBacktraceDatabaseRecord,
 } from './model/BacktraceDatabaseRecord';
 
@@ -32,7 +33,7 @@ export class BacktraceDatabase implements BacktraceModule {
     private readonly _databaseRecordContext: BacktraceDatabaseContext;
     private readonly _storageProviders: BacktraceDatabaseStorageProvider[] = [];
 
-    private readonly _maximumRecords: number;
+    private readonly _recordLimits: BacktraceDatabaseRecordCountByType;
     private readonly _retryInterval: number;
     private _intervalId?: ReturnType<typeof setInterval>;
 
@@ -45,7 +46,10 @@ export class BacktraceDatabase implements BacktraceModule {
         private readonly _sessionFiles?: SessionFiles,
     ) {
         this._databaseRecordContext = new BacktraceDatabaseContext(this._options?.maximumRetries);
-        this._maximumRecords = this._options?.maximumNumberOfRecords ?? 8;
+        this._recordLimits = {
+            report: this._options?.maximumNumberOfRecords ?? 8,
+            attachment: this._options?.maximumNumberOfAttachmentRecords ?? 100,
+        };
         this._retryInterval = this._options?.retryInterval ?? 60_000;
     }
 
@@ -126,8 +130,6 @@ export class BacktraceDatabase implements BacktraceModule {
             return undefined;
         }
 
-        this.prepareDatabase();
-
         const sessionId = backtraceData.attributes?.['application.session'];
 
         const record: ReportBacktraceDatabaseRecord = {
@@ -141,6 +143,7 @@ export class BacktraceDatabase implements BacktraceModule {
             sessionId: typeof sessionId === 'string' ? sessionId : undefined,
         };
 
+        this.prepareDatabase([record]);
         const saveResult = this._storageProvider.add(record);
         if (!saveResult) {
             return undefined;
@@ -167,8 +170,6 @@ export class BacktraceDatabase implements BacktraceModule {
             return undefined;
         }
 
-        this.prepareDatabase();
-
         const record: AttachmentBacktraceDatabaseRecord = {
             type: 'attachment',
             timestamp: TimeHelper.now(),
@@ -180,6 +181,7 @@ export class BacktraceDatabase implements BacktraceModule {
             sessionId: typeof sessionId === 'string' ? sessionId : undefined,
         };
 
+        this.prepareDatabase([record]);
         const saveResult = this._storageProvider.add(record);
         if (!saveResult) {
             return undefined;
@@ -204,6 +206,13 @@ export class BacktraceDatabase implements BacktraceModule {
      */
     public count(): number {
         return this._databaseRecordContext.count();
+    }
+
+    /**
+     * @returns Returns number of records by type stored in the Database
+     */
+    public countByType(): BacktraceDatabaseRecordCountByType {
+        return this._databaseRecordContext.countByType();
     }
 
     /**
@@ -304,25 +313,45 @@ export class BacktraceDatabase implements BacktraceModule {
      * Prepare database to insert records
      * @param totalNumberOfRecords number of records to insert
      */
-    private prepareDatabase(totalNumberOfRecords = 1) {
-        const numberOfRecords = this.count();
-        if (numberOfRecords + totalNumberOfRecords <= this._maximumRecords) {
-            return;
+    private prepareDatabase(forRecords: BacktraceDatabaseRecord[]) {
+        const dropLimits = { ...this._recordLimits };
+        for (const record of forRecords) {
+            dropLimits[record.type]--;
         }
-        this.remove(this._databaseRecordContext.dropOverflow(totalNumberOfRecords));
+
+        const dropped = this._databaseRecordContext.dropOverLimits(dropLimits);
+        this.remove(dropped);
     }
 
     private async loadReports() {
         const records = await this._storageProvider.get();
-        // delete old records before adding them to the database
-        if (records.length >= this._maximumRecords) {
-            this.remove(records.splice(this._maximumRecords));
+
+        // limit only non-attachment records
+        const countByType: BacktraceDatabaseRecordCountByType = {
+            attachment: 0,
+            report: 0,
+        };
+
+        const recordsToAdd: BacktraceDatabaseRecord[] = [];
+        const recordsToRemove: BacktraceDatabaseRecord[] = [];
+        for (const record of records) {
+            if (countByType[record.type] >= this._recordLimits[record.type]) {
+                recordsToRemove.push(record);
+            } else {
+                recordsToAdd.push(record);
+                countByType[record.type]++;
+            }
         }
 
-        this.prepareDatabase(records.length);
-        this._databaseRecordContext.load(records);
+        // delete old records before adding them to the database
+        if (recordsToRemove.length) {
+            this.remove(recordsToRemove);
+        }
 
-        for (const record of records) {
+        this.prepareDatabase(recordsToAdd);
+        this._databaseRecordContext.load(recordsToAdd);
+
+        for (const record of recordsToAdd) {
             this.lockSessionWithRecord(record);
         }
     }

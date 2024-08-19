@@ -30,3 +30,5 @@ export interface AttachmentBacktraceDatabaseRecord {
 }
 
 export type BacktraceDatabaseRecord = ReportBacktraceDatabaseRecord | AttachmentBacktraceDatabaseRecord;
+
+export type BacktraceDatabaseRecordCountByType = Record<BacktraceDatabaseRecord['type'], number>;
