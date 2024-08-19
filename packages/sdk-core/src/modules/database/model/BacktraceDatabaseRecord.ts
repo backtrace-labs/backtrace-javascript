@@ -9,7 +9,6 @@ export interface ReportBacktraceDatabaseRecord {
     readonly timestamp: number;
     readonly sessionId?: string;
     attachments: BacktraceAttachment[];
-    count: number;
     /**
      * Determines if the record is in use
      */
@@ -24,7 +23,6 @@ export interface AttachmentBacktraceDatabaseRecord {
     readonly timestamp: number;
     readonly attachment: BacktraceAttachment;
     readonly sessionId?: string;
-    count: number;
     /**
      * Determines if the record is in use
      */

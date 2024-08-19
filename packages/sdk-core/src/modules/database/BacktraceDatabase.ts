@@ -90,7 +90,7 @@ export class BacktraceDatabase implements BacktraceModule {
         reportEvents.on('before-send', (_, data, attachments) => {
             const record = this.add(data, attachments);
 
-            if (!record || record.locked || record.count !== 1) {
+            if (!record || record.locked) {
                 return undefined;
             }
 
@@ -132,7 +132,6 @@ export class BacktraceDatabase implements BacktraceModule {
 
         const record: ReportBacktraceDatabaseRecord = {
             type: 'report',
-            count: 1,
             data: backtraceData,
             timestamp: TimeHelper.now(),
             hash: '',
@@ -172,7 +171,6 @@ export class BacktraceDatabase implements BacktraceModule {
 
         const record: AttachmentBacktraceDatabaseRecord = {
             type: 'attachment',
-            count: 1,
             timestamp: TimeHelper.now(),
             hash: '',
             id: IdGenerator.uuid(),

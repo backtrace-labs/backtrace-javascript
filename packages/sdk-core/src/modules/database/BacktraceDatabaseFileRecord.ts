@@ -42,7 +42,6 @@ export class ReportBacktraceDatabaseFileRecord implements ReportBacktraceDatabas
     public readonly type = 'report';
     public readonly data: BacktraceData;
     public readonly id: string;
-    public readonly count: number;
     public readonly hash: string;
     public readonly timestamp: number;
     public readonly sessionId?: string;
@@ -54,7 +53,6 @@ export class ReportBacktraceDatabaseFileRecord implements ReportBacktraceDatabas
     ) {
         this.data = record.data;
         this.id = record.id;
-        this.count = record.count;
         this.hash = record.hash;
         this.timestamp = record.timestamp;
         this.sessionId = record.sessionId;
@@ -94,13 +92,11 @@ export class AttachmentBacktraceDatabaseFileRecord implements AttachmentBacktrac
     public readonly timestamp: number;
     public readonly attachment: BacktraceAttachment<unknown>;
     public readonly sessionId?: string | undefined;
-    public readonly count: number;
     public locked: boolean;
 
     private constructor(record: AttachmentBacktraceDatabaseRecord) {
         this.attachment = record.attachment;
         this.id = record.id;
-        this.count = record.count;
         this.hash = record.hash;
         this.timestamp = record.timestamp;
         this.rxid = record.rxid;

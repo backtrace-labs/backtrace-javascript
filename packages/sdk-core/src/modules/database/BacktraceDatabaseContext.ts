@@ -40,7 +40,7 @@ export class BacktraceDatabaseContext {
 
     public count() {
         return Object.values(this.recordBucket)
-            .map((n) => n.reduce((total, record) => total + record.count, 0))
+            .map((n) => n.length)
             .reduce((total, current) => total + current, 0);
     }
 
