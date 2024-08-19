@@ -1,4 +1,4 @@
-import { anySignal, createAbortController } from '../../common/AbortController';
+import { anySignalWithCleanup, createAbortController } from '../../common/AbortController';
 import { Delay } from '../../common/DelayHelper';
 import { TimeHelper } from '../../common/TimeHelper';
 import { jsonEscaper } from '../../common/jsonEscaper';
@@ -42,7 +42,12 @@ export class MetricsSubmissionQueue<T extends MetricsEvent> implements MetricsQu
 
     public async send(abortSignal?: AbortSignal) {
         const eventsToProcess = this._events.splice(0);
-        return await this.submit(eventsToProcess, anySignal(abortSignal, this._abortController.signal));
+        const [signal, disposeSignal] = anySignalWithCleanup(abortSignal, this._abortController.signal);
+        try {
+            return await this.submit(eventsToProcess, signal);
+        } finally {
+            disposeSignal();
+        }
     }
 
     public dispose() {

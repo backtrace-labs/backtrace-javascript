@@ -2,7 +2,7 @@ export * from './BacktraceCoreClient';
 export * from './builder/BacktraceCoreClientBuilder';
 export * from './builder/CoreClientSetup';
 export * from './builder/SdkOptions';
-export { anySignal } from './common/AbortController';
+export { anySignal, anySignalWithCleanup } from './common/AbortController';
 export * from './common/IdGenerator';
 export * from './common/jsonEscaper';
 export * from './common/TimeHelper';

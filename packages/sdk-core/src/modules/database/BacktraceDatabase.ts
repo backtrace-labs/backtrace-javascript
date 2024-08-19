@@ -1,4 +1,4 @@
-import { anySignal, createAbortController } from '../../common/AbortController';
+import { anySignalWithCleanup, createAbortController } from '../../common/AbortController';
 import { IdGenerator } from '../../common/IdGenerator';
 import { TimeHelper } from '../../common/TimeHelper';
 import { BacktraceAttachment } from '../../model/attachment';
@@ -274,8 +274,9 @@ export class BacktraceDatabase implements BacktraceModule {
         for (let bucketIndex = 0; bucketIndex < this._databaseRecordContext.bucketCount; bucketIndex++) {
             // make a copy of records to not update the array after each remove
             const records = [...this._databaseRecordContext.getBucket(bucketIndex)];
-            const signal = anySignal(abortSignal, this._abortController.signal);
+            const [signal, disposeSignal] = anySignalWithCleanup(abortSignal, this._abortController.signal);
 
+            try {
             for (const record of records) {
                 if (!this.enabled) {
                     return;
@@ -304,6 +305,9 @@ export class BacktraceDatabase implements BacktraceModule {
                 } finally {
                     record.locked = false;
                 }
+                }
+            } finally {
+                disposeSignal();
             }
         }
     }

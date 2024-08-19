@@ -202,18 +202,31 @@ export function createAbortController(): OriginalAbortController {
     }
 }
 
+/**
+ * @deprecated use `anySignalWithCleanup` instead
+ */
 export function anySignal(...signals: (OriginalAbortSignal | undefined)[]): OriginalAbortSignal {
+    const [signal] = anySignalWithCleanup(...signals);
+    return signal;
+}
+
+export function anySignalWithCleanup(
+    ...signals: (OriginalAbortSignal | undefined)[]
+): [OriginalAbortSignal, () => void] {
     const controller = createAbortController();
 
-    function onAbort() {
-        controller.abort();
-
+    function cleanup() {
         // Cleanup
         for (const signal of signals) {
             if (signal) {
                 signal.removeEventListener('abort', onAbort);
             }
         }
+    }
+
+    function onAbort() {
+        controller.abort();
+        cleanup();
     }
 
     for (const signal of signals) {
@@ -228,5 +241,5 @@ export function anySignal(...signals: (OriginalAbortSignal | undefined)[]): Orig
         signal.addEventListener('abort', onAbort);
     }
 
-    return controller.signal;
+    return [controller.signal, cleanup];
 }
