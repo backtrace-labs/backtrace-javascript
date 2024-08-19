@@ -44,13 +44,14 @@ export class BacktraceBrowserRequestHandler implements BacktraceRequestHandler {
     ): Promise<BacktraceReportSubmissionResult<T>> {
         const controller = new AbortController();
         const id = setTimeout(() => controller.abort(), this._timeout);
+        const signal = anySignal(abortSignal, controller.signal);
 
         try {
             const response = await fetch(submissionUrl, {
                 method: 'POST',
                 body: payload,
                 headers: typeof payload === 'string' ? this.JSON_HEADERS : this.MULTIPART_HEADERS,
-                signal: anySignal(abortSignal, controller.signal),
+                signal,
             });
 
             clearInterval(id);
@@ -84,6 +85,11 @@ export class BacktraceBrowserRequestHandler implements BacktraceRequestHandler {
             }
 
             return BacktraceReportSubmissionResult.OnUnknownError(err.message);
+        } finally {
+            // Check for backwards compatibility
+            if ('dispose' in signal && typeof signal.dispose === 'function') {
+                signal.dispose();
+            }
         }
     }
 
