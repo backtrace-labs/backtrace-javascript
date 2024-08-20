@@ -12,6 +12,10 @@ export class AttachmentManager {
         this.attachmentEvents = new Events();
     }
 
+    /**
+     * Adds attachment to manager cache.
+     * @param attachments attachments or attachment returning functions
+     */
     public add(...attachments: Array<BacktraceAttachment | (() => BacktraceAttachment)>) {
         this.addProviders(
             ...attachments.map<BacktraceAttachmentProvider>((a) =>
@@ -28,6 +32,10 @@ export class AttachmentManager {
         );
     }
 
+    /**
+     * Adds `BacktraceAttachmentProvider` to manager cache.
+     * @param attachmentProviders attachment providers
+     */
     public addProviders(...attachmentProviders: BacktraceAttachmentProvider[]) {
         let anyScoped = false;
         for (const provider of attachmentProviders) {
@@ -48,6 +56,11 @@ export class AttachmentManager {
         }
     }
 
+    /**
+     * Returns scoped, dynamic, or all attachments.
+     * @param type optional type to filter attachments
+     * @returns array of `BacktraceAttachment`
+     */
     public get(type?: 'scoped' | 'dynamic'): BacktraceAttachment[] {
         const result: BacktraceAttachment[] = [];
         for (const provider of this._attachmentProviders) {
