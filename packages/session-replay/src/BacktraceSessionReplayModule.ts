@@ -1,4 +1,4 @@
-import { BacktraceModule, BacktraceModuleBindData } from '@backtrace/sdk-core';
+import type { BacktraceModule, BacktraceModuleBindData } from '@backtrace/sdk-core';
 import { BacktraceSessionRecorder } from './BacktraceSessionRecorder';
 import { BacktraceSessionRecorderOptions } from './options';
 
