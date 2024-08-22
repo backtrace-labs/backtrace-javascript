@@ -139,3 +139,4 @@ dist/
 # VSCode settings
 settings.json
 
+.rollup.cache/
