@@ -2,15 +2,17 @@
     "name": "@backtrace/nestjs",
     "version": "0.3.0",
     "description": "Backtrace-JavaScript NestJS integration",
-    "main": "lib/index.js",
+    "main": "lib/bundle.cjs",
+    "module": "lib/bundle.mjs",
     "types": "lib/index.d.ts",
+    "type": "module",
     "scripts": {
-        "build": "webpack",
+        "build": "rollup -c rollup.config.mjs",
         "clean": "rimraf \"lib\"",
         "format": "prettier --write '**/*.ts'",
         "lint": "eslint . --ext .ts",
         "prepublishOnly": "cross-env NODE_ENV=production npm run build",
-        "watch": "webpack -w",
+        "watch": "npm run build -- --watch",
         "test": "cross-env NODE_ENV=test jest --passWithNoTests"
     },
     "engines": {
@@ -41,6 +43,10 @@
         "/lib"
     ],
     "devDependencies": {
+        "@backtrace/node": "^0.3.1",
+        "@rollup/plugin-commonjs": "^26.0.1",
+        "@rollup/plugin-json": "^6.1.0",
+        "@rollup/plugin-replace": "^5.0.7",
         "@nestjs/core": "^10",
         "@nestjs/platform-express": "^10",
         "@nestjs/testing": "^10",
@@ -48,16 +54,11 @@
         "@types/jest": "^29.5.1",
         "@types/supertest": "^2.0.13",
         "jest": "^29.5.0",
+        "rollup": "^4.21.0",
+        "rollup-plugin-typescript2": "^0.36.0",
         "supertest": "^6.3.3",
         "ts-jest": "^29.1.0",
-        "ts-loader": "^9.4.3",
-        "typescript": "^5.0.4",
-        "webpack": "^5.87.0",
-        "webpack-cli": "^5.1.4",
-        "webpack-node-externals": "^3.0.0"
-    },
-    "dependencies": {
-        "@backtrace/node": "^0.3.1"
+        "typescript": "^5.0.4"
     },
     "peerDependencies": {
         "@nestjs/common": "^9 || ^10"
