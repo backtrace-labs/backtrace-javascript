@@ -1,4 +1,5 @@
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { BacktraceReportSubmissionResult } from '../../src';
 import { mockFileSystem } from '../_mocks/fileSystem';
 import { BacktraceTestClient } from '../mocks/BacktraceTestClient';
@@ -25,7 +26,7 @@ describe('Database record batch tests', () => {
                 database: {
                     enable: true,
                     autoSend: true,
-                    path: path.join(__dirname, 'database'),
+                    path: path.join(path.dirname(fileURLToPath(import.meta.url)), 'database'),
                     maximumRetries,
                     retryInterval: 1000,
                 },
@@ -58,7 +59,7 @@ describe('Database record batch tests', () => {
                 database: {
                     enable: true,
                     autoSend: true,
-                    path: path.join(__dirname, 'database'),
+                    path: path.join(path.dirname(fileURLToPath(import.meta.url)), 'database'),
                     maximumRetries,
                     retryInterval: 1000,
                 },
