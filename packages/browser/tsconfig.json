@@ -1,14 +1,11 @@
 {
     "extends": "../../tsconfig.base.json",
     "compilerOptions": {
-        "rootDir": "./src",
-        "outDir": "./lib",
+        "target": "ES2015",
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
         "composite": true
     },
-    "exclude": ["node_modules", "tests", "lib"],
-    "references": [
-        {
-            "path": "../sdk-core/tsconfig.json"
-        }
-    ]
+    "include": ["src", "tests"],
+    "exclude": ["node_modules", "lib"]
 }
