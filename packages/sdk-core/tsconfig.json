@@ -4,7 +4,10 @@
     "compilerOptions": {
         "rootDir": "./src",
         "composite": true,
-        "outDir": "./lib"
+        "outDir": "./lib",
+        "target": "ESNext",
+        "module": "ESNext",
+        "moduleResolution": "Bundler"
     },
     "exclude": ["node_modules", "tests", "lib"]
 }
