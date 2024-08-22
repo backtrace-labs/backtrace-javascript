@@ -13,7 +13,7 @@
         "lint": "eslint . --ext .ts",
         "prepublishOnly": "cross-env NODE_ENV=production npm run build",
         "watch": "npm run build -- --watch",
-        "test": "cross-env NODE_ENV=test jest --passWithNoTests"
+        "test": "cross-env NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" NODE_NO_WARNINGS=1 NODE_ENV=test jest"
     },
     "engines": {
         "node": ">=14"
