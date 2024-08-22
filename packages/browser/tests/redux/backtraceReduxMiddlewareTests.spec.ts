@@ -1,5 +1,5 @@
-import { BacktraceBreadcrumbs } from '@backtrace/sdk-core/src';
-import { Action, configureStore, createSlice, Middleware, PayloadAction } from '@reduxjs/toolkit';
+import { BacktraceBreadcrumbs } from '@backtrace/sdk-core';
+import reduxToolkit, { Action, Middleware, PayloadAction } from '@reduxjs/toolkit';
 import { BacktraceClient } from '../../src/BacktraceClient';
 import {
     BacktraceReduxMiddlewareOptions,
@@ -27,7 +27,7 @@ const initialState: TestState = {
 
 const internalError = new Error('Test internal error');
 
-const testSlice = createSlice({
+const testSlice = reduxToolkit.createSlice({
     name: 'test',
     initialState,
     reducers: {
@@ -78,7 +78,7 @@ const getBreadcrumbsSpy = (method: 'info' | 'warn') => {
 };
 
 const getStore = (options?: BacktraceReduxMiddlewareOptions | ((action: Action) => Action | undefined)) =>
-    configureStore({
+    reduxToolkit.configureStore({
         reducer: {
             test: testSlice.reducer,
         },
@@ -237,7 +237,7 @@ describe('createBacktraceReduxMiddleware', () => {
 
 describe('Multiple middleware interaction', () => {
     const backtraceMiddleware = createBacktraceReduxMiddleware(clientBreadcrumbsEnabled);
-    const store = configureStore({
+    const store = reduxToolkit.configureStore({
         reducer: {
             test: testSlice.reducer,
         },
