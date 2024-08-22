@@ -1,5 +1,4 @@
-import { BacktraceSessionProvider, IdGenerator } from '@backtrace/sdk-core';
-import { TimeHelper } from '@backtrace/sdk-core/lib/common/TimeHelper';
+import { BacktraceSessionProvider, IdGenerator, TimeHelper } from '@backtrace/sdk-core';
 
 export class BacktraceBrowserSessionProvider implements BacktraceSessionProvider {
     /**
