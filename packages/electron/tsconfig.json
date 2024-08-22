@@ -1,14 +1,7 @@
 {
     "extends": "../../tsconfig.base.json",
     "compilerOptions": {
-        "outDir": "./",
-        "rootDir": "./src",
         "composite": true
     },
-    "exclude": ["node_modules", "common", "main", "renderer"],
-    "references": [
-        {
-            "path": "../node/tsconfig.json"
-        }
-    ]
+    "exclude": ["node_modules", "common", "main", "renderer"]
 }
