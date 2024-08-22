@@ -1,4 +1,4 @@
-import { BacktraceDatabaseStorageProvider } from '../../src';
+import { BacktraceDatabaseStorageProvider } from '../../src/index.js';
 
 export const testStorageProvider: BacktraceDatabaseStorageProvider = {
     add: jest.fn().mockReturnValue(true),

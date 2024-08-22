@@ -1,4 +1,4 @@
-import { SubmissionUrlInformation } from '../../src/model/http';
+import { SubmissionUrlInformation } from '../../src/model/http/index.js';
 
 describe('Token tests', () => {
     const testedToken = '000000000000a1eb7ae344f6e002de2e20c81fbdedf6991c2f3bb45b11111111';

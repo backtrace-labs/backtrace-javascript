@@ -1,4 +1,4 @@
-import { BacktraceStackFrame } from '../../src/model/data/BacktraceStackTrace';
+import { BacktraceStackFrame } from '../../src/model/data/BacktraceStackTrace.js';
 
 export const v8StackTraceTests: Array<{
     name: string;

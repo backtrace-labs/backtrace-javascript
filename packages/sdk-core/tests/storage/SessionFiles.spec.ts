@@ -1,6 +1,6 @@
 import assert from 'assert';
-import { SessionFiles } from '../../src/modules/storage/SessionFiles';
-import { mockFileSystem } from '../_mocks/fileSystem';
+import { SessionFiles } from '../../src/modules/storage/SessionFiles.js';
+import { mockFileSystem } from '../_mocks/fileSystem.js';
 
 describe('SessionFiles', () => {
     it('should create empty session marker on initialize', () => {

@@ -1,4 +1,4 @@
-import { SubmissionUrlInformation } from '../../src/model/http';
+import { SubmissionUrlInformation } from '../../src/model/http/index.js';
 describe('Submission Url generation tests', () => {
     const submissionTypes: Array<'plcrash' | 'minidump'> = ['minidump', 'plcrash'];
     describe('Submit', () => {

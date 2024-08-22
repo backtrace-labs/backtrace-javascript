@@ -1,8 +1,9 @@
 import path from 'path';
-import { BacktraceReportSubmissionResult } from '../../src';
-import { mockFileSystem } from '../_mocks/fileSystem';
-import { BacktraceTestClient } from '../mocks/BacktraceTestClient';
-import { testHttpClient } from '../mocks/testHttpClient';
+import { fileURLToPath } from 'url';
+import { BacktraceReportSubmissionResult } from '../../src/index.js';
+import { mockFileSystem } from '../_mocks/fileSystem.js';
+import { BacktraceTestClient } from '../mocks/BacktraceTestClient.js';
+import { testHttpClient } from '../mocks/testHttpClient.js';
 
 jest.useFakeTimers();
 
@@ -25,7 +26,7 @@ describe('Database record batch tests', () => {
                 database: {
                     enable: true,
                     autoSend: true,
-                    path: path.join(__dirname, 'database'),
+                    path: path.join(path.dirname(fileURLToPath(import.meta.url)), 'database'),
                     maximumRetries,
                     retryInterval: 1000,
                 },
@@ -58,7 +59,7 @@ describe('Database record batch tests', () => {
                 database: {
                     enable: true,
                     autoSend: true,
-                    path: path.join(__dirname, 'database'),
+                    path: path.join(path.dirname(fileURLToPath(import.meta.url)), 'database'),
                     maximumRetries,
                     retryInterval: 1000,
                 },

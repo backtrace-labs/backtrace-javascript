@@ -1,6 +1,6 @@
 import path from 'path';
-import { BacktraceFileAttachment } from '../../src/model/attachment';
-import { FileSystem } from '../../src/modules/storage/FileSystem';
+import { BacktraceFileAttachment } from '../../src/model/attachment/index.js';
+import { FileSystem } from '../../src/modules/storage/FileSystem.js';
 
 export type MockedFileSystem<T extends FileSystem> = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

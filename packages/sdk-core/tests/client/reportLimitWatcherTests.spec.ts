@@ -1,5 +1,5 @@
-import { TimeHelper } from '../../src/common/TimeHelper';
-import { RateLimitWatcher } from '../../src/modules/rateLimiter/RateLimitWatcher';
+import { TimeHelper } from '../../src/common/TimeHelper.js';
+import { RateLimitWatcher } from '../../src/modules/rateLimiter/RateLimitWatcher.js';
 describe('Report Limit Watcher tests', () => {
     describe('Disabled rate limit watcher', () => {
         it('Should disable limit watcher when the report limit is set to 0', () => {

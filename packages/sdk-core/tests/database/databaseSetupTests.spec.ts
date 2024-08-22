@@ -1,9 +1,9 @@
-import { BacktraceData } from '../../src';
-import { RequestBacktraceReportSubmission } from '../../src/model/http/BacktraceReportSubmission';
-import { BacktraceDatabase } from '../../src/modules/database/BacktraceDatabase';
-import { TEST_SUBMISSION_URL } from '../mocks/BacktraceTestClient';
-import { testHttpClient } from '../mocks/testHttpClient';
-import { testStorageProvider } from '../mocks/testStorageProvider';
+import { BacktraceData } from '../../src/index.js';
+import { RequestBacktraceReportSubmission } from '../../src/model/http/BacktraceReportSubmission.js';
+import { BacktraceDatabase } from '../../src/modules/database/BacktraceDatabase.js';
+import { TEST_SUBMISSION_URL } from '../mocks/BacktraceTestClient.js';
+import { testHttpClient } from '../mocks/testHttpClient.js';
+import { testStorageProvider } from '../mocks/testStorageProvider.js';
 
 describe('Database setup tests', () => {
     it('The database should be disabled by default', () => {

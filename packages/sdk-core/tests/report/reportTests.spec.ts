@@ -1,6 +1,6 @@
 import assert from 'assert';
-import { BacktraceReport } from '../../src';
-import { BacktraceReportStackTraceInfo } from '../../src/model/report/BacktraceReportStackTraceInfo';
+import { BacktraceReport } from '../../src/index.js';
+import { BacktraceReportStackTraceInfo } from '../../src/model/report/BacktraceReportStackTraceInfo.js';
 
 function isStackTraceInfo(obj: unknown): obj is BacktraceReportStackTraceInfo {
     return typeof obj === 'object' && !!obj && 'stack' in obj && 'message' in obj;
