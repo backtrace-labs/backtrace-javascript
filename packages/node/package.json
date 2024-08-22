@@ -3,7 +3,7 @@
     "version": "0.3.2",
     "description": "Backtrace-JavaScript Node.JS integration",
     "main": "lib/bundle.cjs",
-    "module": "lib/bundle.esm.js",
+    "module": "lib/bundle.mjs",
     "types": "lib/index.d.ts",
     "type": "module",
     "scripts": {

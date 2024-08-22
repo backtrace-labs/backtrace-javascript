@@ -12,7 +12,7 @@ export default {
     input: './src/index.ts',
     output: [
         {
-            file: 'lib/bundle.esm.js',
+            file: 'lib/bundle.mjs',
             format: 'esm',
             sourcemap: true,
         },
