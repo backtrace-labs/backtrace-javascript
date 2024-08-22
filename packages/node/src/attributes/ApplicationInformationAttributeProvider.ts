@@ -2,6 +2,7 @@ import { BacktraceAttributeProvider } from '@backtrace/sdk-core';
 import fs from 'fs';
 import path from 'path';
 import process from 'process';
+import { fileURLToPath } from 'url';
 
 export class ApplicationInformationAttributeProvider implements BacktraceAttributeProvider {
     public readonly APPLICATION_ATTRIBUTE = 'application';
@@ -57,19 +58,20 @@ export class ApplicationInformationAttributeProvider implements BacktraceAttribu
                 possibleSourcePaths.unshift(potentialCommandLineStartupFilePath);
             }
         }
-        if (require.main?.path) {
+        if (typeof require !== 'undefined' && require.main?.path) {
             possibleSourcePaths.unshift(path.dirname(require.main.path));
         }
         return possibleSourcePaths;
     }
 
     private generatePathBasedOnTheDirName() {
-        const nodeModulesIndex = __dirname.lastIndexOf('node_modules');
+        const dirname = fileURLToPath(path.dirname(import.meta.url));
+        const nodeModulesIndex = dirname.lastIndexOf('node_modules');
         if (nodeModulesIndex === -1) {
-            return __dirname;
+            return dirname;
         }
 
-        return __dirname.substring(0, nodeModulesIndex);
+        return dirname.substring(0, nodeModulesIndex);
     }
 
     private readApplicationInformation(): Record<string, unknown> | undefined {
