@@ -1,10 +1,11 @@
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { ApplicationInformationAttributeProvider } from '../../src/attributes/ApplicationInformationAttributeProvider';
 
 describe('Application information attribute provider tests', () => {
     describe('search path tests', () => {
-        const sourceDir = path.dirname(path.dirname(__dirname));
+        const sourceDir = path.dirname(path.dirname(path.dirname(fileURLToPath(import.meta.url))));
         const libraryPackageJson = path.join(sourceDir, 'package.json');
         const expectedPackageJson = JSON.parse(fs.readFileSync(libraryPackageJson, 'utf8'));
         it('Should find a package.json file in the project structure', () => {

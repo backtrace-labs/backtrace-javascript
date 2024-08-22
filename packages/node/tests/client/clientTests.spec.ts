@@ -1,7 +1,9 @@
 import { BacktraceReport, BacktraceRequestHandler } from '@backtrace/sdk-core';
 import fs from 'fs';
 import path from 'path';
-import { BacktraceBufferAttachment, BacktraceClient, BacktraceFileAttachment } from '../../src/';
+import { fileURLToPath } from 'url';
+import { BacktraceBufferAttachment, BacktraceClient, BacktraceFileAttachment } from '../../src/index';
+
 describe('Client tests', () => {
     const requestHandler: BacktraceRequestHandler = {
         post: jest.fn().mockResolvedValue(Promise.resolve()),
@@ -45,7 +47,7 @@ describe('Client tests', () => {
     });
 
     describe('Attachment tests', () => {
-        const sampleFile = path.join(__dirname, 'mock', 'sampleFile.txt');
+        const sampleFile = path.join(path.dirname(fileURLToPath(import.meta.url)), 'mock', 'sampleFile.txt');
         const fileContent = fs.readFileSync(sampleFile, 'utf8');
 
         it(`Should generate an attachment list based on the client options`, async () => {

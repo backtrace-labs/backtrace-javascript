@@ -1,4 +1,4 @@
-import { BacktraceClient } from '../../src/';
+import { BacktraceClient } from '../../src/BacktraceClient';
 describe('Client Dispose tests', () => {
     it('Should dispose process callbacks', () => {
         const expectedUnhandledRejectionListenerCount = process.listenerCount('unhandledRejection');

@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { AlternatingFileWriter } from '../../src/common/AlternatingFileWriter';
 import { FsNodeFileSystem } from '../../src/storage/FsNodeFileSystem';
 import { mockStreamFileSystem } from '../_mocks/fileSystem';
@@ -13,7 +14,7 @@ function unlinkSafe(file: string) {
 }
 
 describe('AlternatingFileWriter', () => {
-    const dir = path.join(__dirname, '../_testOutput');
+    const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), '../_testOutput');
     const file1 = path.join(dir, 'alternating_file1');
     const file2 = path.join(dir, 'alternating_file2');
 
