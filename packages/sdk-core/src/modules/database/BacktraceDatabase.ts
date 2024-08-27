@@ -48,7 +48,7 @@ export class BacktraceDatabase implements BacktraceModule {
         this._databaseRecordContext = new BacktraceDatabaseContext(this._options?.maximumRetries);
         this._recordLimits = {
             report: this._options?.maximumNumberOfRecords ?? 8,
-            attachment: this._options?.maximumNumberOfAttachmentRecords ?? 100,
+            attachment: this._options?.maximumNumberOfAttachmentRecords ?? 10,
         };
         this._retryInterval = this._options?.retryInterval ?? 60_000;
     }
