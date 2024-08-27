@@ -171,14 +171,13 @@ export class BacktraceMainElectronModule implements BacktraceModule {
                     continue;
                 }
 
-                for (const attachment of FileBreadcrumbsStorage.getSessionAttachments(session)) {
-                    database.addAttachment(rxid, attachment, session.sessionId);
-                }
+                const fileAttachmentsManager = FileAttachmentsManager.createFromSession(session, fileSystem);
+                const sessionAttachments = [
+                    ...FileBreadcrumbsStorage.getSessionAttachments(session),
+                    ...(await fileAttachmentsManager.get()),
+                ];
 
-                const fileAttachments = FileAttachmentsManager.createFromSession(session, fileSystem);
-                const attachments = await fileAttachments.get();
-
-                for (const attachment of attachments) {
+                for (const attachment of sessionAttachments) {
                     database.addAttachment(rxid, attachment, session.sessionId);
                 }
 
