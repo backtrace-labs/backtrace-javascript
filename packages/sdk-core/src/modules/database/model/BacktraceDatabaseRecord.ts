@@ -5,7 +5,6 @@ export interface ReportBacktraceDatabaseRecord {
     readonly type: 'report';
     readonly data: BacktraceData;
     readonly id: string;
-    readonly hash: string;
     readonly timestamp: number;
     readonly sessionId?: string;
     attachments: BacktraceAttachment[];
@@ -19,7 +18,6 @@ export interface AttachmentBacktraceDatabaseRecord {
     readonly type: 'attachment';
     readonly id: string;
     readonly rxid: string;
-    readonly hash: string;
     readonly timestamp: number;
     readonly attachment: BacktraceAttachment;
     readonly sessionId: string;

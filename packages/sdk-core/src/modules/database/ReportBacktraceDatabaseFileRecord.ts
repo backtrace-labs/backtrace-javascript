@@ -9,7 +9,6 @@ export class ReportBacktraceDatabaseFileRecord implements ReportBacktraceDatabas
     public readonly type = 'report';
     public readonly data: BacktraceData;
     public readonly id: string;
-    public readonly hash: string;
     public readonly timestamp: number;
     public readonly sessionId?: string;
     public locked: boolean;
@@ -20,7 +19,6 @@ export class ReportBacktraceDatabaseFileRecord implements ReportBacktraceDatabas
     ) {
         this.data = record.data;
         this.id = record.id;
-        this.hash = record.hash;
         this.timestamp = record.timestamp;
         this.sessionId = record.sessionId;
         // make sure the database record stored in the database directory

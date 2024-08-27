@@ -136,7 +136,6 @@ export class BacktraceDatabase implements BacktraceModule {
             type: 'report',
             data: backtraceData,
             timestamp: TimeHelper.now(),
-            hash: '',
             id: IdGenerator.uuid(),
             locked: false,
             attachments: attachments,
@@ -174,7 +173,6 @@ export class BacktraceDatabase implements BacktraceModule {
         const record: AttachmentBacktraceDatabaseRecord = {
             type: 'attachment',
             timestamp: TimeHelper.now(),
-            hash: '',
             id: IdGenerator.uuid(),
             rxid,
             locked: false,

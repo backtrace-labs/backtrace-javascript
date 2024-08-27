@@ -102,7 +102,6 @@ describe('Database context memory storage tests', () => {
                 attachments: [],
                 timestamp: TimeHelper.now(),
                 data: {} as BacktraceData,
-                hash: '',
                 id: '123',
                 locked: false,
                 sessionId: undefined,

@@ -8,7 +8,6 @@ export class AttachmentBacktraceDatabaseFileRecord implements AttachmentBacktrac
     public readonly type = 'attachment';
     public readonly id: string;
     public readonly rxid: string;
-    public readonly hash: string;
     public readonly timestamp: number;
     public readonly attachment: BacktraceAttachment<unknown>;
     public readonly sessionId: string;
@@ -17,7 +16,6 @@ export class AttachmentBacktraceDatabaseFileRecord implements AttachmentBacktrac
     private constructor(record: AttachmentBacktraceDatabaseRecord) {
         this.attachment = record.attachment;
         this.id = record.id;
-        this.hash = record.hash;
         this.timestamp = record.timestamp;
         this.rxid = record.rxid;
         this.sessionId = record.sessionId;

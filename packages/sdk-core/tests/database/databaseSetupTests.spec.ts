@@ -14,7 +14,6 @@ function randomReportRecord(): ReportBacktraceDatabaseRecord {
         id: crypto.randomUUID(),
         type: 'report',
         data: { uuid: crypto.randomUUID() } as BacktraceData,
-        hash: crypto.randomBytes(32).toString('hex'),
         locked: false,
         attachments: [],
         timestamp: Date.now(),
@@ -25,7 +24,6 @@ function randomAttachmentRecord(): AttachmentBacktraceDatabaseRecord {
     return {
         id: crypto.randomUUID(),
         type: 'attachment',
-        hash: crypto.randomBytes(32).toString('hex'),
         locked: false,
         timestamp: Date.now(),
         attachment: { name: 'x', get: () => undefined },
