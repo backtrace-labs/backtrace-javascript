@@ -195,7 +195,8 @@ export class BacktraceMainElectronModule implements BacktraceModule {
         try {
             return JSON.parse(crashId)._rxid;
         } catch {
-            return crashId.match(/"_rxid":"([a-f0-9-]+)"/i)?.[1];
+            const rxidRegex = /"_rxid":\s*"([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})"/i;
+            return crashId.match(rxidRegex)?.[1];
         }
     }
 }
