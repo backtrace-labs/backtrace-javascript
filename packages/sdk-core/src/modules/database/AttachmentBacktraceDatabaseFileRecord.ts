@@ -11,7 +11,7 @@ export class AttachmentBacktraceDatabaseFileRecord implements AttachmentBacktrac
     public readonly hash: string;
     public readonly timestamp: number;
     public readonly attachment: BacktraceAttachment<unknown>;
-    public readonly sessionId?: string | undefined;
+    public readonly sessionId: string;
     public locked: boolean;
 
     private constructor(record: AttachmentBacktraceDatabaseRecord) {

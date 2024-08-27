@@ -158,13 +158,14 @@ export class BacktraceDatabase implements BacktraceModule {
     /**
      * Adds Bactrace attachment to the database
      * @param backtraceData diagnostic data object
-     * @param attachments attachments
+     * @param attachment the attachment to add
+     * @param sessionId session ID to use
      * @returns record if database is enabled. Otherwise undefined.
      */
     public addAttachment(
         rxid: string,
         attachment: BacktraceAttachment,
-        sessionId?: string,
+        sessionId: string,
     ): AttachmentBacktraceDatabaseRecord | undefined {
         if (!this._enabled) {
             return undefined;
@@ -178,7 +179,7 @@ export class BacktraceDatabase implements BacktraceModule {
             rxid,
             locked: false,
             attachment,
-            sessionId: typeof sessionId === 'string' ? sessionId : undefined,
+            sessionId,
         };
 
         this.prepareDatabase([record]);

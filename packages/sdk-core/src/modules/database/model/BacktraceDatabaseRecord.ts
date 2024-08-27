@@ -22,7 +22,7 @@ export interface AttachmentBacktraceDatabaseRecord {
     readonly hash: string;
     readonly timestamp: number;
     readonly attachment: BacktraceAttachment;
-    readonly sessionId?: string;
+    readonly sessionId: string;
     /**
      * Determines if the record is in use
      */
