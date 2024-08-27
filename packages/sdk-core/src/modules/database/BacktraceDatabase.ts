@@ -311,7 +311,7 @@ export class BacktraceDatabase implements BacktraceModule {
 
     /**
      * Prepare database to insert records
-     * @param totalNumberOfRecords number of records to insert
+     * @param forRecords records for which to update the database
      */
     private prepareDatabase(forRecords: BacktraceDatabaseRecord[]) {
         const dropLimits = { ...this._recordLimits };
