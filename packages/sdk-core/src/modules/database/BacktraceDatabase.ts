@@ -9,7 +9,12 @@ import { BacktraceModule, BacktraceModuleBindData } from '../BacktraceModule';
 import { SessionFiles } from '../storage';
 import { BacktraceDatabaseContext } from './BacktraceDatabaseContext';
 import { BacktraceDatabaseStorageProvider } from './BacktraceDatabaseStorageProvider';
-import { BacktraceDatabaseRecord } from './model/BacktraceDatabaseRecord';
+import {
+    AttachmentBacktraceDatabaseRecord,
+    BacktraceDatabaseRecord,
+    BacktraceDatabaseRecordCountByType,
+    ReportBacktraceDatabaseRecord,
+} from './model/BacktraceDatabaseRecord';
 
 export class BacktraceDatabase implements BacktraceModule {
     /**
@@ -28,7 +33,7 @@ export class BacktraceDatabase implements BacktraceModule {
     private readonly _databaseRecordContext: BacktraceDatabaseContext;
     private readonly _storageProviders: BacktraceDatabaseStorageProvider[] = [];
 
-    private readonly _maximumRecords: number;
+    private readonly _recordLimits: BacktraceDatabaseRecordCountByType;
     private readonly _retryInterval: number;
     private _intervalId?: ReturnType<typeof setInterval>;
 
@@ -41,7 +46,10 @@ export class BacktraceDatabase implements BacktraceModule {
         private readonly _sessionFiles?: SessionFiles,
     ) {
         this._databaseRecordContext = new BacktraceDatabaseContext(this._options?.maximumRetries);
-        this._maximumRecords = this._options?.maximumNumberOfRecords ?? 8;
+        this._recordLimits = {
+            report: this._options?.maximumNumberOfRecords ?? 8,
+            attachment: this._options?.maximumNumberOfAttachmentRecords ?? 10,
+        };
         this._retryInterval = this._options?.retryInterval ?? 60_000;
     }
 
@@ -86,7 +94,7 @@ export class BacktraceDatabase implements BacktraceModule {
         reportEvents.on('before-send', (_, data, attachments) => {
             const record = this.add(data, attachments);
 
-            if (!record || record.locked || record.count !== 1) {
+            if (!record || record.locked) {
                 return undefined;
             }
 
@@ -94,7 +102,9 @@ export class BacktraceDatabase implements BacktraceModule {
         });
 
         reportEvents.on('after-send', (_, data, __, submissionResult) => {
-            const record = this._databaseRecordContext.find((record) => record.data.uuid === data.uuid);
+            const record = this._databaseRecordContext.find(
+                (record) => record.type === 'report' && record.data.uuid === data.uuid,
+            );
             if (!record) {
                 return;
             }
@@ -115,23 +125,62 @@ export class BacktraceDatabase implements BacktraceModule {
     public add(
         backtraceData: BacktraceData,
         attachments: BacktraceAttachment<unknown>[],
-    ): BacktraceDatabaseRecord | undefined {
+    ): ReportBacktraceDatabaseRecord | undefined {
         if (!this._enabled) {
             return undefined;
         }
 
-        this.prepareDatabase();
+        const sessionId = backtraceData.attributes?.['application.session'];
 
-        const record: BacktraceDatabaseRecord = {
-            count: 1,
+        const record: ReportBacktraceDatabaseRecord = {
+            type: 'report',
             data: backtraceData,
             timestamp: TimeHelper.now(),
-            hash: '',
             id: IdGenerator.uuid(),
             locked: false,
             attachments: attachments,
+            sessionId: typeof sessionId === 'string' ? sessionId : undefined,
         };
 
+        this.prepareDatabase([record]);
+        const saveResult = this._storageProvider.add(record);
+        if (!saveResult) {
+            return undefined;
+        }
+
+        this._databaseRecordContext.add(record);
+        this.lockSessionWithRecord(record);
+
+        return record;
+    }
+
+    /**
+     * Adds Bactrace attachment to the database
+     * @param backtraceData diagnostic data object
+     * @param attachment the attachment to add
+     * @param sessionId session ID to use
+     * @returns record if database is enabled. Otherwise undefined.
+     */
+    public addAttachment(
+        rxid: string,
+        attachment: BacktraceAttachment,
+        sessionId: string,
+    ): AttachmentBacktraceDatabaseRecord | undefined {
+        if (!this._enabled) {
+            return undefined;
+        }
+
+        const record: AttachmentBacktraceDatabaseRecord = {
+            type: 'attachment',
+            timestamp: TimeHelper.now(),
+            id: IdGenerator.uuid(),
+            rxid,
+            locked: false,
+            attachment,
+            sessionId,
+        };
+
+        this.prepareDatabase([record]);
         const saveResult = this._storageProvider.add(record);
         if (!saveResult) {
             return undefined;
@@ -156,6 +205,13 @@ export class BacktraceDatabase implements BacktraceModule {
      */
     public count(): number {
         return this._databaseRecordContext.count();
+    }
+
+    /**
+     * @returns Returns number of records by type stored in the Database
+     */
+    public countByType(): BacktraceDatabaseRecordCountByType {
+        return this._databaseRecordContext.countByType();
     }
 
     /**
@@ -229,8 +285,17 @@ export class BacktraceDatabase implements BacktraceModule {
                 }
                 try {
                     record.locked = true;
-                    const result = await this._requestHandler.send(record.data, record.attachments, signal);
-                    if (result.status === 'Ok') {
+
+                    const result =
+                        record.type === 'report'
+                            ? await this._requestHandler.send(record.data, record.attachments, signal)
+                            : await this._requestHandler.sendAttachment(record.rxid, record.attachment, signal);
+
+                    if (
+                        result.status === 'Ok' ||
+                        result.status === 'Unsupported' ||
+                        result.status === 'Report skipped'
+                    ) {
                         this.remove(record);
                         continue;
                     }
@@ -245,27 +310,47 @@ export class BacktraceDatabase implements BacktraceModule {
 
     /**
      * Prepare database to insert records
-     * @param totalNumberOfRecords number of records to insert
+     * @param forRecords records for which to update the database
      */
-    private prepareDatabase(totalNumberOfRecords = 1) {
-        const numberOfRecords = this.count();
-        if (numberOfRecords + totalNumberOfRecords <= this._maximumRecords) {
-            return;
+    private prepareDatabase(forRecords: BacktraceDatabaseRecord[]) {
+        const dropLimits = { ...this._recordLimits };
+        for (const record of forRecords) {
+            dropLimits[record.type]--;
         }
-        this.remove(this._databaseRecordContext.dropOverflow(totalNumberOfRecords));
+
+        const dropped = this._databaseRecordContext.dropOverLimits(dropLimits);
+        this.remove(dropped);
     }
 
     private async loadReports() {
         const records = await this._storageProvider.get();
-        // delete old records before adding them to the database
-        if (records.length >= this._maximumRecords) {
-            this.remove(records.splice(this._maximumRecords));
+
+        // limit only non-attachment records
+        const countByType: BacktraceDatabaseRecordCountByType = {
+            attachment: 0,
+            report: 0,
+        };
+
+        const recordsToAdd: BacktraceDatabaseRecord[] = [];
+        const recordsToRemove: BacktraceDatabaseRecord[] = [];
+        for (const record of records) {
+            if (countByType[record.type] >= this._recordLimits[record.type]) {
+                recordsToRemove.push(record);
+            } else {
+                recordsToAdd.push(record);
+                countByType[record.type]++;
+            }
         }
 
-        this.prepareDatabase(records.length);
-        this._databaseRecordContext.load(records);
+        // delete old records before adding them to the database
+        if (recordsToRemove.length) {
+            this.remove(recordsToRemove);
+        }
 
-        for (const record of records) {
+        this.prepareDatabase(recordsToAdd);
+        this._databaseRecordContext.load(recordsToAdd);
+
+        for (const record of recordsToAdd) {
             this.lockSessionWithRecord(record);
         }
     }
@@ -287,7 +372,7 @@ export class BacktraceDatabase implements BacktraceModule {
             return;
         }
 
-        const sessionId = record.data.attributes?.['application.session'];
+        const sessionId = record.sessionId;
         if (typeof sessionId !== 'string') {
             this._sessionFiles.lockPreviousSessions(record.id);
             return;

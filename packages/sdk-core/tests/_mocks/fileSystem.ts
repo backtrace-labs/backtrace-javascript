@@ -1,11 +1,9 @@
 import path from 'path';
 import { BacktraceFileAttachment } from '../../src/model/attachment';
 import { FileSystem } from '../../src/modules/storage/FileSystem';
+import { Mocked } from './types';
 
-export type MockedFileSystem<T extends FileSystem> = {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    [K in keyof T]: T[K] extends (...args: any) => any ? jest.Mock<ReturnType<T[K]>, Parameters<T[K]>> : never;
-} & { files: Record<string, string> };
+export type MockedFileSystem<T extends FileSystem> = Mocked<T> & { files: Record<string, string> };
 
 export function mockFileSystem(files?: Record<string, string>): MockedFileSystem<FileSystem> {
     const fs = Object.entries(files ?? {})

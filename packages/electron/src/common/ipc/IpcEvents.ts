@@ -7,6 +7,7 @@ export const IpcEvents = {
     addSummedMetric: `${prefix}_addSummedMetric`,
     sendMetrics: `${prefix}_sendMetrics`,
     sendReport: `${prefix}_sendReport`,
+    sendAttachment: `${prefix}_sendAttachment`,
     post: `${prefix}_post`,
     addBreadcrumb: `${prefix}_addBreadcrumb`,
     sync: `${prefix}_sync`,

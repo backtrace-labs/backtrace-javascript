@@ -2,6 +2,7 @@ import { jsonEscaper } from '../../../common/jsonEscaper';
 import { TimeHelper } from '../../../common/TimeHelper';
 import { OverwritingArray } from '../../../dataStructures/OverwritingArray';
 import { BacktraceAttachment } from '../../../model/attachment';
+import { BacktraceAttachmentProvider } from '../../attachments/BacktraceAttachmentProvider';
 import { Breadcrumb } from '../model/Breadcrumb';
 import { BreadcrumbLogLevel } from '../model/BreadcrumbLogLevel';
 import { BreadcrumbType } from '../model/BreadcrumbType';
@@ -26,6 +27,15 @@ export class InMemoryBreadcrumbsStorage implements BreadcrumbsStorage, Backtrace
 
     public getAttachments(): BacktraceAttachment<unknown>[] {
         return [this];
+    }
+
+    public getAttachmentProviders(): BacktraceAttachmentProvider[] {
+        return [
+            {
+                get: () => this,
+                type: 'scoped',
+            },
+        ];
     }
 
     /**

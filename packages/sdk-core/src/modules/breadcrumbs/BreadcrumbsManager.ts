@@ -66,10 +66,13 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
         }
     }
 
-    public bind({ client, reportEvents }: BacktraceModuleBindData): void {
-        for (const attachment of this._storage.getAttachments()) {
-            client.addAttachment(attachment);
+    public bind({ client, reportEvents, attachmentManager }: BacktraceModuleBindData): void {
+        if (this._storage.getAttachmentProviders) {
+            attachmentManager.addProviders(...this._storage.getAttachmentProviders());
+        } else {
+            attachmentManager.add(...this._storage.getAttachments());
         }
+
         client.addAttribute(() => ({
             [BREADCRUMB_ATTRIBUTE_NAME]: this._storage.lastBreadcrumbId,
         }));

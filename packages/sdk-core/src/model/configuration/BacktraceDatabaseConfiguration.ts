@@ -9,7 +9,7 @@ export interface EnabledBacktraceDatabaseConfiguration {
     path: string;
     /**
      * Determine if the directory should be auto created by the SDK.
-     * By default true.
+     * @default true
      */
     createDatabaseDirectory?: boolean;
 
@@ -22,9 +22,16 @@ export interface EnabledBacktraceDatabaseConfiguration {
     /**
      * The maximum number of reports stored in the offline database. When the limit is reached,
      * the oldest reports are removed. If the value is equal to '0', then no limit is set.
-     * The default value is 8.
+     * @default 8
      */
     maximumNumberOfRecords?: number;
+
+    /**
+     * The maximum number of attachments stored in the offline database. When the limit is reached,
+     * the oldest attachments are removed. If the value is equal to '0', then no limit is set.
+     * @default 10
+     */
+    maximumNumberOfAttachmentRecords?: number;
 
     /**
      * The amount of time (in ms) to wait between retries if the database is unable to send a report.
@@ -34,7 +41,7 @@ export interface EnabledBacktraceDatabaseConfiguration {
 
     /**
      * The maximum number of retries to attempt if the database is unable to send a report.
-     * The default value is 3
+     * @default 3
      */
     maximumRetries?: number;
 
@@ -47,8 +54,7 @@ export interface EnabledBacktraceDatabaseConfiguration {
     /**
      * Controls how much previous session caches to preserve before sending data from previous sessions.
      * This does not remove unsent reports, only session files, like breadcrumbs stored on disk.
-     *
-     * The default value is 1
+     * @default 1
      */
     maximumOldSessions?: number;
 }

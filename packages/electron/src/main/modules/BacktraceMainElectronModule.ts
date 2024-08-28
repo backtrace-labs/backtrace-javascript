@@ -1,11 +1,14 @@
+import { FileAttachmentsManager, FileBreadcrumbsStorage, NodeFileSystem } from '@backtrace/node';
 import {
     BacktraceData,
     BacktraceModule,
     BacktraceModuleBindData,
     RawBreadcrumb,
+    SessionFiles,
     SubmissionUrlInformation,
     SummedEvent,
 } from '@backtrace/sdk-core';
+import type { BacktraceDatabase } from '@backtrace/sdk-core/lib/modules/database/BacktraceDatabase';
 import { app, crashReporter } from 'electron';
 import { IpcAttachmentReference } from '../../common/ipc/IpcAttachmentReference';
 import { IpcEvents } from '../../common/ipc/IpcEvents';
@@ -53,6 +56,15 @@ export class BacktraceMainElectronModule implements BacktraceModule {
             return await reportSubmission.send(data, [...attachments, ...client.attachments]);
         });
 
+        rpc.on(IpcEvents.sendAttachment, async (event, rxid: string, attachmentRef: IpcAttachmentReference) => {
+            const attachment = new IpcAttachment(
+                attachmentRef.name,
+                attachmentRef.id,
+                new WindowIpcTransport(event.sender),
+            );
+            return await reportSubmission.sendAttachment(rxid, attachment);
+        });
+
         rpc.on(IpcEvents.sendMetrics, async () => client.metrics?.send());
 
         rpc.on(IpcEvents.ping, () => Promise.resolve('pong'));
@@ -90,7 +102,8 @@ export class BacktraceMainElectronModule implements BacktraceModule {
             return;
         }
 
-        const { options, attributeManager } = this._bindData;
+        const { options, attributeManager, sessionFiles, fileSystem, database } = this._bindData;
+
         if (options.database?.captureNativeCrashes) {
             if (options.database.path) {
                 app.setPath('crashDumps', options.database.path);
@@ -111,6 +124,13 @@ export class BacktraceMainElectronModule implements BacktraceModule {
                     crashReporter.addExtraParameter(key, dict[key]);
                 }
             });
+
+            if (sessionFiles && database && fileSystem) {
+                const lockId = sessionFiles.lockPreviousSessions();
+                this.sendPreviousCrashAttachments(database, sessionFiles, fileSystem as NodeFileSystem).finally(
+                    () => lockId && sessionFiles.unlockPreviousSessions(lockId),
+                );
+            }
         }
     }
 
@@ -120,6 +140,64 @@ export class BacktraceMainElectronModule implements BacktraceModule {
             'electron.processId': event.processId,
             'electron.process': 'renderer',
         };
+    }
+
+    private async sendPreviousCrashAttachments(
+        database: BacktraceDatabase,
+        session: SessionFiles,
+        fileSystem: NodeFileSystem,
+    ) {
+        // Sort crashes and sessions by timestamp descending
+        const crashes = crashReporter.getUploadedReports().sort((a, b) => b.date.getTime() - a.date.getTime());
+        const previousSessions = session.getPreviousSessions().sort((a, b) => b.timestamp - a.timestamp);
+
+        for (const crash of crashes) {
+            const rxid = this.getCrashRxid(crash.id);
+            if (!rxid) {
+                continue;
+            }
+
+            try {
+                // Get first session that happened before the crash
+                const session = previousSessions.find((p) => p.timestamp < crash.date.getTime());
+                // If there is no such session, there won't be any other sessions
+                if (!session) {
+                    break;
+                }
+
+                const crashLock = session.getFileName(`electron-crash-lock-${rxid}`);
+                // If crash lock exists, do not attempt to add attachments twice
+                if (await fileSystem.exists(crashLock)) {
+                    continue;
+                }
+
+                const fileAttachmentsManager = FileAttachmentsManager.createFromSession(session, fileSystem);
+                const sessionAttachments = [
+                    ...FileBreadcrumbsStorage.getSessionAttachments(session),
+                    ...(await fileAttachmentsManager.get()),
+                ];
+
+                for (const attachment of sessionAttachments) {
+                    database.addAttachment(rxid, attachment, session.sessionId);
+                }
+
+                // Write an empty crash lock, so we know that this crash is already taken care of
+                await fileSystem.writeFile(crashLock, '');
+            } catch {
+                // Do nothing, skip the report
+            }
+        }
+
+        await database.send();
+    }
+
+    private getCrashRxid(crashId: string): string | undefined {
+        try {
+            return JSON.parse(crashId)._rxid;
+        } catch {
+            const rxidRegex = /"_rxid":\s*"([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})"/i;
+            return crashId.match(rxidRegex)?.[1];
+        }
     }
 }
 

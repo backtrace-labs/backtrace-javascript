@@ -46,6 +46,16 @@ export class SubmissionUrlInformation {
         return this.changeSubmissionFormat(submissionUrl, 'minidump');
     }
 
+    public static toAttachmentSubmissionUrl(submissionUrl: string, rxid: string, attachmentName: string): string {
+        const query = `object=${rxid}&attachment_name=${attachmentName}`;
+
+        if (submissionUrl.includes('?')) {
+            return (submissionUrl += `&` + query);
+        }
+
+        return (submissionUrl += '?' + query);
+    }
+
     /**
      * Find the universe based on the submission URL
      * @param submissionUrl submission URL - full submission URL to Backtrace.

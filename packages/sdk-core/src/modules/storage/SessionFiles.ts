@@ -32,7 +32,7 @@ export class SessionFiles implements BacktraceModule {
         private readonly _directory: string,
         public readonly sessionId: string,
         private readonly _maxPreviousLockedSessions = 1,
-        private readonly _timestamp = Date.now(),
+        public readonly timestamp = Date.now(),
         private readonly _lockable = true,
     ) {
         this._escapedSessionId = this.escapeFileName(sessionId);
@@ -124,7 +124,7 @@ export class SessionFiles implements BacktraceModule {
     public getFileName(prefix: string) {
         this.throwIfCleared();
 
-        return this._directory + '/' + `${this.escapeFileName(prefix)}_${this._escapedSessionId}_${this._timestamp}`;
+        return this._directory + '/' + `${this.escapeFileName(prefix)}_${this._escapedSessionId}_${this.timestamp}`;
     }
 
     public getSessionFiles() {

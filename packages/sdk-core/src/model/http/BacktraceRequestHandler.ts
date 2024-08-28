@@ -1,5 +1,6 @@
 import { BacktraceAttachment } from '../attachment';
 import { BacktraceReportSubmissionResult } from '../data/BacktraceSubmissionResult';
+import { BacktraceAttachmentResponse } from './model/BacktraceAttachmentResponse';
 import { BacktraceSubmissionResponse } from './model/BacktraceSubmissionResponse';
 export const DEFAULT_TIMEOUT = 15_000;
 export interface BacktraceRequestHandler {
@@ -29,4 +30,16 @@ export interface BacktraceRequestHandler {
         payload: string,
         abortSignal?: AbortSignal,
     ): Promise<BacktraceReportSubmissionResult<T>>;
+
+    /**
+     * Post attachment to Backtrace API for an existing error
+     * @param submissionUrl
+     * @param attachment
+     * @param abortSignal
+     */
+    postAttachment?(
+        submissionUrl: string,
+        attachment: BacktraceAttachment,
+        abortSignal?: AbortSignal,
+    ): Promise<BacktraceReportSubmissionResult<BacktraceAttachmentResponse>>;
 }

@@ -11,9 +11,11 @@ export {
     BreadcrumbsManager,
     RawBreadcrumb,
 } from '@backtrace/sdk-core';
+export * from './attachment';
 export * from './BacktraceClient';
 export * from './BacktraceConfiguration';
 export * from './BacktraceNodeRequestHandler';
-export * from './attachment';
+export * from './breadcrumbs';
 export * from './builder/BacktraceClientBuilder';
 export * from './builder/BacktraceClientSetup';
+export * from './storage';
