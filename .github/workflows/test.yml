@@ -48,13 +48,11 @@ jobs:
             - run: npm run build
             - run: npm run lint
             - run: npm run format:check
-            - uses: actions/checkout@v4
             - name: Test using Node.js ${{ matrix.node-version }}
               uses: actions/setup-node@v4
               with:
                   node-version: ${{ matrix.node-version }}
             - run: npm i -g npm@8
-            - run: npm ci
             - run: npm test
 
     test_windows:
