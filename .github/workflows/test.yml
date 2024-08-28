@@ -30,7 +30,7 @@ jobs:
                   node-version: ${{ matrix.node-version }}
             - run: npm test
 
-    build_pre_workspaces:
+    test_linux_pre_workspaces:
         runs-on: ubuntu-latest
 
         strategy:
