@@ -26,7 +26,7 @@
     ],
     "homepage": "https://github.com/backtrace-labs/backtrace-javascript#readme",
     "peerDependencies": {
-        "@backtrace/sdk-core": "^0.3.2"
+        "@backtrace/sdk-core": "^0.4.0"
     },
     "dependencies": {
         "rrweb": "^2.0.0-alpha.15"
