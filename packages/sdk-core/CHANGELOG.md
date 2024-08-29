@@ -1,3 +1,11 @@
+# Version 0.4.0
+
+-   change how attachments are managed (#262)
+-   add `BacktraceAttachmentProvider` (#262)
+-   add attachment support to database (#262)
+-   add `maximumNumberOfAttachmentRecords` to database config (#262)
+-   remove `hash` and `count` from database records (#262)
+
 # Version 0.3.3
 
 -   fix `BacktraceClient.instance` not being set when the builder is used (#263)
