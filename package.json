@@ -12,6 +12,7 @@
         "lint": "eslint . --ext .ts",
         "rebuild": "npm run clean && npm run build",
         "test": "npm run test --ws --if-present",
+        "smoketest": "npm run start --workspace=smoketests",
         "syncVersions": "ts-node ./scripts/syncVersions.ts"
     },
     "workspaces": [
@@ -27,7 +28,8 @@
         "tools/webpack-plugin",
         "tools/vite-plugin",
         "packages/electron",
-        "packages/session-replay"
+        "packages/session-replay",
+        "smoketests"
     ],
     "repository": {
         "type": "git",

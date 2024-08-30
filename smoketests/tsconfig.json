@@ -1,0 +1,23 @@
+{
+    "include": ["./tests"],
+    "compilerOptions": {
+        "target": "es2015",
+        "module": "commonjs",
+        "outDir": "./lib",
+        "sourceMap": true,
+        "incremental": true,
+        "strict": true,
+        "esModuleInterop": true,
+        "strictNullChecks": true,
+        "noUnusedLocals": true,
+        "removeComments": false,
+        "forceConsistentCasingInFileNames": true,
+        "skipLibCheck": true,
+        "declaration": true,
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "rootDir": "./tests",
+        "composite": true
+    },
+    "exclude": ["node_modules", "lib"]
+}
