@@ -58,6 +58,10 @@ jobs:
                   node-version: ${{ matrix.node-version }}
             - run: npm i -g npm@8
             - run: npm test
+            - run: npm run smoketest
+              env:
+                  SMOKETESTS_SUBMIT_LAYER_URL: ${{ secrets.SMOKETESTS_SUBMIT_LAYER_URL }}
+                  SMOKETESTS_DIRECT_SUBMIT_URL: ${{ secrets.SMOKETESTS_DIRECT_SUBMIT_URL }}
 
     test_windows:
         runs-on: windows-latest
@@ -72,3 +76,7 @@ jobs:
             - run: npm run lint
             - run: npm run format:check
             - run: npm test
+            - run: npm run smoketest
+              env:
+                  SMOKETESTS_SUBMIT_LAYER_URL: ${{ secrets.SMOKETESTS_SUBMIT_LAYER_URL }}
+                  SMOKETESTS_DIRECT_SUBMIT_URL: ${{ secrets.SMOKETESTS_DIRECT_SUBMIT_URL }}
