@@ -1,3 +1,9 @@
+# Version 0.4.0
+
+-   update `@backtrace/sdk-core` to `0.4.0`
+-   upload attachments for native crashes (#262)
+-   support `postAttachment` in `NodeBacktraceRequestHandler`
+
 # Version 0.3.2
 
 -   remove `native-reg` and use `reg query` executable to determine Windows machine GUID (#250)

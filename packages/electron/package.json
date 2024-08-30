@@ -35,7 +35,7 @@
         "/renderer"
     ],
     "dependencies": {
-        "@backtrace/node": "^0.3.2"
+        "@backtrace/node": "^0.4.0"
     },
     "peerDependencies": {
         "electron": "12 - 28"
