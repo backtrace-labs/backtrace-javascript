@@ -1,0 +1,22 @@
+{
+    "name": "smoketest-node",
+    "version": "1.0.0",
+    "description": "@backtrace/node smoketests",
+    "main": "lib/index.js",
+    "types": "lib/index.d.ts",
+    "scripts": {
+        "start": "node lib/index.js",
+        "build": "tsc",
+        "watch": "npm run build -- --watch",
+        "trust-ssl-cert": "cp /certs/cert.crt /usr/local/share/ca-certificates/ && update-ca-certificates"
+    },
+    "author": "Backtrace <team@backtrace.io>",
+    "license": "MIT",
+    "dependencies": {
+        "@backtrace/node": "file:/sdk/packages/node"
+    },
+    "devDependencies": {
+        "@types/node": "^22.5.1",
+        "typescript": "^5.0.4"
+    }
+}
