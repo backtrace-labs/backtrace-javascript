@@ -1,6 +1,6 @@
 import { Component, ErrorInfo, isValidElement, ReactElement, ReactNode } from 'react';
-import { BacktraceReport } from '.';
 import { BacktraceClient } from './BacktraceClient';
+import { BacktraceReport } from './index';
 
 type RenderFallback = (error: Error) => ReactElement;
 
