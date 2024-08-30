@@ -32,6 +32,6 @@ client.send('test message').then((result) => {
         process.exit(1);
     }
 
-    console.log('submission ok');
+    console.log(result.result?._rxid);
     process.exit(0);
 });
