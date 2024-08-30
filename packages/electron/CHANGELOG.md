@@ -1,3 +1,9 @@
+# Version 0.4.0
+
+-   update `@backtrace/node` to `0.4.0`
+-   support `postAttachment` in `IpcRequestHandler`
+-   upload attachments for Crashpad reports (#262)
+
 # Version 0.3.1
 
 -   update `@backtrace/node` to `0.3.2`
