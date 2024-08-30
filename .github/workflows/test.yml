@@ -29,6 +29,7 @@ jobs:
               with:
                   node-version: ${{ matrix.node-version }}
             - run: npm test
+            - run: npm run smoketest
 
     test_linux_pre_workspaces:
         runs-on: ubuntu-latest
