@@ -21,8 +21,8 @@ export async function asyncSpawn(command: string, args: string[], options?: Asyn
 
         const childProc = spawn(command, args, optionsWithoutSignal);
 
-        let stdout: string = '';
-        let stderr: string = '';
+        let stdout = '';
+        let stderr = '';
 
         childProc.stdout.on('data', (data: Buffer) => {
             console.log(`${debugName}:`, data.toString('utf-8'));

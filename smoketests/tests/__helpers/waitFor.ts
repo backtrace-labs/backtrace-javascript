@@ -8,9 +8,13 @@ interface WaitForOptions {
 }
 
 export async function waitForUrl(url: string, options?: WaitForOptions) {
-    let { retries, wait, factor, signal } = {
+    let { retries, wait } = {
         retries: 30,
         wait: 1000,
+        ...options,
+    };
+
+    const { factor, signal } = {
         factor: 1,
         ...options,
     };
@@ -29,9 +33,9 @@ export async function waitForUrl(url: string, options?: WaitForOptions) {
             }
         } catch (err) {
             error = err;
-        } finally {
+
             if (signal?.aborted) {
-                throw error;
+                break;
             }
 
             retries--;
@@ -40,5 +44,5 @@ export async function waitForUrl(url: string, options?: WaitForOptions) {
         }
     }
 
-    throw error!;
+    throw error;
 }
