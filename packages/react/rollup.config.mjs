@@ -7,7 +7,7 @@ import path from 'path';
 import typescript from 'rollup-plugin-typescript2';
 import packageJson from './package.json' with { type: 'json' };
 
-const extensions = ['.js', '.ts'];
+const extensions = ['.js', '.ts', '.tsx'];
 
 /** @type {import('rollup').RollupOptions} */
 export default {
