@@ -1,12 +1,12 @@
 import {
-    BacktraceClient as BrowserClient,
     BacktraceClientSetup,
     BacktraceConfiguration,
+    BacktraceClient as BrowserClient,
     getStackTraceConverter,
 } from '@backtrace/browser';
-import { AGENT } from './agentDefinition';
-import { BacktraceReactClientBuilder } from './builder/BacktraceReactClientBuilder';
-import { ReactStackTraceConverter } from './converters/ReactStackTraceConverter';
+import { AGENT } from './agentDefinition.js';
+import { BacktraceReactClientBuilder } from './builder/BacktraceReactClientBuilder.js';
+import { ReactStackTraceConverter } from './converters/ReactStackTraceConverter.js';
 
 export class BacktraceClient extends BrowserClient<BacktraceConfiguration> {
     constructor(clientSetup: BacktraceClientSetup) {

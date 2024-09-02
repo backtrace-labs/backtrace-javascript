@@ -1,5 +1,5 @@
 import { BacktraceStackTraceConverter, JavaScriptEngine } from '@backtrace/browser';
-import { ReactStackTraceConverter } from '../src/converters/ReactStackTraceConverter';
+import { ReactStackTraceConverter } from '../src/converters/ReactStackTraceConverter.js';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 class MockConverter implements BacktraceStackTraceConverter {
