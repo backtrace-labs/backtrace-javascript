@@ -1,5 +1,5 @@
-import { NO_PRELOAD_ERROR } from '../common';
-import { PreloadIpcTransport } from './PreloadIpcTransport';
+import { NO_PRELOAD_ERROR } from '../common.js';
+import { PreloadIpcTransport } from './PreloadIpcTransport.js';
 
 export function getIpcTransport() {
     if (!PreloadIpcTransport) {

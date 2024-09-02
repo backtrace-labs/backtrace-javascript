@@ -1,8 +1,8 @@
 import { Event } from 'electron';
 import { Readable, ReadableOptions } from 'stream';
-import { IpcTransport } from '../../common';
-import { IpcEvents } from '../../common/ipc/IpcEvents';
-import { ipcHandshake } from '../../common/ipc/ipcHandshake';
+import { IpcTransport } from '../../common/index.js';
+import { IpcEvents } from '../../common/ipc/IpcEvents.js';
+import { ipcHandshake } from '../../common/ipc/ipcHandshake.js';
 
 export class ReadableIpcStream extends Readable {
     private _isConnected = false;

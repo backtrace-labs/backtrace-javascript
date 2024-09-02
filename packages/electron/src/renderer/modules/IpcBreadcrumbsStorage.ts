@@ -1,6 +1,6 @@
 import { BacktraceAttachment, BreadcrumbsStorage, RawBreadcrumb } from '@backtrace/sdk-core';
-import { IpcTransport } from '../../common';
-import { IpcEvents } from '../../common/ipc/IpcEvents';
+import { IpcTransport } from '../../common/index.js';
+import { IpcEvents } from '../../common/ipc/IpcEvents.js';
 
 export class IpcBreadcrumbsStorage implements BreadcrumbsStorage {
     constructor(private readonly _ipcTransport: IpcTransport) {}

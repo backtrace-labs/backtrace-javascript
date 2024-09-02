@@ -1,6 +1,6 @@
 import { BacktraceAttributeProvider } from '@backtrace/sdk-core';
 import { BrowserWindow } from 'electron';
-import { getBrowserWindowAttributes } from './helpers/attributes';
+import { getBrowserWindowAttributes } from './helpers/attributes.js';
 
 export class AllWindowsAttributeProvider implements BacktraceAttributeProvider {
     public readonly type = 'dynamic';

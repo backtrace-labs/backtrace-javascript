@@ -1,7 +1,7 @@
 import { BacktraceAttachment } from '@backtrace/sdk-core';
 import { Readable } from 'stream';
-import { IpcTransport } from '../../common';
-import { ReadableIpcStream } from '../ipc/ReadableIpcStream';
+import { IpcTransport } from '../../common/index.js';
+import { ReadableIpcStream } from '../ipc/ReadableIpcStream.js';
 
 export class IpcAttachment implements BacktraceAttachment {
     constructor(

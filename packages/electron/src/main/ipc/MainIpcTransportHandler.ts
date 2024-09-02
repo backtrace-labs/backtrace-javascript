@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { IpcMainInvokeEvent, ipcMain } from 'electron';
-import { IpcTransportHandler } from '../../common';
+import { IpcTransportHandler } from '../../common/index.js';
 
 export class MainIpcTransportHandler implements IpcTransportHandler {
     public on(event: string, callback: (event: IpcMainInvokeEvent, ...args: any[]) => unknown) {

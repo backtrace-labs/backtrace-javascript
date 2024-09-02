@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { IpcMainEvent, IpcMainInvokeEvent, ipcMain } from 'electron';
-import { IpcRpcHandler, SyncIpcRpcHandler } from '../../common/ipc/IpcRpc';
+import { IpcRpcHandler, SyncIpcRpcHandler } from '../../common/ipc/IpcRpc.js';
 
 export class MainIpcRpcHandler implements IpcRpcHandler, SyncIpcRpcHandler {
     public on(event: string, callback: (event: IpcMainInvokeEvent, ...args: any[]) => Promise<unknown>): this {

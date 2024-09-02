@@ -1,5 +1,5 @@
-import { NO_PRELOAD_ERROR } from '../common';
-import { PreloadIpcRpc } from './PreloadIpcRpc';
+import { NO_PRELOAD_ERROR } from '../common.js';
+import { PreloadIpcRpc } from './PreloadIpcRpc.js';
 
 export function getIpcRpc() {
     if (!PreloadIpcRpc) {

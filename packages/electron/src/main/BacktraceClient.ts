@@ -4,9 +4,9 @@ import {
     BacktraceClient as NodeBacktraceClient,
 } from '@backtrace/node';
 import { BrowserWindow } from 'electron';
-import { WindowAttributeProvider, WindowAttributeProviderOptions } from './attributes/WindowAttributeProvider';
-import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
-import { BacktraceMainElectronModule } from './modules/BacktraceMainElectronModule';
+import { WindowAttributeProvider, WindowAttributeProviderOptions } from './attributes/WindowAttributeProvider.js';
+import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder.js';
+import { BacktraceMainElectronModule } from './modules/BacktraceMainElectronModule.js';
 
 export class BacktraceClient extends NodeBacktraceClient {
     constructor(clientSetup: BacktraceNodeClientSetup) {

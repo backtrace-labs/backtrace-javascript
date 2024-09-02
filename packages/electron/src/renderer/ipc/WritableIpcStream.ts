@@ -1,6 +1,6 @@
-import { IpcEvents } from '../../common/ipc/IpcEvents';
-import { ipcHandshake } from '../../common/ipc/ipcHandshake';
-import { IpcTransport } from '../../common/ipc/IpcTransport';
+import { IpcEvents } from '../../common/ipc/IpcEvents.js';
+import { ipcHandshake } from '../../common/ipc/ipcHandshake.js';
+import { IpcTransport } from '../../common/ipc/IpcTransport.js';
 
 function waitOnce(event: string, ipc: IpcTransport) {
     return new Promise<void>((resolve) => ipc.once(event, () => resolve()));

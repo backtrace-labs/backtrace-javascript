@@ -5,7 +5,7 @@ import {
     BreadcrumbsEventSubscriber,
 } from '@backtrace/sdk-core';
 import { BrowserWindow, Event, RenderProcessGoneDetails, WebContentsWillFrameNavigateEventParams, app } from 'electron';
-import { point } from '../attributes/helpers/attributes';
+import { point } from '../attributes/helpers/attributes.js';
 
 export class WindowEventSubscriber implements BreadcrumbsEventSubscriber {
     private readonly _toDispose: Array<() => void> = [];

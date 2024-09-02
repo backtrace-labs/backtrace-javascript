@@ -1,4 +1,4 @@
-import { IpcTransport } from './IpcTransport';
+import { IpcTransport } from './IpcTransport.js';
 
 export async function ipcHandshake(ipc: IpcTransport, event: string) {
     const promise = new Promise<void>((resolve) => {

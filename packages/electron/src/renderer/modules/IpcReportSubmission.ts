@@ -8,11 +8,11 @@ import {
     IdGenerator,
     jsonEscaper,
 } from '@backtrace/sdk-core';
-import { IpcTransport } from '../../common';
-import { IpcAttachmentReference } from '../../common/ipc/IpcAttachmentReference';
-import { IpcEvents } from '../../common/ipc/IpcEvents';
-import { IpcRpc } from '../../common/ipc/IpcRpc';
-import { WritableIpcStream } from '../ipc/WritableIpcStream';
+import { IpcTransport } from '../../common/index.js';
+import { IpcAttachmentReference } from '../../common/ipc/IpcAttachmentReference.js';
+import { IpcEvents } from '../../common/ipc/IpcEvents.js';
+import { IpcRpc } from '../../common/ipc/IpcRpc.js';
+import { WritableIpcStream } from '../ipc/WritableIpcStream.js';
 
 export class IpcReportSubmission implements BacktraceReportSubmission {
     constructor(

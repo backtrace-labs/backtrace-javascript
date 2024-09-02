@@ -1,4 +1,4 @@
-import { IpcTransport } from '../../common/ipc/IpcTransport';
+import { IpcTransport } from '../../common/ipc/IpcTransport.js';
 
 declare global {
     interface Window {
