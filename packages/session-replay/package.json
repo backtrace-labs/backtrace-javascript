@@ -13,6 +13,7 @@
         "format": "prettier --write '**/*.ts'",
         "lint": "eslint . --ext .ts",
         "watch": "npm run build -- --watch",
+        "prepublishOnly": "cross-env NODE_ENV=production npm run clean && npm run build",
         "test": "cross-env NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" NODE_NO_WARNINGS=1 NODE_ENV=test jest"
     },
     "repository": {
