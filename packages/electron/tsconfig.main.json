@@ -1,8 +1,12 @@
 {
     "extends": "./tsconfig.json",
     "compilerOptions": {
+        "target": "ES2018", // node.green - Node 14+ implements all used features
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
         "outDir": "./",
-        "rootDir": "./src"
+        "rootDir": "./src",
+        "declarationDir": "./"
     },
     "include": ["src/main", "src/common"],
     "exclude": ["node_modules", "tests", "common", "main", "renderer"],
