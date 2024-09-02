@@ -1,3 +1,7 @@
+# Version 0.1.2
+
+-   build files hotfix
+
 # Version 0.1.1
 
 -   output ES and CJS modules (#272)
