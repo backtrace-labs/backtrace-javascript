@@ -1,4 +1,4 @@
-import { SdkOptions } from '@backtrace/sdk-core/lib/builder/SdkOptions';
+import { SdkOptions } from '@backtrace/sdk-core';
 
 export const AGENT: SdkOptions = {
     langName: 'nodejs',

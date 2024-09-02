@@ -2,7 +2,7 @@ import { BacktraceReport, BacktraceRequestHandler } from '@backtrace/sdk-core';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { BacktraceBufferAttachment, BacktraceClient, BacktraceFileAttachment } from '../../src/index';
+import { BacktraceBufferAttachment, BacktraceClient, BacktraceFileAttachment } from '../../src/index.js';
 
 describe('Client tests', () => {
     const requestHandler: BacktraceRequestHandler = {

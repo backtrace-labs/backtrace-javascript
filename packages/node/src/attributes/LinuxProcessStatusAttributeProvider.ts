@@ -1,6 +1,6 @@
 import { BacktraceAttributeProvider } from '@backtrace/sdk-core';
 import fs from 'fs';
-import { MEMORY_ATTRIBUTE_MAP, MEMORY_INFORMATION_REGEX, PROCESS_STATUS_MAP } from './processStatusInformationMap';
+import { MEMORY_ATTRIBUTE_MAP, MEMORY_INFORMATION_REGEX, PROCESS_STATUS_MAP } from './processStatusInformationMap.js';
 
 export class LinuxProcessStatusAttributeProvider implements BacktraceAttributeProvider {
     private readonly _isLinux = process.platform === 'linux';

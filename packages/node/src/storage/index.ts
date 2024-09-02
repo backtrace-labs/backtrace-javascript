@@ -1,2 +1,2 @@
-export * from './FsNodeFileSystem';
-export * from './interfaces/NodeFileSystem';
+export * from './FsNodeFileSystem.js';
+export * from './interfaces/NodeFileSystem.js';

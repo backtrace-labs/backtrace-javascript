@@ -1,4 +1,4 @@
-import { UnitConverter } from '../common/UnitConverter';
+import { UnitConverter } from '../common/UnitConverter.js';
 
 export const MEMORY_INFORMATION_REGEX = /^(.+):\s+(\d+)\s*(.+)?$/;
 export const MEMORY_ATTRIBUTE_MAP: Record<string, string> = {

@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { ApplicationInformationAttributeProvider } from '../../src/attributes/ApplicationInformationAttributeProvider';
+import { ApplicationInformationAttributeProvider } from '../../src/attributes/ApplicationInformationAttributeProvider.js';
 
 describe('Application information attribute provider tests', () => {
     describe('search path tests', () => {

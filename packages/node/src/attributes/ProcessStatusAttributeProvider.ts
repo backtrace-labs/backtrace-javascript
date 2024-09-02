@@ -1,5 +1,4 @@
-import { BacktraceAttributeProvider } from '@backtrace/sdk-core';
-import { AttributeType } from '@backtrace/sdk-core/lib/model/data/BacktraceData';
+import { AttributeType, BacktraceAttributeProvider } from '@backtrace/sdk-core';
 import os from 'os';
 
 export class ProcessStatusAttributeProvider implements BacktraceAttributeProvider {

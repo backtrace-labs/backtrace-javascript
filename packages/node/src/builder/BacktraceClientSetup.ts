@@ -1,6 +1,6 @@
 import { PartialCoreClientSetup } from '@backtrace/sdk-core';
-import { BacktraceSetupConfiguration } from '../BacktraceConfiguration';
-import { NodeFileSystem } from '../storage/interfaces/NodeFileSystem';
+import { BacktraceSetupConfiguration } from '../BacktraceConfiguration.js';
+import { NodeFileSystem } from '../storage/interfaces/NodeFileSystem.js';
 
 export interface BacktraceClientSetup extends PartialCoreClientSetup<'sdkOptions' | 'requestHandler'> {}
 

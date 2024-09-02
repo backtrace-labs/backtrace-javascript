@@ -1,4 +1,4 @@
-import { MachineIdentitfierAttributeProvider } from '../../src/attributes/MachineIdentitfierAttributeProvider';
+import { MachineIdentitfierAttributeProvider } from '../../src/attributes/MachineIdentitfierAttributeProvider.js';
 
 describe('Machine id attribute provider test', () => {
     if (MachineIdentitfierAttributeProvider.SUPPORTED_PLATFORMS.includes(process.platform)) {

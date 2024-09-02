@@ -1,4 +1,4 @@
-import { NodeFileSystem, WritableStream } from '../storage/interfaces/NodeFileSystem';
+import { NodeFileSystem, WritableStream } from '../storage/interfaces/NodeFileSystem.js';
 
 export class AlternatingFileWriter {
     private _fileStream?: WritableStream;
