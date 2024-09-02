@@ -42,7 +42,12 @@ export class MetricsSubmissionQueue<T extends MetricsEvent> implements MetricsQu
 
     public async send(abortSignal?: AbortSignal) {
         const eventsToProcess = this._events.splice(0);
-        return await this.submit(eventsToProcess, anySignal(abortSignal, this._abortController.signal));
+        const signal = anySignal(abortSignal, this._abortController.signal);
+        try {
+            return await this.submit(eventsToProcess, signal);
+        } finally {
+            signal.dispose();
+        }
     }
 
     public dispose() {

@@ -202,18 +202,25 @@ export function createAbortController(): OriginalAbortController {
     }
 }
 
-export function anySignal(...signals: (OriginalAbortSignal | undefined)[]): OriginalAbortSignal {
+interface DisposableAbortSignal extends OriginalAbortSignal {
+    dispose(): void;
+}
+
+export function anySignal(...signals: (OriginalAbortSignal | undefined)[]): DisposableAbortSignal {
     const controller = createAbortController();
 
-    function onAbort() {
-        controller.abort();
-
+    function cleanup() {
         // Cleanup
         for (const signal of signals) {
             if (signal) {
                 signal.removeEventListener('abort', onAbort);
             }
         }
+    }
+
+    function onAbort() {
+        controller.abort();
+        cleanup();
     }
 
     for (const signal of signals) {
@@ -228,5 +235,6 @@ export function anySignal(...signals: (OriginalAbortSignal | undefined)[]): Orig
         signal.addEventListener('abort', onAbort);
     }
 
-    return controller.signal;
+    (controller.signal as DisposableAbortSignal).dispose = cleanup;
+    return controller.signal as DisposableAbortSignal;
 }

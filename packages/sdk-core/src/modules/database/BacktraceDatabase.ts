@@ -276,34 +276,38 @@ export class BacktraceDatabase implements BacktraceModule {
             const records = [...this._databaseRecordContext.getBucket(bucketIndex)];
             const signal = anySignal(abortSignal, this._abortController.signal);
 
-            for (const record of records) {
-                if (!this.enabled) {
-                    return;
-                }
-                if (record.locked) {
-                    continue;
-                }
-                try {
-                    record.locked = true;
-
-                    const result =
-                        record.type === 'report'
-                            ? await this._requestHandler.send(record.data, record.attachments, signal)
-                            : await this._requestHandler.sendAttachment(record.rxid, record.attachment, signal);
-
-                    if (
-                        result.status === 'Ok' ||
-                        result.status === 'Unsupported' ||
-                        result.status === 'Report skipped'
-                    ) {
-                        this.remove(record);
+            try {
+                for (const record of records) {
+                    if (!this.enabled) {
+                        return;
+                    }
+                    if (record.locked) {
                         continue;
                     }
-                    this._databaseRecordContext.increaseBucket(bucketIndex);
-                    return;
-                } finally {
-                    record.locked = false;
+                    try {
+                        record.locked = true;
+
+                        const result =
+                            record.type === 'report'
+                                ? await this._requestHandler.send(record.data, record.attachments, signal)
+                                : await this._requestHandler.sendAttachment(record.rxid, record.attachment, signal);
+
+                        if (
+                            result.status === 'Ok' ||
+                            result.status === 'Unsupported' ||
+                            result.status === 'Report skipped'
+                        ) {
+                            this.remove(record);
+                            continue;
+                        }
+                        this._databaseRecordContext.increaseBucket(bucketIndex);
+                        return;
+                    } finally {
+                        record.locked = false;
+                    }
                 }
+            } finally {
+                signal.dispose();
             }
         }
     }
