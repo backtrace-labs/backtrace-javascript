@@ -1,2 +1,2 @@
-export * from './BacktraceSessionRecorder';
-export * from './BacktraceSessionReplayModule';
+export * from './BacktraceSessionRecorder.js';
+export * from './BacktraceSessionReplayModule.js';

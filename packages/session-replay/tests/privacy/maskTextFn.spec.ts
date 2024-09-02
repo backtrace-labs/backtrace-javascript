@@ -1,4 +1,4 @@
-import { maskTextFn } from '../../src/privacy/maskTextFn';
+import { maskTextFn } from '../../src/privacy/maskTextFn.js';
 
 describe('maskTextFn', () => {
     describe('mask all text enabled', () => {
