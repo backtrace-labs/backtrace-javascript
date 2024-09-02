@@ -107,6 +107,10 @@ export class AbortSignal extends Emitter implements OriginalAbortSignal {
 
         return super.dispatchEvent(event);
     }
+
+    public any(signals: Iterable<globalThis.AbortSignal>): globalThis.AbortSignal {
+        return anySignal(...signals);
+    }
 }
 
 /**
