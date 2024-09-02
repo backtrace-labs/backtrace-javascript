@@ -25,8 +25,8 @@ export class BacktraceMetrics implements BacktraceModule {
     public readonly DEFAULT_UPDATE_INTERVAL = TimeHelper.convertSecondsToMilliseconds(30 * 60);
     public readonly DEFAULT_SERVER_URL = 'https://events.backtrace.io';
 
-    public readonly metricsHost: string = this._options.metricsSubmissionUrl ?? this.DEFAULT_SERVER_URL;
-    private readonly _updateInterval: number = this._options.autoSendInterval ?? this.DEFAULT_UPDATE_INTERVAL;
+    public readonly metricsHost: string;
+    private readonly _updateInterval: number;
 
     private _updateIntervalId?: ReturnType<typeof setTimeout>;
     private readonly _abortController: AbortController;
@@ -38,6 +38,9 @@ export class BacktraceMetrics implements BacktraceModule {
         private readonly _summedEventsSubmissionQueue: MetricsQueue<SummedEvent>,
         private readonly _uniqueEventsSubmissionQueue: MetricsQueue<UniqueEvent>,
     ) {
+        this.metricsHost = this._options.metricsSubmissionUrl ?? this.DEFAULT_SERVER_URL;
+        this._updateInterval = this._options.autoSendInterval ?? this.DEFAULT_UPDATE_INTERVAL;
+
         this._abortController = createAbortController();
     }
 

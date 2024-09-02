@@ -1,4 +1,5 @@
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { BacktraceDatabaseConfiguration, BacktraceReportSubmissionResult } from '../../src';
 import { BacktraceDatabase } from '../../src/modules/database/BacktraceDatabase';
 import { mockFileSystem } from '../_mocks/fileSystem';
@@ -15,7 +16,7 @@ describe('Database send tests', () => {
         // interface. However, if bug happen we want to be sure to not create
         // anything. Instead we want to fail loud and hard.
         createDatabaseDirectory: false,
-        path: path.join(__dirname, 'database'),
+        path: path.join(path.dirname(fileURLToPath(import.meta.url)), 'database'),
     };
 
     describe('Flush', () => {
