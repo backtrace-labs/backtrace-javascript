@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing';
-import { BacktraceClient, BacktraceModule } from '../src';
+import { BacktraceClient, BacktraceModule } from '../src/index.js';
 
 describe('BacktraceModule', () => {
     beforeEach(() => {

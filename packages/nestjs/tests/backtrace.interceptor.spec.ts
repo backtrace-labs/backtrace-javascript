@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
-import { BacktraceInterceptor, BacktraceInterceptorOptions } from '../src/backtrace.interceptor';
+import { BacktraceInterceptor, BacktraceInterceptorOptions } from '../src/backtrace.interceptor.js';
 
 describe('BacktraceInterceptor', () => {
     function createMockClient() {

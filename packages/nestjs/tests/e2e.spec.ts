@@ -3,7 +3,7 @@ import { Controller, Get, UseInterceptors } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
-import { BacktraceClient, BacktraceInterceptor, BacktraceModule } from '../src';
+import { BacktraceClient, BacktraceInterceptor, BacktraceModule } from '../src/index.js';
 
 describe('e2e', () => {
     beforeEach(() => {

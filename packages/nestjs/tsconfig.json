@@ -2,9 +2,8 @@
     "extends": "../../tsconfig.base.json",
     "compilerOptions": {
         "target": "ES2018", // node.green - Node 14+ implements all used features
-        "module": "ESNext",
-        "moduleResolution": "Bundler",
-        "composite": true
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext"
     },
     "exclude": ["node_modules", "lib"]
 }
