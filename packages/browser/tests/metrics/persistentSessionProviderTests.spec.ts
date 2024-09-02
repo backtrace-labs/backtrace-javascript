@@ -1,5 +1,5 @@
 import { TimeHelper } from '@backtrace/sdk-core';
-import { BacktraceBrowserSessionProvider } from '../../src/BacktraceBrowserSessionProvider';
+import { BacktraceBrowserSessionProvider } from '../../src/BacktraceBrowserSessionProvider.js';
 describe('Session provider tests', () => {
     it('Should generate a new uuid on new session', () => {
         const sessionProvider = new BacktraceBrowserSessionProvider();

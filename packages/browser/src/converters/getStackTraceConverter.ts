@@ -1,7 +1,7 @@
 import { BacktraceStackTraceConverter, V8StackTraceConverter } from '@backtrace/sdk-core';
-import { getEngine } from '../engineDetector';
-import { JavaScriptCoreStackTraceConverter } from './JavaScriptCoreStackTraceConverter';
-import { SpiderMonkeyStackTraceConverter } from './SpiderMonkeyStackTraceConverter';
+import { getEngine } from '../engineDetector.js';
+import { JavaScriptCoreStackTraceConverter } from './JavaScriptCoreStackTraceConverter.js';
+import { SpiderMonkeyStackTraceConverter } from './SpiderMonkeyStackTraceConverter.js';
 
 export function getStackTraceConverter(): BacktraceStackTraceConverter {
     switch (getEngine()) {

@@ -1,5 +1,5 @@
-import { SpiderMonkeyStackTraceConverter } from '../../../src/converters/SpiderMonkeyStackTraceConverter';
-import { spiderMonkeyStackTraceTests } from './spiderMonkeyStackTraceTestCases';
+import { SpiderMonkeyStackTraceConverter } from '../../../src/converters/SpiderMonkeyStackTraceConverter.js';
+import { spiderMonkeyStackTraceTests } from './spiderMonkeyStackTraceTestCases.js';
 
 describe('Stack trace converter tests', () => {
     describe('Spider monkey', () => {

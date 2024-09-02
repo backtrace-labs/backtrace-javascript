@@ -1,4 +1,4 @@
-import { JavaScriptEngine } from '@backtrace/sdk-core/lib/model/data/JavaScriptEngine';
+import { JavaScriptEngine } from '@backtrace/sdk-core';
 
 export function getEngine(): JavaScriptEngine {
     if (!navigator.userAgent) {

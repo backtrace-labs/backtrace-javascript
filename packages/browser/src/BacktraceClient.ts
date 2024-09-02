@@ -4,13 +4,13 @@ import {
     DebugIdContainer,
     VariableDebugIdMapProvider,
 } from '@backtrace/sdk-core';
-import { AGENT } from './agentDefinition';
-import { BacktraceBrowserRequestHandler } from './BacktraceBrowserRequestHandler';
-import { BacktraceBrowserSessionProvider } from './BacktraceBrowserSessionProvider';
-import { BacktraceConfiguration } from './BacktraceConfiguration';
-import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
-import { BacktraceClientSetup } from './builder/BacktraceClientSetup';
-import { getStackTraceConverter } from './converters/getStackTraceConverter';
+import { AGENT } from './agentDefinition.js';
+import { BacktraceBrowserRequestHandler } from './BacktraceBrowserRequestHandler.js';
+import { BacktraceBrowserSessionProvider } from './BacktraceBrowserSessionProvider.js';
+import { BacktraceConfiguration } from './BacktraceConfiguration.js';
+import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder.js';
+import { BacktraceClientSetup } from './builder/BacktraceClientSetup.js';
+import { getStackTraceConverter } from './converters/getStackTraceConverter.js';
 
 export class BacktraceClient<O extends BacktraceConfiguration = BacktraceConfiguration> extends BacktraceCoreClient<O> {
     private readonly _disposeController: AbortController = new AbortController();
