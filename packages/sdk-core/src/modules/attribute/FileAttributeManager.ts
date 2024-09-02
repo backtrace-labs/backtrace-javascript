@@ -1,8 +1,8 @@
-import { jsonEscaper } from '../../common/jsonEscaper';
-import { AttributeType } from '../../model/data';
-import { BacktraceModule, BacktraceModuleBindData } from '../BacktraceModule';
-import { FileSystem, SessionFiles } from '../storage';
-import { AttributeManager } from './AttributeManager';
+import { jsonEscaper } from '../../common/jsonEscaper.js';
+import { AttributeType } from '../../model/data/index.js';
+import { BacktraceModule, BacktraceModuleBindData } from '../BacktraceModule.js';
+import { FileSystem, SessionFiles } from '../storage/index.js';
+import { AttributeManager } from './AttributeManager.js';
 
 const ATTRIBUTE_FILE_NAME = 'bt-attributes';
 

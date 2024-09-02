@@ -1,4 +1,4 @@
-import { SubmissionUrlInformation } from '../../src/model/http';
+import { SubmissionUrlInformation } from '../../src/model/http/index.js';
 describe('Universe tests', () => {
     const testedUniverseName = 'foo-bar-baz';
     describe('Submit', () => {

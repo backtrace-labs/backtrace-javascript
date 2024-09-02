@@ -1,5 +1,5 @@
-import { MetricsQueue } from '../../../src/modules/metrics/MetricsQueue';
-import { MetricsEvent } from '../../../src/modules/metrics/model/MetricsEvent';
+import { MetricsQueue } from '../../../src/modules/metrics/MetricsQueue.js';
+import { MetricsEvent } from '../../../src/modules/metrics/model/MetricsEvent.js';
 
 export const mockSubmissionQueue: MetricsQueue<MetricsEvent> = {
     total: 0,

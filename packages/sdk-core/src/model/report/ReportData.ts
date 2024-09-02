@@ -1,4 +1,4 @@
-import { AttributeType } from '../data/BacktraceData';
+import { AttributeType } from '../data/BacktraceData.js';
 
 export interface ReportData {
     attributes: Record<string, AttributeType>;

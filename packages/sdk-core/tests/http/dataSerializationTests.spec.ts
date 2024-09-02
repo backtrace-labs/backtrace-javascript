@@ -1,8 +1,8 @@
-import { BacktraceReport, DebugIdProvider } from '../../src';
-import { jsonEscaper } from '../../src/common/jsonEscaper';
-import { AttributeManager } from '../../src/modules/attribute/AttributeManager';
-import { V8StackTraceConverter } from '../../src/modules/converter/V8StackTraceConverter';
-import { BacktraceDataBuilder } from '../../src/modules/data/BacktraceDataBuilder';
+import { jsonEscaper } from '../../src/common/jsonEscaper.js';
+import { BacktraceReport, DebugIdProvider } from '../../src/index.js';
+import { AttributeManager } from '../../src/modules/attribute/AttributeManager.js';
+import { V8StackTraceConverter } from '../../src/modules/converter/V8StackTraceConverter.js';
+import { BacktraceDataBuilder } from '../../src/modules/data/BacktraceDataBuilder.js';
 
 describe('Data serialization tests', () => {
     const sdkOptions = {

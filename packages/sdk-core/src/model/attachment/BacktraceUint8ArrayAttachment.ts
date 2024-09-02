@@ -1,4 +1,4 @@
-import { BacktraceAttachment } from './BacktraceAttachment';
+import { BacktraceAttachment } from './BacktraceAttachment.js';
 
 export class BacktraceUint8ArrayAttachment implements BacktraceAttachment<Blob> {
     constructor(

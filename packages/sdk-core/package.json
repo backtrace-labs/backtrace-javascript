@@ -7,11 +7,11 @@
     "types": "lib/index.d.ts",
     "type": "module",
     "scripts": {
-        "build": "rollup -c rollup.config.mjs",
+        "build": "tsc -p tsconfig.build.json --noEmit && rollup -c rollup.config.mjs",
         "clean": "rimraf lib *.tsbuildinfo",
         "format": "prettier --write '**/*.ts'",
         "lint": "eslint . --ext .ts",
-        "watch": "npm run build -- --watch",
+        "watch": "concurrently \"tsc -p tsconfig.build.json --noEmit --watch\" \"rollup -c rollup.config.mjs --watch\"",
         "test": "cross-env NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" NODE_NO_WARNINGS=1 NODE_ENV=test jest"
     },
     "repository": {
@@ -37,7 +37,9 @@
     ],
     "homepage": "https://github.com/backtrace-labs/backtrace-javascript#readme",
     "devDependencies": {
+        "@rollup/plugin-typescript": "^11.1.6",
         "@types/jest": "^29.5.1",
+        "concurrently": "^8.2.2",
         "jest": "^29.5.0",
         "rollup": "^4.21.0",
         "rollup-plugin-typescript2": "^0.36.0",

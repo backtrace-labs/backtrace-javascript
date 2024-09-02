@@ -1,15 +1,15 @@
-import { createAbortController } from '../../common/AbortController';
-import { AbortError } from '../../common/AbortError';
-import { TimeHelper } from '../../common/TimeHelper';
-import { BacktraceMetricsOptions } from '../../model/configuration/BacktraceConfiguration';
-import { AttributeType } from '../../model/data/BacktraceData';
-import { BacktraceModule } from '../BacktraceModule';
-import { AttributeManager } from '../attribute/AttributeManager';
-import { ReportDataBuilder } from '../attribute/ReportDataBuilder';
-import { BacktraceSessionProvider } from './BacktraceSessionProvider';
-import { MetricsQueue } from './MetricsQueue';
-import { SummedEvent } from './model/SummedEvent';
-import { UniqueEvent } from './model/UniqueEvent';
+import { createAbortController } from '../../common/AbortController.js';
+import { AbortError } from '../../common/AbortError.js';
+import { TimeHelper } from '../../common/TimeHelper.js';
+import { BacktraceMetricsOptions } from '../../model/configuration/BacktraceConfiguration.js';
+import { AttributeType } from '../../model/data/BacktraceData.js';
+import { BacktraceModule } from '../BacktraceModule.js';
+import { AttributeManager } from '../attribute/AttributeManager.js';
+import { ReportDataBuilder } from '../attribute/ReportDataBuilder.js';
+import { BacktraceSessionProvider } from './BacktraceSessionProvider.js';
+import { MetricsQueue } from './MetricsQueue.js';
+import { SummedEvent } from './model/SummedEvent.js';
+import { UniqueEvent } from './model/UniqueEvent.js';
 
 export class BacktraceMetrics implements BacktraceModule {
     /**

@@ -1,7 +1,7 @@
-import { FileSystem } from '../storage';
-import { AttachmentBacktraceDatabaseFileRecord } from './AttachmentBacktraceDatabaseFileRecord';
-import { BacktraceDatabaseRecord } from './model/BacktraceDatabaseRecord';
-import { ReportBacktraceDatabaseFileRecord } from './ReportBacktraceDatabaseFileRecord';
+import { FileSystem } from '../storage/index.js';
+import { AttachmentBacktraceDatabaseFileRecord } from './AttachmentBacktraceDatabaseFileRecord.js';
+import { BacktraceDatabaseRecord } from './model/BacktraceDatabaseRecord.js';
+import { ReportBacktraceDatabaseFileRecord } from './ReportBacktraceDatabaseFileRecord.js';
 
 export const BacktraceDatabaseFileRecord = {
     fromRecord(record: BacktraceDatabaseRecord) {

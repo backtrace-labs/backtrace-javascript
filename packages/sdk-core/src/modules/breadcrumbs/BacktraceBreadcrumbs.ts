@@ -1,7 +1,7 @@
-import { AttributeType } from '../../model/data/BacktraceData';
-import { BreadcrumbsEventSubscriber } from './events/BreadcrumbsEventSubscriber';
-import { BreadcrumbLogLevel } from './model/BreadcrumbLogLevel';
-import { BreadcrumbType } from './model/BreadcrumbType';
+import { AttributeType } from '../../model/data/BacktraceData.js';
+import { BreadcrumbsEventSubscriber } from './events/BreadcrumbsEventSubscriber.js';
+import { BreadcrumbLogLevel } from './model/BreadcrumbLogLevel.js';
+import { BreadcrumbType } from './model/BreadcrumbType.js';
 
 export interface BacktraceBreadcrumbs {
     /**

@@ -1,4 +1,4 @@
-import { BacktraceAttributeProvider } from './BacktraceAttributeProvider';
+import { BacktraceAttributeProvider } from './BacktraceAttributeProvider.js';
 
 export class UserAttributeProvider implements BacktraceAttributeProvider {
     public readonly type: 'scoped' | 'dynamic';

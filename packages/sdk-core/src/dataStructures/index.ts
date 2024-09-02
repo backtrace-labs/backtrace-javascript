@@ -1,2 +1,2 @@
-export * from './OverwritingArray';
-export * from './OverwritingArrayIterator';
+export * from './OverwritingArray.js';
+export * from './OverwritingArrayIterator.js';

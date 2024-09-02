@@ -1,5 +1,5 @@
-import { SOURCE_DEBUG_ID_VARIABLE } from './DebugIdProvider';
-import { DebugIdMapProvider } from './interfaces/DebugIdMapProvider';
+import { SOURCE_DEBUG_ID_VARIABLE } from './DebugIdProvider.js';
+import { DebugIdMapProvider } from './interfaces/DebugIdMapProvider.js';
 
 export interface DebugIdContainer {
     [SOURCE_DEBUG_ID_VARIABLE]?: Record<string, string>;

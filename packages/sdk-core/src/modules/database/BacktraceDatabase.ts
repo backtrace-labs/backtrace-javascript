@@ -1,20 +1,20 @@
-import { anySignal, createAbortController } from '../../common/AbortController';
-import { IdGenerator } from '../../common/IdGenerator';
-import { TimeHelper } from '../../common/TimeHelper';
-import { BacktraceAttachment } from '../../model/attachment';
-import { BacktraceDatabaseConfiguration } from '../../model/configuration/BacktraceDatabaseConfiguration';
-import { BacktraceData } from '../../model/data/BacktraceData';
-import { BacktraceReportSubmission } from '../../model/http/BacktraceReportSubmission';
-import { BacktraceModule, BacktraceModuleBindData } from '../BacktraceModule';
-import { SessionFiles } from '../storage';
-import { BacktraceDatabaseContext } from './BacktraceDatabaseContext';
-import { BacktraceDatabaseStorageProvider } from './BacktraceDatabaseStorageProvider';
+import { anySignal, createAbortController } from '../../common/AbortController.js';
+import { IdGenerator } from '../../common/IdGenerator.js';
+import { TimeHelper } from '../../common/TimeHelper.js';
+import { BacktraceAttachment } from '../../model/attachment/index.js';
+import { BacktraceDatabaseConfiguration } from '../../model/configuration/BacktraceDatabaseConfiguration.js';
+import { BacktraceData } from '../../model/data/BacktraceData.js';
+import { BacktraceReportSubmission } from '../../model/http/BacktraceReportSubmission.js';
+import { BacktraceModule, BacktraceModuleBindData } from '../BacktraceModule.js';
+import { SessionFiles } from '../storage/index.js';
+import { BacktraceDatabaseContext } from './BacktraceDatabaseContext.js';
+import { BacktraceDatabaseStorageProvider } from './BacktraceDatabaseStorageProvider.js';
 import {
     AttachmentBacktraceDatabaseRecord,
     BacktraceDatabaseRecord,
     BacktraceDatabaseRecordCountByType,
     ReportBacktraceDatabaseRecord,
-} from './model/BacktraceDatabaseRecord';
+} from './model/BacktraceDatabaseRecord.js';
 
 export class BacktraceDatabase implements BacktraceModule {
     /**

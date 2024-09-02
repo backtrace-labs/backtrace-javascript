@@ -1,5 +1,5 @@
-import { BacktraceStackFrame } from '../../model/data/BacktraceStackTrace';
-import { JavaScriptEngine } from '../../model/data/JavaScriptEngine';
+import { BacktraceStackFrame } from '../../model/data/BacktraceStackTrace.js';
+import { JavaScriptEngine } from '../../model/data/JavaScriptEngine.js';
 
 export interface BacktraceStackTraceConverter {
     get engine(): JavaScriptEngine;

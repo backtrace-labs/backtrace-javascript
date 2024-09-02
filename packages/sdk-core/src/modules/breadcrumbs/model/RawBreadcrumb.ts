@@ -1,6 +1,6 @@
-import { AttributeType } from '../../../model/data';
-import { BreadcrumbLogLevel } from './BreadcrumbLogLevel';
-import { BreadcrumbType } from './BreadcrumbType';
+import { AttributeType } from '../../../model/data/index.js';
+import { BreadcrumbLogLevel } from './BreadcrumbLogLevel.js';
+import { BreadcrumbType } from './BreadcrumbType.js';
 
 export interface RawBreadcrumb {
     message: string;

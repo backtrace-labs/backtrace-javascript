@@ -1,4 +1,4 @@
-import { BacktraceStackTrace } from './BacktraceStackTrace';
+import { BacktraceStackTrace } from './BacktraceStackTrace.js';
 
 export type AttributeType = string | number | boolean | undefined | null;
 

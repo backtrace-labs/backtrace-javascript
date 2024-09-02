@@ -1,6 +1,6 @@
-import { BreadcrumbsManager } from '../../src/modules/breadcrumbs/BreadcrumbsManager';
-import { Breadcrumb } from '../../src/modules/breadcrumbs/model/Breadcrumb';
-import { InMemoryBreadcrumbsStorage } from '../../src/modules/breadcrumbs/storage/InMemoryBreadcrumbsStorage';
+import { BreadcrumbsManager } from '../../src/modules/breadcrumbs/BreadcrumbsManager.js';
+import { Breadcrumb } from '../../src/modules/breadcrumbs/model/Breadcrumb.js';
+import { InMemoryBreadcrumbsStorage } from '../../src/modules/breadcrumbs/storage/InMemoryBreadcrumbsStorage.js';
 describe('Breadcrumbs interceptor tests', () => {
     it('Should filter out the breadcrumb', () => {
         const storage = new InMemoryBreadcrumbsStorage(100);

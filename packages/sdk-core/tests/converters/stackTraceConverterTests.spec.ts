@@ -1,5 +1,5 @@
-import { V8StackTraceConverter } from '../../src/modules/converter/V8StackTraceConverter';
-import { v8StackTraceTests } from './v8stackTraceTestCases';
+import { V8StackTraceConverter } from '../../src/modules/converter/V8StackTraceConverter.js';
+import { v8StackTraceTests } from './v8stackTraceTestCases.js';
 
 describe('Stack trace converter tests', () => {
     describe('v8', () => {

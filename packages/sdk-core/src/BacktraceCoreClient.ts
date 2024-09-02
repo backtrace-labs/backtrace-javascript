@@ -1,3 +1,6 @@
+import { CoreClientSetup } from './builder/CoreClientSetup.js';
+import { Events } from './common/Events.js';
+import { ReportEvents } from './events/ReportEvents.js';
 import {
     BacktraceAttachment,
     BacktraceAttributeProvider,
@@ -11,28 +14,25 @@ import {
     FileSystem,
     SdkOptions,
     SessionFiles,
-} from '.';
-import { CoreClientSetup } from './builder/CoreClientSetup';
-import { Events } from './common/Events';
-import { ReportEvents } from './events/ReportEvents';
-import { AttributeType, BacktraceData } from './model/data/BacktraceData';
-import { BacktraceReportSubmission, RequestBacktraceReportSubmission } from './model/http/BacktraceReportSubmission';
-import { BacktraceReport } from './model/report/BacktraceReport';
-import { AttachmentManager } from './modules/attachments/AttachmentManager';
-import { AttributeManager } from './modules/attribute/AttributeManager';
-import { ClientAttributeProvider } from './modules/attribute/ClientAttributeProvider';
-import { UserAttributeProvider } from './modules/attribute/UserAttributeProvider';
-import { BacktraceModule, BacktraceModuleBindData } from './modules/BacktraceModule';
-import { BacktraceModuleCtor, BacktraceModules, ReadonlyBacktraceModules } from './modules/BacktraceModules';
-import { BreadcrumbsManager } from './modules/breadcrumbs/BreadcrumbsManager';
-import { V8StackTraceConverter } from './modules/converter/V8StackTraceConverter';
-import { BacktraceDataBuilder } from './modules/data/BacktraceDataBuilder';
-import { BacktraceDatabase } from './modules/database/BacktraceDatabase';
-import { BacktraceDatabaseFileStorageProvider } from './modules/database/BacktraceDatabaseFileStorageProvider';
-import { BacktraceMetrics } from './modules/metrics/BacktraceMetrics';
-import { MetricsBuilder } from './modules/metrics/MetricsBuilder';
-import { SingleSessionProvider } from './modules/metrics/SingleSessionProvider';
-import { RateLimitWatcher } from './modules/rateLimiter/RateLimitWatcher';
+} from './index.js';
+import { AttributeType, BacktraceData } from './model/data/BacktraceData.js';
+import { BacktraceReportSubmission, RequestBacktraceReportSubmission } from './model/http/BacktraceReportSubmission.js';
+import { BacktraceReport } from './model/report/BacktraceReport.js';
+import { AttachmentManager } from './modules/attachments/AttachmentManager.js';
+import { AttributeManager } from './modules/attribute/AttributeManager.js';
+import { ClientAttributeProvider } from './modules/attribute/ClientAttributeProvider.js';
+import { UserAttributeProvider } from './modules/attribute/UserAttributeProvider.js';
+import { BacktraceModule, BacktraceModuleBindData } from './modules/BacktraceModule.js';
+import { BacktraceModuleCtor, BacktraceModules, ReadonlyBacktraceModules } from './modules/BacktraceModules.js';
+import { BreadcrumbsManager } from './modules/breadcrumbs/BreadcrumbsManager.js';
+import { V8StackTraceConverter } from './modules/converter/V8StackTraceConverter.js';
+import { BacktraceDataBuilder } from './modules/data/BacktraceDataBuilder.js';
+import { BacktraceDatabase } from './modules/database/BacktraceDatabase.js';
+import { BacktraceDatabaseFileStorageProvider } from './modules/database/BacktraceDatabaseFileStorageProvider.js';
+import { BacktraceMetrics } from './modules/metrics/BacktraceMetrics.js';
+import { MetricsBuilder } from './modules/metrics/MetricsBuilder.js';
+import { SingleSessionProvider } from './modules/metrics/SingleSessionProvider.js';
+import { RateLimitWatcher } from './modules/rateLimiter/RateLimitWatcher.js';
 
 export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = BacktraceConfiguration> {
     /**

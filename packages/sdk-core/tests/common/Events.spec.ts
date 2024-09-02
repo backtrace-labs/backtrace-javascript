@@ -1,4 +1,4 @@
-import { Events } from '../../src/common/Events';
+import { Events } from '../../src/common/Events.js';
 
 describe('Events', () => {
     it('should call every callback once', () => {

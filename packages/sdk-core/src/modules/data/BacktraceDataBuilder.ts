@@ -1,12 +1,12 @@
-import { BacktraceStackTraceConverter, DebugIdProvider } from '../..';
-import { SdkOptions } from '../../builder/SdkOptions';
-import { IdGenerator } from '../../common/IdGenerator';
-import { TimeHelper } from '../../common/TimeHelper';
-import { BacktraceData } from '../../model/data/BacktraceData';
-import { BacktraceStackFrame, BacktraceStackTrace } from '../../model/data/BacktraceStackTrace';
-import { BacktraceReport } from '../../model/report/BacktraceReport';
-import { AttributeManager } from '../attribute/AttributeManager';
-import { ReportDataBuilder } from '../attribute/ReportDataBuilder';
+import { SdkOptions } from '../../builder/SdkOptions.js';
+import { IdGenerator } from '../../common/IdGenerator.js';
+import { TimeHelper } from '../../common/TimeHelper.js';
+import { BacktraceStackTraceConverter, DebugIdProvider } from '../../index.js';
+import { BacktraceData } from '../../model/data/BacktraceData.js';
+import { BacktraceStackFrame, BacktraceStackTrace } from '../../model/data/BacktraceStackTrace.js';
+import { BacktraceReport } from '../../model/report/BacktraceReport.js';
+import { AttributeManager } from '../attribute/AttributeManager.js';
+import { ReportDataBuilder } from '../attribute/ReportDataBuilder.js';
 
 export class BacktraceDataBuilder {
     public readonly MAIN_THREAD_NAME = 'main';

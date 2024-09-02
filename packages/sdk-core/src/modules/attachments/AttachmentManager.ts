@@ -1,7 +1,7 @@
-import { Events } from '../../common/Events';
-import { AttachmentEvents } from '../../events/AttachmentEvents';
-import { BacktraceAttachment } from '../../model/attachment';
-import { BacktraceAttachmentProvider } from './BacktraceAttachmentProvider';
+import { Events } from '../../common/Events.js';
+import { AttachmentEvents } from '../../events/AttachmentEvents.js';
+import { BacktraceAttachment } from '../../model/attachment/index.js';
+import { BacktraceAttachmentProvider } from './BacktraceAttachmentProvider.js';
 
 export class AttachmentManager {
     public readonly attachmentEvents: Events<AttachmentEvents>;

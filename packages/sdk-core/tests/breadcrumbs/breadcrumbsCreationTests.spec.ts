@@ -1,6 +1,6 @@
-import { BreadcrumbLogLevel, BreadcrumbType } from '../../src/modules/breadcrumbs';
-import { BreadcrumbsManager } from '../../src/modules/breadcrumbs/BreadcrumbsManager';
-import { InMemoryBreadcrumbsStorage } from '../../src/modules/breadcrumbs/storage/InMemoryBreadcrumbsStorage';
+import { BreadcrumbsManager } from '../../src/modules/breadcrumbs/BreadcrumbsManager.js';
+import { BreadcrumbLogLevel, BreadcrumbType } from '../../src/modules/breadcrumbs/index.js';
+import { InMemoryBreadcrumbsStorage } from '../../src/modules/breadcrumbs/storage/InMemoryBreadcrumbsStorage.js';
 
 describe('Breadcrumbs creation tests', () => {
     it('Last breadcrumb id attribute should be equal to last bredcrumb id in the array', () => {

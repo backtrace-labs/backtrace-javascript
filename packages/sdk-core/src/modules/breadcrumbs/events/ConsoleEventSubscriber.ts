@@ -1,8 +1,8 @@
-import { textFormatter } from '../../../common/textFormatter';
-import { BacktraceBreadcrumbs } from '../BacktraceBreadcrumbs';
-import { BreadcrumbLogLevel } from '../model/BreadcrumbLogLevel';
-import { BreadcrumbType } from '../model/BreadcrumbType';
-import { BreadcrumbsEventSubscriber } from './BreadcrumbsEventSubscriber';
+import { textFormatter } from '../../../common/textFormatter.js';
+import { BacktraceBreadcrumbs } from '../BacktraceBreadcrumbs.js';
+import { BreadcrumbLogLevel } from '../model/BreadcrumbLogLevel.js';
+import { BreadcrumbType } from '../model/BreadcrumbType.js';
+import { BreadcrumbsEventSubscriber } from './BreadcrumbsEventSubscriber.js';
 
 type ConsoleMethod = (...args: unknown[]) => void;
 export class ConsoleEventSubscriber implements BreadcrumbsEventSubscriber {

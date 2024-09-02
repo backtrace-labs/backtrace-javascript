@@ -1,5 +1,5 @@
-import { BacktraceAttachment } from '../../../model/attachment';
-import { BacktraceData } from '../../../model/data/BacktraceData';
+import { BacktraceAttachment } from '../../../model/attachment/index.js';
+import { BacktraceData } from '../../../model/data/BacktraceData.js';
 
 export interface ReportBacktraceDatabaseRecord {
     readonly type: 'report';

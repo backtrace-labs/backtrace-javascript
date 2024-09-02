@@ -1,4 +1,4 @@
-import { AbortError } from './AbortError';
+import { AbortError } from './AbortError.js';
 
 export class Delay {
     /**

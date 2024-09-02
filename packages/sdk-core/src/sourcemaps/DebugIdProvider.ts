@@ -1,5 +1,5 @@
-import { BacktraceStackTraceConverter } from '../modules/converter';
-import { DebugIdMapProvider } from './interfaces/DebugIdMapProvider';
+import { BacktraceStackTraceConverter } from '../modules/converter/index.js';
+import { DebugIdMapProvider } from './interfaces/DebugIdMapProvider.js';
 
 export const SOURCE_DEBUG_ID_VARIABLE = '_btDebugIds';
 

@@ -1,7 +1,7 @@
-import { BacktraceStackFrame } from '../../model/data/BacktraceStackTrace';
-import { JavaScriptEngine } from '../../model/data/JavaScriptEngine';
-import { BacktraceStackTraceConverter } from './BacktraceStackTraceConverter';
-import { ANONYMOUS_FUNCTION, UNKNOWN_FRAME } from './consts/frameNamesConsts';
+import { BacktraceStackFrame } from '../../model/data/BacktraceStackTrace.js';
+import { JavaScriptEngine } from '../../model/data/JavaScriptEngine.js';
+import { BacktraceStackTraceConverter } from './BacktraceStackTraceConverter.js';
+import { ANONYMOUS_FUNCTION, UNKNOWN_FRAME } from './consts/frameNamesConsts.js';
 
 export class V8StackTraceConverter implements BacktraceStackTraceConverter {
     get engine(): JavaScriptEngine {

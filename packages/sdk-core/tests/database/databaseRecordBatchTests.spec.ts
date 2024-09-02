@@ -1,9 +1,9 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { BacktraceReportSubmissionResult } from '../../src';
-import { mockFileSystem } from '../_mocks/fileSystem';
-import { BacktraceTestClient } from '../mocks/BacktraceTestClient';
-import { testHttpClient } from '../mocks/testHttpClient';
+import { BacktraceReportSubmissionResult } from '../../src/index.js';
+import { mockFileSystem } from '../_mocks/fileSystem.js';
+import { BacktraceTestClient } from '../mocks/BacktraceTestClient.js';
+import { testHttpClient } from '../mocks/testHttpClient.js';
 
 jest.useFakeTimers();
 

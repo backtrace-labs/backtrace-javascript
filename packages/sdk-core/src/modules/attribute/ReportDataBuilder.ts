@@ -1,5 +1,5 @@
-import { AttributeType } from '../../model/data/BacktraceData';
-import { ReportData } from '../../model/report/ReportData';
+import { AttributeType } from '../../model/data/BacktraceData.js';
+import { ReportData } from '../../model/report/ReportData.js';
 
 export class ReportDataBuilder {
     public static build(attributes: Record<string, unknown>): ReportData {

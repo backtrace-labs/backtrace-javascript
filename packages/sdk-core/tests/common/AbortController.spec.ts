@@ -1,5 +1,5 @@
-import { AbortController } from '../../src/common/AbortController';
-import { AbortError } from '../../src/common/AbortError';
+import { AbortController } from '../../src/common/AbortController.js';
+import { AbortError } from '../../src/common/AbortError.js';
 
 function createEvent(type: string) {
     if (typeof Event === 'undefined') {

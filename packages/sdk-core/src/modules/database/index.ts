@@ -1,3 +1,3 @@
-export { BacktraceDatabase } from './BacktraceDatabase';
-export * from './BacktraceDatabaseStorageProvider';
-export * from './model/BacktraceDatabaseRecord';
+export { BacktraceDatabase } from './BacktraceDatabase.js';
+export * from './BacktraceDatabaseStorageProvider.js';
+export * from './model/BacktraceDatabaseRecord.js';

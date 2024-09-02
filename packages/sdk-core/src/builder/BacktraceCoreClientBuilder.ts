@@ -1,15 +1,15 @@
-import { BacktraceReportSubmission } from '../model/http/BacktraceReportSubmission';
-import { BacktraceRequestHandler } from '../model/http/BacktraceRequestHandler';
-import { BacktraceModule } from '../modules/BacktraceModule';
-import { BacktraceAttributeProvider } from '../modules/attribute/BacktraceAttributeProvider';
-import { BreadcrumbsEventSubscriber, BreadcrumbsStorage } from '../modules/breadcrumbs';
-import { BacktraceStackTraceConverter } from '../modules/converter';
-import { BacktraceSessionProvider } from '../modules/metrics/BacktraceSessionProvider';
-import { MetricsQueue } from '../modules/metrics/MetricsQueue';
-import { SummedEvent } from '../modules/metrics/model/SummedEvent';
-import { UniqueEvent } from '../modules/metrics/model/UniqueEvent';
-import { FileSystem } from '../modules/storage';
-import { CoreClientSetup } from './CoreClientSetup';
+import { BacktraceReportSubmission } from '../model/http/BacktraceReportSubmission.js';
+import { BacktraceRequestHandler } from '../model/http/BacktraceRequestHandler.js';
+import { BacktraceModule } from '../modules/BacktraceModule.js';
+import { BacktraceAttributeProvider } from '../modules/attribute/BacktraceAttributeProvider.js';
+import { BreadcrumbsEventSubscriber, BreadcrumbsStorage } from '../modules/breadcrumbs/index.js';
+import { BacktraceStackTraceConverter } from '../modules/converter/index.js';
+import { BacktraceSessionProvider } from '../modules/metrics/BacktraceSessionProvider.js';
+import { MetricsQueue } from '../modules/metrics/MetricsQueue.js';
+import { SummedEvent } from '../modules/metrics/model/SummedEvent.js';
+import { UniqueEvent } from '../modules/metrics/model/UniqueEvent.js';
+import { FileSystem } from '../modules/storage/index.js';
+import { CoreClientSetup } from './CoreClientSetup.js';
 
 type Writeable<T> = { -readonly [P in keyof T]: T[P] };
 

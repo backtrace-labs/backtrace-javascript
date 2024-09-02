@@ -1,4 +1,4 @@
-import { OverwritingArrayIterator } from './OverwritingArrayIterator';
+import { OverwritingArrayIterator } from './OverwritingArrayIterator.js';
 
 export class OverwritingArray<T> {
     private _array: T[];

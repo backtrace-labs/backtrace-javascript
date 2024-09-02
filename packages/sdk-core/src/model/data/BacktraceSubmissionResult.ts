@@ -1,4 +1,4 @@
-import { BacktraceSubmissionStatus } from './BacktraceSubmissionStatus';
+import { BacktraceSubmissionStatus } from './BacktraceSubmissionStatus.js';
 
 export class BacktraceReportSubmissionResult<T> {
     public get result(): T | undefined {

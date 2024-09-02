@@ -1,6 +1,6 @@
-import { IdGenerator } from '../../common/IdGenerator';
-import { TimeHelper } from '../../common/TimeHelper';
-import { BacktraceSessionProvider } from './BacktraceSessionProvider';
+import { IdGenerator } from '../../common/IdGenerator.js';
+import { TimeHelper } from '../../common/TimeHelper.js';
+import { BacktraceSessionProvider } from './BacktraceSessionProvider.js';
 
 export class SingleSessionProvider implements BacktraceSessionProvider {
     public readonly newSession: boolean = true;

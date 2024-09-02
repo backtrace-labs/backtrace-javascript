@@ -1,7 +1,7 @@
-import { BacktraceAttachment } from '../attachment';
-import { BacktraceReportSubmissionResult } from '../data/BacktraceSubmissionResult';
-import { BacktraceAttachmentResponse } from './model/BacktraceAttachmentResponse';
-import { BacktraceSubmissionResponse } from './model/BacktraceSubmissionResponse';
+import { BacktraceAttachment } from '../attachment/index.js';
+import { BacktraceReportSubmissionResult } from '../data/BacktraceSubmissionResult.js';
+import { BacktraceAttachmentResponse } from './model/BacktraceAttachmentResponse.js';
+import { BacktraceSubmissionResponse } from './model/BacktraceSubmissionResponse.js';
 export const DEFAULT_TIMEOUT = 15_000;
 export interface BacktraceRequestHandler {
     /**

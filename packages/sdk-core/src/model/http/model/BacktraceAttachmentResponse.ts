@@ -1,4 +1,4 @@
-import { BacktraceSubmissionResponse } from './BacktraceSubmissionResponse';
+import { BacktraceSubmissionResponse } from './BacktraceSubmissionResponse.js';
 
 export interface BacktraceAttachmentResponse extends BacktraceSubmissionResponse {
     attachment_name: string;

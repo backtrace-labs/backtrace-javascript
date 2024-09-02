@@ -1,4 +1,4 @@
-import { SubmissionUrlInformation } from '../../model/http';
+import { SubmissionUrlInformation } from '../../model/http/index.js';
 
 export class MetricsUrlInformation {
     public static generateSummedEventsUrl(

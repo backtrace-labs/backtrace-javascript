@@ -1,14 +1,14 @@
-import { TimeHelper } from '../../common/TimeHelper';
-import { BacktraceConfiguration, BacktraceMetricsOptions } from '../../model/configuration/BacktraceConfiguration';
-import { BacktraceRequestHandler } from '../../model/http';
-import { AttributeManager } from '../attribute/AttributeManager';
-import { BacktraceMetrics } from './BacktraceMetrics';
-import { BacktraceSessionProvider } from './BacktraceSessionProvider';
-import { MetricsQueue } from './MetricsQueue';
-import { MetricsSubmissionQueue } from './MetricsSubmissionQueue';
-import { MetricsUrlInformation } from './MetricsUrlInformation';
-import { SummedEvent } from './model/SummedEvent';
-import { UniqueEvent } from './model/UniqueEvent';
+import { TimeHelper } from '../../common/TimeHelper.js';
+import { BacktraceConfiguration, BacktraceMetricsOptions } from '../../model/configuration/BacktraceConfiguration.js';
+import { BacktraceRequestHandler } from '../../model/http/index.js';
+import { AttributeManager } from '../attribute/AttributeManager.js';
+import { BacktraceMetrics } from './BacktraceMetrics.js';
+import { BacktraceSessionProvider } from './BacktraceSessionProvider.js';
+import { MetricsQueue } from './MetricsQueue.js';
+import { MetricsSubmissionQueue } from './MetricsSubmissionQueue.js';
+import { MetricsUrlInformation } from './MetricsUrlInformation.js';
+import { SummedEvent } from './model/SummedEvent.js';
+import { UniqueEvent } from './model/UniqueEvent.js';
 
 interface ApplicationInfo {
     application: string;

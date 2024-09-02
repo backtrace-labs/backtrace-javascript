@@ -1,4 +1,4 @@
-import { BacktraceAttachment } from './BacktraceAttachment';
+import { BacktraceAttachment } from './BacktraceAttachment.js';
 
 export class BacktraceStringAttachment implements BacktraceAttachment<string> {
     constructor(

@@ -1,7 +1,7 @@
-import { Events } from '../../common/Events';
-import { IdGenerator } from '../../common/IdGenerator';
-import { BacktraceModule } from '../BacktraceModule';
-import { FileSystem } from './FileSystem';
+import { Events } from '../../common/Events.js';
+import { IdGenerator } from '../../common/IdGenerator.js';
+import { BacktraceModule } from '../BacktraceModule.js';
+import { FileSystem } from './FileSystem.js';
 
 interface FileSession {
     readonly file: string;
