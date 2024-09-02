@@ -4,6 +4,7 @@
     "description": "@backtrace/node smoketests",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
+    "type": "module",
     "scripts": {
         "start": "node lib/index.js",
         "build": "tsc",
