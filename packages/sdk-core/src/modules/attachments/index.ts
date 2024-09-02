@@ -1,2 +1,2 @@
-export * from './AttachmentManager';
-export * from './BacktraceAttachmentProvider';
+export * from './AttachmentManager.js';
+export * from './BacktraceAttachmentProvider.js';

@@ -1,9 +1,9 @@
-import { BacktraceReport, DebugIdProvider } from '../../src';
-import { TimeHelper } from '../../src/common/TimeHelper';
-import { BacktraceStackFrame } from '../../src/model/data/BacktraceStackTrace';
-import { AttributeManager } from '../../src/modules/attribute/AttributeManager';
-import { V8StackTraceConverter } from '../../src/modules/converter/V8StackTraceConverter';
-import { BacktraceDataBuilder } from '../../src/modules/data/BacktraceDataBuilder';
+import { TimeHelper } from '../../src/common/TimeHelper.js';
+import { BacktraceReport, DebugIdProvider } from '../../src/index.js';
+import { BacktraceStackFrame } from '../../src/model/data/BacktraceStackTrace.js';
+import { AttributeManager } from '../../src/modules/attribute/AttributeManager.js';
+import { V8StackTraceConverter } from '../../src/modules/converter/V8StackTraceConverter.js';
+import { BacktraceDataBuilder } from '../../src/modules/data/BacktraceDataBuilder.js';
 
 describe('Data generation tests', () => {
     const sdkOptions = {

@@ -1,4 +1,4 @@
-import { BacktraceTestClient } from '../mocks/BacktraceTestClient';
+import { BacktraceTestClient } from '../mocks/BacktraceTestClient.js';
 
 describe('Attributes tests', () => {
     describe('Client attribute add', () => {

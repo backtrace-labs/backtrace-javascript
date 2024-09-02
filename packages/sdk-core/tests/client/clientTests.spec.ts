@@ -1,5 +1,5 @@
-import { BacktraceReport, BacktraceStringAttachment } from '../../src/';
-import { BacktraceTestClient } from '../mocks/BacktraceTestClient';
+import { BacktraceReport, BacktraceStringAttachment } from '../../src/index.js';
+import { BacktraceTestClient } from '../mocks/BacktraceTestClient.js';
 describe('Client tests', () => {
     describe('Send tests', () => {
         const client = BacktraceTestClient.buildFakeClient();

@@ -1,8 +1,8 @@
 import { contextBridge } from 'electron';
-import { IpcTransport } from '../common';
-import { IpcRpc, SyncIpcRpcCaller } from '../common/ipc/IpcRpc';
-import { RendererIpcRpc } from './ipc/RendererIpcRpc';
-import { RendererIpcTransport } from './ipc/RendererIpcTransport';
+import { IpcTransport } from '../common/index.js';
+import { IpcRpc, SyncIpcRpcCaller } from '../common/ipc/IpcRpc.js';
+import { RendererIpcRpc } from './ipc/RendererIpcRpc.js';
+import { RendererIpcTransport } from './ipc/RendererIpcTransport.js';
 
 const ipcTransport = new RendererIpcTransport();
 const ipcTransportApi: IpcTransport = {

@@ -1,2 +1,2 @@
-export * from './ipc/IpcRpc';
-export * from './ipc/IpcTransport';
+export * from './ipc/IpcRpc.js';
+export * from './ipc/IpcTransport.js';

@@ -1,3 +1,10 @@
+import { jsonEscaper } from '../../common/jsonEscaper.js';
+import { BacktraceBreadcrumbsSettings } from '../../model/configuration/BacktraceConfiguration.js';
+import { AttributeType } from '../../model/data/BacktraceData.js';
+import { BacktraceReport } from '../../model/report/BacktraceReport.js';
+import { BacktraceModule, BacktraceModuleBindData } from '../BacktraceModule.js';
+import { BreadcrumbsEventSubscriber } from './events/BreadcrumbsEventSubscriber.js';
+import { ConsoleEventSubscriber } from './events/ConsoleEventSubscriber.js';
 import {
     BacktraceBreadcrumbs,
     BreadcrumbLogLevel,
@@ -6,16 +13,9 @@ import {
     BreadcrumbType,
     defaultBreadcrumbsLogLevel,
     defaultBreadcurmbType,
-} from '.';
-import { jsonEscaper } from '../../common/jsonEscaper';
-import { BacktraceBreadcrumbsSettings } from '../../model/configuration/BacktraceConfiguration';
-import { AttributeType } from '../../model/data/BacktraceData';
-import { BacktraceReport } from '../../model/report/BacktraceReport';
-import { BacktraceModule, BacktraceModuleBindData } from '../BacktraceModule';
-import { BreadcrumbsEventSubscriber } from './events/BreadcrumbsEventSubscriber';
-import { ConsoleEventSubscriber } from './events/ConsoleEventSubscriber';
-import { RawBreadcrumb } from './model/RawBreadcrumb';
-import { InMemoryBreadcrumbsStorage } from './storage/InMemoryBreadcrumbsStorage';
+} from './index.js';
+import { RawBreadcrumb } from './model/RawBreadcrumb.js';
+import { InMemoryBreadcrumbsStorage } from './storage/InMemoryBreadcrumbsStorage.js';
 
 const BREADCRUMB_ATTRIBUTE_NAME = 'breadcrumbs.lastId';
 

@@ -5,13 +5,12 @@
     "author": "Backtrace <team@backtrace.io>",
     "license": "MIT",
     "scripts": {
-        "build": "tsc -b ./tsconfig.packages.json && npm run build --ws --if-present",
-        "clean": "tsc -b --clean && rimraf \"lib\" && npm run clean --ws --if-present",
+        "build": "npm run build --ws --if-present",
+        "clean": "npm run clean --ws --if-present",
         "format": "prettier --write \"**/*.ts\"",
         "format:check": "prettier --check \"**/*.ts\"",
         "lint": "eslint . --ext .ts",
         "rebuild": "npm run clean && npm run build",
-        "watch": "tsc -b ./tsconfig.packages.json -w",
         "test": "npm run test --ws --if-present",
         "syncVersions": "ts-node ./scripts/syncVersions.ts"
     },

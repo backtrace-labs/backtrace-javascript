@@ -1,6 +1,6 @@
-import { BacktraceAttachment } from '../../../model/attachment';
-import { BacktraceAttachmentProvider } from '../../attachments/BacktraceAttachmentProvider';
-import { RawBreadcrumb } from '../model/RawBreadcrumb';
+import { BacktraceAttachment } from '../../../model/attachment/index.js';
+import { BacktraceAttachmentProvider } from '../../attachments/BacktraceAttachmentProvider.js';
+import { RawBreadcrumb } from '../model/RawBreadcrumb.js';
 
 export interface BreadcrumbsStorage {
     /**

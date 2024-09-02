@@ -1,4 +1,4 @@
-import { BacktraceBreadcrumbs } from '../BacktraceBreadcrumbs';
+import { BacktraceBreadcrumbs } from '../BacktraceBreadcrumbs.js';
 
 export interface BreadcrumbsEventSubscriber {
     /**

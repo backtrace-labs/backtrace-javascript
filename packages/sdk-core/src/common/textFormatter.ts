@@ -1,4 +1,4 @@
-import { jsonEscaper } from './jsonEscaper';
+import { jsonEscaper } from './jsonEscaper.js';
 
 export function textFormatter(): (...params: unknown[]) => string {
     const defaultFormatter = fallbackFormatter(jsonEscaper());

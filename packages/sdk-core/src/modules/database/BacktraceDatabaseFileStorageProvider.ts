@@ -1,9 +1,9 @@
-import { jsonEscaper } from '../../common/jsonEscaper';
-import { BacktraceDatabaseConfiguration } from '../../model/configuration/BacktraceDatabaseConfiguration';
-import { FileSystem } from '../storage';
-import { BacktraceDatabaseFileRecord } from './BacktraceDatabaseFileRecord';
-import { BacktraceDatabaseStorageProvider } from './BacktraceDatabaseStorageProvider';
-import { BacktraceDatabaseRecord } from './model/BacktraceDatabaseRecord';
+import { jsonEscaper } from '../../common/jsonEscaper.js';
+import { BacktraceDatabaseConfiguration } from '../../model/configuration/BacktraceDatabaseConfiguration.js';
+import { FileSystem } from '../storage/index.js';
+import { BacktraceDatabaseFileRecord } from './BacktraceDatabaseFileRecord.js';
+import { BacktraceDatabaseStorageProvider } from './BacktraceDatabaseStorageProvider.js';
+import { BacktraceDatabaseRecord } from './model/BacktraceDatabaseRecord.js';
 
 export class BacktraceDatabaseFileStorageProvider implements BacktraceDatabaseStorageProvider {
     private _enabled = true;

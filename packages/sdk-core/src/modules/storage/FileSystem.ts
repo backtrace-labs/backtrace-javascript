@@ -1,4 +1,4 @@
-import { BacktraceAttachment } from '../../model/attachment';
+import { BacktraceAttachment } from '../../model/attachment/index.js';
 
 export interface FileSystem {
     readDir(dir: string): Promise<string[]>;

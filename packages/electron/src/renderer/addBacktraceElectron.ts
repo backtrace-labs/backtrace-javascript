@@ -1,15 +1,15 @@
 import { BacktraceCoreClientBuilder } from '@backtrace/sdk-core';
-import { IpcEvents } from '../common/ipc/IpcEvents';
-import { SyncData } from '../common/models/SyncData';
-import { getIpcRpc } from './ipc/getIpcRpc';
-import { getIpcTransport } from './ipc/getIpcTransport';
-import { ConstSessionProvider } from './modules/ConstSessionProvider';
-import { IpcAsyncSessionProvider } from './modules/IpcAsyncSessionProvider';
-import { IpcBreadcrumbsStorage } from './modules/IpcBreadcrumbsStorage';
-import { IpcReportSubmission } from './modules/IpcReportSubmission';
-import { IpcRequestHandler } from './modules/IpcRequestHandler';
-import { IpcSummedMetricsQueue } from './modules/IpcSummedMetricsQueue';
-import { StubMetricsQueue } from './modules/StubMetricsQueue';
+import { IpcEvents } from '../common/ipc/IpcEvents.js';
+import { SyncData } from '../common/models/SyncData.js';
+import { getIpcRpc } from './ipc/getIpcRpc.js';
+import { getIpcTransport } from './ipc/getIpcTransport.js';
+import { ConstSessionProvider } from './modules/ConstSessionProvider.js';
+import { IpcAsyncSessionProvider } from './modules/IpcAsyncSessionProvider.js';
+import { IpcBreadcrumbsStorage } from './modules/IpcBreadcrumbsStorage.js';
+import { IpcReportSubmission } from './modules/IpcReportSubmission.js';
+import { IpcRequestHandler } from './modules/IpcRequestHandler.js';
+import { IpcSummedMetricsQueue } from './modules/IpcSummedMetricsQueue.js';
+import { StubMetricsQueue } from './modules/StubMetricsQueue.js';
 
 export interface AddBacktraceElectronOptions {
     /**

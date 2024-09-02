@@ -1,7 +1,7 @@
 import { BacktraceSessionProvider, IdGenerator } from '@backtrace/sdk-core';
-import { IpcTransport } from '../../common';
-import { IpcEvents } from '../../common/ipc/IpcEvents';
-import { SyncData } from '../../common/models/SyncData';
+import { IpcTransport } from '../../common/index.js';
+import { IpcEvents } from '../../common/ipc/IpcEvents.js';
+import { SyncData } from '../../common/models/SyncData.js';
 
 export class IpcAsyncSessionProvider implements BacktraceSessionProvider {
     private _sessionId = IdGenerator.uuid();

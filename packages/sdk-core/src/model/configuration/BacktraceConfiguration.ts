@@ -1,9 +1,9 @@
-import { BreadcrumbLogLevel, BreadcrumbType } from '../../modules/breadcrumbs';
-import { RawBreadcrumb } from '../../modules/breadcrumbs/model/RawBreadcrumb';
-import { BacktraceAttachment } from '../attachment';
-import { BacktraceData } from '../data/BacktraceData';
-import { BacktraceReport } from '../report/BacktraceReport';
-import { BacktraceDatabaseConfiguration } from './BacktraceDatabaseConfiguration';
+import { BreadcrumbLogLevel, BreadcrumbType } from '../../modules/breadcrumbs/index.js';
+import { RawBreadcrumb } from '../../modules/breadcrumbs/model/RawBreadcrumb.js';
+import { BacktraceAttachment } from '../attachment/index.js';
+import { BacktraceData } from '../data/BacktraceData.js';
+import { BacktraceReport } from '../report/BacktraceReport.js';
+import { BacktraceDatabaseConfiguration } from './BacktraceDatabaseConfiguration.js';
 
 export interface BacktraceMetricsOptions {
     /**

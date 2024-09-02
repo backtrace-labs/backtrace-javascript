@@ -1,4 +1,4 @@
-import { TimeHelper } from '../../common/TimeHelper';
+import { TimeHelper } from '../../common/TimeHelper.js';
 
 export class RateLimitWatcher {
     /**

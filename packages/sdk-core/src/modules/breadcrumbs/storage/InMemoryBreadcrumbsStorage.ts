@@ -1,13 +1,13 @@
-import { jsonEscaper } from '../../../common/jsonEscaper';
-import { TimeHelper } from '../../../common/TimeHelper';
-import { OverwritingArray } from '../../../dataStructures/OverwritingArray';
-import { BacktraceAttachment } from '../../../model/attachment';
-import { BacktraceAttachmentProvider } from '../../attachments/BacktraceAttachmentProvider';
-import { Breadcrumb } from '../model/Breadcrumb';
-import { BreadcrumbLogLevel } from '../model/BreadcrumbLogLevel';
-import { BreadcrumbType } from '../model/BreadcrumbType';
-import { RawBreadcrumb } from '../model/RawBreadcrumb';
-import { BreadcrumbsStorage } from './BreadcrumbsStorage';
+import { jsonEscaper } from '../../../common/jsonEscaper.js';
+import { TimeHelper } from '../../../common/TimeHelper.js';
+import { OverwritingArray } from '../../../dataStructures/OverwritingArray.js';
+import { BacktraceAttachment } from '../../../model/attachment/index.js';
+import { BacktraceAttachmentProvider } from '../../attachments/BacktraceAttachmentProvider.js';
+import { Breadcrumb } from '../model/Breadcrumb.js';
+import { BreadcrumbLogLevel } from '../model/BreadcrumbLogLevel.js';
+import { BreadcrumbType } from '../model/BreadcrumbType.js';
+import { RawBreadcrumb } from '../model/RawBreadcrumb.js';
+import { BreadcrumbsStorage } from './BreadcrumbsStorage.js';
 
 export class InMemoryBreadcrumbsStorage implements BreadcrumbsStorage, BacktraceAttachment {
     public get lastBreadcrumbId(): number {

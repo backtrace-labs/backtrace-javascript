@@ -1,14 +1,14 @@
 import { BacktraceCoreClientBuilder } from '@backtrace/sdk-core';
-import { ApplicationInformationAttributeProvider } from '../attributes/ApplicationInformationAttributeProvider';
-import { UserAgentAttributeProvider } from '../attributes/UserAgentAttributeProvider';
-import { UserIdentifierAttributeProvider } from '../attributes/UserIdentifierAttributeProvider';
-import { WebsiteAttributeProvider } from '../attributes/WebsiteAttributeProvider';
-import { WindowAttributeProvider } from '../attributes/WindowAttributeProvider';
-import { BacktraceClient } from '../BacktraceClient';
-import { DocumentEventSubscriber } from '../breadcrumbs/DocumentEventSubscriber';
-import { HistoryEventSubscriber } from '../breadcrumbs/HistoryEventSubscriber';
-import { WebRequestEventSubscriber } from '../breadcrumbs/WebRequestEventSubscriber';
-import { BacktraceClientSetup } from './BacktraceClientSetup';
+import { ApplicationInformationAttributeProvider } from '../attributes/ApplicationInformationAttributeProvider.js';
+import { UserAgentAttributeProvider } from '../attributes/UserAgentAttributeProvider.js';
+import { UserIdentifierAttributeProvider } from '../attributes/UserIdentifierAttributeProvider.js';
+import { WebsiteAttributeProvider } from '../attributes/WebsiteAttributeProvider.js';
+import { WindowAttributeProvider } from '../attributes/WindowAttributeProvider.js';
+import { BacktraceClient } from '../BacktraceClient.js';
+import { DocumentEventSubscriber } from '../breadcrumbs/DocumentEventSubscriber.js';
+import { HistoryEventSubscriber } from '../breadcrumbs/HistoryEventSubscriber.js';
+import { WebRequestEventSubscriber } from '../breadcrumbs/WebRequestEventSubscriber.js';
+import { BacktraceClientSetup } from './BacktraceClientSetup.js';
 
 export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<BacktraceClientSetup> {
     constructor(clientSetup: BacktraceClientSetup) {

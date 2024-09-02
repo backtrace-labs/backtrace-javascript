@@ -5,7 +5,7 @@ import {
     FileSystem,
     SessionFiles,
 } from '@backtrace/sdk-core';
-import { BacktraceFileAttachment } from './BacktraceFileAttachment';
+import { BacktraceFileAttachment } from './BacktraceFileAttachment.js';
 
 const ATTACHMENT_FILE_NAME = 'bt-attachments';
 

@@ -10,19 +10,19 @@ export {
     BacktraceStringAttachment,
     BacktraceUint8ArrayAttachment,
     BreadcrumbLogLevel,
+    BreadcrumbType,
     BreadcrumbsEventSubscriber,
     BreadcrumbsManager,
-    BreadcrumbType,
     JavaScriptEngine,
     RawBreadcrumb,
     SingleSessionProvider,
     V8StackTraceConverter,
 } from '@backtrace/sdk-core';
-export * from './agentDefinition';
-export * from './BacktraceBrowserRequestHandler';
-export * from './BacktraceClient';
-export * from './BacktraceConfiguration';
-export * from './builder/BacktraceClientBuilder';
-export * from './builder/BacktraceClientSetup';
-export * from './converters/getStackTraceConverter';
-export * from './redux/BacktraceReduxMiddleware';
+export * from './agentDefinition.js';
+export * from './BacktraceBrowserRequestHandler.js';
+export * from './BacktraceClient.js';
+export * from './BacktraceConfiguration.js';
+export * from './builder/BacktraceClientBuilder.js';
+export * from './builder/BacktraceClientSetup.js';
+export * from './converters/getStackTraceConverter.js';
+export * from './redux/BacktraceReduxMiddleware.js';

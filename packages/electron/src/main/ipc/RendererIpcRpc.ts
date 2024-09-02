@@ -1,5 +1,5 @@
 import { Event, ipcRenderer } from 'electron';
-import { IpcRpc, IpcRpcEvent, SyncIpcRpcCaller } from '../../common/ipc/IpcRpc';
+import { IpcRpc, IpcRpcEvent, SyncIpcRpcCaller } from '../../common/ipc/IpcRpc.js';
 
 export class RendererIpcRpc implements IpcRpc, SyncIpcRpcCaller {
     public on(event: string, callback: (event: Event, ...args: unknown[]) => Promise<unknown>): this {

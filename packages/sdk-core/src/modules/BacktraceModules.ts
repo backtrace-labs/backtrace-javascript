@@ -1,4 +1,4 @@
-import { BacktraceModule } from './BacktraceModule';
+import { BacktraceModule } from './BacktraceModule.js';
 
 export type BacktraceModuleCtor<T extends BacktraceModule = BacktraceModule> = new (...args: never[]) => T;
 

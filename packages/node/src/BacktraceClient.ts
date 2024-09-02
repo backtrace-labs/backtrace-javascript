@@ -8,18 +8,18 @@ import {
     VariableDebugIdMapProvider,
 } from '@backtrace/sdk-core';
 import path from 'path';
-import { BacktraceConfiguration, BacktraceSetupConfiguration } from './BacktraceConfiguration';
-import { BacktraceNodeRequestHandler } from './BacktraceNodeRequestHandler';
-import { AGENT } from './agentDefinition';
-import { FileAttachmentsManager } from './attachment/FileAttachmentsManager';
-import { transformAttachment } from './attachment/transformAttachments';
-import { FileBreadcrumbsStorage } from './breadcrumbs/FileBreadcrumbsStorage';
-import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
-import { BacktraceNodeClientSetup } from './builder/BacktraceClientSetup';
-import { NodeOptionReader } from './common/NodeOptionReader';
-import { NodeDiagnosticReportConverter } from './converter/NodeDiagnosticReportConverter';
-import { FsNodeFileSystem } from './storage/FsNodeFileSystem';
-import { NodeFileSystem } from './storage/interfaces/NodeFileSystem';
+import { BacktraceConfiguration, BacktraceSetupConfiguration } from './BacktraceConfiguration.js';
+import { BacktraceNodeRequestHandler } from './BacktraceNodeRequestHandler.js';
+import { AGENT } from './agentDefinition.js';
+import { FileAttachmentsManager } from './attachment/FileAttachmentsManager.js';
+import { transformAttachment } from './attachment/transformAttachments.js';
+import { FileBreadcrumbsStorage } from './breadcrumbs/FileBreadcrumbsStorage.js';
+import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder.js';
+import { BacktraceNodeClientSetup } from './builder/BacktraceClientSetup.js';
+import { NodeOptionReader } from './common/NodeOptionReader.js';
+import { NodeDiagnosticReportConverter } from './converter/NodeDiagnosticReportConverter.js';
+import { FsNodeFileSystem } from './storage/FsNodeFileSystem.js';
+import { NodeFileSystem } from './storage/interfaces/NodeFileSystem.js';
 
 export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration> {
     private _listeners: Record<string, NodeJS.UnhandledRejectionListener | NodeJS.UncaughtExceptionListener> = {};

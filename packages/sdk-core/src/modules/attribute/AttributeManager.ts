@@ -1,8 +1,8 @@
-import { Events } from '../../common/Events';
-import { AttributeEvents } from '../../events/AttributeEvents';
-import { ReportData } from '../../model/report/ReportData';
-import { BacktraceAttributeProvider } from './BacktraceAttributeProvider';
-import { ReportDataBuilder } from './ReportDataBuilder';
+import { Events } from '../../common/Events.js';
+import { AttributeEvents } from '../../events/AttributeEvents.js';
+import { ReportData } from '../../model/report/ReportData.js';
+import { BacktraceAttributeProvider } from './BacktraceAttributeProvider.js';
+import { ReportDataBuilder } from './ReportDataBuilder.js';
 
 export class AttributeManager {
     public readonly attributeEvents: Events<AttributeEvents>;

@@ -1,10 +1,16 @@
-import { BacktraceConfiguration, BacktraceCoreClient, BacktraceRequestHandler, FileSystem, SessionFiles } from '..';
-import { Events } from '../common/Events';
-import { ReportEvents } from '../events/ReportEvents';
-import { BacktraceReportSubmission } from '../model/http/BacktraceReportSubmission';
-import { AttachmentManager } from './attachments/AttachmentManager';
-import { AttributeManager } from './attribute/AttributeManager';
-import { BacktraceDatabase } from './database/BacktraceDatabase';
+import { Events } from '../common/Events.js';
+import { ReportEvents } from '../events/ReportEvents.js';
+import {
+    BacktraceConfiguration,
+    BacktraceCoreClient,
+    BacktraceRequestHandler,
+    FileSystem,
+    SessionFiles,
+} from '../index.js';
+import { BacktraceReportSubmission } from '../model/http/BacktraceReportSubmission.js';
+import { AttachmentManager } from './attachments/AttachmentManager.js';
+import { AttributeManager } from './attribute/AttributeManager.js';
+import { BacktraceDatabase } from './database/BacktraceDatabase.js';
 
 export interface BacktraceModuleBindData {
     readonly client: BacktraceCoreClient;

@@ -1,5 +1,5 @@
 import { BacktraceCoreClientBuilder } from '@backtrace/sdk-core';
-import { transformAttachment } from '../attachment/transformAttachments';
+import { transformAttachment } from '../attachment/transformAttachments.js';
 import {
     ApplicationInformationAttributeProvider,
     LinuxProcessStatusAttributeProvider,
@@ -7,9 +7,9 @@ import {
     MachineIdentitfierAttributeProvider,
     ProcessInformationAttributeProvider,
     ProcessStatusAttributeProvider,
-} from '../attributes';
-import { BacktraceClient } from '../BacktraceClient';
-import { BacktraceClientSetup, BacktraceNodeClientSetup } from './BacktraceClientSetup';
+} from '../attributes/index.js';
+import { BacktraceClient } from '../BacktraceClient.js';
+import { BacktraceClientSetup, BacktraceNodeClientSetup } from './BacktraceClientSetup.js';
 
 export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<BacktraceClientSetup> {
     constructor(clientSetup: BacktraceNodeClientSetup) {

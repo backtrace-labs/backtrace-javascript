@@ -3,6 +3,8 @@
     "exclude": ["node_modules", "tests", "lib"],
     "compilerOptions": {
         "rootDir": "./src",
-        "outDir": "./lib"
+        "outDir": "./lib",
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext"
     }
 }

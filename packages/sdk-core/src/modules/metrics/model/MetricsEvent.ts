@@ -1,6 +1,6 @@
-import { IdGenerator } from '../../../common/IdGenerator';
-import { TimeHelper } from '../../../common/TimeHelper';
-import { AttributeType } from '../../../model/data/BacktraceData';
+import { IdGenerator } from '../../../common/IdGenerator.js';
+import { TimeHelper } from '../../../common/TimeHelper.js';
+import { AttributeType } from '../../../model/data/BacktraceData.js';
 
 export class MetricsEvent<V extends string | string[] = string | string[]> {
     public readonly id = IdGenerator.uuid();

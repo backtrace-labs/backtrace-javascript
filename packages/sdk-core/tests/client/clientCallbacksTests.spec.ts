@@ -1,5 +1,5 @@
-import { BacktraceData, BacktraceReportSubmissionResult } from '../../src';
-import { BacktraceTestClient } from '../mocks/BacktraceTestClient';
+import { BacktraceData, BacktraceReportSubmissionResult } from '../../src/index.js';
+import { BacktraceTestClient } from '../mocks/BacktraceTestClient.js';
 
 describe('Client callbacks tests', () => {
     afterEach(() => {

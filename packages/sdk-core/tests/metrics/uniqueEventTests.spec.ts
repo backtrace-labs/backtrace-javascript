@@ -1,14 +1,14 @@
 import { fail } from 'assert';
-import { TimeHelper } from '../../src/common/TimeHelper';
-import { AttributeType } from '../../src/model/data/BacktraceData';
-import { AttributeManager } from '../../src/modules/attribute/AttributeManager';
-import { MetricsBuilder } from '../../src/modules/metrics/MetricsBuilder';
-import { MetricsUrlInformation } from '../../src/modules/metrics/MetricsUrlInformation';
-import { SingleSessionProvider } from '../../src/modules/metrics/SingleSessionProvider';
-import { UniqueEvent } from '../../src/modules/metrics/model/UniqueEvent';
-import { APPLICATION, APPLICATION_VERSION, TEST_SUBMISSION_URL } from '../mocks/BacktraceTestClient';
-import { testHttpClient } from '../mocks/testHttpClient';
-import { mockSubmissionQueue } from './mocks/mockSubmissionQueue';
+import { TimeHelper } from '../../src/common/TimeHelper.js';
+import { AttributeType } from '../../src/model/data/BacktraceData.js';
+import { AttributeManager } from '../../src/modules/attribute/AttributeManager.js';
+import { MetricsBuilder } from '../../src/modules/metrics/MetricsBuilder.js';
+import { MetricsUrlInformation } from '../../src/modules/metrics/MetricsUrlInformation.js';
+import { SingleSessionProvider } from '../../src/modules/metrics/SingleSessionProvider.js';
+import { UniqueEvent } from '../../src/modules/metrics/model/UniqueEvent.js';
+import { APPLICATION, APPLICATION_VERSION, TEST_SUBMISSION_URL } from '../mocks/BacktraceTestClient.js';
+import { testHttpClient } from '../mocks/testHttpClient.js';
+import { mockSubmissionQueue } from './mocks/mockSubmissionQueue.js';
 
 describe('Unique events tests', () => {
     let timestamp: number;

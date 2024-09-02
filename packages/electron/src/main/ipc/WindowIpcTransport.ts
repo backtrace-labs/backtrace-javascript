@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { WebContents, ipcMain } from 'electron';
-import { IpcTransport } from '../../common';
+import { IpcTransport } from '../../common/index.js';
 
 export class WindowIpcTransport implements IpcTransport {
     constructor(private readonly _webContents: WebContents) {}

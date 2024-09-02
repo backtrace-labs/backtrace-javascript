@@ -1,4 +1,4 @@
-import { AttributeType } from '../../../model/data/BacktraceData';
+import { AttributeType } from '../../../model/data/BacktraceData.js';
 
 export interface Breadcrumb {
     id: number;

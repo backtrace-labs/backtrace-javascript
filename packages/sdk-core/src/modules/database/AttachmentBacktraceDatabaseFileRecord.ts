@@ -1,8 +1,8 @@
-import { BacktraceAttachment } from '../../model/attachment';
-import { isFileAttachment } from '../attachments/isFileAttachment';
-import { FileSystem } from '../storage';
-import { BacktraceDatabaseFileRecord } from './BacktraceDatabaseFileRecord';
-import { AttachmentBacktraceDatabaseRecord } from './model/BacktraceDatabaseRecord';
+import { BacktraceAttachment } from '../../model/attachment/index.js';
+import { isFileAttachment } from '../attachments/isFileAttachment.js';
+import { FileSystem } from '../storage/index.js';
+import { BacktraceDatabaseFileRecord } from './BacktraceDatabaseFileRecord.js';
+import { AttachmentBacktraceDatabaseRecord } from './model/BacktraceDatabaseRecord.js';
 
 export class AttachmentBacktraceDatabaseFileRecord implements AttachmentBacktraceDatabaseRecord {
     public readonly type = 'attachment';

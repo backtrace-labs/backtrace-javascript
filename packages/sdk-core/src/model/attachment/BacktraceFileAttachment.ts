@@ -1,4 +1,4 @@
-import { BacktraceAttachment } from './BacktraceAttachment';
+import { BacktraceAttachment } from './BacktraceAttachment.js';
 
 export interface BacktraceFileAttachment<T = unknown> extends BacktraceAttachment<T> {
     /**

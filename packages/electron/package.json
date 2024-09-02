@@ -2,9 +2,9 @@
     "name": "@backtrace/electron",
     "version": "0.4.0",
     "description": "Backtrace-JavaScript Electron integration",
-    "main": "main/index.cjs",
-    "module": "main/index.mjs",
-    "types": "main/index.d.ts",
+    "main": "./main/index.cjs",
+    "module": "./main/index.mjs",
+    "types": "./main/index.d.ts",
     "type": "module",
     "exports": {
         "./package.json": "./package.json",
@@ -60,12 +60,12 @@
         }
     },
     "scripts": {
-        "build": "rollup -c rollup.config.mjs",
-        "clean": "rimraf common main renderer",
+        "build": "tsc -p tsconfig.main.json --noEmit && tsc -p tsconfig.renderer.json --noEmit && rollup -c rollup.config.mjs",
+        "clean": "rimraf main renderer common",
         "format": "prettier --write '**/*.ts'",
         "lint": "eslint src --ext .ts",
         "prepublishOnly": "cross-env NODE_ENV=production npm run build",
-        "watch": "npm run build -- --watch"
+        "watch": "concurrently \"tsc -p tsconfig.main.json --noEmit --watch\" \"tsc -p tsconfig.renderer.json --noEmit --watch\" \"rollup -c rollup.config.mjs --watch\""
     },
     "keywords": [
         "Error",
@@ -99,8 +99,12 @@
         "@rollup/plugin-json": "^6.1.0",
         "@rollup/plugin-node-resolve": "^15.2.3",
         "@rollup/plugin-replace": "^5.0.7",
+        "@rollup/plugin-typescript": "^11.1.6",
+        "@types/fs-extra": "^11.0.4",
+        "concurrently": "^8.2.2",
+        "fs-extra": "^11.2.0",
+        "glob": "^11.0.0",
         "rollup": "^4.21.0",
-        "rollup-plugin-typescript2": "^0.36.0",
         "typescript": "^5.0.4"
     }
 }

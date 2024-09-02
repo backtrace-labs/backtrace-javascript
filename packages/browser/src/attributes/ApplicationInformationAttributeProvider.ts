@@ -1,5 +1,5 @@
 import { BacktraceAttributeProvider } from '@backtrace/sdk-core';
-import { BacktraceConfiguration } from '../BacktraceConfiguration';
+import { BacktraceConfiguration } from '../BacktraceConfiguration.js';
 
 export class ApplicationInformationAttributeProvider implements BacktraceAttributeProvider {
     public readonly APPLICATION_ATTRIBUTE = 'application';

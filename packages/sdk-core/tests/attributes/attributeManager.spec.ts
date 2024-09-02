@@ -1,5 +1,5 @@
-import { BacktraceAttributeProvider } from '../../src';
-import { AttributeManager } from '../../src/modules/attribute/AttributeManager';
+import { BacktraceAttributeProvider } from '../../src/index.js';
+import { AttributeManager } from '../../src/modules/attribute/AttributeManager.js';
 
 describe('AttributeManager', () => {
     function provider(type: BacktraceAttributeProvider['type'], get: BacktraceAttributeProvider['get']) {

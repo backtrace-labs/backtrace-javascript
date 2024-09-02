@@ -1,4 +1,4 @@
-import { UserIdentifierAttributeProvider } from '../../src/attributes/UserIdentifierAttributeProvider';
+import { UserIdentifierAttributeProvider } from '../../src/attributes/UserIdentifierAttributeProvider.js';
 describe('User id attribute provider test', () => {
     it(`Should always set user id attribute`, () => {
         const userIdentifier = new UserIdentifierAttributeProvider();

@@ -1,5 +1,5 @@
-import { BacktraceDatabaseStorageProvider } from '../../src';
-import { Mocked } from '../_mocks/types';
+import { BacktraceDatabaseStorageProvider } from '../../src/index.js';
+import { Mocked } from '../_mocks/types.js';
 
 export function getTestStorageProvider(): Mocked<BacktraceDatabaseStorageProvider> {
     return {

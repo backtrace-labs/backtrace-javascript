@@ -1,1 +1,1 @@
-export * from './FileAttributeManager';
+export * from './FileAttributeManager.js';

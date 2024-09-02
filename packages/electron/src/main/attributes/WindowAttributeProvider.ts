@@ -1,6 +1,6 @@
 import { BacktraceAttributeProvider } from '@backtrace/sdk-core';
 import { BrowserWindow } from 'electron';
-import { flatten, getBasicBrowserWindowAttributes } from './helpers/attributes';
+import { flatten, getBasicBrowserWindowAttributes } from './helpers/attributes.js';
 
 export interface WindowAttributeProviderOptions {
     /**

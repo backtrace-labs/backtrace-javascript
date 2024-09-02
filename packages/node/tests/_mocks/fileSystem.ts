@@ -1,7 +1,7 @@
 import { MockedFileSystem, mockFileSystem } from '@backtrace/sdk-core/tests/_mocks/fileSystem';
 import path from 'path';
 import { Writable } from 'stream';
-import { NodeFileSystem, WritableStream } from '../../src/storage/interfaces/NodeFileSystem';
+import { NodeFileSystem, WritableStream } from '../../src/storage/interfaces/NodeFileSystem.js';
 
 export function mockStreamFileSystem(files?: Record<string, string>): MockedFileSystem<NodeFileSystem> {
     const fs = mockFileSystem(files);

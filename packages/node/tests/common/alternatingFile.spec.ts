@@ -1,9 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { AlternatingFileWriter } from '../../src/common/AlternatingFileWriter';
-import { FsNodeFileSystem } from '../../src/storage/FsNodeFileSystem';
-import { mockStreamFileSystem } from '../_mocks/fileSystem';
+import { AlternatingFileWriter } from '../../src/common/AlternatingFileWriter.js';
+import { FsNodeFileSystem } from '../../src/storage/FsNodeFileSystem.js';
+import { mockStreamFileSystem } from '../_mocks/fileSystem.js';
 
 function unlinkSafe(file: string) {
     try {

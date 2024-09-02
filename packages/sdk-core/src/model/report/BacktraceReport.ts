@@ -1,9 +1,9 @@
-import { jsonEscaper } from '../../common/jsonEscaper';
-import { TimeHelper } from '../../common/TimeHelper';
-import { BacktraceAttachment } from '../attachment';
-import { BacktraceStackFrame } from '../data/BacktraceStackTrace';
-import { BacktraceErrorType } from './BacktraceErrorType';
-import { BacktraceReportStackTraceInfo } from './BacktraceReportStackTraceInfo';
+import { jsonEscaper } from '../../common/jsonEscaper.js';
+import { TimeHelper } from '../../common/TimeHelper.js';
+import { BacktraceAttachment } from '../attachment/index.js';
+import { BacktraceStackFrame } from '../data/BacktraceStackTrace.js';
+import { BacktraceErrorType } from './BacktraceErrorType.js';
+import { BacktraceReportStackTraceInfo } from './BacktraceReportStackTraceInfo.js';
 
 export class BacktraceReport {
     /**

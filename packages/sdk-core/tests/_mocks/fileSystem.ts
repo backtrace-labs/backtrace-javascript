@@ -1,7 +1,7 @@
 import path from 'path';
-import { BacktraceFileAttachment } from '../../src/model/attachment';
-import { FileSystem } from '../../src/modules/storage/FileSystem';
-import { Mocked } from './types';
+import { BacktraceFileAttachment } from '../../src/model/attachment/index.js';
+import { FileSystem } from '../../src/modules/storage/FileSystem.js';
+import { Mocked } from './types.js';
 
 export type MockedFileSystem<T extends FileSystem> = Mocked<T> & { files: Record<string, string> };
 

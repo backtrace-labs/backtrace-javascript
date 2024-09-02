@@ -1,13 +1,13 @@
 import crypto from 'crypto';
 import { nextTick } from 'process';
 import { promisify } from 'util';
-import { AttachmentBacktraceDatabaseRecord, BacktraceData, ReportBacktraceDatabaseRecord } from '../../src';
-import { RequestBacktraceReportSubmission } from '../../src/model/http/BacktraceReportSubmission';
-import { BacktraceDatabase } from '../../src/modules/database/BacktraceDatabase';
-import { BacktraceDatabaseContext } from '../../src/modules/database/BacktraceDatabaseContext';
-import { TEST_SUBMISSION_URL } from '../mocks/BacktraceTestClient';
-import { testHttpClient } from '../mocks/testHttpClient';
-import { getTestStorageProvider } from '../mocks/testStorageProvider';
+import { AttachmentBacktraceDatabaseRecord, BacktraceData, ReportBacktraceDatabaseRecord } from '../../src/index.js';
+import { RequestBacktraceReportSubmission } from '../../src/model/http/BacktraceReportSubmission.js';
+import { BacktraceDatabase } from '../../src/modules/database/BacktraceDatabase.js';
+import { BacktraceDatabaseContext } from '../../src/modules/database/BacktraceDatabaseContext.js';
+import { TEST_SUBMISSION_URL } from '../mocks/BacktraceTestClient.js';
+import { testHttpClient } from '../mocks/testHttpClient.js';
+import { getTestStorageProvider } from '../mocks/testStorageProvider.js';
 
 function randomReportRecord(): ReportBacktraceDatabaseRecord {
     return {

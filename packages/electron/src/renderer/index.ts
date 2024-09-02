@@ -1,1 +1,1 @@
-export * from './addBacktraceElectron';
+export * from './addBacktraceElectron.js';

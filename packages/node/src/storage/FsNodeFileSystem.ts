@@ -1,7 +1,7 @@
 import { BacktraceAttachment } from '@backtrace/sdk-core';
 import fs from 'fs';
-import { BacktraceFileAttachment } from '../attachment';
-import { NodeFileSystem, WritableStream } from './interfaces/NodeFileSystem';
+import { BacktraceFileAttachment } from '../attachment/index.js';
+import { NodeFileSystem, WritableStream } from './interfaces/NodeFileSystem.js';
 
 export class FsNodeFileSystem implements NodeFileSystem {
     public readDir(dir: string): Promise<string[]> {

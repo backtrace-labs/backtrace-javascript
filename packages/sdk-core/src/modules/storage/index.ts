@@ -1,2 +1,2 @@
-export * from './FileSystem';
-export * from './SessionFiles';
+export * from './FileSystem.js';
+export * from './SessionFiles.js';

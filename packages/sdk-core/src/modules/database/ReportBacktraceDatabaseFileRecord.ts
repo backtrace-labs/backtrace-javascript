@@ -1,9 +1,9 @@
-import { BacktraceAttachment } from '../../model/attachment';
-import { BacktraceData } from '../../model/data';
-import { isFileAttachment } from '../attachments/isFileAttachment';
-import { FileSystem } from '../storage';
-import { BacktraceDatabaseFileRecord } from './BacktraceDatabaseFileRecord';
-import { ReportBacktraceDatabaseRecord } from './model/BacktraceDatabaseRecord';
+import { BacktraceAttachment } from '../../model/attachment/index.js';
+import { BacktraceData } from '../../model/data/index.js';
+import { isFileAttachment } from '../attachments/isFileAttachment.js';
+import { FileSystem } from '../storage/index.js';
+import { BacktraceDatabaseFileRecord } from './BacktraceDatabaseFileRecord.js';
+import { ReportBacktraceDatabaseRecord } from './model/BacktraceDatabaseRecord.js';
 
 export class ReportBacktraceDatabaseFileRecord implements ReportBacktraceDatabaseRecord {
     public readonly type = 'report';

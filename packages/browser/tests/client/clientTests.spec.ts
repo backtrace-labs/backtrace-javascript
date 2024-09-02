@@ -4,7 +4,7 @@ import {
     BacktraceRequestHandler,
     BacktraceUint8ArrayAttachment,
 } from '@backtrace/sdk-core';
-import { BacktraceClient } from '../../src/';
+import { BacktraceClient } from '../../src/index.js';
 
 describe('Client tests', () => {
     const requestHandler: BacktraceRequestHandler = {

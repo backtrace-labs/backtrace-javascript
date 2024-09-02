@@ -1,8 +1,8 @@
-import { AttributeManager } from '../../src/modules/attribute/AttributeManager';
-import { MetricsBuilder } from '../../src/modules/metrics/MetricsBuilder';
-import { SingleSessionProvider } from '../../src/modules/metrics/SingleSessionProvider';
-import { APPLICATION, APPLICATION_VERSION, TEST_SUBMISSION_URL } from '../mocks/BacktraceTestClient';
-import { testHttpClient } from '../mocks/testHttpClient';
+import { AttributeManager } from '../../src/modules/attribute/AttributeManager.js';
+import { MetricsBuilder } from '../../src/modules/metrics/MetricsBuilder.js';
+import { SingleSessionProvider } from '../../src/modules/metrics/SingleSessionProvider.js';
+import { APPLICATION, APPLICATION_VERSION, TEST_SUBMISSION_URL } from '../mocks/BacktraceTestClient.js';
+import { testHttpClient } from '../mocks/testHttpClient.js';
 
 describe('Metric setup', () => {
     let attributeManager: AttributeManager;

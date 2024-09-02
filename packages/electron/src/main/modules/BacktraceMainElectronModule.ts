@@ -1,4 +1,5 @@
 import { FileAttachmentsManager, FileBreadcrumbsStorage, NodeFileSystem } from '@backtrace/node';
+import type { BacktraceDatabase } from '@backtrace/sdk-core';
 import {
     BacktraceData,
     BacktraceModule,
@@ -8,15 +9,14 @@ import {
     SubmissionUrlInformation,
     SummedEvent,
 } from '@backtrace/sdk-core';
-import type { BacktraceDatabase } from '@backtrace/sdk-core/lib/modules/database/BacktraceDatabase';
 import { app, crashReporter } from 'electron';
-import { IpcAttachmentReference } from '../../common/ipc/IpcAttachmentReference';
-import { IpcEvents } from '../../common/ipc/IpcEvents';
-import { SyncData } from '../../common/models/SyncData';
-import { MainIpcRpcHandler } from '../ipc/MainIpcRpcHandler';
-import { MainIpcTransportHandler } from '../ipc/MainIpcTransportHandler';
-import { WindowIpcTransport } from '../ipc/WindowIpcTransport';
-import { IpcAttachment } from './IpcAttachment';
+import { IpcAttachmentReference } from '../../common/ipc/IpcAttachmentReference.js';
+import { IpcEvents } from '../../common/ipc/IpcEvents.js';
+import { SyncData } from '../../common/models/SyncData.js';
+import { MainIpcRpcHandler } from '../ipc/MainIpcRpcHandler.js';
+import { MainIpcTransportHandler } from '../ipc/MainIpcTransportHandler.js';
+import { WindowIpcTransport } from '../ipc/WindowIpcTransport.js';
+import { IpcAttachment } from './IpcAttachment.js';
 
 export class BacktraceMainElectronModule implements BacktraceModule {
     private _bindData?: BacktraceModuleBindData;

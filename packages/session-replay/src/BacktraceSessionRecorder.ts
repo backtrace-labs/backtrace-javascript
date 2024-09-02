@@ -1,8 +1,8 @@
 import { BacktraceAttachment, OverwritingArray } from '@backtrace/sdk-core';
 import { eventWithTime } from '@rrweb/types';
 import { record } from 'rrweb';
-import { BacktraceSessionRecorderOptions } from './options';
-import { maskTextFn } from './privacy/maskTextFn';
+import { BacktraceSessionRecorderOptions } from './options.js';
+import { maskTextFn } from './privacy/maskTextFn.js';
 
 export class BacktraceSessionRecorder implements BacktraceAttachment {
     public readonly name = 'bt-session-replay-0';

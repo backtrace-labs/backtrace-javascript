@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { IdGenerator } from '@backtrace/sdk-core';
 import { BrowserWindow, ipcMain, IpcMainInvokeEvent } from 'electron';
-import { IpcRpc, SyncIpcRpcHandler } from '../../common/ipc/IpcRpc';
+import { IpcRpc, SyncIpcRpcHandler } from '../../common/ipc/IpcRpc.js';
 
 export class WindowIpcRpc implements IpcRpc, SyncIpcRpcHandler {
     constructor(private readonly _window: BrowserWindow) {}

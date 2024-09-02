@@ -1,11 +1,11 @@
 import assert from 'assert';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { BacktraceData, BacktraceDatabaseRecord, BacktraceReportSubmissionResult } from '../../src';
-import { TimeHelper } from '../../src/common/TimeHelper';
-import { BacktraceDatabase } from '../../src/modules/database/BacktraceDatabase';
-import { mockFileSystem } from '../_mocks/fileSystem';
-import { BacktraceTestClient } from '../mocks/BacktraceTestClient';
+import { TimeHelper } from '../../src/common/TimeHelper.js';
+import { BacktraceData, BacktraceDatabaseRecord, BacktraceReportSubmissionResult } from '../../src/index.js';
+import { BacktraceDatabase } from '../../src/modules/database/BacktraceDatabase.js';
+import { mockFileSystem } from '../_mocks/fileSystem.js';
+import { BacktraceTestClient } from '../mocks/BacktraceTestClient.js';
 
 describe('Database context memory storage tests', () => {
     const testDatabaseSettings = {

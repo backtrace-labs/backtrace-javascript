@@ -1,10 +1,10 @@
-import { anySignal, createAbortController } from '../../common/AbortController';
-import { Delay } from '../../common/DelayHelper';
-import { TimeHelper } from '../../common/TimeHelper';
-import { jsonEscaper } from '../../common/jsonEscaper';
-import { BacktraceRequestHandler } from '../../model/http';
-import { MetricsQueue } from './MetricsQueue';
-import { MetricsEvent } from './model/MetricsEvent';
+import { anySignal, createAbortController } from '../../common/AbortController.js';
+import { Delay } from '../../common/DelayHelper.js';
+import { TimeHelper } from '../../common/TimeHelper.js';
+import { jsonEscaper } from '../../common/jsonEscaper.js';
+import { BacktraceRequestHandler } from '../../model/http/index.js';
+import { MetricsQueue } from './MetricsQueue.js';
+import { MetricsEvent } from './model/MetricsEvent.js';
 
 export class MetricsSubmissionQueue<T extends MetricsEvent> implements MetricsQueue<T> {
     public get total() {

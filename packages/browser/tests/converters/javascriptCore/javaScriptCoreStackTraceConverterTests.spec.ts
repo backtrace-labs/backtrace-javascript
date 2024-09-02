@@ -1,5 +1,5 @@
-import { JavaScriptCoreStackTraceConverter } from '../../../src/converters/JavaScriptCoreStackTraceConverter';
-import { javaScriptCoreStackTraceTests } from './javaScriptCoreStackTraceTestCases';
+import { JavaScriptCoreStackTraceConverter } from '../../../src/converters/JavaScriptCoreStackTraceConverter.js';
+import { javaScriptCoreStackTraceTests } from './javaScriptCoreStackTraceTestCases.js';
 
 describe('Stack trace converter tests', () => {
     describe('JavaScriptCore', () => {

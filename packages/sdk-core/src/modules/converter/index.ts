@@ -1,2 +1,2 @@
-export * from './BacktraceStackTraceConverter';
-export * from './consts/frameNamesConsts';
+export * from './BacktraceStackTraceConverter.js';
+export * from './consts/frameNamesConsts.js';

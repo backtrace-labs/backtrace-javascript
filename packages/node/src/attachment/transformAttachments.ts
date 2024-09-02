@@ -1,7 +1,7 @@
 import { BacktraceAttachment } from '@backtrace/sdk-core';
 import { Readable } from 'stream';
-import { BacktraceSetupConfiguration } from '../BacktraceConfiguration';
-import { BacktraceFileAttachment } from './BacktraceFileAttachment';
+import { BacktraceSetupConfiguration } from '../BacktraceConfiguration.js';
+import { BacktraceFileAttachment } from './BacktraceFileAttachment.js';
 
 /**
  * Transform a client attachment into the attachment model.

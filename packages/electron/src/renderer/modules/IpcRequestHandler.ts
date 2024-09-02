@@ -1,6 +1,6 @@
 import { BacktraceReportSubmissionResult, BacktraceRequestHandler } from '@backtrace/sdk-core';
-import { IpcEvents } from '../../common/ipc/IpcEvents';
-import { IpcRpc } from '../../common/ipc/IpcRpc';
+import { IpcEvents } from '../../common/ipc/IpcEvents.js';
+import { IpcRpc } from '../../common/ipc/IpcRpc.js';
 
 export class IpcRequestHandler implements BacktraceRequestHandler {
     constructor(private readonly _ipc: IpcRpc) {}

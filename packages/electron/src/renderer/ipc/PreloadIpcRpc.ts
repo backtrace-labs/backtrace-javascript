@@ -1,4 +1,4 @@
-import { IpcRpc, SyncIpcRpcCaller } from '../../common/ipc/IpcRpc';
+import { IpcRpc, SyncIpcRpcCaller } from '../../common/ipc/IpcRpc.js';
 
 declare global {
     interface Window {

@@ -1,1 +1,1 @@
-export * from './FileBreadcrumbsStorage';
+export * from './FileBreadcrumbsStorage.js';

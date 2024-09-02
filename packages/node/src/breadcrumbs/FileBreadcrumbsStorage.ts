@@ -11,9 +11,9 @@ import {
     TimeHelper,
 } from '@backtrace/sdk-core';
 import path from 'path';
-import { BacktraceFileAttachment } from '../attachment';
-import { AlternatingFileWriter } from '../common/AlternatingFileWriter';
-import { NodeFileSystem } from '../storage/interfaces/NodeFileSystem';
+import { BacktraceFileAttachment } from '../attachment/index.js';
+import { AlternatingFileWriter } from '../common/AlternatingFileWriter.js';
+import { NodeFileSystem } from '../storage/interfaces/NodeFileSystem.js';
 
 const FILE_PREFIX = 'bt-breadcrumbs';
 

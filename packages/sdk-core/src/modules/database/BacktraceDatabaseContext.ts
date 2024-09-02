@@ -1,4 +1,4 @@
-import { BacktraceDatabaseRecord, BacktraceDatabaseRecordCountByType } from './model/BacktraceDatabaseRecord';
+import { BacktraceDatabaseRecord, BacktraceDatabaseRecordCountByType } from './model/BacktraceDatabaseRecord.js';
 
 export class BacktraceDatabaseContext {
     private readonly _records: BacktraceDatabaseRecord[];

@@ -1,6 +1,6 @@
+import type { BacktraceStackFrame } from '@backtrace/sdk-core';
 import { BacktraceErrorType, BacktraceReport } from '@backtrace/sdk-core';
-import type { BacktraceStackFrame } from '@backtrace/sdk-core/lib/model/data/BacktraceStackTrace';
-import { NodeDiagnosticReport } from './models/NodeDiagnosticReport';
+import { NodeDiagnosticReport } from './models/NodeDiagnosticReport.js';
 
 export class NodeDiagnosticReportConverter {
     public convert(report: NodeDiagnosticReport): BacktraceReport {

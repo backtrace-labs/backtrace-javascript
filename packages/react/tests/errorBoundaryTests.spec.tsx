@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import React from 'react';
-import { BacktraceClient } from '../src/BacktraceClient';
-import { ErrorBoundary } from '../src/ErrorBoundary';
+import { BacktraceClient } from '../src/BacktraceClient.js';
+import { ErrorBoundary } from '../src/ErrorBoundary.js';
 
 describe('Error Boundary', () => {
     const childrenText = 'I am the children';

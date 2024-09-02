@@ -1,6 +1,6 @@
 import { MetricsQueue, SummedEvent } from '@backtrace/sdk-core';
-import { IpcRpc, IpcTransport } from '../../common';
-import { IpcEvents } from '../../common/ipc/IpcEvents';
+import { IpcRpc, IpcTransport } from '../../common/index.js';
+import { IpcEvents } from '../../common/ipc/IpcEvents.js';
 
 export class IpcSummedMetricsQueue implements MetricsQueue<SummedEvent> {
     public readonly total = 0;

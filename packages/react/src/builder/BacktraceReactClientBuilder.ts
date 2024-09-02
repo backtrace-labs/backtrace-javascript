@@ -1,5 +1,5 @@
 import { BacktraceClientBuilder, BacktraceClientSetup } from '@backtrace/browser';
-import { BacktraceClient } from '../BacktraceClient';
+import { BacktraceClient } from '../BacktraceClient.js';
 
 export class BacktraceReactClientBuilder extends BacktraceClientBuilder {
     constructor(clientSetup: BacktraceClientSetup) {

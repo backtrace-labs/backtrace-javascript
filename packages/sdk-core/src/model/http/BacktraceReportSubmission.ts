@@ -1,12 +1,12 @@
-import { jsonEscaper } from '../../common/jsonEscaper';
-import { BacktraceAttachment } from '../attachment';
-import { BacktraceConfiguration } from '../configuration/BacktraceConfiguration';
-import { BacktraceData } from '../data/BacktraceData';
-import { BacktraceReportSubmissionResult } from '../data/BacktraceSubmissionResult';
-import { BacktraceRequestHandler } from './BacktraceRequestHandler';
-import { BacktraceAttachmentResponse } from './model/BacktraceAttachmentResponse';
-import { BacktraceSubmissionResponse } from './model/BacktraceSubmissionResponse';
-import { SubmissionUrlInformation } from './SubmissionUrlInformation';
+import { jsonEscaper } from '../../common/jsonEscaper.js';
+import { BacktraceAttachment } from '../attachment/index.js';
+import { BacktraceConfiguration } from '../configuration/BacktraceConfiguration.js';
+import { BacktraceData } from '../data/BacktraceData.js';
+import { BacktraceReportSubmissionResult } from '../data/BacktraceSubmissionResult.js';
+import { BacktraceRequestHandler } from './BacktraceRequestHandler.js';
+import { BacktraceAttachmentResponse } from './model/BacktraceAttachmentResponse.js';
+import { BacktraceSubmissionResponse } from './model/BacktraceSubmissionResponse.js';
+import { SubmissionUrlInformation } from './SubmissionUrlInformation.js';
 
 export interface BacktraceReportSubmission {
     send(

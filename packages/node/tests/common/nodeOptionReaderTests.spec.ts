@@ -1,4 +1,4 @@
-import { NodeOptionReader } from '../../src/common/NodeOptionReader';
+import { NodeOptionReader } from '../../src/common/NodeOptionReader.js';
 describe('Node options reader', () => {
     describe('argv', () => {
         it('should read --unhandled-rejections option', () => {

@@ -1,6 +1,6 @@
-import { AbortError } from './AbortError';
-import { Events } from './Events';
-import { OriginalAbortController, OriginalAbortSignal } from './abortInterfaces';
+import { AbortError } from './AbortError.js';
+import { Events } from './Events.js';
+import { OriginalAbortController, OriginalAbortSignal } from './abortInterfaces.js';
 
 /**
  * Copied and repurposed from https://github.com/mo/abortcontroller-polyfill/blob/master/src/abortcontroller.js
