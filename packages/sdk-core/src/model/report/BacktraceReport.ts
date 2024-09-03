@@ -112,6 +112,6 @@ export class BacktraceReport {
     }
 
     private generateErrorMessage(data: unknown) {
-        return typeof data === 'object' ? JSON.stringify(data, jsonEscaper()) : data?.toString() ?? '';
+        return typeof data === 'object' ? JSON.stringify(data, jsonEscaper()) : (data?.toString() ?? '');
     }
 }

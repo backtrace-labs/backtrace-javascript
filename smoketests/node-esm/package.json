@@ -1,0 +1,22 @@
+{
+    "name": "smoketest-node-esm",
+    "version": "1.0.0",
+    "description": "@backtrace/node smoketests",
+    "main": "lib/index.js",
+    "types": "lib/index.d.ts",
+    "type": "module",
+    "scripts": {
+        "start": "node lib/index.js",
+        "build": "tsc",
+        "watch": "npm run build -- --watch"
+    },
+    "author": "Backtrace <team@backtrace.io>",
+    "license": "MIT",
+    "dependencies": {
+        "@backtrace/node": "file:../../packages/node"
+    },
+    "devDependencies": {
+        "@types/node": "^22.5.1",
+        "typescript": "^5.0.4"
+    }
+}

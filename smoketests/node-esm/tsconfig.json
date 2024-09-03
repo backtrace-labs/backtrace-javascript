@@ -1,0 +1,22 @@
+{
+    "include": ["./src"],
+    "compilerOptions": {
+        "target": "ESNext",
+        "module": "NodeNext",
+        "outDir": "./lib",
+        "sourceMap": true,
+        "strict": true,
+        "esModuleInterop": true,
+        "strictNullChecks": true,
+        "noUnusedLocals": true,
+        "removeComments": false,
+        "forceConsistentCasingInFileNames": true,
+        "skipLibCheck": true,
+        "declaration": true,
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "rootDir": "./src",
+        "composite": true
+    },
+    "exclude": ["node_modules", "tests", "lib"]
+}

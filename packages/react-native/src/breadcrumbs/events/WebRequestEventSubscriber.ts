@@ -71,7 +71,7 @@ export class WebRequestEventSubscriber implements BreadcrumbsEventSubscriber {
             } catch (e) {
                 backtraceBreadcrumbs.addBreadcrumb(
                     `HTTP ${method} failure on request to ${resource}. Reason: ${
-                        e instanceof Error ? e.message : e?.toString() ?? 'unknown'
+                        e instanceof Error ? e.message : (e?.toString() ?? 'unknown')
                     }`,
                     BreadcrumbLogLevel.Warning,
                     BreadcrumbType.Http,

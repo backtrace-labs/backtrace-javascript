@@ -1,0 +1,10 @@
+{
+    "name": "smoketests",
+    "version": "1.0.0",
+    "description": "smoketests for SDK packages",
+    "scripts": {
+        "start": "jest --runInBand"
+    },
+    "author": "Backtrace <team@backtrace.io>",
+    "license": "MIT"
+}

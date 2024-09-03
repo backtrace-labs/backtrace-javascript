@@ -174,7 +174,7 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
             const isErrorTypeReason = reason instanceof Error;
             await this.send(
                 new BacktraceReport(
-                    isErrorTypeReason ? reason : reason?.toString() ?? 'Unhandled rejection',
+                    isErrorTypeReason ? reason : (reason?.toString() ?? 'Unhandled rejection'),
                     {
                         'error.type': 'Unhandled exception',
                     },
@@ -221,7 +221,7 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
                 writable: true,
                 configurable: true,
             });
-            warning.stack = traceWarnings && isErrorTypeReason ? error.stack ?? '' : '';
+            warning.stack = traceWarnings && isErrorTypeReason ? (error.stack ?? '') : '';
             process.emitWarning(warning);
         };
         process.prependListener('unhandledRejection', captureUnhandledRejectionsCallback);
@@ -255,7 +255,7 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
         const reportName = process.report?.filename;
         const databasePath = process.report?.directory
             ? process.report.directory
-            : this.options.database?.path ?? process.cwd();
+            : (this.options.database?.path ?? process.cwd());
 
         let databaseFiles: string[];
         try {
