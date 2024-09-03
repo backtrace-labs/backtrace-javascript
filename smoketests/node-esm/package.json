@@ -8,8 +8,7 @@
     "scripts": {
         "start": "node lib/index.js",
         "build": "tsc",
-        "watch": "npm run build -- --watch",
-        "trust-ssl-cert": "cp /certs/cert.crt /usr/local/share/ca-certificates/ && update-ca-certificates"
+        "watch": "npm run build -- --watch"
     },
     "author": "Backtrace <team@backtrace.io>",
     "license": "MIT",
