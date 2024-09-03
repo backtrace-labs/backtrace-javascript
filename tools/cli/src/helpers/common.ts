@@ -105,11 +105,16 @@ export function writeSourceAndSourceMap<T extends SourceAndSourceMap>(asset: T) 
     );
 }
 
-export function readSourceMapFromPathOrFromSource(sourceProcessor: SourceProcessor): (asset: Asset) => Promise<Result<{
-    content: RawSourceMap;
-    name: string;
-    path: string;
-}, string>>  {
+export function readSourceMapFromPathOrFromSource(sourceProcessor: SourceProcessor): (asset: Asset) => Promise<
+    Result<
+        {
+            content: RawSourceMap;
+            name: string;
+            path: string;
+        },
+        string
+    >
+> {
     return function readSourceMapFromPathOrFromSource(asset: Asset) {
         return pipe(
             asset,
