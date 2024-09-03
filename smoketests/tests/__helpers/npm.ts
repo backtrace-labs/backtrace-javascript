@@ -2,9 +2,11 @@ import { SpawnOptionsWithoutStdio } from 'child_process';
 import { asyncSpawn } from './asyncSpawn';
 
 export function npm(cwd: string, args: string[], options?: SpawnOptionsWithoutStdio) {
-    const command = /^win/.test(process.platform) ? 'npm.cmd' : 'npm';
+    const isWindows = /^win/.test(process.platform);
+    const command = isWindows ? 'npm.cmd' : 'npm';
     return asyncSpawn(command, args, {
         ...options,
+        shell: isWindows,
         cwd,
     });
 }
