@@ -2,11 +2,9 @@ import assert from 'assert';
 import path from 'path';
 import { asyncSpawn } from '../__helpers/asyncSpawn';
 import { setupNpmApp } from '../__helpers/npm';
+import { DIRECT_SUBMIT_URL, SUBMIT_LAYER_URL } from '../__helpers/urls';
 
 const NODE_APP_PATH = path.join(__dirname, '../../node-esm');
-
-const SUBMIT_LAYER_URL = process.env.SMOKETESTS_SUBMIT_LAYER_URL;
-const DIRECT_SUBMIT_URL = process.env.SMOKETESTS_DIRECT_SUBMIT_URL;
 
 const RXID_REGEX = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 
