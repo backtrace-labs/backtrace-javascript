@@ -17,7 +17,7 @@ export class BacktraceSessionRecorder implements BacktraceAttachment {
 
     constructor(private readonly _options: BacktraceSessionRecorderOptions) {
         this._events = [];
-        this._maxEventCount = !_options.disableMaxEventCount ? _options.maxEventCount ?? 100 : undefined;
+        this._maxEventCount = !_options.disableMaxEventCount ? (_options.maxEventCount ?? 100) : undefined;
         this._previousEvents = new OverwritingArray<eventWithTime>(this._maxEventCount ?? 100);
     }
 

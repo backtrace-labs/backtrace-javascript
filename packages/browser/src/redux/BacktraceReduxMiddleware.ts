@@ -98,7 +98,7 @@ export function createBacktraceReduxMiddleware(
 
             return response;
         } catch (err) {
-            const message = err instanceof Error ? err.message : err?.toString() ?? 'unknown';
+            const message = err instanceof Error ? err.message : (err?.toString() ?? 'unknown');
             client.breadcrumbs?.warn(
                 `A problem occurred during action ${action?.type ?? 'unknown'}. Reason: ${message}`,
             );
