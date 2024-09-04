@@ -59,7 +59,7 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
                 FileBreadcrumbsStorage.create(
                     fileSystem,
                     this.sessionFiles,
-                    clientSetup.options.breadcrumbs?.maximumBreadcrumbs ?? 100,
+                    (clientSetup.options.breadcrumbs?.maximumBreadcrumbs ?? 100) || 100,
                 ),
             );
         }
