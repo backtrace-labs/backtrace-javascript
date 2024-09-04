@@ -1,4 +1,4 @@
-import { Breadcrumb, BreadcrumbLogLevel, BreadcrumbType, RawBreadcrumb } from '@backtrace/sdk-core';
+import { Breadcrumb, BreadcrumbLogLevel, BreadcrumbType, RawBreadcrumb, SessionFiles } from '@backtrace/sdk-core';
 import assert from 'assert';
 import { Readable } from 'stream';
 import { promisify } from 'util';
@@ -34,6 +34,7 @@ const nextTick = promisify(process.nextTick);
 describe('FileBreadcrumbsStorage', () => {
     it('should return added breadcrumbs', async () => {
         const fs = mockStreamFileSystem();
+        const session = new SessionFiles(fs, '.', 'sessionId');
 
         const breadcrumbs: RawBreadcrumb[] = [
             {
@@ -85,7 +86,7 @@ describe('FileBreadcrumbsStorage', () => {
             },
         ];
 
-        const storage = new FileBreadcrumbsStorage('breadcrumbs-1', 'breadcrumbs-2', fs, {
+        const storage = new FileBreadcrumbsStorage(session, fs, {
             maximumBreadcrumbs: 100,
         });
 
@@ -107,6 +108,7 @@ describe('FileBreadcrumbsStorage', () => {
 
     it('should return added breadcrumbs in two attachments', async () => {
         const fs = mockStreamFileSystem();
+        const session = new SessionFiles(fs, '.', 'sessionId');
 
         const breadcrumbs: RawBreadcrumb[] = [
             {
@@ -161,7 +163,7 @@ describe('FileBreadcrumbsStorage', () => {
             },
         ];
 
-        const storage = new FileBreadcrumbsStorage('breadcrumbs-1', 'breadcrumbs-2', fs, {
+        const storage = new FileBreadcrumbsStorage(session, fs, {
             maximumBreadcrumbs: 4,
         });
 
@@ -173,7 +175,7 @@ describe('FileBreadcrumbsStorage', () => {
         // FileBreadcrumbsStorage is asynchronous in nature
         await nextTick();
 
-        const [mainAttachment, fallbackAttachment] = storage.getAttachments();
+        const [fallbackAttachment, mainAttachment] = storage.getAttachments();
 
         const mainStream = mainAttachment.get();
         const fallbackStream = fallbackAttachment.get();
@@ -188,6 +190,7 @@ describe('FileBreadcrumbsStorage', () => {
 
     it('should return no more than maximumBreadcrumbs breadcrumbs', async () => {
         const fs = mockStreamFileSystem();
+        const session = new SessionFiles(fs, '.', 'sessionId');
 
         const breadcrumbs: RawBreadcrumb[] = [
             {
@@ -232,7 +235,7 @@ describe('FileBreadcrumbsStorage', () => {
             },
         ];
 
-        const storage = new FileBreadcrumbsStorage('breadcrumbs-1', 'breadcrumbs-2', fs, {
+        const storage = new FileBreadcrumbsStorage(session, fs, {
             maximumBreadcrumbs: 2,
         });
 
@@ -244,7 +247,7 @@ describe('FileBreadcrumbsStorage', () => {
         // FileBreadcrumbsStorage is asynchronous in nature
         await nextTick();
 
-        const [mainAttachment, fallbackAttachment] = storage.getAttachments();
+        const [fallbackAttachment, mainAttachment] = storage.getAttachments();
 
         const mainStream = mainAttachment.get();
         const fallbackStream = fallbackAttachment.get();
@@ -259,6 +262,7 @@ describe('FileBreadcrumbsStorage', () => {
 
     it('should return breadcrumbs up to the json size', async () => {
         const fs = mockStreamFileSystem();
+        const session = new SessionFiles(fs, '.', 'sessionId');
 
         const breadcrumbs: RawBreadcrumb[] = [
             {
@@ -298,9 +302,9 @@ describe('FileBreadcrumbsStorage', () => {
             },
         ];
 
-        const storage = new FileBreadcrumbsStorage('breadcrumbs-1', 'breadcrumbs-2', fs, {
+        const storage = new FileBreadcrumbsStorage(session, fs, {
             maximumBreadcrumbs: 100,
-            maximumBreadcrumbsSize: JSON.stringify(expectedMain[0]).length + 10,
+            maximumTotalBreadcrumbsSize: JSON.stringify(expectedMain[0]).length + 10,
         });
 
         for (const breadcrumb of breadcrumbs) {
@@ -311,10 +315,10 @@ describe('FileBreadcrumbsStorage', () => {
         // FileBreadcrumbsStorage is asynchronous in nature
         await nextTick();
 
-        const [mainAttachment, fallbackAttachment] = storage.getAttachments();
+        const [fallbackAttachment, mainAttachment] = storage.getAttachments();
 
-        const mainStream = mainAttachment.get();
-        const fallbackStream = fallbackAttachment.get();
+        const mainStream = mainAttachment?.get();
+        const fallbackStream = fallbackAttachment?.get();
         assert(mainStream);
         assert(fallbackStream);
 
