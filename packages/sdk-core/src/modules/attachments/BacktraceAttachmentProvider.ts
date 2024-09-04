@@ -13,5 +13,5 @@ export interface BacktraceAttachmentProvider {
     /**
      * Generate provider attributes
      */
-    get(): BacktraceAttachment;
+    get(): BacktraceAttachment | BacktraceAttachment[] | undefined;
 }
