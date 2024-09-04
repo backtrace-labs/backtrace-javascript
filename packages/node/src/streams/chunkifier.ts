@@ -105,7 +105,7 @@ export function chunkifier({ sink: streamFactory, ...options }: ChunkifierOption
 function forwardEvents<E extends EventEmitter>(from: E, to: E, ...events: string[]) {
     const fwd =
         (event: string) =>
-        (...args: any[]) =>
+        (...args: unknown[]) =>
             to.emit(event as string, ...args, to);
 
     const forwards: [string, ReturnType<typeof fwd>][] = [];

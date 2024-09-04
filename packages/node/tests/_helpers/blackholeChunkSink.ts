@@ -1,5 +1,5 @@
 import { Writable } from 'stream';
-import { ChunkSink } from '../../src/streams/chunkifier';
+import { ChunkSink } from '../../src/streams/chunkifier.js';
 
 export function blackholeChunkSink(): ChunkSink {
     return () => {

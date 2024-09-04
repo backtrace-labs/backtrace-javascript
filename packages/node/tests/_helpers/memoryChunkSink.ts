@@ -1,11 +1,11 @@
 import { Writable } from 'stream';
-import { ChunkSink } from '../../src/streams/chunkifier';
+import { ChunkSink } from '../../src/streams/chunkifier.js';
 
 export function memoryChunkSink() {
     const results: Buffer[][] = [];
 
     const sink: ChunkSink = () => {
-        let index = results.length;
+        const index = results.length;
         results.push([]);
 
         return new Writable({

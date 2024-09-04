@@ -56,7 +56,7 @@ export function limitLines(count: number) {
     let seen = 0;
 
     return new Transform({
-        transform(chunk: Buffer, encoding) {
+        transform(chunk: Buffer) {
             const remaining = count - seen;
             if (chunk.length >= remaining) {
                 this.push(null);

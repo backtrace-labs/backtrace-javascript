@@ -10,6 +10,7 @@ export function lineChunkSplitter(maxLines: number): ChunkSplitter {
     function findNthLine(data: Buffer, remaining: number): [number, number] {
         let lastIndex = -1;
         let count = 0;
+        // eslint-disable-next-line no-constant-condition
         while (true) {
             lastIndex = data.indexOf('\n', lastIndex + 1);
             if (lastIndex === -1) {

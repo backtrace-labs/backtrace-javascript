@@ -2,8 +2,8 @@ import { Breadcrumb, BreadcrumbLogLevel, BreadcrumbType, RawBreadcrumb, SessionF
 import assert from 'assert';
 import { Readable } from 'stream';
 import { promisify } from 'util';
-import { FileBreadcrumbsStorage } from '../../src/breadcrumbs/FileBreadcrumbsStorage';
-import { mockStreamFileSystem } from '../_mocks/fileSystem';
+import { FileBreadcrumbsStorage } from '../../src/breadcrumbs/FileBreadcrumbsStorage.js';
+import { mockStreamFileSystem } from '../_mocks/fileSystem.js';
 
 async function readToEnd(readable: Readable) {
     return new Promise<Buffer>((resolve, reject) => {

@@ -1,5 +1,5 @@
 import { Readable } from 'stream';
-import { ChunkSplitter } from '../../src/streams/chunkifier';
+import { ChunkSplitter } from '../../src/streams/chunkifier.js';
 
 export async function splitToEnd(readable: Readable, splitter: ChunkSplitter) {
     const results: Buffer[][] = [[]];
