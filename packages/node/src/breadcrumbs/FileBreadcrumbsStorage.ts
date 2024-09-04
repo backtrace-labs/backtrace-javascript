@@ -71,7 +71,7 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
         });
     }
 
-    public static getSessionAttachments(session: SessionFiles, fileSystem: NodeFileSystem) {
+    public static getSessionAttachments(session: SessionFiles, fileSystem?: NodeFileSystem) {
         const files = session
             .getSessionFiles()
             .filter((f) => path.basename(f).startsWith(FILE_PREFIX))
