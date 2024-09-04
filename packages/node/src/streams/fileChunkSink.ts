@@ -1,7 +1,7 @@
 import EventEmitter from 'events';
 import fs from 'fs';
-import { NodeFileSystem } from '../storage/interfaces/NodeFileSystem';
-import { ChunkSink } from './chunkifier';
+import { NodeFileSystem } from '../storage/interfaces/NodeFileSystem.js';
+import { ChunkSink } from './chunkifier.js';
 
 interface FileChunkSinkOptions {
     /**

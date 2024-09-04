@@ -1,4 +1,4 @@
-import { ChunkSplitter } from './chunkifier';
+import { ChunkSplitter } from './chunkifier.js';
 
 /**
  * Splits data into chunks with maximum lines.

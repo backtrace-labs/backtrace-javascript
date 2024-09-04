@@ -2,7 +2,7 @@ import { BacktraceFileAttachment as CoreBacktraceFileAttachment } from '@backtra
 import fs from 'fs';
 import path from 'path';
 import { Readable } from 'stream';
-import { NodeFileSystem } from '../storage/interfaces/NodeFileSystem';
+import { NodeFileSystem } from '../storage/interfaces/NodeFileSystem.js';
 
 export class BacktraceFileAttachment implements CoreBacktraceFileAttachment<Readable> {
     public readonly name: string;
