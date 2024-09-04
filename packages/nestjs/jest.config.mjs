@@ -11,6 +11,7 @@ export default {
     testEnvironment: 'node',
     setupFiles: ['./jest.setup.mjs'],
     testPathIgnorePatterns: disableTests ? ['.'] : [],
+    passWithNoTests: disableTests,
     moduleNameMapper: {
         '^(\\.{1,2}/.*)\\.js$': '$1',
     },
