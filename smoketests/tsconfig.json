@@ -1,5 +1,5 @@
 {
-    "include": ["./tests"],
+    "include": ["./tests", "./wdio.conf.ts"],
     "compilerOptions": {
         "target": "ESNext",
         "module": "NodeNext",
@@ -16,8 +16,16 @@
         "declaration": true,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
-        "rootDir": "./tests",
-        "composite": true
+        "rootDir": "./",
+        "composite": true,
+        "types": [
+            "node",
+            "@wdio/globals/types",
+            "expect-webdriverio",
+            "@wdio/mocha-framework",
+            "@wdio/sauce-service",
+            "@types/jest"
+        ]
     },
     "exclude": ["node_modules", "lib"]
 }
