@@ -1,4 +1,6 @@
 import { SpawnOptionsWithoutStdio } from 'child_process';
+import fs from 'fs/promises';
+import path from 'path';
 import { asyncSpawn } from './asyncSpawn';
 
 export function npm(cwd: string, args: string[], options?: SpawnOptionsWithoutStdio) {
@@ -11,7 +13,22 @@ export function npm(cwd: string, args: string[], options?: SpawnOptionsWithoutSt
     });
 }
 
-export async function setupNpmApp(cwd: string) {
+async function cleanNpmApp(cwd: string) {
+    await npm(cwd, ['run', '--if-present', 'clean']);
+    await fs.rm(path.join(cwd, 'node_modules'), { recursive: true, force: true });
+    await fs.rm(path.join(cwd, 'package-lock.json'), { force: true });
+}
+
+export async function setupNpmApp(cwd: string, ...scripts: string[][]) {
     await npm(cwd, ['install']);
-    await npm(cwd, ['run', 'build']);
+    for (const args of scripts) {
+        await npm(cwd, ['run', ...args]);
+    }
+}
+
+export function useNpmApp(cwd: string, ...scripts: string[][]) {
+    beforeAll(async () => {
+        await cleanNpmApp(cwd);
+        await setupNpmApp(cwd, ...scripts);
+    });
 }

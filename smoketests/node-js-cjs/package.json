@@ -1,0 +1,15 @@
+{
+    "name": "smoketest-node-js-cjs",
+    "version": "1.0.0",
+    "description": "@backtrace/node smoketests",
+    "main": "index.cjs",
+    "type": "commonjs",
+    "scripts": {
+        "start": "node index.cjs"
+    },
+    "author": "Backtrace <team@backtrace.io>",
+    "license": "MIT",
+    "dependencies": {
+        "@backtrace/node": "file:../../packages/node"
+    }
+}

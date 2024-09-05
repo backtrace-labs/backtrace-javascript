@@ -1,11 +1,12 @@
 {
-    "name": "smoketest-node",
+    "name": "smoketest-node-ts-cjs",
     "version": "1.0.0",
     "description": "@backtrace/node smoketests",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
     "scripts": {
         "start": "node lib/index.js",
+        "clean": "rimraf lib",
         "build": "tsc",
         "watch": "npm run build -- --watch"
     },

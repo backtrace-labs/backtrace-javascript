@@ -1,5 +1,5 @@
 {
-    "name": "smoketest-node-esm",
+    "name": "smoketest-node-ts-esm",
     "version": "1.0.0",
     "description": "@backtrace/node smoketests",
     "main": "lib/index.js",
@@ -7,6 +7,7 @@
     "type": "module",
     "scripts": {
         "start": "node lib/index.js",
+        "clean": "rimraf lib",
         "build": "tsc",
         "watch": "npm run build -- --watch"
     },
