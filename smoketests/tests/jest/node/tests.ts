@@ -1,7 +1,6 @@
-import { asyncSpawn } from '../__helpers/asyncSpawn';
-import { DIRECT_SUBMIT_URL, SUBMIT_LAYER_URL } from '../__helpers/urls';
-
-const RXID_REGEX = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+import { asyncSpawn } from '../../__helpers/asyncSpawn';
+import { RXID_REGEX } from '../../__helpers/rxid';
+import { DIRECT_SUBMIT_URL, SUBMIT_LAYER_URL } from '../../__helpers/urls';
 
 async function spawnNodeApp(cwd: string, url: string | URL) {
     return asyncSpawn('npm', ['run', 'start', url.toString()], { cwd, timeout: 10000 });
