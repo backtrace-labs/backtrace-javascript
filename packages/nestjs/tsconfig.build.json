@@ -1,4 +1,10 @@
 {
     "extends": "./tsconfig.json",
-    "exclude": ["node_modules", "tests", "lib"]
+    "exclude": ["node_modules", "tests", "lib"],
+    "compilerOptions": {
+        "outDir": "./lib",
+        "rootDir": "./src",
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext"
+    }
 }

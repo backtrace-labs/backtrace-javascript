@@ -1,14 +1,9 @@
 {
     "extends": "../../tsconfig.base.json",
     "compilerOptions": {
-        "outDir": "./lib",
-        "rootDir": "./src",
-        "composite": true
+        "target": "ES2018", // node.green - Node 14+ implements all used features
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext"
     },
-    "exclude": ["node_modules", "lib"],
-    "references": [
-        {
-            "path": "../node/tsconfig.json"
-        }
-    ]
+    "exclude": ["node_modules", "lib"]
 }
