@@ -62,6 +62,8 @@ jobs:
               env:
                   SMOKETESTS_SUBMIT_LAYER_URL: ${{ secrets.SMOKETESTS_SUBMIT_LAYER_URL }}
                   SMOKETESTS_DIRECT_SUBMIT_URL: ${{ secrets.SMOKETESTS_DIRECT_SUBMIT_URL }}
+                  SMOKETESTS_SAUCE_USERNAME: ${{ secrets.SMOKETESTS_SAUCE_USERNAME }}
+                  SMOKETESTS_SAUCE_ACCESS_KEY: ${{ secrets.SMOKETESTS_SAUCE_ACCESS_KEY }}
 
     test_windows:
         runs-on: windows-latest
@@ -80,3 +82,5 @@ jobs:
               env:
                   SMOKETESTS_SUBMIT_LAYER_URL: ${{ secrets.SMOKETESTS_SUBMIT_LAYER_URL }}
                   SMOKETESTS_DIRECT_SUBMIT_URL: ${{ secrets.SMOKETESTS_DIRECT_SUBMIT_URL }}
+                  SMOKETESTS_SAUCE_USERNAME: ${{ secrets.SMOKETESTS_SAUCE_USERNAME }}
+                  SMOKETESTS_SAUCE_ACCESS_KEY: ${{ secrets.SMOKETESTS_SAUCE_ACCESS_KEY }}
