@@ -1,4 +1,5 @@
 import { BacktraceClient, ErrorBoundary } from '@backtrace/react';
+import { BacktraceSessionReplayModule } from '@backtrace/session-replay';
 import { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 
@@ -7,18 +8,26 @@ if (!SUBMISSION_URL) {
     throw new Error('submission URL is required');
 }
 
-const client = BacktraceClient.initialize({
-    url: SUBMISSION_URL,
-    name: '@backtrace/react-example',
-    version: '0.0.1',
-    userAttributes: {
-        'custom-attribute': 'test',
-        'custom-annotation': {
-            prop1: true,
-            prop2: 123,
+const client = BacktraceClient.initialize(
+    {
+        url: SUBMISSION_URL,
+        name: '@backtrace/react-example',
+        version: '0.0.1',
+        userAttributes: {
+            'custom-attribute': 'test',
+            'custom-annotation': {
+                prop1: true,
+                prop2: 123,
+            },
         },
     },
-});
+    (builder) =>
+        builder.useModule(
+            new BacktraceSessionReplayModule({
+                maxEventCount: 100,
+            }),
+        ),
+);
 
 function App() {
     const [status, setStatus] = useState('loading');
