@@ -1,5 +1,5 @@
 {
-    "name": "smoketest-node-ts-esm",
+    "name": "smoketest-node-js-esm",
     "version": "1.0.0",
     "description": "@backtrace/node smoketests",
     "main": "index.mjs",

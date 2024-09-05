@@ -1,9 +1,8 @@
-import { SpawnOptionsWithoutStdio } from 'child_process';
 import fs from 'fs/promises';
 import path from 'path';
-import { asyncSpawn } from './asyncSpawn';
+import { asyncSpawn, AsyncSpawnOptions, AsyncSpawnResult } from './asyncSpawn.js';
 
-export function npm(cwd: string, args: string[], options?: SpawnOptionsWithoutStdio) {
+export function npm(cwd: string, args: string[], options?: AsyncSpawnOptions) {
     const isWindows = /^win/.test(process.platform);
     const command = isWindows ? 'npm.cmd' : 'npm';
     return asyncSpawn(command, args, {
@@ -30,5 +29,22 @@ export function useNpmApp(cwd: string, ...scripts: string[][]) {
     beforeAll(async () => {
         await cleanNpmApp(cwd);
         await setupNpmApp(cwd, ...scripts);
+    });
+}
+
+export function useNpmScript(cwd: string, script: string[]) {
+    const abort = new AbortController();
+
+    let appPromise: Promise<AsyncSpawnResult>;
+
+    beforeAll(async () => {
+        appPromise = npm(cwd, script, {
+            signal: abort.signal,
+        });
+    });
+
+    afterAll(async () => {
+        abort.abort();
+        await appPromise;
     });
 }

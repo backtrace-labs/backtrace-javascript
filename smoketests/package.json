@@ -2,9 +2,15 @@
     "name": "smoketests",
     "version": "1.0.0",
     "description": "smoketests for SDK packages",
+    "type": "module",
     "scripts": {
-        "start": "jest --runInBand"
+        "prepare-packages": "tsx ./tests/prepare.ts",
+        "jest": "cross-env NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" NODE_NO_WARNINGS=1 NODE_ENV=test jest --runInBand",
+        "start": "npm run prepare-packages && npm run jest"
     },
     "author": "Backtrace <team@backtrace.io>",
-    "license": "MIT"
+    "devDependencies": {
+        "jest": "^29.7.0",
+        "tsx": "^4.19.0"
+    }
 }
