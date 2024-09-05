@@ -6,16 +6,20 @@ async function spawnNodeApp(cwd: string, url: string | URL) {
     return asyncSpawn('npm', ['run', 'start', url.toString()], { cwd, timeout: 10000 });
 }
 
+function getRxid(stdout: string) {
+    return stdout.trim().split('\n').slice(-1)[0];
+}
+
 export function addSubmitTests(appPath: string) {
     describe('submit', () => {
         it('should submit an error to submit layer URL', async () => {
             const result = await spawnNodeApp(appPath, SUBMIT_LAYER_URL);
-            expect(result.stdout.trim()).toMatch(RXID_REGEX);
+            expect(getRxid(result.stdout)).toMatch(RXID_REGEX);
         });
 
         it('should submit an error to direct submit URL', async () => {
             const result = await spawnNodeApp(appPath, DIRECT_SUBMIT_URL);
-            expect(result.stdout.trim()).toMatch(RXID_REGEX);
+            expect(getRxid(result.stdout)).toMatch(RXID_REGEX);
         });
 
         it('should fail submitting to an invalid URL', async () => {
