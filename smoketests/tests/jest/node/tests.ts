@@ -1,9 +1,9 @@
-import { asyncSpawn } from '../../__helpers/asyncSpawn.js';
+import { npm } from '../../__helpers/npm.js';
 import { RXID_REGEX } from '../../__helpers/rxid.js';
 import { DIRECT_SUBMIT_URL, SUBMIT_LAYER_URL } from '../../__helpers/urls.js';
 
 async function spawnNodeApp(cwd: string, url: string | URL) {
-    return asyncSpawn('npm', ['run', 'start', url.toString()], { cwd, timeout: 10000 });
+    return npm(cwd, ['run', 'start', url.toString()], { timeout: 10000 });
 }
 
 function getRxid(stdout: string) {
