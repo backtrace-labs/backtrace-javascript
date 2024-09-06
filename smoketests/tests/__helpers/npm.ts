@@ -5,7 +5,7 @@ import { asyncSpawn, AsyncSpawnOptions, AsyncSpawnResult } from './asyncSpawn.js
 export function npm(cwd: string, args: string[], options?: AsyncSpawnOptions) {
     const isWindows = /^win/.test(process.platform);
     const command = isWindows ? 'npm.cmd' : 'npm';
-    return asyncSpawn(command, args, {
+    return asyncSpawn(command, isWindows ? args.map((a) => `"${a}"`) : args, {
         ...options,
         shell: isWindows,
         cwd,
