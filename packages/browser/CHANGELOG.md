@@ -1,3 +1,10 @@
+# Version 0.4.0
+
+-   update `@backtrace/sdk-core` to `0.5.0`
+-   update code to use ES modules (#268, #279)
+-   emit CJS and ES modules (#268, #279)
+-   fix abort event not being removed from signal (#265)
+
 # Version 0.3.1
 
 -   added a new HTTP header to report submission layer (#246)
