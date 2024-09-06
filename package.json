@@ -13,6 +13,8 @@
         "rebuild": "npm run clean && npm run build",
         "test": "npm run test --ws --if-present",
         "smoketest": "npm run start --workspace=smoketests",
+        "smoketest:node": "npm run start:jest --workspace=smoketests",
+        "smoketest:browser": "npm run start:wdio --workspace=smoketests",
         "syncVersions": "ts-node ./scripts/syncVersions.ts"
     },
     "workspaces": [

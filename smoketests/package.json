@@ -6,6 +6,8 @@
     "scripts": {
         "prepare-packages": "tsx ./tests/prepare.ts",
         "start": "npm run prepare-packages && npm run jest && npm run wdio",
+        "start:jest": "npm run prepare-packages && npm run jest",
+        "start:wdio": "npm run prepare-packages && npm run wdio",
         "jest": "cross-env NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" NODE_NO_WARNINGS=1 NODE_ENV=test jest --runInBand",
         "wdio": "wdio run ./wdio.conf.ts"
     },
