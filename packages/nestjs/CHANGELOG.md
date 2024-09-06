@@ -1,3 +1,9 @@
+# Version 0.4.0
+
+-   update `@backtrace/node` to `0.5.0`
+-   update code to use ES modules (#271)
+-   emit CJS and ES modules (#271)
+
 # Version 0.3.0
 
 -   update `@backtrace/node` to `0.3.0`
