@@ -1,3 +1,9 @@
+# Version 0.5.0
+
+-   update code to use ES modules (#266, #279)
+-   emit CJS and ES modules (#266, #279)
+-   fix abort event not being removed from signal (#265)
+
 # Version 0.4.0
 
 -   change how attachments are managed (#262)
