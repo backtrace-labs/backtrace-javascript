@@ -1,3 +1,9 @@
+# Version 0.4.0
+
+-   update `@backtrace/browser` to `0.4.0`
+-   update code to use ES modules (#269, #279)
+-   emit CJS and ES modules (#269, #279)
+
 # Version 0.3.1
 
 -   added a new HTTP header to report submission layer (#246)
