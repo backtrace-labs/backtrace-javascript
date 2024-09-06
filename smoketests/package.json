@@ -4,7 +4,7 @@
     "description": "smoketests for SDK packages",
     "type": "module",
     "scripts": {
-        "prepare-packages": "tsx ./tests/prepare.ts",
+        "prepare-packages": "node --loader ts-node/esm ./tests/prepare.ts",
         "start": "npm run prepare-packages && npm run jest && npm run wdio",
         "start:jest": "npm run prepare-packages && npm run jest",
         "start:wdio": "npm run prepare-packages && npm run wdio",
@@ -24,7 +24,6 @@
         "@wdio/spec-reporter": "^9.0.8",
         "@wdio/static-server-service": "^9.0.8",
         "expect-webdriverio": "^5.0.2",
-        "jest": "^29.7.0",
-        "tsx": "^4.19.0"
+        "jest": "^29.7.0"
     }
 }
