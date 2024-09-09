@@ -1,3 +1,7 @@
+# Version 0.4.1
+
+-   fix imports of `tslib` - internalize `tslib` functions (#288)
+
 # Version 0.4.0
 
 -   update `@backtrace/node` to `0.5.0`
