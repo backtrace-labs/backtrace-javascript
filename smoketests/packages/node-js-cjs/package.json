@@ -10,6 +10,6 @@
     "author": "Backtrace <team@backtrace.io>",
     "license": "MIT",
     "dependencies": {
-        "@backtrace/node": "file:../../packages/node"
+        "@backtrace/node": "file:../../../packages/node"
     }
 }

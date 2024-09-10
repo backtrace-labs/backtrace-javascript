@@ -7,15 +7,16 @@
     "homepage": "/react-ts-esm/lib",
     "scripts": {
         "start": "http-server ./lib",
-        "build": "cross-env BUILD_PATH='./lib' react-scripts build"
+        "build": "cross-env BUILD_PATH='./lib' react-scripts build",
+        "watch": "cross-env BUILD_PATH='./lib' react-scripts start"
     },
     "author": "Backtrace <team@backtrace.io>",
     "license": "MIT",
     "devDependencies": {
         "@types/react": "^16.14.0",
         "@types/react-dom": "^18.2.6",
-        "@backtrace/browser": "file:../../packages/react",
-        "@backtrace/session-replay": "file:../../packages/session-replay",
+        "@backtrace/browser": "file:../../../packages/react",
+        "@backtrace/session-replay": "file:../../../packages/session-replay",
         "http-server": "^14.1.1",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
