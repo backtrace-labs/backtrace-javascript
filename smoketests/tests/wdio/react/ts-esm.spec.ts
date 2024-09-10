@@ -1,37 +1,35 @@
 import { $, browser, expect } from '@wdio/globals';
-import { RXID_REGEX } from '../../__helpers/rxid.js';
-import { DIRECT_SUBMIT_URL, SUBMIT_LAYER_URL } from '../../__helpers/urls.js';
+import { addSubmitTests } from './tests.js';
 
 function getUrl(submitUrl: string) {
     return `http://localhost:4567/react-ts-esm/lib/index.html?url=${encodeURIComponent(submitUrl)}`;
 }
 
 describe('react-ts-esm', () => {
-    it('should submit an error to submit layer URL', async () => {
-        await browser.url(getUrl(SUBMIT_LAYER_URL));
-
-        const statusElement = $('#status');
-        await browser.waitUntil(async () => (await statusElement.getText()) !== 'loading');
-
-        await expect(statusElement).toHaveText('Ok');
-        await expect($('#rxid')).toHaveText(RXID_REGEX);
+    describe('send message', () => {
+        addSubmitTests(getUrl, '#test-message');
     });
 
-    it('should submit an error to direct submit URL', async () => {
-        await browser.url(getUrl(DIRECT_SUBMIT_URL));
+    describe('send exception', () => {
+        addSubmitTests(getUrl, '#test-exception');
+    });
 
-        const statusElement = $('#status');
-        await browser.waitUntil(async () => (await statusElement.getText()) !== 'loading');
+    describe('unhandled exception', () => {
+        addSubmitTests(getUrl, '#test-unhandled-exception');
+    });
 
-        await expect(statusElement).toHaveText('Ok');
-        await expect($('#rxid')).toHaveText(RXID_REGEX);
+    describe('unhandled rejection', () => {
+        addSubmitTests(getUrl, '#test-unhandled-rejection');
     });
 
     it('should fail submitting to an invalid URL', async () => {
         await browser.url(getUrl('http://localhost:12345'));
 
+        const button = $('#test-message');
+        await button.click();
+
         const statusElement = $('#status');
-        await browser.waitUntil(async () => (await statusElement.getText()) !== 'loading');
+        await browser.waitUntil(async () => (await statusElement.getText()) !== 'running');
 
         const errorElement = $('#error');
         switch (browser.capabilities.browserName?.toLowerCase()) {
