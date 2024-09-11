@@ -26,7 +26,7 @@ const client = BacktraceClient.initialize({
 });
 
 console.log('submitting message');
-client.send('test message').then((result) => {
+client.send(new Error('test exception')).then((result) => {
     if (result.status !== 'Ok') {
         console.error('Unexpected result:', result);
         process.exit(1);
