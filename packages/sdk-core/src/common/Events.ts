@@ -1,33 +1,31 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-interface EventCallback {
-    callback: (...args: any[]) => unknown;
+interface EventCallback<A extends any[] = any[]> {
+    callback: (...args: A) => unknown;
     once?: boolean;
 }
 
-export class Events<
-    E extends Record<string | number | symbol, (...args: any[]) => unknown> = Record<
-        string | number | symbol,
-        (...args: any[]) => unknown
-    >,
-> {
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export type EventMap = Record<string, any[]>;
+
+export class Events<E extends EventMap = EventMap> {
     private readonly _callbacks: Partial<Record<keyof E, EventCallback[]>> = {};
 
-    public on<N extends keyof E>(event: N, callback: E[N]): this {
+    public on<N extends keyof E>(event: N, callback: (...args: E[N]) => unknown): this {
         this.addCallback(event, { callback });
         return this;
     }
 
-    public once<N extends keyof E>(event: N, callback: E[N]): this {
+    public once<N extends keyof E>(event: N, callback: (...args: E[N]) => unknown): this {
         this.addCallback(event, { callback, once: true });
         return this;
     }
 
-    public off<N extends keyof E>(event: N, callback: E[N]): this {
+    public off<N extends keyof E>(event: N, callback: (...args: E[N]) => unknown): this {
         this.removeCallback(event, callback);
         return this;
     }
 
-    public emit<N extends keyof E>(event: N, ...args: Parameters<E[N]>): boolean {
+    public emit<N extends keyof E>(event: N, ...args: E[N]): boolean {
         const callbacks = this._callbacks[event];
         if (!callbacks || !callbacks.length) {
             return false;
@@ -48,7 +46,7 @@ export class Events<
         return true;
     }
 
-    private addCallback(event: keyof E, callback: EventCallback) {
+    private addCallback<A extends unknown[]>(event: keyof E, callback: EventCallback<A>) {
         const list = this._callbacks[event];
         if (list) {
             list.push(callback);
@@ -57,7 +55,7 @@ export class Events<
         }
     }
 
-    private removeCallback(event: keyof E, callback: EventCallback['callback']) {
+    private removeCallback<A extends unknown[]>(event: keyof E, callback: EventCallback<A>['callback']) {
         const list = this._callbacks[event];
         if (!list) {
             return;

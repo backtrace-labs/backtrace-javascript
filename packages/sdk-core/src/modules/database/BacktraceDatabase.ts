@@ -82,7 +82,7 @@ export class BacktraceDatabase implements BacktraceModule {
         return true;
     }
 
-    public bind({ reportEvents }: BacktraceModuleBindData): void {
+    public bind({ client }: BacktraceModuleBindData): void {
         if (this._enabled) {
             return;
         }
@@ -91,7 +91,7 @@ export class BacktraceDatabase implements BacktraceModule {
             return;
         }
 
-        reportEvents.on('before-send', (_, data, attachments) => {
+        client.on('before-send', (_, data, attachments) => {
             const record = this.add(data, attachments);
 
             if (!record || record.locked) {
@@ -101,7 +101,7 @@ export class BacktraceDatabase implements BacktraceModule {
             record.locked = true;
         });
 
-        reportEvents.on('after-send', (_, data, __, submissionResult) => {
+        client.on('after-send', (_, data, __, submissionResult) => {
             const record = this._databaseRecordContext.find(
                 (record) => record.type === 'report' && record.data.uuid === data.uuid,
             );

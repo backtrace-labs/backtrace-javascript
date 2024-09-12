@@ -1,6 +1,6 @@
 import { CoreClientSetup } from './builder/CoreClientSetup.js';
 import { Events } from './common/Events.js';
-import { ReportEvents } from './events/ReportEvents.js';
+import { ClientEvents } from './events/ClientEvents.js';
 import {
     BacktraceAttachment,
     BacktraceAttributeProvider,
@@ -34,7 +34,9 @@ import { MetricsBuilder } from './modules/metrics/MetricsBuilder.js';
 import { SingleSessionProvider } from './modules/metrics/SingleSessionProvider.js';
 import { RateLimitWatcher } from './modules/rateLimiter/RateLimitWatcher.js';
 
-export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = BacktraceConfiguration> {
+export abstract class BacktraceCoreClient<
+    O extends BacktraceConfiguration = BacktraceConfiguration,
+> extends Events<ClientEvents> {
     /**
      * Backtrace client instance
      */
@@ -112,7 +114,7 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
     }
 
     protected readonly options: O;
-    protected readonly reportEvents: Events<ReportEvents>;
+
     protected readonly attributeManager: AttributeManager;
     protected readonly attachmentManager: AttachmentManager;
     protected readonly fileSystem?: FileSystem;
@@ -128,7 +130,7 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
     private _enabled = false;
 
     protected constructor(setup: CoreClientSetup<O>) {
-        this.reportEvents = new Events();
+        super();
 
         this.options = setup.options;
         this.fileSystem = setup.fileSystem;
@@ -316,7 +318,7 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
                   skipFrames: this.skipFrameOnMessage(data),
               });
 
-        this.reportEvents.emit('before-skip', report);
+        this.emit('before-skip', report);
 
         if (this.options.skipReport && this.options.skipReport(report)) {
             return Promise.resolve(BacktraceReportSubmissionResult.ReportSkipped());
@@ -329,12 +331,12 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
 
         const submissionAttachments = this.generateSubmissionAttachments(report, reportAttachments);
 
-        this.reportEvents.emit('before-send', report, backtraceData, submissionAttachments);
+        this.emit('before-send', report, backtraceData, submissionAttachments);
 
         return this._reportSubmission
             .send(backtraceData, submissionAttachments, abortSignal)
             .then((submissionResult) => {
-                this.reportEvents.emit('after-send', report, backtraceData, submissionAttachments, submissionResult);
+                this.emit('after-send', report, backtraceData, submissionAttachments, submissionResult);
                 return submissionResult;
             });
     }
@@ -403,7 +405,6 @@ export abstract class BacktraceCoreClient<O extends BacktraceConfiguration = Bac
         return {
             client: this,
             options: this.options,
-            reportEvents: this.reportEvents,
             attributeManager: this.attributeManager,
             attachmentManager: this.attachmentManager,
             reportSubmission: this._reportSubmission,

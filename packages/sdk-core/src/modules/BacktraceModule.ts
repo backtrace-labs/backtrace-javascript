@@ -1,5 +1,3 @@
-import { Events } from '../common/Events.js';
-import { ReportEvents } from '../events/ReportEvents.js';
 import {
     BacktraceConfiguration,
     BacktraceCoreClient,
@@ -17,7 +15,6 @@ export interface BacktraceModuleBindData {
     readonly options: BacktraceConfiguration;
     readonly attributeManager: AttributeManager;
     readonly attachmentManager: AttachmentManager;
-    readonly reportEvents: Events<ReportEvents>;
     readonly reportSubmission: BacktraceReportSubmission;
     readonly requestHandler: BacktraceRequestHandler;
     readonly database?: BacktraceDatabase;

@@ -1,5 +1,5 @@
 import { BacktraceAttachment } from '../model/attachment/index.js';
 
 export type AttachmentEvents = {
-    'scoped-attachments-updated'(attachments: BacktraceAttachment[]): void;
+    'scoped-attachments-updated': [attachments: BacktraceAttachment[]];
 };

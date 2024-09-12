@@ -11,7 +11,7 @@ interface FileSession {
 }
 
 type SessionEvents = {
-    unlocked(): void;
+    unlocked: [];
 };
 
 const SESSION_MARKER_PREFIX = 'bt-session';
