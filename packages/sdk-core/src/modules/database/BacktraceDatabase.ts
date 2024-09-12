@@ -360,6 +360,10 @@ export class BacktraceDatabase implements BacktraceModule {
     }
 
     private async setupDatabaseAutoSend() {
+        if (!this._enabled) {
+            return;
+        }
+
         if (this._options?.autoSend === false) {
             return;
         }
