@@ -1,10 +1,12 @@
 import { anySignal, createAbortController } from '../../common/AbortController.js';
+import { Events } from '../../common/Events.js';
 import { IdGenerator } from '../../common/IdGenerator.js';
 import { TimeHelper } from '../../common/TimeHelper.js';
 import { BacktraceAttachment } from '../../model/attachment/index.js';
 import { BacktraceDatabaseConfiguration } from '../../model/configuration/BacktraceDatabaseConfiguration.js';
 import { BacktraceData } from '../../model/data/BacktraceData.js';
 import { BacktraceReportSubmission } from '../../model/http/BacktraceReportSubmission.js';
+import { BacktraceReportSubmissionResult, BacktraceSubmissionResponse } from '../../model/http/index.js';
 import { BacktraceModule, BacktraceModuleBindData } from '../BacktraceModule.js';
 import { SessionFiles } from '../storage/index.js';
 import { BacktraceDatabaseContext } from './BacktraceDatabaseContext.js';
@@ -16,7 +18,17 @@ import {
     ReportBacktraceDatabaseRecord,
 } from './model/BacktraceDatabaseRecord.js';
 
-export class BacktraceDatabase implements BacktraceModule {
+type BacktraceDatabaseEvents = {
+    added: [record: BacktraceDatabaseRecord];
+    removed: [record: BacktraceDatabaseRecord];
+    'before-send': [record: BacktraceDatabaseRecord];
+    'after-send': [
+        record: BacktraceDatabaseRecord,
+        result: BacktraceReportSubmissionResult<BacktraceSubmissionResponse>,
+    ];
+};
+
+export class BacktraceDatabase extends Events<BacktraceDatabaseEvents> implements BacktraceModule {
     /**
      * Determines if the database is enabled.
      */
@@ -45,6 +57,8 @@ export class BacktraceDatabase implements BacktraceModule {
         private readonly _requestHandler: BacktraceReportSubmission,
         private readonly _sessionFiles?: SessionFiles,
     ) {
+        super();
+
         this._databaseRecordContext = new BacktraceDatabaseContext(this._options?.maximumRetries);
         this._recordLimits = {
             report: this._options?.maximumNumberOfRecords ?? 8,
@@ -151,6 +165,8 @@ export class BacktraceDatabase implements BacktraceModule {
         this._databaseRecordContext.add(record);
         this.lockSessionWithRecord(record);
 
+        this.emit('added', record);
+
         return record;
     }
 
@@ -188,6 +204,8 @@ export class BacktraceDatabase implements BacktraceModule {
 
         this._databaseRecordContext.add(record);
         this.lockSessionWithRecord(record);
+
+        this.emit('added', record);
 
         return record;
     }
@@ -238,6 +256,8 @@ export class BacktraceDatabase implements BacktraceModule {
             this._databaseRecordContext.remove(record);
             this._storageProvider.delete(record);
             this._sessionFiles?.unlockPreviousSessions(record.id);
+
+            this.emit('removed', record);
         }
     }
 
@@ -287,10 +307,14 @@ export class BacktraceDatabase implements BacktraceModule {
                     try {
                         record.locked = true;
 
+                        this.emit('before-send', record);
+
                         const result =
                             record.type === 'report'
                                 ? await this._requestHandler.send(record.data, record.attachments, signal)
                                 : await this._requestHandler.sendAttachment(record.rxid, record.attachment, signal);
+
+                        this.emit('after-send', record, result);
 
                         if (
                             result.status === 'Ok' ||
@@ -356,6 +380,7 @@ export class BacktraceDatabase implements BacktraceModule {
 
         for (const record of recordsToAdd) {
             this.lockSessionWithRecord(record);
+            this.emit('added', record);
         }
     }
 
