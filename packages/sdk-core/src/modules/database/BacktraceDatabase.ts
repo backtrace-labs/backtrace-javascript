@@ -1,5 +1,6 @@
 import { anySignal, createAbortController } from '../../common/AbortController.js';
 import { IdGenerator } from '../../common/IdGenerator.js';
+import { unrefInterval } from '../../common/intervalHelper.js';
 import { TimeHelper } from '../../common/TimeHelper.js';
 import { BacktraceAttachment } from '../../model/attachment/index.js';
 import { BacktraceDatabaseConfiguration } from '../../model/configuration/BacktraceDatabaseConfiguration.js';
@@ -35,7 +36,7 @@ export class BacktraceDatabase implements BacktraceModule {
 
     private readonly _recordLimits: BacktraceDatabaseRecordCountByType;
     private readonly _retryInterval: number;
-    private _intervalId?: ReturnType<typeof setInterval>;
+    private _intervalId?: NodeJS.Timeout | number;
 
     private _enabled = false;
 
@@ -368,6 +369,7 @@ export class BacktraceDatabase implements BacktraceModule {
             await this.send();
         };
         this._intervalId = setInterval(sendDatabaseReports, this._retryInterval);
+        unrefInterval(this._intervalId);
         await this.send();
     }
 

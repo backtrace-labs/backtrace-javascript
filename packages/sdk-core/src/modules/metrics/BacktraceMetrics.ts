@@ -1,11 +1,12 @@
 import { createAbortController } from '../../common/AbortController.js';
 import { AbortError } from '../../common/AbortError.js';
+import { unrefInterval } from '../../common/intervalHelper.js';
 import { TimeHelper } from '../../common/TimeHelper.js';
 import { BacktraceMetricsOptions } from '../../model/configuration/BacktraceConfiguration.js';
 import { AttributeType } from '../../model/data/BacktraceData.js';
-import { BacktraceModule } from '../BacktraceModule.js';
 import { AttributeManager } from '../attribute/AttributeManager.js';
 import { ReportDataBuilder } from '../attribute/ReportDataBuilder.js';
+import { BacktraceModule } from '../BacktraceModule.js';
 import { BacktraceSessionProvider } from './BacktraceSessionProvider.js';
 import { MetricsQueue } from './MetricsQueue.js';
 import { SummedEvent } from './model/SummedEvent.js';
@@ -28,7 +29,7 @@ export class BacktraceMetrics implements BacktraceModule {
     public readonly metricsHost: string;
     private readonly _updateInterval: number;
 
-    private _updateIntervalId?: ReturnType<typeof setTimeout>;
+    private _updateIntervalId?: NodeJS.Timeout | number;
     private readonly _abortController: AbortController;
 
     constructor(
@@ -60,7 +61,9 @@ export class BacktraceMetrics implements BacktraceModule {
         }
         this._updateIntervalId = setInterval(() => {
             this.handleAbort(() => this.send(this._abortController.signal));
-        }, this._updateInterval);
+        }, this._updateInterval) as NodeJS.Timeout | number;
+
+        unrefInterval(this._updateIntervalId);
     }
 
     /**
