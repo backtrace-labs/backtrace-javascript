@@ -36,7 +36,7 @@ export class BacktraceDatabase implements BacktraceModule {
 
     private readonly _recordLimits: BacktraceDatabaseRecordCountByType;
     private readonly _retryInterval: number;
-    private _intervalId?: NodeJS.Timeout | number;;
+    private _intervalId?: NodeJS.Timeout | number;
 
     private _enabled = false;
 
