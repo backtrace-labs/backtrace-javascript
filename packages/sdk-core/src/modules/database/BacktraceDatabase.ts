@@ -14,7 +14,7 @@ import {
     AttachmentBacktraceDatabaseRecord,
     BacktraceDatabaseRecord,
     BacktraceDatabaseRecordCountByType,
-    ReportBacktraceDatabaseRecord
+    ReportBacktraceDatabaseRecord,
 } from './model/BacktraceDatabaseRecord.js';
 
 export class BacktraceDatabase implements BacktraceModule {

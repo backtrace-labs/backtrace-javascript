@@ -63,7 +63,6 @@ export class BacktraceMetrics implements BacktraceModule {
             this.handleAbort(() => this.send(this._abortController.signal));
         }, this._updateInterval) as NodeJS.Timeout | number;
 
-
         unrefInterval(this._updateIntervalId);
     }
 
