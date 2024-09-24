@@ -3,7 +3,10 @@ import { ChunkSplitter } from './chunkifier.js';
 /**
  * Splits data into chunks with maximum length.
  * @param maxLength Maximum length of one chunk.
- * @param wholeLines If `true`, will split chunks before newlines, so whole lines are passed to the chunk.
+ * @param wholeLines Can be one of:
+ * * `"skip"` - if last line does not fit in the chunk, it will be skipped entirely
+ * * `"break"` - if last line does not fit in the chunk, it will be broken into two new chunks
+ * * `false` - last line will be always broken into old and new chunk
  */
 export function lengthChunkSplitter(maxLength: number, wholeLines: 'skip' | 'break' | false = false): ChunkSplitter {
     let seen = 0;
