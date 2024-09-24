@@ -101,7 +101,7 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
         ];
     }
 
-    public add(rawBreadcrumb: RawBreadcrumb): number {
+    public add(rawBreadcrumb: RawBreadcrumb) {
         this._lastBreadcrumbId++;
         const id = this._lastBreadcrumbId;
         const breadcrumb: Breadcrumb = {
@@ -118,7 +118,7 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
         const sizeLimit = this._limits.maximumTotalBreadcrumbsSize;
         if (sizeLimit !== undefined) {
             if (jsonLength > sizeLimit) {
-                return id;
+                return undefined;
             }
         }
 
