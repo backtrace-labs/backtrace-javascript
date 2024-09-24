@@ -203,8 +203,8 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
             }
         }
 
-        this._storage.add(limitedBreadcrumb);
-        return true;
+        const id = this._storage.add(limitedBreadcrumb);
+        return id !== undefined;
     }
 
     /**

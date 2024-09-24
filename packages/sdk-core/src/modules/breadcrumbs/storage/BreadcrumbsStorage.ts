@@ -32,7 +32,7 @@ export interface BreadcrumbsStorage {
      * Adds breadcrumb to the storage
      * @param rawBreadcrumb breadcrumb data
      */
-    add(rawBreadcrumb: RawBreadcrumb | LimitedRawBreadcrumb): number;
+    add(rawBreadcrumb: RawBreadcrumb | LimitedRawBreadcrumb): number | undefined;
 
     /**
      * Gets attachments associated with this storage.
