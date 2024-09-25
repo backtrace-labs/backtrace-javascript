@@ -6,10 +6,10 @@ import { BacktraceAttachment } from '../../model/attachment/index.js';
 import { BacktraceDatabaseConfiguration } from '../../model/configuration/BacktraceDatabaseConfiguration.js';
 import { BacktraceData } from '../../model/data/BacktraceData.js';
 import { BacktraceReportSubmission } from '../../model/http/BacktraceReportSubmission.js';
-import { BacktraceReportSubmissionResult, BacktraceSubmissionResponse } from '../../model/http/index.js';
 import { BacktraceModule, BacktraceModuleBindData } from '../BacktraceModule.js';
 import { SessionFiles } from '../storage/index.js';
 import { BacktraceDatabaseContext } from './BacktraceDatabaseContext.js';
+import { BacktraceDatabaseEvents } from './BacktraceDatabaseEvents.js';
 import { BacktraceDatabaseStorageProvider } from './BacktraceDatabaseStorageProvider.js';
 import {
     AttachmentBacktraceDatabaseRecord,
@@ -17,16 +17,6 @@ import {
     BacktraceDatabaseRecordCountByType,
     ReportBacktraceDatabaseRecord,
 } from './model/BacktraceDatabaseRecord.js';
-
-type BacktraceDatabaseEvents = {
-    added: [record: BacktraceDatabaseRecord];
-    removed: [record: BacktraceDatabaseRecord];
-    'before-send': [record: BacktraceDatabaseRecord];
-    'after-send': [
-        record: BacktraceDatabaseRecord,
-        result: BacktraceReportSubmissionResult<BacktraceSubmissionResponse>,
-    ];
-};
 
 export class BacktraceDatabase extends Events<BacktraceDatabaseEvents> implements BacktraceModule {
     /**
