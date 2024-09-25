@@ -40,7 +40,7 @@ const client = BacktraceClient.initialize({
 function waitForSend(timeout: number) {
     return new Promise<BacktraceReportSubmissionResult<BacktraceSubmissionResponse>>((resolve, reject) => {
         let resolved = false;
-        client.once('after-send', (data, attachments, result) => {
+        client.once('after-send', (report, data, attachments, result) => {
             if (!resolved) {
                 resolved = true;
                 resolve(result);
@@ -56,8 +56,30 @@ function waitForSend(timeout: number) {
     });
 }
 
-async function test(fn: () => Promise<BacktraceReportSubmissionResult<BacktraceSubmissionResponse>> | void) {
-    const waitPromise = waitForSend(TIMEOUT);
+function waitForDbSend(timeout: number) {
+    return new Promise<BacktraceReportSubmissionResult<BacktraceSubmissionResponse>>((resolve, reject) => {
+        let resolved = false;
+        client.database?.once('after-send', (record, result) => {
+            if (!resolved) {
+                resolved = true;
+                resolve(result);
+            }
+        });
+
+        setTimeout(() => {
+            if (!resolved) {
+                resolved = true;
+                reject(new Error('Wait for send timed out.'));
+            }
+        }, timeout);
+    });
+}
+
+async function test(
+    fn: () => Promise<BacktraceReportSubmissionResult<BacktraceSubmissionResponse>> | void,
+    waitForResult?: (timeout: number) => Promise<BacktraceReportSubmissionResult<BacktraceSubmissionResponse>>,
+) {
+    const waitPromise = (waitForResult ?? waitForSend)(TIMEOUT);
     const result = (await fn()) ?? (await waitPromise);
     if (result.status === 'Ok') {
         console.log(result.result?._rxid);
@@ -73,7 +95,7 @@ switch (TEST ?? 'test-exception') {
     case DATABASE_TEST: {
         await test(() => {
             // do nothing, expect database to send something
-        });
+        }, waitForDbSend);
         break;
     }
     case 'test-unhandled-exception':
