@@ -5,7 +5,7 @@
     "main": "index.cjs",
     "type": "commonjs",
     "scripts": {
-        "start": "node index.cjs"
+        "start": "node --unhandled-rejections=throw index.cjs"
     },
     "author": "Backtrace <team@backtrace.io>",
     "license": "MIT",

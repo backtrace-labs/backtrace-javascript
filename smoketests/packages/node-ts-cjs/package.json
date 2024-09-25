@@ -5,7 +5,7 @@
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
     "scripts": {
-        "start": "node lib/index.js",
+        "start": "node --unhandled-rejections=throw lib/index.js",
         "clean": "rimraf lib",
         "build": "tsc",
         "watch": "npm run build -- --watch"

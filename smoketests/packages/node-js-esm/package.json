@@ -5,7 +5,7 @@
     "main": "index.mjs",
     "type": "module",
     "scripts": {
-        "start": "node index.mjs"
+        "start": "node --unhandled-rejections=throw index.mjs"
     },
     "author": "Backtrace <team@backtrace.io>",
     "license": "MIT",
