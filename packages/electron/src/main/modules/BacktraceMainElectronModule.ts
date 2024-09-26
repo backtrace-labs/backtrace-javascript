@@ -173,7 +173,7 @@ export class BacktraceMainElectronModule implements BacktraceModule {
 
                 const fileAttachmentsManager = FileAttachmentsManager.createFromSession(session, fileSystem);
                 const sessionAttachments = [
-                    ...FileBreadcrumbsStorage.getSessionAttachments(session),
+                    ...FileBreadcrumbsStorage.getSessionAttachments(session, fileSystem),
                     ...(await fileAttachmentsManager.get()),
                 ];
 
