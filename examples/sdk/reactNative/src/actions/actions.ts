@@ -1,4 +1,4 @@
-import { BacktraceClient } from '@backtrace/react-native';
+import { BacktraceClient, BreadcrumbLogLevel, BreadcrumbType } from '@backtrace/react-native';
 import { Alert, Platform } from 'react-native';
 import { actions as androidActions } from './android/action';
 
@@ -123,6 +123,17 @@ export function generateActions(client: BacktraceClient) {
                 const value = Date.now();
                 notify(`Setting a time attribute to ${value}`);
                 client.addAttribute({ time: value });
+            },
+        },
+        {
+            name: 'Add a breadcrumb',
+            platform,
+            action: async () => {
+                const timestamp = Date.now();
+                notify(`Adding manual breadcrumb`);
+                client.breadcrumbs?.addBreadcrumb('Manual breadcrumb', BreadcrumbLogLevel.Info, BreadcrumbType.User, {
+                    timestamp,
+                });
             },
         },
         ...Platform.select({
