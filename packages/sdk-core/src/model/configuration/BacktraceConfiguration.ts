@@ -47,8 +47,46 @@ export interface BacktraceBreadcrumbsSettings {
     /**
      * Specifies maximum number of breadcrumbs stored by the library. By default, only 100 breadcrumbs
      * will be stored.
+     *
+     * Use `false` to disable the limit.
+     * @default 100
      */
-    maximumBreadcrumbs?: number;
+    maximumBreadcrumbs?: number | false;
+
+    /**
+     * Specifies maximum object depth that are included in breadcrumb attributes.
+     *
+     * Use `false` to disable the limit.
+     * @default 2
+     */
+    maximumAttributesDepth?: number | false;
+
+    /**
+     * Specifies maximum breadcrumb message length.
+     * If the size is exceeded, message will be truncated.
+     *
+     * Use `false` to disable the limit.
+     * @default 255
+     */
+    maximumBreadcrumbMessageLength?: number | false;
+
+    /**
+     * Specifies maximum single breadcrumb size in bytes.
+     * If the size is exceeded, the breadcrumb will be skipped.
+     *
+     * Use `false` to disable the limit.
+     * @default 65536 // 64kB
+     */
+    maximumBreadcrumbSize?: number | false;
+
+    /**
+     * Specifies maximum breadcrumbs size in bytes.
+     * If the size is exceeded, oldest breadcrumbs will be skipped.
+     *
+     * Use `false` to disable the limit.
+     * @default 1048576 // 1MB
+     */
+    maximumTotalBreadcrumbsSize?: number | false;
 
     /**
      * Inspects breadcrumb and allows to modify it. If the undefined value is being

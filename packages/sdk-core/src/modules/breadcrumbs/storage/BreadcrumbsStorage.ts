@@ -1,6 +1,26 @@
 import { BacktraceAttachment } from '../../../model/attachment/index.js';
 import { BacktraceAttachmentProvider } from '../../attachments/BacktraceAttachmentProvider.js';
-import { RawBreadcrumb } from '../model/RawBreadcrumb.js';
+import { LimitedRawBreadcrumb, RawBreadcrumb } from '../model/RawBreadcrumb.js';
+
+export interface BreadcrumbsStorageOptions {
+    readonly limits: BreadcrumbsStorageLimits;
+}
+
+export interface BreadcrumbsStorageLimits {
+    /**
+     * Specifies maximum number of breadcrumbs stored by the storage. By default, only 100 breadcrumbs
+     * will be stored.
+     */
+    readonly maximumBreadcrumbs?: number;
+
+    /**
+     * Specifies maximum breadcrumbs size in bytes.
+     * If the size is exceeded, oldest breadcrumbs will be skipped.
+     */
+    readonly maximumTotalBreadcrumbsSize?: number;
+}
+
+export type BreadcrumbsStorageFactory = (options: BreadcrumbsStorageOptions) => BreadcrumbsStorage;
 
 export interface BreadcrumbsStorage {
     /**
@@ -12,7 +32,7 @@ export interface BreadcrumbsStorage {
      * Adds breadcrumb to the storage
      * @param rawBreadcrumb breadcrumb data
      */
-    add(rawBreadcrumb: RawBreadcrumb): number;
+    add(rawBreadcrumb: RawBreadcrumb | LimitedRawBreadcrumb): number | undefined;
 
     /**
      * Gets attachments associated with this storage.

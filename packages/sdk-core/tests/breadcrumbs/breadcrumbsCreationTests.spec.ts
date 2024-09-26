@@ -4,7 +4,7 @@ import { InMemoryBreadcrumbsStorage } from '../../src/modules/breadcrumbs/storag
 
 describe('Breadcrumbs creation tests', () => {
     it('Last breadcrumb id attribute should be equal to last bredcrumb id in the array', () => {
-        const storage = new InMemoryBreadcrumbsStorage(100);
+        const storage = new InMemoryBreadcrumbsStorage({ maximumBreadcrumbs: 100 });
         storage.add({ level: BreadcrumbLogLevel.Info, message: 'test', type: BreadcrumbType.Manual });
 
         const lastBreadcrumbId = storage.lastBreadcrumbId;
@@ -14,8 +14,8 @@ describe('Breadcrumbs creation tests', () => {
     });
 
     it('Each breadcrumb should have different id', () => {
-        const storage = new InMemoryBreadcrumbsStorage(100);
-        const breadcrumbsManager = new BreadcrumbsManager(undefined, { storage });
+        const storage = new InMemoryBreadcrumbsStorage({ maximumBreadcrumbs: 100 });
+        const breadcrumbsManager = new BreadcrumbsManager(undefined, { storage: () => storage });
         breadcrumbsManager.initialize();
         breadcrumbsManager.info('test');
         breadcrumbsManager.info('test2');
@@ -26,7 +26,7 @@ describe('Breadcrumbs creation tests', () => {
     });
 
     it('Should update breadcrumb id every time after adding a breadcrumb', () => {
-        const storage = new InMemoryBreadcrumbsStorage(100);
+        const storage = new InMemoryBreadcrumbsStorage({ maximumBreadcrumbs: 100 });
 
         storage.add({ level: BreadcrumbLogLevel.Info, message: 'test', type: BreadcrumbType.Manual });
         const breadcrumbId1 = storage.lastBreadcrumbId;
@@ -38,8 +38,8 @@ describe('Breadcrumbs creation tests', () => {
 
     it('Should set expected breadcrumb message', () => {
         const message = 'test';
-        const storage = new InMemoryBreadcrumbsStorage(100);
-        const breadcrumbsManager = new BreadcrumbsManager(undefined, { storage });
+        const storage = new InMemoryBreadcrumbsStorage({ maximumBreadcrumbs: 100 });
+        const breadcrumbsManager = new BreadcrumbsManager(undefined, { storage: () => storage });
         breadcrumbsManager.initialize();
         breadcrumbsManager.info(message);
         const [breadcrumb] = JSON.parse(storage.get() as string);
@@ -51,8 +51,8 @@ describe('Breadcrumbs creation tests', () => {
         const input = 1;
         const expectedBreadcrumbValueOutput = input.toString();
 
-        const storage = new InMemoryBreadcrumbsStorage(100);
-        const breadcrumbsManager = new BreadcrumbsManager(undefined, { storage });
+        const storage = new InMemoryBreadcrumbsStorage({ maximumBreadcrumbs: 100 });
+        const breadcrumbsManager = new BreadcrumbsManager(undefined, { storage: () => storage });
         breadcrumbsManager.initialize();
         breadcrumbsManager.info(input as unknown as string);
         const [breadcrumb] = JSON.parse(storage.get() as string);
@@ -64,8 +64,8 @@ describe('Breadcrumbs creation tests', () => {
         const input = { foo: 1, bar: true, baz: undefined };
         const expectedBreadcrumbValueOutput = JSON.stringify(input);
 
-        const storage = new InMemoryBreadcrumbsStorage(100);
-        const breadcrumbsManager = new BreadcrumbsManager(undefined, { storage });
+        const storage = new InMemoryBreadcrumbsStorage({ maximumBreadcrumbs: 100 });
+        const breadcrumbsManager = new BreadcrumbsManager(undefined, { storage: () => storage });
         breadcrumbsManager.initialize();
         breadcrumbsManager.info(input as unknown as string);
         const [breadcrumb] = JSON.parse(storage.get() as string);
@@ -77,8 +77,8 @@ describe('Breadcrumbs creation tests', () => {
         const input = null;
         const expectedBreadcrumbValueOutput = '';
 
-        const storage = new InMemoryBreadcrumbsStorage(100);
-        const breadcrumbsManager = new BreadcrumbsManager(undefined, { storage });
+        const storage = new InMemoryBreadcrumbsStorage({ maximumBreadcrumbs: 100 });
+        const breadcrumbsManager = new BreadcrumbsManager(undefined, { storage: () => storage });
         breadcrumbsManager.initialize();
         breadcrumbsManager.info(input as unknown as string);
         const [breadcrumb] = JSON.parse(storage.get() as string);
@@ -89,8 +89,8 @@ describe('Breadcrumbs creation tests', () => {
     it('Should set expected breadcrumb level', () => {
         const message = 'test';
         const level = BreadcrumbLogLevel.Warning;
-        const storage = new InMemoryBreadcrumbsStorage(100);
-        const breadcrumbsManager = new BreadcrumbsManager(undefined, { storage });
+        const storage = new InMemoryBreadcrumbsStorage({ maximumBreadcrumbs: 100 });
+        const breadcrumbsManager = new BreadcrumbsManager(undefined, { storage: () => storage });
         breadcrumbsManager.initialize();
         breadcrumbsManager.log(message, level);
         const [breadcrumb] = JSON.parse(storage.get() as string);
@@ -102,8 +102,8 @@ describe('Breadcrumbs creation tests', () => {
         const message = 'test';
         const level = BreadcrumbLogLevel.Warning;
         const type = BreadcrumbType.Configuration;
-        const storage = new InMemoryBreadcrumbsStorage(100);
-        const breadcrumbsManager = new BreadcrumbsManager(undefined, { storage });
+        const storage = new InMemoryBreadcrumbsStorage({ maximumBreadcrumbs: 100 });
+        const breadcrumbsManager = new BreadcrumbsManager(undefined, { storage: () => storage });
         breadcrumbsManager.initialize();
         breadcrumbsManager.addBreadcrumb(message, level, type);
         const [breadcrumb] = JSON.parse(storage.get() as string);
@@ -115,8 +115,8 @@ describe('Breadcrumbs creation tests', () => {
         const message = 'test';
         const level = BreadcrumbLogLevel.Warning;
         const attributes = { foo: 'bar', baz: 1 };
-        const storage = new InMemoryBreadcrumbsStorage(100);
-        const breadcrumbsManager = new BreadcrumbsManager(undefined, { storage });
+        const storage = new InMemoryBreadcrumbsStorage({ maximumBreadcrumbs: 100 });
+        const breadcrumbsManager = new BreadcrumbsManager(undefined, { storage: () => storage });
         breadcrumbsManager.initialize();
         breadcrumbsManager.log(message, level, attributes);
         const [breadcrumb] = JSON.parse(storage.get() as string);

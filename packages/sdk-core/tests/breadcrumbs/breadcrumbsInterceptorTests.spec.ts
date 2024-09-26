@@ -3,13 +3,13 @@ import { Breadcrumb } from '../../src/modules/breadcrumbs/model/Breadcrumb.js';
 import { InMemoryBreadcrumbsStorage } from '../../src/modules/breadcrumbs/storage/InMemoryBreadcrumbsStorage.js';
 describe('Breadcrumbs interceptor tests', () => {
     it('Should filter out the breadcrumb', () => {
-        const storage = new InMemoryBreadcrumbsStorage(100);
+        const storage = new InMemoryBreadcrumbsStorage({ maximumBreadcrumbs: 100 });
         const breadcrumbsManager = new BreadcrumbsManager(
             {
                 intercept: () => undefined,
             },
             {
-                storage,
+                storage: () => storage,
             },
         );
         breadcrumbsManager.initialize();
@@ -21,7 +21,7 @@ describe('Breadcrumbs interceptor tests', () => {
 
     it('Should remove pii information from breadcrumb', () => {
         const expectedBreadcrumbMessage = 'bar';
-        const storage = new InMemoryBreadcrumbsStorage(100);
+        const storage = new InMemoryBreadcrumbsStorage({ maximumBreadcrumbs: 100 });
         const breadcrumbsManager = new BreadcrumbsManager(
             {
                 intercept: (breadcrumb) => {
@@ -30,7 +30,7 @@ describe('Breadcrumbs interceptor tests', () => {
                 },
             },
             {
-                storage,
+                storage: () => storage,
             },
         );
         breadcrumbsManager.initialize();
