@@ -1,7 +1,7 @@
 import { BacktraceAttachment } from '@backtrace/sdk-core';
 import fs from 'fs';
 import { BacktraceFileAttachment } from '../attachment/index.js';
-import { NodeFileSystem, WritableStream } from './interfaces/NodeFileSystem.js';
+import { NodeFileSystem } from './interfaces/NodeFileSystem.js';
 
 export class FsNodeFileSystem implements NodeFileSystem {
     public readDir(dir: string): Promise<string[]> {
@@ -52,10 +52,12 @@ export class FsNodeFileSystem implements NodeFileSystem {
         fs.renameSync(oldPath, newPath);
     }
 
-    public createWriteStream(path: string): WritableStream {
-        const stream = fs.createWriteStream(path, 'utf-8');
-        (stream as Partial<WritableStream>).writeSync = (chunk) => stream.write(chunk);
-        return stream as unknown as WritableStream;
+    public createWriteStream(path: string): fs.WriteStream {
+        return fs.createWriteStream(path, 'utf-8');
+    }
+
+    public createReadStream(path: string): fs.ReadStream {
+        return fs.createReadStream(path, 'utf-8');
     }
 
     public async exists(path: string): Promise<boolean> {

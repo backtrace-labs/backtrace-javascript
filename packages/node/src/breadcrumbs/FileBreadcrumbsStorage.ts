@@ -4,6 +4,8 @@ import {
     Breadcrumb,
     BreadcrumbLogLevel,
     BreadcrumbsStorage,
+    BreadcrumbsStorageFactory,
+    BreadcrumbsStorageLimits,
     BreadcrumbType,
     jsonEscaper,
     RawBreadcrumb,
@@ -11,9 +13,14 @@ import {
     TimeHelper,
 } from '@backtrace/sdk-core';
 import path from 'path';
+import { Readable, Writable } from 'stream';
 import { BacktraceFileAttachment } from '../attachment/index.js';
-import { AlternatingFileWriter } from '../common/AlternatingFileWriter.js';
 import { NodeFileSystem } from '../storage/interfaces/NodeFileSystem.js';
+import { chunkifier, ChunkSplitterFactory } from '../streams/chunkifier.js';
+import { combinedChunkSplitter } from '../streams/combinedChunkSplitter.js';
+import { FileChunkSink } from '../streams/fileChunkSink.js';
+import { lengthChunkSplitter } from '../streams/lengthChunkSplitter.js';
+import { lineChunkSplitter } from '../streams/lineChunkSplitter.js';
 
 const FILE_PREFIX = 'bt-breadcrumbs';
 
@@ -24,58 +31,77 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
 
     private _lastBreadcrumbId: number = TimeHelper.toTimestampInSec(TimeHelper.now());
 
-    private readonly _writer: AlternatingFileWriter;
+    private readonly _dest: Writable;
+    private readonly _sink: FileChunkSink;
 
     constructor(
-        private readonly _mainFile: string,
-        private readonly _fallbackFile: string,
-        fileSystem: NodeFileSystem,
-        maximumBreadcrumbs: number,
+        session: SessionFiles,
+        private readonly _fileSystem: NodeFileSystem,
+        private readonly _limits: BreadcrumbsStorageLimits,
     ) {
-        this._writer = new AlternatingFileWriter(
-            _mainFile,
-            _fallbackFile,
-            Math.floor(maximumBreadcrumbs / 2),
-            fileSystem,
-        );
+        const splitters: ChunkSplitterFactory[] = [];
+        const maximumBreadcrumbs = this._limits.maximumBreadcrumbs;
+        if (maximumBreadcrumbs !== undefined) {
+            splitters.push(() => lineChunkSplitter(Math.ceil(maximumBreadcrumbs / 2)));
+        }
+
+        const maximumTotalBreadcrumbsSize = this._limits.maximumTotalBreadcrumbsSize;
+        if (maximumTotalBreadcrumbsSize !== undefined) {
+            splitters.push(() => lengthChunkSplitter(Math.ceil(maximumTotalBreadcrumbsSize), 'skip'));
+        }
+
+        this._sink = new FileChunkSink({
+            maxFiles: 2,
+            fs: this._fileSystem,
+            file: (n) => session.getFileName(FileBreadcrumbsStorage.getFileName(n)),
+        });
+
+        if (!splitters.length) {
+            this._dest = this._sink.getSink()(0);
+        } else {
+            this._dest = chunkifier({
+                sink: this._sink.getSink(),
+                splitter:
+                    splitters.length === 1 ? splitters[0] : () => combinedChunkSplitter(...splitters.map((s) => s())),
+            });
+        }
+
+        this._dest.on('error', () => {
+            // Do nothing on error
+        });
     }
 
-    public static getSessionAttachments(session: SessionFiles) {
+    public static getSessionAttachments(session: SessionFiles, fileSystem?: NodeFileSystem) {
         const files = session
             .getSessionFiles()
             .filter((f) => path.basename(f).startsWith(FILE_PREFIX))
             .slice(0, 2);
 
-        return files.map((file) => new BacktraceFileAttachment(file, path.basename(file)));
+        return files.map((file) => new BacktraceFileAttachment(file, path.basename(file), fileSystem));
     }
 
-    public static create(session: SessionFiles, fileSystem: NodeFileSystem, maximumBreadcrumbs: number) {
-        const file1 = session.getFileName(this.getFileName(0));
-        const file2 = session.getFileName(this.getFileName(1));
-        return new FileBreadcrumbsStorage(file1, file2, fileSystem, maximumBreadcrumbs);
+    public static factory(session: SessionFiles, fileSystem: NodeFileSystem): BreadcrumbsStorageFactory {
+        return ({ limits }) => new FileBreadcrumbsStorage(session, fileSystem, limits);
     }
 
-    public getAttachments(): BacktraceAttachment<unknown>[] {
-        return [
-            new BacktraceFileAttachment(this._mainFile, 'bt-breadcrumbs-0'),
-            new BacktraceFileAttachment(this._fallbackFile, 'bt-breadcrumbs-1'),
-        ];
+    public getAttachments(): BacktraceAttachment<Readable>[] {
+        const files = [...this._sink.files].map((f) => f.path.toString('utf-8'));
+        return files.map((f) => new BacktraceFileAttachment(f, f, this._fileSystem));
     }
 
     public getAttachmentProviders(): BacktraceAttachmentProvider[] {
         return [
             {
-                get: () => new BacktraceFileAttachment(this._mainFile, 'bt-breadcrumbs-0'),
-                type: 'dynamic',
-            },
-            {
-                get: () => new BacktraceFileAttachment(this._fallbackFile, 'bt-breadcrumbs-1'),
+                get: () => {
+                    const files = [...this._sink.files].map((f) => f.path.toString('utf-8'));
+                    return files.map((f) => new BacktraceFileAttachment(f, f, this._fileSystem));
+                },
                 type: 'dynamic',
             },
         ];
     }
 
-    public add(rawBreadcrumb: RawBreadcrumb): number {
+    public add(rawBreadcrumb: RawBreadcrumb) {
         this._lastBreadcrumbId++;
         const id = this._lastBreadcrumbId;
         const breadcrumb: Breadcrumb = {
@@ -88,8 +114,15 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
         };
 
         const breadcrumbJson = JSON.stringify(breadcrumb, jsonEscaper());
-        this._writer.writeLine(breadcrumbJson);
+        const jsonLength = breadcrumbJson.length + 1; // newline
+        const sizeLimit = this._limits.maximumTotalBreadcrumbsSize;
+        if (sizeLimit !== undefined) {
+            if (jsonLength > sizeLimit) {
+                return undefined;
+            }
+        }
 
+        this._dest.write(breadcrumbJson + '\n');
         return id;
     }
 

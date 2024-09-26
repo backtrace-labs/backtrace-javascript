@@ -2,6 +2,7 @@ import { BacktraceFileAttachment as CoreBacktraceFileAttachment } from '@backtra
 import fs from 'fs';
 import path from 'path';
 import { Readable } from 'stream';
+import { NodeFileSystem } from '../storage/interfaces/NodeFileSystem.js';
 
 export class BacktraceFileAttachment implements CoreBacktraceFileAttachment<Readable> {
     public readonly name: string;
@@ -9,14 +10,15 @@ export class BacktraceFileAttachment implements CoreBacktraceFileAttachment<Read
     constructor(
         public readonly filePath: string,
         name?: string,
+        private readonly _fileSystem?: NodeFileSystem,
     ) {
         this.name = name ?? path.basename(this.filePath);
     }
 
-    public get(): fs.ReadStream | undefined {
-        if (!fs.existsSync(this.filePath)) {
+    public get(): Readable | undefined {
+        if (!(this._fileSystem ?? fs).existsSync(this.filePath)) {
             return undefined;
         }
-        return fs.createReadStream(this.filePath);
+        return (this._fileSystem ?? fs).createReadStream(this.filePath);
     }
 }

@@ -1,7 +1,10 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore The following import fails due to missing extension, but it cannot have one (it imports a .ts file)
 import { MockedFileSystem, mockFileSystem } from '@backtrace/sdk-core/tests/_mocks/fileSystem';
+import { ReadStream, WriteStream } from 'fs';
 import path from 'path';
-import { Writable } from 'stream';
-import { NodeFileSystem, WritableStream } from '../../src/storage/interfaces/NodeFileSystem.js';
+import { Readable, Writable } from 'stream';
+import { NodeFileSystem } from '../../src/storage/interfaces/NodeFileSystem.js';
 
 export function mockStreamFileSystem(files?: Record<string, string>): MockedFileSystem<NodeFileSystem> {
     const fs = mockFileSystem(files);
@@ -40,11 +43,31 @@ export function mockStreamFileSystem(files?: Record<string, string>): MockedFile
                     callback && callback();
                 },
             });
-
-            (writable as Partial<WritableStream>).close = () => writable.end();
-            (writable as Partial<WritableStream>).writeSync = (chunk) => writable.write(chunk);
-
+            (writable as WriteStream).path = p;
             return writable;
+        }),
+
+        createReadStream: jest.fn().mockImplementation((p: string) => {
+            const fullPath = path.resolve(p);
+            const file = fs.files[fullPath];
+            if (!file) {
+                throw new Error(`File ${p} does not exist`);
+            }
+
+            let position = 0;
+            const readable = new Readable({
+                read(size) {
+                    const chunk = file.substring(position, position + size);
+                    if (!chunk) {
+                        this.push(null);
+                    } else {
+                        this.push(Buffer.from(chunk));
+                        position += size;
+                    }
+                },
+            });
+            (readable as ReadStream).path = p;
+            return readable;
         }),
     };
 }

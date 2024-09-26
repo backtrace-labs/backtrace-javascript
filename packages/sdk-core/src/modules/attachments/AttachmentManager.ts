@@ -68,7 +68,16 @@ export class AttachmentManager {
                 continue;
             }
 
-            result.push(provider.get());
+            const attachment = provider.get();
+            if (!attachment) {
+                continue;
+            }
+
+            if (Array.isArray(attachment)) {
+                result.push(...attachment);
+            } else {
+                result.push(attachment);
+            }
         }
         return result;
     }
