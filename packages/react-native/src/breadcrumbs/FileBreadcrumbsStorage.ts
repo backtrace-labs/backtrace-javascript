@@ -5,6 +5,7 @@ import {
     TimeHelper,
     jsonEscaper,
     type BacktraceAttachment,
+    type BacktraceAttachmentProvider,
     type Breadcrumb,
     type BreadcrumbsStorage,
     type BreadcrumbsStorageFactory,
@@ -56,6 +57,19 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
         ];
     }
 
+    public getAttachmentProviders(): BacktraceAttachmentProvider[] {
+        return [
+            {
+                get: () => new BacktraceFileAttachment(this._fileSystem, this._mainFile, 'bt-breadcrumbs-0'),
+                type: 'dynamic',
+            },
+            {
+                get: () => new BacktraceFileAttachment(this._fileSystem, this._fallbackFile, 'bt-breadcrumbs-1'),
+                type: 'dynamic',
+            },
+        ];
+    }
+
     public add(rawBreadcrumb: RawBreadcrumb): number {
         const breadcrumbType = BreadcrumbType[rawBreadcrumb.type];
         if (!breadcrumbType) {
@@ -79,9 +93,9 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
         };
 
         const breadcrumbJson = JSON.stringify(breadcrumb, jsonEscaper());
-        const jsonLength = breadcrumbJson.length + 1; // newline
         const sizeLimit = this._limits.maximumTotalBreadcrumbsSize;
         if (sizeLimit !== undefined) {
+            const jsonLength = breadcrumbJson.length + 1; // newline
             if (jsonLength > sizeLimit) {
                 return id;
             }
