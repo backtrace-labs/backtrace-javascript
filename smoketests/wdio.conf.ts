@@ -4,7 +4,13 @@ export const config: Options.Testrunner & {
     capabilities: WebdriverIO.Capabilities[];
 } = {
     runner: 'local',
-    tsConfigPath: './tsconfig.json',
+    autoCompileOpts: {
+        autoCompile: true,
+        tsNodeOpts: {
+            project: './tsconfig.json',
+            transpileOnly: true,
+        },
+    },
 
     user: process.env.SMOKETESTS_SAUCE_USERNAME,
     key: process.env.SMOKETESTS_SAUCE_ACCESS_KEY,
@@ -40,7 +46,8 @@ export const config: Options.Testrunner & {
             'sauce',
             {
                 sauceConnect: true,
-                setJobName(config, capabilities) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                setJobName(config, capabilities: any) {
                     return `@backtrace/javascript smoketests for ${capabilities.browserName} on ${capabilities.platformName}`;
                 },
             },
@@ -53,7 +60,7 @@ export const config: Options.Testrunner & {
         ],
     ],
     framework: 'mocha',
-    reporters: ['dot', 'spec'],
+    reporters: ['spec'],
     mochaOpts: {
         ui: 'bdd',
         timeout: 120000,
