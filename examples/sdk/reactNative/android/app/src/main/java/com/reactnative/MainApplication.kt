@@ -1,4 +1,4 @@
-package com.rnbtexample
+package com.reactnative
 
 import android.app.Application
 import com.facebook.react.PackageList
