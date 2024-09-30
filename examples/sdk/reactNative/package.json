@@ -10,7 +10,6 @@
     },
     "dependencies": {
         "@backtrace/react-native": "file:../../../packages/react-native",
-        "@backtrace/react": "file:../../../packages/react",
         "react": "18.3.1",
         "react-native": "0.75.3"
     },
