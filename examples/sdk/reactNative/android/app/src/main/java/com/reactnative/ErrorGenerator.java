@@ -21,11 +21,6 @@ public class ErrorGenerator extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
-  public void test() {
-    return;
-  }
-
-  @ReactMethod
   public void throwError() throws IOException {
     readUserConfiguration();
   }
