@@ -95,7 +95,7 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
         }
     }
 
-    public bind({ client, reportEvents, attachmentManager }: BacktraceModuleBindData): void {
+    public bind({ client, attachmentManager }: BacktraceModuleBindData): void {
         if (this._storage.getAttachmentProviders) {
             attachmentManager.addProviders(...this._storage.getAttachmentProviders());
         } else {
@@ -106,7 +106,7 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
             [BREADCRUMB_ATTRIBUTE_NAME]: this._storage.lastBreadcrumbId,
         }));
 
-        reportEvents.on('before-skip', (report) => this.logReport(report));
+        client.on('before-skip', (report) => this.logReport(report));
     }
 
     public initialize() {

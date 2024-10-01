@@ -1,4 +1,5 @@
 import { anySignal, createAbortController } from '../../common/AbortController.js';
+import { Events } from '../../common/Events.js';
 import { IdGenerator } from '../../common/IdGenerator.js';
 import { unrefInterval } from '../../common/intervalHelper.js';
 import { TimeHelper } from '../../common/TimeHelper.js';
@@ -9,6 +10,7 @@ import { BacktraceReportSubmission } from '../../model/http/BacktraceReportSubmi
 import { BacktraceModule, BacktraceModuleBindData } from '../BacktraceModule.js';
 import { SessionFiles } from '../storage/index.js';
 import { BacktraceDatabaseContext } from './BacktraceDatabaseContext.js';
+import { BacktraceDatabaseEvents } from './BacktraceDatabaseEvents.js';
 import { BacktraceDatabaseStorageProvider } from './BacktraceDatabaseStorageProvider.js';
 import {
     AttachmentBacktraceDatabaseRecord,
@@ -17,7 +19,7 @@ import {
     ReportBacktraceDatabaseRecord,
 } from './model/BacktraceDatabaseRecord.js';
 
-export class BacktraceDatabase implements BacktraceModule {
+export class BacktraceDatabase extends Events<BacktraceDatabaseEvents> implements BacktraceModule {
     /**
      * Determines if the database is enabled.
      */
@@ -46,6 +48,8 @@ export class BacktraceDatabase implements BacktraceModule {
         private readonly _requestHandler: BacktraceReportSubmission,
         private readonly _sessionFiles?: SessionFiles,
     ) {
+        super();
+
         this._databaseRecordContext = new BacktraceDatabaseContext(this._options?.maximumRetries);
         this._recordLimits = {
             report: this._options?.maximumNumberOfRecords ?? 8,
@@ -83,7 +87,7 @@ export class BacktraceDatabase implements BacktraceModule {
         return true;
     }
 
-    public bind({ reportEvents }: BacktraceModuleBindData): void {
+    public bind({ client }: BacktraceModuleBindData): void {
         if (this._enabled) {
             return;
         }
@@ -92,7 +96,7 @@ export class BacktraceDatabase implements BacktraceModule {
             return;
         }
 
-        reportEvents.on('before-send', (_, data, attachments) => {
+        client.on('before-send', (_, data, attachments) => {
             const record = this.add(data, attachments);
 
             if (!record || record.locked) {
@@ -102,7 +106,7 @@ export class BacktraceDatabase implements BacktraceModule {
             record.locked = true;
         });
 
-        reportEvents.on('after-send', (_, data, __, submissionResult) => {
+        client.on('after-send', (_, data, __, submissionResult) => {
             const record = this._databaseRecordContext.find(
                 (record) => record.type === 'report' && record.data.uuid === data.uuid,
             );
@@ -152,6 +156,8 @@ export class BacktraceDatabase implements BacktraceModule {
         this._databaseRecordContext.add(record);
         this.lockSessionWithRecord(record);
 
+        this.emit('added', record);
+
         return record;
     }
 
@@ -189,6 +195,8 @@ export class BacktraceDatabase implements BacktraceModule {
 
         this._databaseRecordContext.add(record);
         this.lockSessionWithRecord(record);
+
+        this.emit('added', record);
 
         return record;
     }
@@ -239,6 +247,8 @@ export class BacktraceDatabase implements BacktraceModule {
             this._databaseRecordContext.remove(record);
             this._storageProvider.delete(record);
             this._sessionFiles?.unlockPreviousSessions(record.id);
+
+            this.emit('removed', record);
         }
     }
 
@@ -288,10 +298,14 @@ export class BacktraceDatabase implements BacktraceModule {
                     try {
                         record.locked = true;
 
+                        this.emit('before-send', record);
+
                         const result =
                             record.type === 'report'
                                 ? await this._requestHandler.send(record.data, record.attachments, signal)
                                 : await this._requestHandler.sendAttachment(record.rxid, record.attachment, signal);
+
+                        this.emit('after-send', record, result);
 
                         if (
                             result.status === 'Ok' ||
@@ -357,10 +371,15 @@ export class BacktraceDatabase implements BacktraceModule {
 
         for (const record of recordsToAdd) {
             this.lockSessionWithRecord(record);
+            this.emit('added', record);
         }
     }
 
     private async setupDatabaseAutoSend() {
+        if (!this._enabled) {
+            return;
+        }
+
         if (this._options?.autoSend === false) {
             return;
         }
