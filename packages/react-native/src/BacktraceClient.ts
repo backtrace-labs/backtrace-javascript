@@ -10,6 +10,8 @@ import {
 } from '@backtrace/sdk-core';
 import { NativeModules, Platform } from 'react-native';
 import { type BacktraceConfiguration } from './BacktraceConfiguration';
+import { ReactNativeRequestHandler } from './ReactNativeRequestHandler';
+import { ReactStackTraceConverter } from './ReactStackTraceConverter';
 import { FileBreadcrumbsStorage } from './breadcrumbs/FileBreadcrumbsStorage';
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 import type { BacktraceClientSetup } from './builder/BacktraceClientSetup';
@@ -17,8 +19,6 @@ import { version } from './common/platformHelper';
 import { CrashReporter } from './crashReporter/CrashReporter';
 import { generateUnhandledExceptionHandler } from './handlers';
 import { type ExceptionHandler } from './handlers/ExceptionHandler';
-import { ReactNativeRequestHandler } from './ReactNativeRequestHandler';
-import { ReactStackTraceConverter } from './ReactStackTraceConverter';
 import { type FileSystem } from './storage/FileSystem';
 
 export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration> {
@@ -55,13 +55,7 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
 
         const breadcrumbsManager = this.modules.get(BreadcrumbsManager);
         if (breadcrumbsManager && this.sessionFiles) {
-            breadcrumbsManager.setStorage(
-                FileBreadcrumbsStorage.create(
-                    fileSystem,
-                    this.sessionFiles,
-                    (clientSetup.options.breadcrumbs?.maximumBreadcrumbs ?? 100) || 100,
-                ),
-            );
+            breadcrumbsManager.setStorage(FileBreadcrumbsStorage.factory(fileSystem, this.sessionFiles));
         }
 
         this.attributeManager.attributeEvents.on(
