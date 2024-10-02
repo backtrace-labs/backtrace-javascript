@@ -1,5 +1,6 @@
 import { BacktraceClient } from '@backtrace/node';
 import { ConfigurableModuleBuilder, Global, Module } from '@nestjs/common';
+import { BacktraceExceptionFilter } from './backtrace.filter.js';
 import { BacktraceExceptionHandler, BacktraceExceptionHandlerOptions } from './backtrace.handler.js';
 import { BacktraceInterceptor } from './backtrace.interceptor.js';
 
@@ -58,7 +59,8 @@ const { ConfigurableModuleClass, MODULE_OPTIONS_TOKEN } = new ConfigurableModule
             inject: [MODULE_OPTIONS_TOKEN],
         },
         BacktraceInterceptor,
+        BacktraceExceptionFilter,
     ],
-    exports: [BacktraceClient, BacktraceExceptionHandler, BacktraceInterceptor],
+    exports: [BacktraceClient, BacktraceExceptionFilter, BacktraceExceptionHandler, BacktraceInterceptor],
 })
 export class BacktraceModule extends ConfigurableModuleClass {}
