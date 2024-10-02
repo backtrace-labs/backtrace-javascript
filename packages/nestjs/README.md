@@ -13,6 +13,8 @@ after which you can explore the rich set of Backtrace features.
     - [Integrate the SDK](#integrate-the-sdk)
     - [Upload source maps](#upload-source-maps)
     - [Add a Backtrace error interceptor](#add-a-backtrace-error-interceptor)
+    - [Add a Backtrace exception filter](#add-a-backtrace-exception-filter)
+    - [Use the Backtrace exception handler in your code](#use-the-backtrace-exception-handler-in-your-code)
 1. [Error Reporting Features](#error-reporting-features)
     - [Attributes](#attributes)
     - [File Attachments](#file-attachments)
@@ -75,10 +77,37 @@ class AppController {
     @Post()
     public endpoint() {
         // Manually send an error
-        this._cclient.send(new Error('Something broke!'));
+        this._client.send(new Error('Something broke!'));
     }
 }
 ```
+
+#### Configuring the module
+
+By default, the exception handler will exclude:
+
+-   all `HttpException` errors that have `status < 500`.
+
+To include or exclude specific error types, pass options to `BacktraceModule`:
+
+```ts
+@Module({
+    imports: [
+        BacktraceModule.register({
+            options: {
+                includeExceptionTypes: [MyException],
+                excludeExceptionTypes: (error) => error instanceof HttpException && error.getStatus() < 500,
+            },
+        }),
+    ],
+    controllers: [AppController],
+})
+class AppModule {}
+```
+
+As shown in the example above, `includeExceptionTypes` and `excludeExceptionTypes` accept either an array of error
+types, or a function that can return a `boolean`. The array types will match using `instanceof`. The function will have
+the thrown error passed as the first parameter.
 
 ### Upload source maps
 
@@ -107,7 +136,7 @@ import { BacktraceModule, BacktraceInterceptor } from '@backtrace/nestjs';
     providers: [
         {
             provide: APP_INTERCEPTOR,
-            useValue: new BacktraceInterceptor(),
+            useExisting: BacktraceInterceptor,
         },
     ],
     controllers: [CatsController],
@@ -122,10 +151,17 @@ const app = await NestFactory.create(AppModule);
 app.useGlobalInterceptors(new BacktraceInterceptor());
 ```
 
-To use it on a controller, use `UseInterceptors` decorator:
+To use it on a specific controller, use `UseInterceptors` decorator:
 
 ```ts
-@UseInterceptors(new BacktraceInterceptor())
+@UseInterceptors(BacktraceInterceptor)
+export class CatsController {}
+```
+
+or
+
+```ts
+@UseInterceptors(new BacktraceInterceptor({ ... }))
 export class CatsController {}
 ```
 
@@ -133,26 +169,94 @@ For more information, consult [NestJS documentation](https://docs.nestjs.com/int
 
 #### Configuring the interceptor
 
-By default, the interceptor will include:
-
--   all errors that are an instance of `Error`,
-
-and exclude:
-
--   all `HttpException` errors that have `status < 500`.
-
-To include or exclude specific error types, pass options to `BacktraceInterceptor`:
+By default, the interceptor will use [options from `BacktraceModule`](#configuring-the-module). You can pass the options also directly to the interceptor:
 
 ```ts
 new BacktraceInterceptor({
-    includeExceptionTypes: [Error],
+    includeExceptionTypes: [MyException],
     excludeExceptionTypes: (error) => error instanceof HttpException && error.getStatus() < 500,
 });
 ```
 
-As shown in the example above, `includeExceptionTypes` and `excludeExceptionTypes` accept either an array of error
-types, or a function that can return a `boolean`. The array types will match using `instanceof`. The function will have
-the thrown error passed as the first parameter.
+### Add a Backtrace exception filter
+
+The interceptor does not capture all exceptions. For example, exceptions thrown by guards will not be captured by the interceptor. You can use the `BacktraceExceptionFilter` exception filter class.
+The filter will capture everything that the interceptor would capture.
+
+To add the filter globally, you can register it as `APP_FILTER`:
+
+```ts
+import { Module } from '@nestjs/common';
+import { APP_FILTER } from '@nestjs/core';
+import { BacktraceModule, BacktraceExceptionFilter } from '@backtrace/nestjs';
+
+@Module({
+    imports: [BacktraceModule],
+    providers: [
+        {
+            provide: APP_INTERCEPTOR,
+            useExisting: BacktraceExceptionFilter,
+        },
+    ],
+    controllers: [CatsController],
+})
+export class AppModule {}
+```
+
+Or, use `app.useGlobalFilters`:
+
+```ts
+const app = await NestFactory.create(AppModule);
+
+// Note that you need to pass httpAdapter to BacktraceExceptionFilter as a second argument
+const { httpAdapter } = app.get(HttpAdapterHost);
+app.useGlobalInterceptors(new BacktraceExceptionFilter({}, httpAdapter));
+```
+
+To use it on a specific controller, use `UseFilters` decorator:
+
+```ts
+@UseFilters(BacktraceExceptionFilter)
+export class CatsController {}
+```
+
+For more information, consult [NestJS documentation](https://docs.nestjs.com/exception-filters#binding-filters).
+
+#### Configuring the filter
+
+By default, the filter will use [options from `BacktraceModule`](#configuring-the-module). You can pass the options also directly to the filter:
+
+```ts
+new BacktraceExceptionFilter({
+    includeExceptionTypes: [MyException],
+    excludeExceptionTypes: (error) => error instanceof HttpException && error.getStatus() < 500,
+});
+```
+
+### Use the Backtrace exception handler in your code
+
+If you want to leverage the exception filtering and handling in your custom logic, e.g. exception filters, you can inject `BacktraceExceptionHandler` to your logic:
+
+```ts
+class MyExceptionFilter implements ExceptionFilter {
+    constructor(private readonly handler: BacktraceExceptionHandler) {}
+
+    catch(exception: unknown, host: ArgumentsHost) {
+        const wasExceptionSent = this.handler.handleException(exception, host);
+    }
+}
+```
+
+#### Configuring the handler
+
+By default, the handler will use [options from `BacktraceModule`](#configuring-the-module). You can pass the options also directly to the handler:
+
+```ts
+new BacktraceExceptionHandler({
+    includeExceptionTypes: [MyException],
+    excludeExceptionTypes: (error) => error instanceof HttpException && error.getStatus() < 500,
+});
+```
 
 ## Error Reporting Features
 

@@ -1,15 +1,8 @@
 import { BacktraceClient } from '@backtrace/node';
-import {
-    BadRequestException,
-    Controller,
-    Get,
-    HttpException,
-    InternalServerErrorException,
-    NotFoundException,
-    Type,
-} from '@nestjs/common';
+import { Controller, Get, Type } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
+import { BacktraceExceptionHandler } from '../src/backtrace.handler.js';
 import { BacktraceInterceptor, BacktraceInterceptorOptions } from '../src/backtrace.interceptor.js';
 
 describe('BacktraceInterceptor', () => {
@@ -58,6 +51,28 @@ describe('BacktraceInterceptor', () => {
         await request(app.getHttpServer()).get('/error').expect(500);
 
         expect(send).toBeCalledWith(error, expect.anything());
+    });
+
+    it('should call handler.handleException', async () => {
+        const error = new Error('foo');
+
+        @Controller()
+        class TestController {
+            @Get('error')
+            public error() {
+                throw error;
+            }
+        }
+
+        const handleSpy = jest.spyOn(BacktraceExceptionHandler.prototype, 'handleException');
+
+        const { interceptor } = createInterceptor({});
+        const { app } = await createAppWithInterceptor(interceptor, TestController);
+
+        await app.init();
+        await request(app.getHttpServer()).get('/error').expect(500);
+
+        expect(handleSpy).toBeCalledWith(error, expect.anything());
     });
 
     it('should not change the error', async () => {
@@ -112,232 +127,8 @@ describe('BacktraceInterceptor', () => {
         expect(send).not.toBeCalled();
     });
 
-    describe('include', () => {
-        it('should not send when error type is not on include list', async () => {
-            const error = new BadRequestException('abc');
-
-            @Controller()
-            class TestController {
-                @Get('error')
-                public error() {
-                    throw error;
-                }
-            }
-
-            const { send, interceptor } = createInterceptor({
-                includeExceptionTypes: [NotFoundException],
-            });
-            const { app } = await createAppWithInterceptor(interceptor, TestController);
-
-            await app.init();
-            await request(app.getHttpServer()).get('/error').expect(400);
-
-            expect(send).not.toBeCalled();
-        });
-
-        it('should send when error type is on include list as a type', async () => {
-            const error = new BadRequestException('abc');
-
-            @Controller()
-            class TestController {
-                @Get('error')
-                public error() {
-                    throw error;
-                }
-            }
-
-            const { send, interceptor } = createInterceptor({
-                includeExceptionTypes: [BadRequestException],
-            });
-            const { app } = await createAppWithInterceptor(interceptor, TestController);
-
-            await app.init();
-            await request(app.getHttpServer()).get('/error').expect(400);
-
-            expect(send).toBeCalled();
-        });
-
-        it('should send when error type is on include list as a subtype', async () => {
-            const error = new BadRequestException('abc');
-
-            @Controller()
-            class TestController {
-                @Get('error')
-                public error() {
-                    throw error;
-                }
-            }
-
-            const { send, interceptor } = createInterceptor({
-                includeExceptionTypes: [Error],
-            });
-            const { app } = await createAppWithInterceptor(interceptor, TestController);
-
-            await app.init();
-            await request(app.getHttpServer()).get('/error').expect(400);
-
-            expect(send).toBeCalled();
-        });
-
-        it('should send when include resolves to true', async () => {
-            const error = new BadRequestException('abc');
-
-            @Controller()
-            class TestController {
-                @Get('error')
-                public error() {
-                    throw error;
-                }
-            }
-
-            const { send, interceptor } = createInterceptor({
-                includeExceptionTypes: () => true,
-            });
-            const { app } = await createAppWithInterceptor(interceptor, TestController);
-
-            await app.init();
-            await request(app.getHttpServer()).get('/error').expect(400);
-
-            expect(send).toBeCalled();
-        });
-
-        it('should not send when include resolves to false', async () => {
-            const error = new BadRequestException('abc');
-
-            @Controller()
-            class TestController {
-                @Get('error')
-                public error() {
-                    throw error;
-                }
-            }
-
-            const { send, interceptor } = createInterceptor({
-                includeExceptionTypes: () => false,
-            });
-            const { app } = await createAppWithInterceptor(interceptor, TestController);
-
-            await app.init();
-            await request(app.getHttpServer()).get('/error').expect(400);
-
-            expect(send).not.toBeCalled();
-        });
-    });
-
-    describe('exclude', () => {
-        it('should not send when error type is on exclude list', async () => {
-            const error = new BadRequestException('abc');
-
-            @Controller()
-            class TestController {
-                @Get('error')
-                public error() {
-                    throw error;
-                }
-            }
-
-            const { send, interceptor } = createInterceptor({
-                excludeExceptionTypes: [BadRequestException],
-            });
-            const { app } = await createAppWithInterceptor(interceptor, TestController);
-
-            await app.init();
-            await request(app.getHttpServer()).get('/error').expect(400);
-
-            expect(send).not.toBeCalled();
-        });
-
-        it('should send when error type is not on exclude list as a type', async () => {
-            const error = new BadRequestException('abc');
-
-            @Controller()
-            class TestController {
-                @Get('error')
-                public error() {
-                    throw error;
-                }
-            }
-
-            const { send, interceptor } = createInterceptor({
-                excludeExceptionTypes: [NotFoundException],
-            });
-            const { app } = await createAppWithInterceptor(interceptor, TestController);
-
-            await app.init();
-            await request(app.getHttpServer()).get('/error').expect(400);
-
-            expect(send).toBeCalled();
-        });
-
-        it('should not send when error type is on exclude list as a subtype', async () => {
-            const error = new BadRequestException('abc');
-
-            @Controller()
-            class TestController {
-                @Get('error')
-                public error() {
-                    throw error;
-                }
-            }
-
-            const { send, interceptor } = createInterceptor({
-                excludeExceptionTypes: [Error],
-            });
-            const { app } = await createAppWithInterceptor(interceptor, TestController);
-
-            await app.init();
-            await request(app.getHttpServer()).get('/error').expect(400);
-
-            expect(send).not.toBeCalled();
-        });
-
-        it('should not send when exclude resolves to true', async () => {
-            const error = new BadRequestException('abc');
-
-            @Controller()
-            class TestController {
-                @Get('error')
-                public error() {
-                    throw error;
-                }
-            }
-
-            const { send, interceptor } = createInterceptor({
-                excludeExceptionTypes: () => true,
-            });
-            const { app } = await createAppWithInterceptor(interceptor, TestController);
-
-            await app.init();
-            await request(app.getHttpServer()).get('/error').expect(400);
-
-            expect(send).not.toBeCalled();
-        });
-
-        it('should send when exclude resolves to false', async () => {
-            const error = new BadRequestException('abc');
-
-            @Controller()
-            class TestController {
-                @Get('error')
-                public error() {
-                    throw error;
-                }
-            }
-
-            const { send, interceptor } = createInterceptor({
-                excludeExceptionTypes: () => false,
-            });
-            const { app } = await createAppWithInterceptor(interceptor, TestController);
-
-            await app.init();
-            await request(app.getHttpServer()).get('/error').expect(400);
-
-            expect(send).toBeCalled();
-        });
-    });
-
     describe('attributes', () => {
-        it('should by default add request attributes for class and contextType', async () => {
+        it('should by default add request attributes for controller type', async () => {
             @Controller()
             class TestController {
                 @Get('error')
@@ -355,7 +146,6 @@ describe('BacktraceInterceptor', () => {
             const actual = send.mock.calls[0][1];
             expect(actual).toMatchObject({
                 'request.controller': TestController.name,
-                'request.contextType': 'http',
             });
         });
 
@@ -416,98 +206,6 @@ describe('BacktraceInterceptor', () => {
                     'request.contextType': 'http',
                 }),
             );
-        });
-    });
-
-    describe('include and exclude default behavior', () => {
-        it('should by default send Error exceptions', async () => {
-            @Controller()
-            class TestController {
-                @Get('error')
-                public error() {
-                    throw new Error('foo');
-                }
-            }
-
-            const { send, interceptor } = createInterceptor();
-            const { app } = await createAppWithInterceptor(interceptor, TestController);
-
-            await app.init();
-            await request(app.getHttpServer()).get('/error').expect(500);
-
-            expect(send).toBeCalled();
-        });
-
-        it('should by default send InternalServerErrorException exceptions', async () => {
-            @Controller()
-            class TestController {
-                @Get('error')
-                public error() {
-                    throw new InternalServerErrorException('foo');
-                }
-            }
-
-            const { send, interceptor } = createInterceptor();
-            const { app } = await createAppWithInterceptor(interceptor, TestController);
-
-            await app.init();
-            await request(app.getHttpServer()).get('/error').expect(500);
-
-            expect(send).toBeCalled();
-        });
-
-        it('should by default send HttpException exceptions with 500 status', async () => {
-            @Controller()
-            class TestController {
-                @Get('error')
-                public error() {
-                    throw new HttpException('foo', 500);
-                }
-            }
-
-            const { send, interceptor } = createInterceptor();
-            const { app } = await createAppWithInterceptor(interceptor, TestController);
-
-            await app.init();
-            await request(app.getHttpServer()).get('/error').expect(500);
-
-            expect(send).toBeCalled();
-        });
-
-        it('should by default not send HttpException exceptions with 400 status', async () => {
-            @Controller()
-            class TestController {
-                @Get('error')
-                public error() {
-                    throw new HttpException('foo', 400);
-                }
-            }
-
-            const { send, interceptor } = createInterceptor();
-            const { app } = await createAppWithInterceptor(interceptor, TestController);
-
-            await app.init();
-            await request(app.getHttpServer()).get('/error').expect(400);
-
-            expect(send).not.toBeCalled();
-        });
-
-        it('should by default not send BadRequestException exceptions', async () => {
-            @Controller()
-            class TestController {
-                @Get('error')
-                public error() {
-                    throw new BadRequestException('foo');
-                }
-            }
-
-            const { send, interceptor } = createInterceptor();
-            const { app } = await createAppWithInterceptor(interceptor, TestController);
-
-            await app.init();
-            await request(app.getHttpServer()).get('/error').expect(400);
-
-            expect(send).not.toBeCalled();
         });
     });
 });
