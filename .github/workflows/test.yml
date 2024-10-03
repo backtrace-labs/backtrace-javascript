@@ -24,33 +24,8 @@ jobs:
             - run: npm run lint
             - run: npm run format:check
             - run: npm test
-            - uses: dorny/paths-filter@v3
-              id: filter
-              with:
-                  filters: |
-                        browser:
-                            - 'packages/browser/**'
-                            - 'packages/sdk-core/**'
-                            - 'packages/sdk-core/**'
-                        node:
-                            - 'packages/sdk-core/**'
-                            - 'packages/electron/**'
-                            - 'packages/nestjs/**'
-                            - 'packages/node/**'
-
-            - run: npm run smoketest:node
-              if: steps.filter.outputs.node == 'true'
-              env:
-                    SMOKETESTS_SUBMIT_LAYER_URL: ${{ secrets.SMOKETESTS_SUBMIT_LAYER_URL }}
-                    SMOKETESTS_DIRECT_SUBMIT_URL: ${{ secrets.SMOKETESTS_DIRECT_SUBMIT_URL }}
-
-            - run: npm run smoketest:browser
-              if: steps.filter.outputs.browser == 'true'
-              env:
-                    SMOKETESTS_SUBMIT_LAYER_URL: ${{ secrets.SMOKETESTS_SUBMIT_LAYER_URL }}
-                    SMOKETESTS_DIRECT_SUBMIT_URL: ${{ secrets.SMOKETESTS_DIRECT_SUBMIT_URL }}
-                    SMOKETESTS_SAUCE_USERNAME: ${{ secrets.SMOKETESTS_SAUCE_USERNAME }}
-                    SMOKETESTS_SAUCE_ACCESS_KEY: ${{ secrets.SMOKETESTS_SAUCE_ACCESS_KEY }}
+            - name: smoke-test
+              uses: ./smoketest.yml
 
     test_linux:
         runs-on: ubuntu-latest
