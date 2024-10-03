@@ -22,7 +22,7 @@ jobs:
             - run: npm ci
             - run: npm run build
             - name: smoke-test
-              uses: ./.github/workflows/smoketest
+              uses: ./.github/workflows/smoketest.yml
             - run: npm run lint
             - run: npm run format:check
             - run: npm test
