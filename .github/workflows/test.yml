@@ -25,7 +25,7 @@ jobs:
             - run: npm run format:check
             - run: npm test
             - name: smoke-test
-              uses: ./smoketest.yml
+              uses: ./smoketest
 
     test_linux:
         runs-on: ubuntu-latest
