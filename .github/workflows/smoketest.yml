@@ -1,4 +1,4 @@
-name: "Smoke test"
+name: Smoke test
 description: "Execute smoke tests"
 runs:
   using: "composite"
