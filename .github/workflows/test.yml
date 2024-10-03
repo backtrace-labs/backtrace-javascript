@@ -25,28 +25,28 @@ jobs:
             - run: npm run format:check
             - run: npm test
             - uses: dorny/paths-filter@v3
-                id: filter
-                with:
-                    filters: |
-                    browser:
-                        - '.github/packages/browser/**'
-                        - '.github/packages/sdk-core/**'
-                        - '.github/packages/sdk-core/**'
-                    node:
-                        - '.github/packages/sdk-core/**'
-                        - '.github/packages/electron/**'
-                        - '.github/packages/nestjs/**'
-                        - '.github/packages/node/**'
+              id: filter
+              with:
+                  filters: |
+                        browser:
+                            - '.github/packages/browser/**'
+                            - '.github/packages/sdk-core/**'
+                            - '.github/packages/sdk-core/**'
+                        node:
+                            - '.github/packages/sdk-core/**'
+                            - '.github/packages/electron/**'
+                            - '.github/packages/nestjs/**'
+                            - '.github/packages/node/**'
 
             - run: npm run smoketest:node
-                if: steps.filter.outputs.node == 'true'
-                env:
+              if: steps.filter.outputs.node == 'true'
+              env:
                     SMOKETESTS_SUBMIT_LAYER_URL: ${{ secrets.SMOKETESTS_SUBMIT_LAYER_URL }}
                     SMOKETESTS_DIRECT_SUBMIT_URL: ${{ secrets.SMOKETESTS_DIRECT_SUBMIT_URL }}
-                    
+
             - run: npm run smoketest:browser
-                if: steps.filter.outputs.browser == 'true'
-                env:
+              if: steps.filter.outputs.browser == 'true'
+              env:
                     SMOKETESTS_SUBMIT_LAYER_URL: ${{ secrets.SMOKETESTS_SUBMIT_LAYER_URL }}
                     SMOKETESTS_DIRECT_SUBMIT_URL: ${{ secrets.SMOKETESTS_DIRECT_SUBMIT_URL }}
                     SMOKETESTS_SAUCE_USERNAME: ${{ secrets.SMOKETESTS_SAUCE_USERNAME }}
