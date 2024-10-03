@@ -1,7 +1,7 @@
 {
     "name": "@backtrace/browser",
     "version": "0.4.0",
-    "description": "Backtrace-JavaScript web browser integration.",
+    "description": "Backtrace-JavaScript web browser integration",
     "main": "lib/bundle.cjs",
     "module": "lib/bundle.mjs",
     "browser": "lib/bundle.mjs",
