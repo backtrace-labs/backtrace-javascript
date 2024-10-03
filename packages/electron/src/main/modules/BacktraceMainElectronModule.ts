@@ -210,3 +210,4 @@ function toStringDictionary(record: Record<string, unknown>): Record<string, str
         {} as Record<string, string>,
     );
 }
+
