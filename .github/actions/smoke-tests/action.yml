@@ -1,5 +1,20 @@
 name: Smoke test
 description: "Execute smoke tests"
+
+inputs:
+  submit-url:
+    description: 'Submit layer url'
+    required: true
+  direct-submit-url:
+    description: 'Direct submission URL to Backtrace instance'
+    required: true
+  sauce-username:
+    description: 'Sauce labs user name'
+    required: true
+  sauce-access-key:
+    description: 'Sauce labs secret'
+    required: true
+
 runs:
   using: "composite"
   steps:
@@ -20,13 +35,13 @@ runs:
     - run: npm run smoketest:node
       if: steps.filter.outputs.node == 'true'
       env:
-            SMOKETESTS_SUBMIT_LAYER_URL: ${{ secrets.SMOKETESTS_SUBMIT_LAYER_URL }}
-            SMOKETESTS_DIRECT_SUBMIT_URL: ${{ secrets.SMOKETESTS_DIRECT_SUBMIT_URL }}
+            SMOKETESTS_SUBMIT_LAYER_URL: ${{ inputs.submit-url }}
+            SMOKETESTS_DIRECT_SUBMIT_URL: ${{ inputs.direct-submit-url }}
 
     - run: npm run smoketest:browser
       if: steps.filter.outputs.browser == 'true'
       env:
-            SMOKETESTS_SUBMIT_LAYER_URL: ${{ secrets.SMOKETESTS_SUBMIT_LAYER_URL }}
-            SMOKETESTS_DIRECT_SUBMIT_URL: ${{ secrets.SMOKETESTS_DIRECT_SUBMIT_URL }}
-            SMOKETESTS_SAUCE_USERNAME: ${{ secrets.SMOKETESTS_SAUCE_USERNAME }}
-            SMOKETESTS_SAUCE_ACCESS_KEY: ${{ secrets.SMOKETESTS_SAUCE_ACCESS_KEY }}
+            SMOKETESTS_SUBMIT_LAYER_URL: ${{ inputs.submit-url }}
+            SMOKETESTS_DIRECT_SUBMIT_URL: ${{ inputs.direct-submit-url }}
+            SMOKETESTS_SAUCE_USERNAME: ${{ inputs.sauce-username }}
+            SMOKETESTS_SAUCE_ACCESS_KEY: ${{ inputs.sauce-access-key }}
