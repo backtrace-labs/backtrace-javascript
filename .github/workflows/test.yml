@@ -29,14 +29,14 @@ jobs:
               with:
                   filters: |
                         browser:
-                            - '.github/packages/browser/**'
-                            - '.github/packages/sdk-core/**'
-                            - '.github/packages/sdk-core/**'
+                            - 'packages/browser/**'
+                            - 'packages/sdk-core/**'
+                            - 'packages/sdk-core/**'
                         node:
-                            - '.github/packages/sdk-core/**'
-                            - '.github/packages/electron/**'
-                            - '.github/packages/nestjs/**'
-                            - '.github/packages/node/**'
+                            - 'packages/sdk-core/**'
+                            - 'packages/electron/**'
+                            - 'packages/nestjs/**'
+                            - 'packages/node/**'
 
             - run: npm run smoketest:node
               if: steps.filter.outputs.node == 'true'
