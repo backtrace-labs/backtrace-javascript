@@ -33,12 +33,14 @@ runs:
                     - 'packages/node/**'
 
     - run: npm run smoketest:node
+      shell: bash
       if: steps.filter.outputs.node == 'true'
       env:
             SMOKETESTS_SUBMIT_LAYER_URL: ${{ inputs.submit-url }}
             SMOKETESTS_DIRECT_SUBMIT_URL: ${{ inputs.direct-submit-url }}
 
     - run: npm run smoketest:browser
+      shell: bash
       if: steps.filter.outputs.browser == 'true'
       env:
             SMOKETESTS_SUBMIT_LAYER_URL: ${{ inputs.submit-url }}
