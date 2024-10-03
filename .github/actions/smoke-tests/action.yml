@@ -24,12 +24,10 @@ runs:
           filters: |
                 browser:
                     - 'packages/browser/**'
-                    - 'packages/sdk-core/**'
+                    - 'packages/react/**'
                     - 'packages/sdk-core/**'
                 node:
                     - 'packages/sdk-core/**'
-                    - 'packages/electron/**'
-                    - 'packages/nestjs/**'
                     - 'packages/node/**'
 
     - run: npm run smoketest:node
