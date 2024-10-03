@@ -21,6 +21,9 @@ jobs:
                   node-version: ${{ matrix.node-version }}
             - run: npm ci
             - run: npm run build
+            - run: npm run lint
+            - run: npm run format:check
+            - run: npm test
             - name: smoke-test
               uses: ./.github/actions/smoke-tests
               with:
@@ -28,9 +31,6 @@ jobs:
                 direct-submit-url: ${{ secrets.SMOKETESTS_DIRECT_SUBMIT_URL }}
                 sauce-username: ${{ secrets.SMOKETESTS_SAUCE_USERNAME }}
                 sauce-access-key: ${{ secrets.SMOKETESTS_SAUCE_ACCESS_KEY }}
-            - run: npm run lint
-            - run: npm run format:check
-            - run: npm test
 
     test_linux:
         runs-on: ubuntu-latest
