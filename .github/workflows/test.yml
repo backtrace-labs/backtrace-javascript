@@ -24,7 +24,7 @@ jobs:
             - name: smoke-test
               uses: ./.github/actions/smoke-tests
               with:
-                secret-token: ${{ secrets.SMOKETESTS_SUBMIT_LAYER_URL }}
+                submit-url: ${{ secrets.SMOKETESTS_SUBMIT_LAYER_URL }}
                 direct-submit-url: ${{ secrets.SMOKETESTS_DIRECT_SUBMIT_URL }}
                 sauce-username: ${{ secrets.SMOKETESTS_SAUCE_USERNAME }}
                 sauce-access-key: ${{ secrets.SMOKETESTS_SAUCE_ACCESS_KEY }}
