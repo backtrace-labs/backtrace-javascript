@@ -26,4 +26,3 @@ export * from './builder/BacktraceClientBuilder.js';
 export * from './builder/BacktraceClientSetup.js';
 export * from './converters/getStackTraceConverter.js';
 export * from './redux/BacktraceReduxMiddleware.js';
-
