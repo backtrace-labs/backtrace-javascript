@@ -36,6 +36,16 @@ export const config: Options.Testrunner & {
             browserName: 'safari',
             platformName: 'macOS 13',
         },
+        {
+            platformName: 'iOS',
+            browserName: 'Safari',
+            'appium:deviceName': 'iPhone Simulator',
+            'appium:platformVersion': 'current_major',
+            'appium:automationName': 'XCUITest',
+            'sauce:options': {
+                appiumVersion: '2.0.0',
+            },
+        },
     ],
 
     logLevel: 'info',
