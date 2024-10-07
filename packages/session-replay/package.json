@@ -33,7 +33,7 @@
         "rrweb": "^2.0.0-alpha.15"
     },
     "devDependencies": {
-        "@backtrace/sdk-core": "^0.5.0",
+        "@backtrace/sdk-core": "^0.6.0",
         "@rollup/plugin-commonjs": "^26.0.1",
         "@rollup/plugin-json": "^6.1.0",
         "@rollup/plugin-node-resolve": "^15.2.3",

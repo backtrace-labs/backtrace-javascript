@@ -1,3 +1,9 @@
+# Version 0.6.0
+
+-   add `setInterval` unreffing, fixing blocking of application exit (#291)
+-   reduce breadcrumbs size (#228)
+-   use core client and database as event emitter (#290)
+
 # Version 0.5.0
 
 -   update code to use ES modules (#266, #279)
