@@ -138,8 +138,9 @@ describe('Client tests', () => {
     describe('Validation tests', () => {
         it('should throw on initialize when application and application.version attributes are missing', () => {
             const instance = new BacktraceTestClient({}, testHttpClient);
-            expect(() => instance.initialize()).toThrow(/application: must be defined and not an empty string/);
-            expect(() => instance.initialize()).toThrow(/application.version: must be defined and not an empty string/);
+            expect(() => instance.initialize()).toThrow(
+                'application and application.version attributes must be defined.',
+            );
         });
 
         it('should throw on initialize when application attribute is missing', () => {
@@ -151,7 +152,9 @@ describe('Client tests', () => {
                     }),
                 },
             ]);
-            expect(() => instance.initialize()).toThrow(/application: must be defined and not an empty string/);
+            expect(() => instance.initialize()).toThrow(
+                'application and application.version attributes must be defined.',
+            );
         });
 
         it('should throw on initialize when application.version attribute is missing', () => {
@@ -163,7 +166,9 @@ describe('Client tests', () => {
                     }),
                 },
             ]);
-            expect(() => instance.initialize()).toThrow(/application.version: must be defined and not an empty string/);
+            expect(() => instance.initialize()).toThrow(
+                'application and application.version attributes must be defined.',
+            );
         });
 
         it('should not throw on initialize when application and application.version attributes are defined as scoped', () => {
