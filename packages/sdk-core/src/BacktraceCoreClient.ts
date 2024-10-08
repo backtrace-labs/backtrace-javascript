@@ -218,6 +218,8 @@ export abstract class BacktraceCoreClient<
     }
 
     public initialize() {
+        this.validateAttributes();
+
         if (this.fileSystem && this.options.database?.createDatabaseDirectory) {
             if (!this.options.database.path) {
                 throw new Error(
@@ -417,5 +419,52 @@ export abstract class BacktraceCoreClient<
 
     private static destroy() {
         this._instance = undefined;
+    }
+
+    private validateAttributes() {
+        function isNotEmptyString(v: unknown) {
+            if (typeof v === 'string' && v) {
+                return;
+            }
+
+            return 'must be defined and not an empty string';
+        }
+
+        const validators = {
+            application: isNotEmptyString,
+            'application.version': isNotEmptyString,
+        } as const;
+
+        function validate(attributes: Record<string, unknown>) {
+            const errors: Record<string, string> = {};
+            for (const [attribute, validate] of Object.entries(validators)) {
+                const value = attributes[attribute];
+                const error = validate(value);
+                if (error) {
+                    errors[attribute] = error;
+                }
+            }
+            return errors;
+        }
+
+        // Validate scoped attributes first. If they return no errors, there is no point
+        // in checking all attributes, which resolving of may be slower.
+        const scoped = this.attributeManager.get('scoped');
+        const scopedErrors = validate(scoped.attributes);
+        if (!Object.keys(scopedErrors).length) {
+            return;
+        }
+
+        const allAttributes = this.attributeManager.get();
+        const allErrors = validate(allAttributes.attributes);
+        if (!Object.keys(allErrors).length) {
+            return;
+        }
+
+        const attributeErrors = Object.entries(allErrors)
+            .map(([attribute, error]) => `${attribute}: ${error}`)
+            .join('\n');
+
+        throw new Error(`Following attributes are invalid:\n${attributeErrors}`);
     }
 }
