@@ -1,6 +1,12 @@
 import { BacktraceReport, BacktraceStringAttachment } from '../../src/index.js';
+import { AttributeManager } from '../../src/modules/attribute/AttributeManager.js';
 import { BacktraceTestClient } from '../mocks/BacktraceTestClient.js';
+import { testHttpClient } from '../mocks/testHttpClient.js';
 describe('Client tests', () => {
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
+
     describe('Send tests', () => {
         const client = BacktraceTestClient.buildFakeClient();
 
@@ -126,6 +132,105 @@ describe('Client tests', () => {
                 [clientAttachment, reportAttachment],
                 undefined,
             );
+        });
+    });
+
+    describe('Validation tests', () => {
+        it('should throw on initialize when application and application.version attributes are missing', () => {
+            const instance = new BacktraceTestClient({}, testHttpClient);
+            expect(() => instance.initialize()).toThrow(
+                'application and application.version attributes must be defined.',
+            );
+        });
+
+        it('should throw on initialize when application attribute is missing', () => {
+            const instance = new BacktraceTestClient({}, testHttpClient, [
+                {
+                    type: 'scoped',
+                    get: () => ({
+                        'application.version': '1.2.3',
+                    }),
+                },
+            ]);
+            expect(() => instance.initialize()).toThrow(
+                'application and application.version attributes must be defined.',
+            );
+        });
+
+        it('should throw on initialize when application.version attribute is missing', () => {
+            const instance = new BacktraceTestClient({}, testHttpClient, [
+                {
+                    type: 'scoped',
+                    get: () => ({
+                        application: 'my-app',
+                    }),
+                },
+            ]);
+            expect(() => instance.initialize()).toThrow(
+                'application and application.version attributes must be defined.',
+            );
+        });
+
+        it('should not throw on initialize when application and application.version attributes are defined as scoped', () => {
+            const instance = new BacktraceTestClient({}, testHttpClient, [
+                {
+                    type: 'scoped',
+                    get: () => ({
+                        application: 'my-app',
+                        'application.version': '1.2.3',
+                    }),
+                },
+            ]);
+            expect(() => instance.initialize()).not.toThrow();
+        });
+
+        it('should not throw on initialize when application and application.version attributes are defined as dynamic', () => {
+            const instance = new BacktraceTestClient({}, testHttpClient, [
+                {
+                    type: 'dynamic',
+                    get: () => ({
+                        application: 'my-app',
+                        'application.version': '1.2.3',
+                    }),
+                },
+            ]);
+            expect(() => instance.initialize()).not.toThrow();
+        });
+
+        it('should only test scoped attributes and not all when application and application.version attributes are defined as scoped', () => {
+            const instance = new BacktraceTestClient({}, testHttpClient, [
+                {
+                    type: 'scoped',
+                    get: () => ({
+                        application: 'my-app',
+                        'application.version': '1.2.3',
+                    }),
+                },
+            ]);
+
+            const getAttributesSpy = jest.spyOn(AttributeManager.prototype, 'get');
+            instance.initialize();
+
+            expect(getAttributesSpy).toHaveBeenCalledWith('scoped');
+            expect(getAttributesSpy).not.toHaveBeenCalledWith();
+        });
+
+        it('should test both scoped attributes and all when application and application.version attributes are defined as dynamic', () => {
+            const instance = new BacktraceTestClient({}, testHttpClient, [
+                {
+                    type: 'dynamic',
+                    get: () => ({
+                        application: 'my-app',
+                        'application.version': '1.2.3',
+                    }),
+                },
+            ]);
+
+            const getAttributesSpy = jest.spyOn(AttributeManager.prototype, 'get');
+            instance.initialize();
+
+            expect(getAttributesSpy).toHaveBeenCalledWith('scoped');
+            expect(getAttributesSpy).toHaveBeenCalledWith();
         });
     });
 });

@@ -218,6 +218,8 @@ export abstract class BacktraceCoreClient<
     }
 
     public initialize() {
+        this.validateAttributes();
+
         if (this.fileSystem && this.options.database?.createDatabaseDirectory) {
             if (!this.options.database.path) {
                 throw new Error(
@@ -417,5 +419,29 @@ export abstract class BacktraceCoreClient<
 
     private static destroy() {
         this._instance = undefined;
+    }
+
+    private validateAttributes() {
+        function validateApplicationAndVersion(attributes: Record<string, unknown>) {
+            if (!attributes['application'] || !attributes['application.version']) {
+                return 'application and application.version attributes must be defined.';
+            }
+        }
+
+        // Validate scoped attributes first. If they return no errors, there is no point
+        // in checking all attributes, which resolving of may be slower.
+        const scoped = this.attributeManager.get('scoped');
+        const scopedError = validateApplicationAndVersion(scoped.attributes);
+        if (!scopedError) {
+            return;
+        }
+
+        const allAttributes = this.attributeManager.get();
+        const error = validateApplicationAndVersion(allAttributes.attributes);
+        if (!error) {
+            return;
+        }
+
+        throw new Error(error);
     }
 }
