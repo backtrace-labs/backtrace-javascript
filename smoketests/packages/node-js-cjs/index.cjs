@@ -1,5 +1,6 @@
-import { BacktraceClient } from '@backtrace/node';
-import path from 'path';
+/* eslint-disable @typescript-eslint/no-var-requires */
+const { BacktraceClient } = require('@backtrace/node');
+const path = require('path');
 
 const SUBMISSION_URL = process.argv[2];
 if (!SUBMISSION_URL) {
@@ -26,7 +27,7 @@ const client = BacktraceClient.initialize({
 });
 
 console.log('submitting message');
-client.send('test message').then((result) => {
+client.send(new Error('test exception')).then((result) => {
     if (result.status !== 'Ok') {
         console.error('Unexpected result:', result);
         process.exit(1);

@@ -2,9 +2,26 @@
     "name": "smoketests",
     "version": "1.0.0",
     "description": "smoketests for SDK packages",
+    "type": "module",
     "scripts": {
-        "start": "jest --runInBand"
+        "prepare-packages": "node --loader ts-node/esm ./tests/prepare.ts",
+        "start": "npm run prepare-packages && npm run jest && npm run wdio",
+        "start:jest": "npm run prepare-packages && npm run jest",
+        "start:wdio": "npm run prepare-packages && npm run wdio",
+        "jest": "cross-env NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" NODE_NO_WARNINGS=1 NODE_ENV=test jest --runInBand",
+        "wdio": "wdio run ./wdio.conf.ts"
     },
     "author": "Backtrace <team@backtrace.io>",
-    "license": "MIT"
+    "license": "MIT",
+    "devDependencies": {
+        "@types/jest": "^29.5.12",
+        "@wdio/cli": "^8.40.5",
+        "@wdio/local-runner": "^8.40.5",
+        "@wdio/mocha-framework": "^8.40.3",
+        "@wdio/sauce-service": "^8.40.5",
+        "@wdio/spec-reporter": "^8.40.3",
+        "@wdio/static-server-service": "^8.40.3",
+        "expect-webdriverio": "^5.0.2",
+        "jest": "^29.7.0"
+    }
 }

@@ -5,7 +5,7 @@ export interface AsyncSpawnResult {
     readonly stderr: string;
 }
 
-interface AsyncSpawnOptions extends SpawnOptionsWithoutStdio {
+export interface AsyncSpawnOptions extends SpawnOptionsWithoutStdio {
     readonly signal?: AbortSignal;
     readonly debugName?: string;
 }

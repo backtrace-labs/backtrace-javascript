@@ -6,13 +6,42 @@ on:
     pull_request:
 
 jobs:
+    test_linux_all:
+        runs-on: ubuntu-latest
+
+        strategy:
+            matrix:
+                node-version: [20.x]
+
+        steps:
+            - uses: actions/checkout@v4
+            - name: Use Node.js ${{ matrix.node-version }}
+              uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ matrix.node-version }}
+            - run: npm ci
+            - run: npm run build
+            - run: npm run lint
+            - run: npm run format:check
+            - run: npm test
+            - run: npm run smoketest:node
+              env:
+                  SMOKETESTS_SUBMIT_LAYER_URL: ${{ secrets.SMOKETESTS_SUBMIT_LAYER_URL }}
+                  SMOKETESTS_DIRECT_SUBMIT_URL: ${{ secrets.SMOKETESTS_DIRECT_SUBMIT_URL }}
+            - run: npm run smoketest:browser
+              env:
+                  SMOKETESTS_SUBMIT_LAYER_URL: ${{ secrets.SMOKETESTS_SUBMIT_LAYER_URL }}
+                  SMOKETESTS_DIRECT_SUBMIT_URL: ${{ secrets.SMOKETESTS_DIRECT_SUBMIT_URL }}
+                  SMOKETESTS_SAUCE_USERNAME: ${{ secrets.SMOKETESTS_SAUCE_USERNAME }}
+                  SMOKETESTS_SAUCE_ACCESS_KEY: ${{ secrets.SMOKETESTS_SAUCE_ACCESS_KEY }}
+
     test_linux:
         runs-on: ubuntu-latest
 
         strategy:
             matrix:
                 build-version: [20.x]
-                node-version: [16.x, 18.x, 20.x]
+                node-version: [16.x, 18.x]
 
         steps:
             - uses: actions/checkout@v4
@@ -22,14 +51,12 @@ jobs:
                   node-version: ${{ matrix.build-version }}
             - run: npm ci
             - run: npm run build
-            - run: npm run lint
-            - run: npm run format:check
             - name: Test using Node.js ${{ matrix.node-version }}
               uses: actions/setup-node@v4
               with:
                   node-version: ${{ matrix.node-version }}
             - run: npm test
-            - run: npm run smoketest
+            - run: npm run smoketest:node
               env:
                   SMOKETESTS_SUBMIT_LAYER_URL: ${{ secrets.SMOKETESTS_SUBMIT_LAYER_URL }}
                   SMOKETESTS_DIRECT_SUBMIT_URL: ${{ secrets.SMOKETESTS_DIRECT_SUBMIT_URL }}
@@ -50,33 +77,34 @@ jobs:
                   node-version: ${{ matrix.build-version }}
             - run: npm ci
             - run: npm run build
-            - run: npm run lint
-            - run: npm run format:check
             - name: Test using Node.js ${{ matrix.node-version }}
               uses: actions/setup-node@v4
               with:
                   node-version: ${{ matrix.node-version }}
             - run: npm i -g npm@8
             - run: npm test
-            - run: npm run smoketest
+            - run: npm run smoketest:node
               env:
                   SMOKETESTS_SUBMIT_LAYER_URL: ${{ secrets.SMOKETESTS_SUBMIT_LAYER_URL }}
                   SMOKETESTS_DIRECT_SUBMIT_URL: ${{ secrets.SMOKETESTS_DIRECT_SUBMIT_URL }}
 
     test_windows:
         runs-on: windows-latest
+
+        strategy:
+            matrix:
+                node-version: [18.x]
+
         steps:
             - uses: actions/checkout@v4
-            - name: Use Node.js 18.x
+            - name: Use Node.js ${{ matrix.node-version }}
               uses: actions/setup-node@v4
               with:
-                  node-version: 18.x
+                  node-version: ${{ matrix.node-version }}
             - run: npm ci
             - run: npm run build
-            - run: npm run lint
-            - run: npm run format:check
             - run: npm test
-            - run: npm run smoketest
+            - run: npm run smoketest:node
               env:
                   SMOKETESTS_SUBMIT_LAYER_URL: ${{ secrets.SMOKETESTS_SUBMIT_LAYER_URL }}
                   SMOKETESTS_DIRECT_SUBMIT_URL: ${{ secrets.SMOKETESTS_DIRECT_SUBMIT_URL }}
