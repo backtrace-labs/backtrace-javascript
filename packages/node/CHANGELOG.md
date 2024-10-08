@@ -1,3 +1,9 @@
+# Version 0.6.0
+
+-   update `@backtrace/sdk-core` to `0.6.0`
+-   reduce breadcrumbs size (#228)
+-   use `application` and `application.version` attribute validation from `sdk-core` (#296)
+
 # Version 0.5.0
 
 -   update `@backtrace/sdk-core` to `0.5.0`
