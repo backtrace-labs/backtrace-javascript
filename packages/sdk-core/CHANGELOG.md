@@ -3,6 +3,7 @@
 -   add `setInterval` unreffing, fixing blocking of application exit (#291)
 -   reduce breadcrumbs size (#228)
 -   use core client and database as event emitter (#290)
+-   add `application` and `application.version` attribute validation (#296)
 
 # Version 0.5.0
 
