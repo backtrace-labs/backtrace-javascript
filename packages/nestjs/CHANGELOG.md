@@ -1,3 +1,8 @@
+# Version 0.5.0
+
+-   update `@backtrace/node` to `0.6.0`
+-   add exception filter and exception handler (#293)
+
 # Version 0.4.1
 
 -   fix imports of `tslib` - internalize `tslib` functions (#288)
