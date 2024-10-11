@@ -1,3 +1,8 @@
+# Version 0.6.0
+
+-   update `@backtrace/node` to `0.6.0`
+-   reduce breadcrumb size (#231)
+
 # Version 0.5.0
 
 -   update `@backtrace/node` to `0.5.0`
