@@ -132,11 +132,11 @@ export class BacktraceExceptionHandler<Context extends ArgumentsHost = Arguments
     }
 
     private shouldSend(error: unknown) {
-        if (this._options.includeExceptionTypes && this.filterException(error, this._options.includeExceptionTypes)) {
+        if (this._options.includeExceptionTypes && this.testException(error, this._options.includeExceptionTypes)) {
             return true;
         }
 
-        if (this._options.excludeExceptionTypes && this.filterException(error, this._options.excludeExceptionTypes)) {
+        if (this._options.excludeExceptionTypes && this.testException(error, this._options.excludeExceptionTypes)) {
             return false;
         }
 
@@ -191,7 +191,13 @@ export class BacktraceExceptionHandler<Context extends ArgumentsHost = Arguments
         };
     }
 
-    private filterException(exception: unknown, filter: ExceptionTypeFilter): boolean {
+    /**
+     * Checks if given exception is matched by the filter, or any filter, if multiple are provided.
+     * @param exception Exception to test.
+     * @param filter Filter(s) to use.
+     * @returns `true` if matched, `false` if not
+     */
+    private testException(exception: unknown, filter: ExceptionTypeFilter): boolean {
         if (Array.isArray(filter)) {
             return filter.some((f) => exception instanceof f);
         }
