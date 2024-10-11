@@ -109,6 +109,8 @@ As shown in the example above, `includeExceptionTypes` and `excludeExceptionType
 types, or a function that can return a `boolean`. The array types will match using `instanceof`. The function will have
 the thrown error passed as the first parameter.
 
+**Note:** include is tested before exclude, so if exception type is both included and excluded, it will be included.
+
 ### Upload source maps
 
 Client-side error reports are based on minified code. Upload source maps and source code to resolve minified code to
