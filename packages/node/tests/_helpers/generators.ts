@@ -1,6 +1,8 @@
-import crypto from 'crypto';
 import readline from 'readline';
 import { Readable, Transform } from 'stream';
+import { createRng } from './random.js';
+
+const rng = createRng();
 
 export function randomLines(minLineLength: number, maxLineLength: number) {
     const str = randomString();
@@ -9,7 +11,7 @@ export function randomLines(minLineLength: number, maxLineLength: number) {
         read(size) {
             let buffer = '';
             while (buffer.length < size) {
-                const lineLength = Math.floor(Math.random() * (maxLineLength - minLineLength)) + minLineLength;
+                const lineLength = rng.intBetween(minLineLength, maxLineLength);
                 const line = str.read(lineLength) + '\n';
                 buffer += line;
             }
@@ -25,7 +27,7 @@ export function lines(minLineLength: number, maxLineLength: number) {
         read(size) {
             let buffer = '';
             while (buffer.length < size) {
-                const lineLength = Math.floor(Math.random() * (maxLineLength - minLineLength)) + minLineLength;
+                const lineLength = rng.intBetween(minLineLength, maxLineLength);
                 const line = counter + '_'.repeat(lineLength - 2) + counter + '\n';
                 buffer += line;
                 counter = (counter + 1) % 10;
@@ -85,10 +87,9 @@ export async function readLines(readable: Readable, lines: number) {
 }
 
 export function randomString() {
-    const a = 'A'.charCodeAt(0);
     return new Readable({
         read(size) {
-            this.push(crypto.randomBytes(size).map((c) => (c % 26) + a));
+            this.push(rng.string(size));
         },
     });
 }
