@@ -1,7 +1,7 @@
 import path from 'path';
 import { Writable } from 'stream';
-import { FileChunkSink } from '../../src/streams/fileChunkSink';
-import { mockStreamFileSystem } from '../_mocks/fileSystem';
+import { FileChunkSink } from '../../src/streams/fileChunkSink.js';
+import { mockStreamFileSystem } from '../_mocks/fileSystem.js';
 
 function writeAndClose(stream: Writable, value: string) {
     return new Promise((resolve, reject) => {

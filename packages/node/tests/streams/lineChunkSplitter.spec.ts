@@ -1,7 +1,7 @@
 import { Readable } from 'stream';
-import { lineChunkSplitter } from '../../src/streams/lineChunkSplitter';
-import { chunkify, splitToEnd } from '../_helpers/chunks';
-import { randomLines, readLines } from '../_helpers/generators';
+import { lineChunkSplitter } from '../../src/streams/lineChunkSplitter.js';
+import { chunkify, splitToEnd } from '../_helpers/chunks.js';
+import { randomLines, readLines } from '../_helpers/generators.js';
 
 function countNewlines(buffer: Buffer) {
     return buffer.reduce((sum, c) => (c === '\n'.charCodeAt(0) ? sum + 1 : sum), 0);

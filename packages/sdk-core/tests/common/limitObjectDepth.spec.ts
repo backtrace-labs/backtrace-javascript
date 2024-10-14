@@ -1,4 +1,4 @@
-import { limitObjectDepth } from '../../src/common/limitObjectDepth';
+import { limitObjectDepth } from '../../src/common/limitObjectDepth.js';
 
 const EXPECTED_REMOVED_PLACEHOLDER = '<removed>';
 

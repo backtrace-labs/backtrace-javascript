@@ -1,9 +1,9 @@
 import { Readable, Writable } from 'stream';
-import { chunkifier, ChunkSplitter } from '../../src/streams/chunkifier';
-import { blackholeChunkSink } from '../_helpers/blackholeChunkSink';
-import { splitToEnd } from '../_helpers/chunks';
-import { limit, randomString } from '../_helpers/generators';
-import { memoryChunkSink } from '../_helpers/memoryChunkSink';
+import { chunkifier, ChunkSplitter } from '../../src/streams/chunkifier.js';
+import { blackholeChunkSink } from '../_helpers/blackholeChunkSink.js';
+import { splitToEnd } from '../_helpers/chunks.js';
+import { limit, randomString } from '../_helpers/generators.js';
+import { memoryChunkSink } from '../_helpers/memoryChunkSink.js';
 
 function charSplitter(char: string): ChunkSplitter {
     return (chunk) => {

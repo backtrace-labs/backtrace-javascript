@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { jsonEscaper } from '../../src/common/jsonEscaper';
-import { jsonSize } from '../../src/common/jsonSize';
+import { jsonEscaper } from '../../src/common/jsonEscaper.js';
+import { jsonSize } from '../../src/common/jsonSize.js';
 
 describe('jsonSize', () => {
     it('should compute string size', () => {

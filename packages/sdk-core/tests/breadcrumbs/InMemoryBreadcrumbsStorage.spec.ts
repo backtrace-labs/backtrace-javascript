@@ -1,5 +1,5 @@
-import { Breadcrumb, BreadcrumbLogLevel, BreadcrumbType, RawBreadcrumb } from '../../src';
-import { InMemoryBreadcrumbsStorage } from '../../src/modules/breadcrumbs/storage/InMemoryBreadcrumbsStorage';
+import { Breadcrumb, BreadcrumbLogLevel, BreadcrumbType, RawBreadcrumb } from '../../src/index.js';
+import { InMemoryBreadcrumbsStorage } from '../../src/modules/breadcrumbs/storage/InMemoryBreadcrumbsStorage.js';
 
 describe('InMemoryBreadcrumbsStorage', () => {
     it('should return added breadcrumbs', () => {

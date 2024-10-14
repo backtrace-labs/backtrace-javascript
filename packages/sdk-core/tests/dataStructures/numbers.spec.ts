@@ -1,4 +1,4 @@
-import { clamped, wrapped } from '../../src/dataStructures/numbers';
+import { clamped, wrapped } from '../../src/dataStructures/numbers.js';
 
 describe('wrapped', () => {
     it('should return set number if between min and max', () => {

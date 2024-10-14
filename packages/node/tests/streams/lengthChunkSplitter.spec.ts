@@ -1,7 +1,7 @@
 import { Readable } from 'stream';
-import { lengthChunkSplitter } from '../../src/streams/lengthChunkSplitter';
-import { chunkify, splitToEnd } from '../_helpers/chunks';
-import { randomString } from '../_helpers/generators';
+import { lengthChunkSplitter } from '../../src/streams/lengthChunkSplitter.js';
+import { chunkify, splitToEnd } from '../_helpers/chunks.js';
+import { randomString } from '../_helpers/generators.js';
 
 describe('lengthChunkSplitter', () => {
     it('should split chunk if it is larger than maxLength', () => {

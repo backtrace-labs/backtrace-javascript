@@ -1,4 +1,4 @@
-import { OverwritingArray } from '../../src/dataStructures/OverwritingArray';
+import { OverwritingArray } from '../../src/dataStructures/OverwritingArray.js';
 
 describe('OverwritingArray', () => {
     describe('push', () => {
