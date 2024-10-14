@@ -7,6 +7,7 @@
  */
 
 import path from 'path';
+import { parseOptions } from './common/options';
 import { log } from './common/output';
 import {
     DependencyType,
@@ -58,12 +59,17 @@ function updateVersions(packageJson: PackageJson, currentVersions: Record<string
 }
 
 (async () => {
+    const options = ['--dry-run'] as const;
     const rootPackageJson = await loadPackageJson(path.join(rootDir, 'package.json'));
     const workspacePackageJsonPaths = getWorkspacePackageJsonPaths(rootPackageJson);
     const workspacePackageJsons = await Promise.all(workspacePackageJsonPaths.map(loadPackageJson));
 
-    const args = process.argv.slice(2);
-    const packageJsonPathsToSync = args.length ? args : workspacePackageJsonPaths;
+    const [positionalArgs, { '--dry-run': dryRun }] = parseOptions(options);
+    const packageJsonPathsToSync = positionalArgs.length ? positionalArgs : workspacePackageJsonPaths;
+
+    if (dryRun) {
+        log('dry run enabled');
+    }
 
     const currentVersions = workspacePackageJsons.reduce(
         (obj, pj) => {
@@ -77,7 +83,9 @@ function updateVersions(packageJson: PackageJson, currentVersions: Record<string
         const packageJson = await loadPackageJson(packageJsonPath);
         const updated = updateVersions(packageJson, currentVersions);
         if (updated) {
-            await savePackageJson(packageJsonPath, packageJson);
+            if (!dryRun) {
+                await savePackageJson(packageJsonPath, packageJson);
+            }
             console.log(path.relative(process.cwd(), packageJsonPath));
         }
     }

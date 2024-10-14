@@ -67,3 +67,11 @@ export function npmPublish(packageJsonPath: string) {
         cwd: path.dirname(packageJsonPath),
     };
 }
+
+export function npmRun(script: string, options?: { args: string[]; packageJsonPath?: string }) {
+    return {
+        command: 'npm',
+        args: ['run', '--silent', script, '--', ...(options?.args ?? [])],
+        cwd: options?.packageJsonPath && path.dirname(options.packageJsonPath),
+    };
+}

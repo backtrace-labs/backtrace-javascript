@@ -24,8 +24,8 @@ import {
     gitRestoreFile,
 } from './common/git';
 import { log } from './common/output';
-import { PackageJson, loadPackageJson, npmInstall, savePackageJson } from './common/packageJson';
-import { TrasnactionFn, noop, transaction } from './common/transaction';
+import { PackageJson, loadPackageJson, npmInstall, npmRun, savePackageJson } from './common/packageJson';
+import { TrasnactionFn, transaction } from './common/transaction';
 
 const rootDir = path.join(__dirname, '..');
 
@@ -60,17 +60,21 @@ function updateVersion(
 }
 
 async function main() {
-    const options = ['--dry-run', '--no-push', '--no-commit', '--no-checkout', '--no-add', '--name'] as const;
+    const options = [
+        '--dry-run',
+        '--no-push',
+        '--no-commit',
+        '--no-checkout',
+        '--no-add',
+        '--no-sync',
+        '--name',
+    ] as const;
 
     const argv = process.argv.slice(2);
     const [packageJsonPath, versionOrRelease, identifier] = argv.filter((v) => !options.some((o) => v.startsWith(o)));
 
     if (!packageJsonPath) {
         throw new Error('first argument must be a package.json path');
-    }
-
-    if (!versionOrRelease) {
-        throw new Error('second argument must be a version or release type');
     }
 
     const optionValues = options.reduce(
@@ -100,11 +104,15 @@ async function main() {
         typeof optionValues['--name'] === 'string'
             ? optionValues['--name']
             : packageJson.name.replace('@backtrace/', '');
-    const updatedPackageJson = updateVersion(packageJson, versionOrRelease, identifier);
+    const updatedPackageJson = versionOrRelease
+        ? updateVersion(packageJson, versionOrRelease, identifier)
+        : packageJson;
     const currentBranch = execute(gitGetCurrentBranch());
     const branchName = `${packageName}/${updatedPackageJson.version}`;
 
-    log(`updating version from ${packageJson.version} to ${updatedPackageJson.version}`);
+    if (packageJson.version !== updatedPackageJson.version) {
+        log(`updating version from ${packageJson.version} to ${updatedPackageJson.version}`);
+    }
 
     const exit: TrasnactionFn = [
         'exit',
@@ -114,29 +122,32 @@ async function main() {
         },
     ];
 
+    const filesToAdd: string[] = [
+        packageJsonPath,
+        packageLockPath,
+        path.join(path.dirname(packageJsonPath), 'CHANGELOG.md'),
+    ];
+    if (!dryRun) {
+        await savePackageJson(packageJsonPath, updatedPackageJson);
+    }
+
+    if (!optionValues['--no-sync']) {
+        const execute = executor();
+        const args = dryRun ? ['--dry-run'] : [];
+        const syncedPackages = execute(npmRun('syncVersions', { args }))
+            .trim()
+            .split('\n')
+            .filter((f) => !!f);
+        for (const path of syncedPackages) {
+            filesToAdd.push(path);
+        }
+    }
+
     const run = transaction(
-        dryRun
-            ? noop
-            : [
-                  'save package json',
-                  () => savePackageJson(packageJsonPath, updatedPackageJson),
-                  () => savePackageJson(packageJsonPath, packageJson),
-              ],
         ['npm install', () => execute(npmInstall()), () => execute(gitRestoreFile(packageLockPath))],
         optionValues['--no-add']
             ? exit
-            : [
-                  'add package.json to git',
-                  () => execute(gitAdd(packageJsonPath)),
-                  () => execute(gitReset(packageJsonPath)),
-              ],
-        optionValues['--no-add']
-            ? exit
-            : [
-                  'add package-lock.json to git',
-                  () => execute(gitAdd(packageLockPath)),
-                  () => execute(gitReset(packageLockPath)),
-              ],
+            : ['add files to git', () => execute(gitAdd(...filesToAdd)), () => execute(gitReset(...filesToAdd))],
         optionValues['--no-checkout']
             ? exit
             : ['create branch', () => execute(gitCreateBranch(branchName)), () => execute(gitDeleteBranch(branchName))],
