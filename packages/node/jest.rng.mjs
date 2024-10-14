@@ -5,6 +5,9 @@ function getRandomSeed() {
 }
 
 export default function () {
-    process.env.TEST_SEED ??= getRandomSeed();
+    if (!process.env.TEST_SEED) {
+        process.env.TEST_SEED = getRandomSeed();
+    }
+
     console.log(`\n=== Using random seed ${process.env.TEST_SEED} ===`);
 }
