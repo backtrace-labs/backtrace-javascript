@@ -2,15 +2,37 @@ const { execSync } = require('child_process');
 const path = require('path');
 const chalk = require('chalk');
 
+/**
+ * Returns `true` if any function of `fns` returns `true`.
+ */
 const oneOf =
     (...fns) =>
     (...args) =>
         fns.some((fn) => fn(...args));
+
 const startsWith = (what) => (str) => str.startsWith(what);
+
+/**
+ * Returns n-th part from left of path.
+ *
+ * @example
+ * console.log(nthPathPart(2)('a/b/c/d')) // 'c'
+ */
 const nthPathPart = (n) => (pathStr) => path.normalize(pathStr).split(path.sep)[n];
+
+/**
+ * Returns array as comma-separated string.
+ */
 const csv = (array) => (array.length ? array.join(', ') : '<none>');
+
+/**
+ * Case-insensitive string equality check.
+ */
 const ciEquals = (a, b) => a.localeCompare(b, undefined, { sensitivity: 'accent' }) === 0;
 
+/**
+ * Expected change prefixes, in form of `[predicate, getPrefix]` functions.
+ */
 const changePrefix = [
     // packages/sdk-core/file.ts => sdk-core
     // tools/cli/file.ts => cli
@@ -21,6 +43,9 @@ const changePrefix = [
     [oneOf(startsWith('smoketests/'), startsWith('scripts/')), nthPathPart(0)],
 ];
 
+/**
+ * Retrieves change prefix from file path, e.g. "sdk-core" for "packages/sdk-core/file.ts".
+ */
 function getChangePrefix(filePath) {
     for (const [test, prefix] of changePrefix) {
         if (test(filePath)) {
@@ -29,14 +54,23 @@ function getChangePrefix(filePath) {
     }
 }
 
+/**
+ * Returns unique values of `values`.
+ */
 function unique(...values) {
     return [...new Set(...values)];
 }
 
+/**
+ * Returns all expected prefixes for `modifiedFiles`.
+ */
 function getExpectedPrefixes(modifiedFiles) {
     return unique(modifiedFiles.split('\n').map(getChangePrefix)).filter((f) => !!f);
 }
 
+/**
+ * Returns all used prefixes in `message`.
+ */
 function getActualPrefixes(message) {
     if (!message.includes(':')) {
         return [[], message];
@@ -50,6 +84,9 @@ function getActualPrefixes(message) {
     return [prefix.split(', '), (rest && rest.trim()) || ''];
 }
 
+/**
+ * Returns all prefixes that are in `expected`, but not in `actual`.
+ */
 function getMissingPrefixes(expected, actual) {
     const missing = [];
 
@@ -62,12 +99,24 @@ function getMissingPrefixes(expected, actual) {
     return missing;
 }
 
+/**
+ * Returns normalized expected prefixes based on what is missing and what was provided.
+ * Normalization changes the case to match expected.
+ */
 function normalizeExpectedPrefixes(expected, missing, actual) {
     const normalizedActual = actual.map((a) => expected.find((e) => ciEquals(a, e)) || a);
     const missingFromNormalized = missing.filter((m) => !normalizedActual.includes(m));
     return [...normalizedActual, ...missingFromNormalized];
 }
 
+/**
+ * Displays error banner in format of:
+ * ```
+ * ===============
+ * ==== error ====
+ * ===============
+ * ```
+ */
 function banner(str) {
     const repeat = (n, what) => [...new Array(n)].map(() => what).join('');
 
