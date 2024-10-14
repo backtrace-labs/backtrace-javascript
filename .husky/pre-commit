@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+
+# Run lint on modified files
+prettier $(git diff --cached --name-only --diff-filter=ACMR | sed 's| |\\ |g') --write --ignore-unknown
+
+# Update index with modified files
+git update-index --again
