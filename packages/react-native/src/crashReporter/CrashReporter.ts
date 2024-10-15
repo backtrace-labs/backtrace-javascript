@@ -1,4 +1,5 @@
 import { type AttributeType, type BacktraceAttachment, type FileSystem } from '@backtrace/sdk-core';
+import path from 'path';
 import { NativeModules } from 'react-native';
 import { BacktraceFileAttachment } from '../attachment/BacktraceFileAttachment';
 import { DebuggerHelper } from '../common/DebuggerHelper';
@@ -33,11 +34,12 @@ export class CrashReporter {
             return false;
         }
 
-        this._fileSystem.createDirSync(`${databasePath}/native`);
+        const nativeDatabasePath = path.join(databasePath, 'native');
+        this._fileSystem.createDirSync(nativeDatabasePath);
 
         CrashReporter.BacktraceReactNative.initialize(
             submissionUrl,
-            databasePath,
+            nativeDatabasePath,
             {
                 ...this.convertAttributes(attributes),
                 'error.type': 'Crash',
