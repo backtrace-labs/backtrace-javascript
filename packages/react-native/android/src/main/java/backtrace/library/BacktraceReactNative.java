@@ -103,7 +103,6 @@ public class BacktraceReactNative extends ReactContextBaseJavaModule {
 
     @ReactMethod()
     public void crash() {
-        Log.d("BacktraceCrashHandlerRunner", "Crash");
         BacktraceBase.crash();
     }
 }
