@@ -8,7 +8,9 @@ export async function splitToEnd(readable: Readable, splitter: ChunkSplitter) {
         while (chunk) {
             const [c1, c2] = splitter(chunk, readable.readableEncoding ?? 'utf-8');
             results[results.length - 1].push(c1);
-            if (c2) {
+            if (!c2?.length) {
+                break;
+            } else if (c2) {
                 chunk = c2;
                 results.push([]);
             } else {
