@@ -1,3 +1,14 @@
+/**
+ * This script verifies if the commit message contains a valid prefix
+ * if files have been modified in the following directories:
+ * - packages/** - message must contain the package name prefix (e.g. "sdk-core"),
+ * - tools/** - message must contain the tool name prefix (e.g. "cli"),
+ * - scripts/** - message must contain the "scripts" prefix,
+ * - smoketests/** - message must contain the "smoketests" prefix.
+ *
+ * The list can be extended by modifying VALID_PREFIXES constant.
+ */
+
 const { execSync } = require('child_process');
 const path = require('path');
 const chalk = require('chalk');
@@ -31,9 +42,11 @@ const csv = (array) => (array.length ? array.join(', ') : '<none>');
 const ciEquals = (a, b) => a.localeCompare(b, undefined, { sensitivity: 'accent' }) === 0;
 
 /**
- * Expected change prefixes, in form of `[predicate, getPrefix]` functions.
+ * Expected change prefixes, in form of `[predicate, getPrefix]` functions:
+ * - `predicate`: `(modifiedFile: string) => boolean` - should return `true` if `modifiedFile` should have the prefix
+ * - `getPrefix`: `(modifiedFile: string) => string` - should return prefix value
  */
-const changePrefix = [
+const VALID_PREFIXES = [
     // packages/sdk-core/file.ts => sdk-core
     // tools/cli/file.ts => cli
     [oneOf(startsWith('packages/'), startsWith('tools/')), nthPathPart(1)],
@@ -47,7 +60,7 @@ const changePrefix = [
  * Retrieves change prefix from file path, e.g. "sdk-core" for "packages/sdk-core/file.ts".
  */
 function getChangePrefix(filePath) {
-    for (const [test, prefix] of changePrefix) {
+    for (const [test, prefix] of VALID_PREFIXES) {
         if (test(filePath)) {
             return prefix(filePath);
         }
