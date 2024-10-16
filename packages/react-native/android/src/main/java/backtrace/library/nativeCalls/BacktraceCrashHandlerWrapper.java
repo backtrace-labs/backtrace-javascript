@@ -1,9 +1,6 @@
 package backtraceio.library.nativeCalls;
 
-import backtraceio.library.enums.UnwindingMode;
-import backtraceio.library.interfaces.NativeCommunication;
-
-public class BacktraceCrashHandlerWrapper implements NativeCommunication {
+public class BacktraceCrashHandlerWrapper{
     public boolean handleCrash(String[] args) {
         return BacktraceCrashHandler.handleCrash(args);
     }
@@ -16,7 +13,7 @@ public class BacktraceCrashHandlerWrapper implements NativeCommunication {
     public boolean initializeCrashHandler(String url, String databasePath, String handlerPath,
                                           String[] attributeKeys, String[] attributeValues,
                                           String[] attachmentPaths, boolean enableClientSideUnwinding,
-                                          UnwindingMode unwindingMode) {
+                                          Integer unwindingMode) {
         return BacktraceCrashHandler.initializeCrashHandler(url, databasePath, handlerPath, attributeKeys, attributeValues, attachmentPaths, enableClientSideUnwinding, unwindingMode);
     }
 }
