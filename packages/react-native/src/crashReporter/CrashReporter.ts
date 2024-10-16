@@ -33,11 +33,12 @@ export class CrashReporter {
             return false;
         }
 
-        this._fileSystem.createDirSync(`${databasePath}/native`);
+        const nativeDatabasePath = `${databasePath}/native`;
+        this._fileSystem.createDirSync(nativeDatabasePath);
 
         CrashReporter.BacktraceReactNative.initialize(
             submissionUrl,
-            databasePath,
+            nativeDatabasePath,
             {
                 ...this.convertAttributes(attributes),
                 'error.type': 'Crash',
