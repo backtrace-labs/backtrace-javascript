@@ -62,6 +62,12 @@ public class BacktraceReactNative extends ReactContextBaseJavaModule {
         String[] values = attributes.values().toArray(new String[0]);
         BacktraceCrashHandlerWrapper nativeCommunication = new BacktraceCrashHandlerWrapper();
 
+        // Depending on the AGP version, the crash handler executable might be extracted from APK or not.
+        // Due to that, we need to have an option, to capture and send exceptions without the crash handler executable.
+        // We can achieve the same via Java Crash Handler - the Java class that will be executed via app_process. 
+
+        // The reason why we don't want to enable java crash handler by default is because of the proguard 
+        // support and testing potential limitations of the new java crash handler.
         Boolean result =
                 new File(handlerPath).exists()
                     ?   nativeCommunication.initializeCrashHandler(
