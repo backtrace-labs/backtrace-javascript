@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+message="$(cat "$1")"
+node .husky/scripts/commit-msg.js "$message"
