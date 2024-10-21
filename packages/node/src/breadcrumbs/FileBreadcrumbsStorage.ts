@@ -86,16 +86,13 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
 
     public getAttachments(): BacktraceAttachment<Readable>[] {
         const files = [...this._sink.files].map((f) => f.path.toString('utf-8'));
-        return files.map((f) => new BacktraceFileAttachment(f, f, this._fileSystem));
+        return files.map((f) => new BacktraceFileAttachment(f, path.basename(f), this._fileSystem));
     }
 
     public getAttachmentProviders(): BacktraceAttachmentProvider[] {
         return [
             {
-                get: () => {
-                    const files = [...this._sink.files].map((f) => f.path.toString('utf-8'));
-                    return files.map((f) => new BacktraceFileAttachment(f, path.basename(f), this._fileSystem));
-                },
+                get: () => this.getAttachments(),
                 type: 'dynamic',
             },
         ];
