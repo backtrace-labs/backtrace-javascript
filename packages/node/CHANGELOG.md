@@ -1,3 +1,7 @@
+# Version 0.6.1
+
+-   fix invalid breadcrumb name in `FileBreadcrumbsStorage` (#303)
+
 # Version 0.6.0
 
 -   update `@backtrace/sdk-core` to `0.6.0`
