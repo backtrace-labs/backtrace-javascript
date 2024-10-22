@@ -327,4 +327,98 @@ describe('FileBreadcrumbsStorage', () => {
         expect(actualMain).toEqual(expectedMain);
         expect(actualFallback).toEqual(expectedFallback);
     });
+
+    it('should return attachments with a valid name from getAttachments', async () => {
+        const fs = mockStreamFileSystem();
+        const session = new SessionFiles(fs, '.', 'sessionId');
+
+        const breadcrumbs: RawBreadcrumb[] = [
+            {
+                level: BreadcrumbLogLevel.Info,
+                message: 'a',
+                type: BreadcrumbType.Manual,
+                attributes: {
+                    foo: 'bar',
+                },
+            },
+            {
+                level: BreadcrumbLogLevel.Debug,
+                message: 'b',
+                type: BreadcrumbType.Http,
+            },
+            {
+                level: BreadcrumbLogLevel.Warning,
+                message: 'c',
+                type: BreadcrumbType.Navigation,
+                attributes: {},
+            },
+        ];
+
+        const storage = new FileBreadcrumbsStorage(session, fs, {
+            maximumBreadcrumbs: 4,
+        });
+
+        for (const breadcrumb of breadcrumbs) {
+            storage.add(breadcrumb);
+            await nextTick();
+        }
+
+        // FileBreadcrumbsStorage is asynchronous in nature
+        await nextTick();
+
+        const [fallbackAttachment, mainAttachment] = storage.getAttachments();
+
+        expect(fallbackAttachment.name).toEqual(expect.stringMatching(/^bt-breadcrumbs-0/));
+        expect(mainAttachment.name).toEqual(expect.stringMatching(/^bt-breadcrumbs-1/));
+    });
+
+    it('should return attachments with a valid name from getAttachmentProviders', async () => {
+        const fs = mockStreamFileSystem();
+        const session = new SessionFiles(fs, '.', 'sessionId');
+
+        const breadcrumbs: RawBreadcrumb[] = [
+            {
+                level: BreadcrumbLogLevel.Info,
+                message: 'a',
+                type: BreadcrumbType.Manual,
+                attributes: {
+                    foo: 'bar',
+                },
+            },
+            {
+                level: BreadcrumbLogLevel.Debug,
+                message: 'b',
+                type: BreadcrumbType.Http,
+            },
+            {
+                level: BreadcrumbLogLevel.Warning,
+                message: 'c',
+                type: BreadcrumbType.Navigation,
+                attributes: {},
+            },
+        ];
+
+        const storage = new FileBreadcrumbsStorage(session, fs, {
+            maximumBreadcrumbs: 4,
+        });
+
+        for (const breadcrumb of breadcrumbs) {
+            storage.add(breadcrumb);
+            await nextTick();
+        }
+
+        // FileBreadcrumbsStorage is asynchronous in nature
+        await nextTick();
+
+        const providers = storage.getAttachmentProviders();
+
+        const [fallbackAttachment, mainAttachment] = providers
+            .map((v) => v.get())
+            .map((v) => (Array.isArray(v) ? v : [v]))
+            .filter((f) => !!f)
+            .reduce((acc, arr) => [...acc, ...arr], []);
+
+        expect(fallbackAttachment?.name).toEqual(expect.stringMatching(/^bt-breadcrumbs-0/));
+        expect(mainAttachment?.name).toEqual(expect.stringMatching(/^bt-breadcrumbs-1/));
+    });
 });
