@@ -1,6 +1,6 @@
 {
     "name": "@backtrace/node",
-    "version": "0.6.0",
+    "version": "0.6.1",
     "description": "Backtrace-JavaScript Node.JS integration",
     "main": "lib/bundle.cjs",
     "module": "lib/bundle.mjs",
