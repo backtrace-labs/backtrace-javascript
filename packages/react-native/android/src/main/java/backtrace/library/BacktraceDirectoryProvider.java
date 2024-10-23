@@ -39,7 +39,7 @@ public class BacktraceDirectoryProvider extends ReactContextBaseJavaModule {
 
         WritableArray array = new WritableNativeArray();
         for (File directoryFile : file.listFiles()) {
-            array.pushString(directoryFile.getPath());
+            array.pushString(directoryFile.getName());
         }
 
         return array;

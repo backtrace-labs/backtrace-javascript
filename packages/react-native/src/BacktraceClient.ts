@@ -82,9 +82,8 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
             );
 
             this.initializeNativeCrashReporter();
-        } catch (err) {
+        } finally {
             lockId && this.sessionFiles?.unlockPreviousSessions(lockId);
-            throw err;
         }
     }
 
