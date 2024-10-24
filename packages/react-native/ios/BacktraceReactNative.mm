@@ -15,7 +15,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(initialize:(NSString*)submissionUrl
     }
     instance = [[BacktraceCrashReporter alloc] initWithBacktraceUrl:submissionUrl andDatabasePath: databasePath andAttributes: attributes andOomSupport:TRUE andAttachments:attachmentPaths];
     [instance start];
-    return instance;
+    return nil;
 }
 
 RCT_EXPORT_METHOD(useAttachments: (NSArray*) attachmentPaths) {
