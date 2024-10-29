@@ -39,7 +39,11 @@ describe('BacktraceInterceptor', () => {
 
         class Filter extends BaseExceptionFilter {
             catch(exception: unknown, host: ArgumentsHost): void {
-                handler.handleException(exception, host);
+                try {
+                    handler.handleException(exception, host);
+                } catch (err) {
+                    // Do nothing
+                }
                 super.catch(exception, host);
             }
         }
@@ -120,6 +124,57 @@ describe('BacktraceInterceptor', () => {
         await request(app.getHttpServer()).get('/ok').expect(200);
 
         expect(send).not.toBeCalled();
+    });
+
+    it('should throw if client is uninitialized', async () => {
+        const error = new Error('foo');
+
+        @Controller()
+        class TestController {
+            @Get('error')
+            public error() {
+                throw error;
+            }
+        }
+
+        const interceptor = new BacktraceExceptionHandler({});
+        const handleException = jest.spyOn(interceptor, 'handleException');
+
+        const { app } = await createAppWithHandler(interceptor, TestController);
+
+        await app.init();
+        await request(app.getHttpServer()).get('/error').expect(500);
+
+        const result = handleException.mock.results[0];
+        expect(result.type).toEqual('throw');
+        expect(result.value).toBeInstanceOf(Error);
+        expect(result.value.message).toBe('Backtrace instance is unavailable. Initialize the client first.');
+    });
+
+    it('should not throw if client is uninitialized and skipIfClientUndefined is true', async () => {
+        const error = new Error('foo');
+
+        @Controller()
+        class TestController {
+            @Get('error')
+            public error() {
+                throw error;
+            }
+        }
+
+        const interceptor = new BacktraceExceptionHandler({
+            skipIfClientUndefined: true,
+        });
+        const handleException = jest.spyOn(interceptor, 'handleException');
+
+        const { app } = await createAppWithHandler(interceptor, TestController);
+
+        await app.init();
+        await request(app.getHttpServer()).get('/error').expect(500);
+
+        const result = handleException.mock.results[0];
+        expect(result.type).not.toEqual('throw');
+        expect(result.value).toBe(false);
     });
 
     describe('include', () => {
