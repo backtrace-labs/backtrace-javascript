@@ -1,3 +1,8 @@
+# Version 0.6.1
+
+-   update `@backtrace/node` to `0.6.1`
+-   change the default electron version to the latest (#311)
+
 # Version 0.6.0
 
 -   update `@backtrace/node` to `0.6.0`
