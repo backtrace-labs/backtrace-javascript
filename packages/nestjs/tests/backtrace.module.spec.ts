@@ -56,4 +56,18 @@ describe('BacktraceModule', () => {
             }).compile(),
         ).rejects.toThrowError(/Backtrace instance is not available\./);
     });
+
+    it('should not throw an error when instance is not initialized and skipIfClientUndefined is true', async () => {
+        await expect(
+            Test.createTestingModule({
+                imports: [
+                    BacktraceModule.register({
+                        options: {
+                            skipIfClientUndefined: true,
+                        },
+                    }),
+                ],
+            }).compile(),
+        ).resolves.not.toThrow();
+    });
 });

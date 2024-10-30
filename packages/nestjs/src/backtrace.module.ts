@@ -40,7 +40,12 @@ const { ConfigurableModuleClass, MODULE_OPTIONS_TOKEN } = new ConfigurableModule
                     (instanceOrOptions instanceof BacktraceClient ? instanceOrOptions : instanceOrOptions?.client) ??
                     BacktraceClient.instance;
 
-                if (!instance) {
+                const skipIfClientUndefined =
+                    instanceOrOptions instanceof BacktraceClient
+                        ? false
+                        : instanceOrOptions?.options?.skipIfClientUndefined;
+
+                if (!instance && !skipIfClientUndefined) {
                     throw new Error(
                         'Backtrace instance is not available. Initialize it first, or pass it into the module using register/registerAsync.',
                     );
