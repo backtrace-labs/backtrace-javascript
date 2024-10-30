@@ -92,7 +92,7 @@
         "@backtrace/node": "^0.6.1"
     },
     "peerDependencies": {
-        "electron": "12 - 28"
+        "electron": ">=12"
     },
     "devDependencies": {
         "@rollup/plugin-commonjs": "^26.0.1",
