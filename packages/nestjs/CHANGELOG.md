@@ -1,3 +1,7 @@
+# Version 0.5.1
+
+-   fix `skipIfClientUndefined` not working in `BacktraceModule` (#309)
+
 # Version 0.5.0
 
 -   update `@backtrace/node` to `0.6.0`
