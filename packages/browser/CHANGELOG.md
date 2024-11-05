@@ -1,3 +1,7 @@
+# Version 0.4.1
+
+-   fix old `@backtrace/sdk-core` bundled with the package
+
 # Version 0.4.0
 
 -   update `@backtrace/sdk-core` to `0.5.0`
