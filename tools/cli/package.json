@@ -15,7 +15,7 @@
         "clean": "tsc -b --clean && rimraf \"lib\"",
         "format": "prettier --write '**/*.ts'",
         "lint": "eslint . --ext .ts",
-        "prepublishOnly": "cross-env NODE_ENV=production npm run build",
+        "prepublishOnly": "npm run clean && cross-env NODE_ENV=production npm run build",
         "watch": "tsc -w",
         "start": "node lib/index.js",
         "test": "cross-env NODE_ENV=test jest"

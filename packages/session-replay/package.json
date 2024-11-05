@@ -13,7 +13,7 @@
         "format": "prettier --write '**/*.ts'",
         "lint": "eslint . --ext .ts",
         "watch": "concurrently \"tsc -p tsconfig.build.json --noEmit --watch\" \"rollup -c rollup.config.mjs --watch\"",
-        "prepublishOnly": "cross-env NODE_ENV=production npm run clean && npm run build",
+        "prepublishOnly": "npm -w ../sdk-core run prepublishOnly && npm run clean && cross-env NODE_ENV=production npm run build",
         "test": "cross-env NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" NODE_NO_WARNINGS=1 NODE_ENV=test jest"
     },
     "repository": {

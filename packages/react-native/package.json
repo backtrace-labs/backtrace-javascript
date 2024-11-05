@@ -30,7 +30,7 @@
         "build": "bob build",
         "clean": "rimraf \"lib\"",
         "format:check": "eslint \"**/*.{js,ts,tsx}\"",
-        "prepublishOnly": "bob build",
+        "prepublishOnly": "npm run clean && cross-env NODE_ENV=production bob build",
         "test": "cross-env NODE_ENV=test jest"
     },
     "keywords": [

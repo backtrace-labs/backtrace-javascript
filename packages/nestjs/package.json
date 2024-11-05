@@ -11,7 +11,7 @@
         "clean": "rimraf \"lib\"",
         "format": "prettier --write '**/*.ts'",
         "lint": "eslint . --ext .ts",
-        "prepublishOnly": "cross-env NODE_ENV=production npm run build",
+        "prepublishOnly": "npm run clean && cross-env NODE_ENV=production npm run build",
         "watch": "concurrently \"tsc -p tsconfig.build.json --noEmit --watch\" \"rollup -c rollup.config.mjs --watch\"",
         "test": "cross-env NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" NODE_NO_WARNINGS=1 NODE_ENV=test jest"
     },

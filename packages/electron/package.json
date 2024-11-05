@@ -64,7 +64,7 @@
         "clean": "rimraf main renderer common",
         "format": "prettier --write '**/*.ts'",
         "lint": "eslint src --ext .ts",
-        "prepublishOnly": "cross-env NODE_ENV=production npm run build",
+        "prepublishOnly": "npm run clean && cross-env NODE_ENV=production npm run build",
         "watch": "concurrently \"tsc -p tsconfig.main.json --noEmit --watch\" \"tsc -p tsconfig.renderer.json --noEmit --watch\" \"rollup -c rollup.config.mjs --watch\""
     },
     "keywords": [
