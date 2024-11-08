@@ -28,6 +28,7 @@
     ],
     "scripts": {
         "build": "bob build",
+        "watch": "tsc --noEmit --watch",
         "clean": "rimraf \"lib\"",
         "format:check": "eslint \"**/*.{js,ts,tsx}\"",
         "prepublishOnly": "npm run clean && cross-env NODE_ENV=production bob build",
@@ -90,6 +91,7 @@
         "typescript": "^5.0.2"
     },
     "dependencies": {
-        "@backtrace/sdk-core": "^0.6.0"
+        "@backtrace/sdk-core": "^0.6.0",
+        "web-streams-polyfill": "^4.0.0"
     }
 }
