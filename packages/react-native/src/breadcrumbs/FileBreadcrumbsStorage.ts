@@ -5,13 +5,17 @@ import {
     SessionFiles,
     TimeHelper,
     type BacktraceAttachment,
+    type BacktraceAttachmentProvider,
     type Breadcrumb,
     type BreadcrumbsStorage,
     type RawBreadcrumb,
 } from '@backtrace/sdk-core';
+import { WritableStream } from 'web-streams-polyfill';
 import { BacktraceFileAttachment } from '..';
 import { type FileSystem } from '../storage';
-import { AlternatingFileWriter } from './AlternatingFileWriter';
+import { ChunkifierSink } from '../storage/Chunkifier';
+import { FileChunkSink } from '../storage/FileChunkSink';
+import { lineChunkSplitter } from '../storage/lineChunkSplitter';
 
 const FILE_PREFIX = 'bt-breadcrumbs';
 
@@ -21,32 +25,44 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
     }
 
     private _lastBreadcrumbId: number = TimeHelper.toTimestampInSec(TimeHelper.now());
-    private readonly _writer: AlternatingFileWriter;
+    private readonly _dest: WritableStream;
+    private readonly _writer: WritableStreamDefaultWriter;
+    private readonly _sink: FileChunkSink;
 
-    constructor(
-        private readonly _fileSystem: FileSystem,
-        private readonly _mainFile: string,
-        private readonly _fallbackFile: string,
-        maximumBreadcrumbs: number,
-    ) {
-        this._writer = new AlternatingFileWriter(
-            _mainFile,
-            _fallbackFile,
-            Math.floor(maximumBreadcrumbs / 2),
-            _fileSystem,
+    constructor(session: SessionFiles, private readonly _fileSystem: FileSystem, maximumBreadcrumbs: number) {
+        this._sink = new FileChunkSink({
+            maxFiles: 2,
+            fs: this._fileSystem,
+            file: (n) => session.getFileName(FileBreadcrumbsStorage.getFileName(n)),
+        });
+
+        this._dest = new WritableStream(
+            new ChunkifierSink({
+                sink: this._sink.getSink(),
+                splitter: () => lineChunkSplitter(Math.ceil(maximumBreadcrumbs / 2)),
+            }),
         );
+
+        this._writer = this._dest.getWriter();
     }
 
     public static create(fileSystem: FileSystem, session: SessionFiles, maximumBreadcrumbs: number) {
-        const file1 = session.getFileName(this.getFileName(0));
-        const file2 = session.getFileName(this.getFileName(1));
-        return new FileBreadcrumbsStorage(fileSystem, file1, file2, maximumBreadcrumbs);
+        return new FileBreadcrumbsStorage(session, fileSystem, maximumBreadcrumbs);
     }
 
     public getAttachments(): BacktraceAttachment<unknown>[] {
+        const files = [...this._sink.files].map((f) => f.path);
+        return files.map(
+            (f, i) => new BacktraceFileAttachment(this._fileSystem, f, `bt-breadcrumbs-${i}`, 'application/json'),
+        );
+    }
+
+    public getAttachmentProviders(): BacktraceAttachmentProvider[] {
         return [
-            new BacktraceFileAttachment(this._fileSystem, this._mainFile, 'bt-breadcrumbs-0'),
-            new BacktraceFileAttachment(this._fileSystem, this._fallbackFile, 'bt-breadcrumbs-1'),
+            {
+                get: () => this.getAttachments(),
+                type: 'dynamic',
+            },
         ];
     }
 
@@ -73,7 +89,7 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
         };
 
         const breadcrumbJson = JSON.stringify(breadcrumb, jsonEscaper());
-        this._writer.writeLine(breadcrumbJson);
+        this._writer.write(breadcrumbJson + '\n');
 
         return id;
     }
