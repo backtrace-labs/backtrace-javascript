@@ -1,5 +1,6 @@
 import readline from 'readline';
 import { Readable } from 'stream';
+import { ReadableStream } from 'web-streams-polyfill';
 import { createRng } from './random';
 
 const rng = createRng();

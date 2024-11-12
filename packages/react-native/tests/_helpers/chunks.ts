@@ -1,3 +1,4 @@
+import { ReadableStream } from 'web-streams-polyfill';
 import { Chunk, ChunkSplitter } from '../../src/storage/Chunkifier';
 
 /**

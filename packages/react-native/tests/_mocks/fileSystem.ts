@@ -1,7 +1,6 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore The following import fails due to missing extension, but it cannot have one (it imports a .ts file)
 import { MockedFileSystem, mockFileSystem } from '@backtrace/sdk-core/tests/_mocks/fileSystem';
 import path from 'path';
+import { WritableStream } from 'web-streams-polyfill';
 import { FileSystem } from '../../src/storage/FileSystem';
 
 export function mockStreamFileSystem(files?: Record<string, string>): MockedFileSystem<FileSystem> {

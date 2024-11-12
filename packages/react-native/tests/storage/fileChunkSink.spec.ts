@@ -1,4 +1,5 @@
 import path from 'path';
+import { WritableStream } from 'web-streams-polyfill';
 import { FileChunkSink } from '../../src/storage/FileChunkSink';
 import { mockStreamFileSystem } from '../_mocks/fileSystem';
 

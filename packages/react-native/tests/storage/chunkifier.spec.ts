@@ -1,3 +1,4 @@
+import { WritableStream } from 'web-streams-polyfill';
 import { Chunk, ChunkifierSink, ChunkSplitter } from '../../src/storage/Chunkifier';
 import { blackholeChunkSink } from '../_helpers/blackholeChunkSink';
 import { splitToEnd } from '../_helpers/chunks';
