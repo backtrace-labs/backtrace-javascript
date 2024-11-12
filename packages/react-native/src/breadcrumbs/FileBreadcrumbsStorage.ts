@@ -29,7 +29,11 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
     private readonly _writer: WritableStreamDefaultWriter;
     private readonly _sink: FileChunkSink;
 
-    constructor(session: SessionFiles, private readonly _fileSystem: FileSystem, maximumBreadcrumbs: number) {
+    constructor(
+        session: SessionFiles,
+        private readonly _fileSystem: FileSystem,
+        maximumBreadcrumbs: number,
+    ) {
         this._sink = new FileChunkSink({
             maxFiles: 2,
             fs: this._fileSystem,

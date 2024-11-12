@@ -21,7 +21,10 @@ export interface StreamWriter {
 }
 
 export class FileWritableStream extends WritableStream {
-    constructor(public readonly path: string, streamWriter: StreamWriter) {
+    constructor(
+        public readonly path: string,
+        streamWriter: StreamWriter,
+    ) {
         super(new NativeUnderlyingSink(path, streamWriter));
     }
 }
@@ -29,7 +32,10 @@ export class FileWritableStream extends WritableStream {
 export class NativeUnderlyingSink implements UnderlyingSink<string> {
     private _streamId?: string;
 
-    constructor(public readonly path: string, private readonly _streamWriter: StreamWriter) {}
+    constructor(
+        public readonly path: string,
+        private readonly _streamWriter: StreamWriter,
+    ) {}
 
     public async start() {
         this._streamId = this._streamWriter.create(this.path);
