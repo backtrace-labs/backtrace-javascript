@@ -1,4 +1,4 @@
-import { ChunkSplitter } from '../../src/storage/Chunkifier';
+import { Chunk, ChunkSplitter } from '../../src/storage/Chunkifier';
 
 /**
  * Trims array from right until `predicate` returns `false`.
@@ -16,8 +16,8 @@ function trimRightIf<T>(t: T[], predicate: (t: T) => boolean) {
     return [];
 }
 
-export async function splitToEnd(readable: ReadableStream, splitter: ChunkSplitter) {
-    const results: string[][] = [[]];
+export async function splitToEnd<W extends Chunk>(readable: ReadableStream, splitter: ChunkSplitter<W>) {
+    const results: W[][] = [[]];
 
     for await (let chunk of readable) {
         while (chunk) {

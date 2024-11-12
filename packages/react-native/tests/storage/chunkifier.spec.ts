@@ -1,10 +1,10 @@
-import { ChunkifierSink, ChunkSplitter } from '../../src/storage/Chunkifier';
+import { Chunk, ChunkifierSink, ChunkSplitter } from '../../src/storage/Chunkifier';
 import { blackholeChunkSink } from '../_helpers/blackholeChunkSink';
 import { splitToEnd } from '../_helpers/chunks';
 import { dataStream, randomString, readToEnd } from '../_helpers/generators';
 import { memoryChunkSink } from '../_helpers/memoryChunkSink';
 
-function charSplitter(char: string): ChunkSplitter {
+function charSplitter(char: string): ChunkSplitter<string> {
     return (chunk) => {
         const index = chunk.indexOf(char);
         if (index === -1) {
@@ -14,8 +14,8 @@ function charSplitter(char: string): ChunkSplitter {
     };
 }
 
-function noopSplitter(): ChunkSplitter {
-    return (c: string) => [c];
+function noopSplitter<W extends Chunk>(): ChunkSplitter<W> {
+    return (c: W) => [c];
 }
 
 describe('ChunkifierSink', () => {
@@ -40,7 +40,7 @@ describe('ChunkifierSink', () => {
         const splitCount = 10;
         let split = 0;
         const splitterFactory = jest.fn(
-            (): ChunkSplitter => (chunk) => {
+            (): ChunkSplitter<string> => (chunk) => {
                 if (split < splitCount) {
                     split++;
                     return [chunk.substring(0, 10), chunk.substring(10)];

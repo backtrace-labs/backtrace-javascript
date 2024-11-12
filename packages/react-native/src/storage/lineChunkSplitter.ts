@@ -4,7 +4,7 @@ import type { ChunkSplitter } from './Chunkifier';
  * Splits data into chunks with maximum lines.
  * @param maxLines Maximum lines in one chunk.
  */
-export function lineChunkSplitter(maxLines: number): ChunkSplitter {
+export function lineChunkSplitter(maxLines: number): ChunkSplitter<string> {
     let seen = 0;
 
     function findNthLine(data: string, remaining: number): [number, number] {

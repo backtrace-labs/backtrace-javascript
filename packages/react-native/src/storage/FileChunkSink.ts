@@ -44,7 +44,7 @@ export class FileChunkSink {
     /**
      * Returns `ChunkSink`. Pass this to `chunkifier`.
      */
-    public getSink(): ChunkSink<FileWritableStream> {
+    public getSink(): ChunkSink<string, FileWritableStream> {
         return (n) => {
             const stream = this.createStream(n);
             this._streamTracker.push(stream);
