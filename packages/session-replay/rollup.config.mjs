@@ -4,6 +4,7 @@ import nodeResolve from '@rollup/plugin-node-resolve';
 import terser from '@rollup/plugin-terser';
 import typescript from '@rollup/plugin-typescript';
 import path from 'path';
+import { apiExtractor } from '../../build/rollup/apiExtractorPlugin.mjs';
 
 const extensions = ['.js', '.ts'];
 
@@ -43,5 +44,6 @@ export default {
         }),
         commonjs({ defaultIsModuleExports: true }),
         json(),
+        apiExtractor(),
     ],
 };
