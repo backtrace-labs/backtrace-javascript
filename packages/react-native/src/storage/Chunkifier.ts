@@ -48,7 +48,7 @@ export class ChunkifierSink<W extends Chunk> implements UnderlyingSink<W> {
     public async write(data: W): Promise<void> {
         // If data is empty from the start, forward the write directly to current stream
         if (this.isEmpty(data)) {
-            return await (this._context ??= this.createStreamContext()).streamWriter.write(data);
+            return await this.ensureStreamContext().streamWriter.write(data);
         }
 
         while (data) {
@@ -56,10 +56,10 @@ export class ChunkifierSink<W extends Chunk> implements UnderlyingSink<W> {
                 break;
             }
 
-            this._splitter ??= this._options.splitter();
-            const [currentChunk, nextChunk] = this._splitter(data);
+            const splitter = this.ensureSplitter();
+            const [currentChunk, nextChunk] = splitter(data);
             if (nextChunk === undefined) {
-                const current = (this._context ??= this.createStreamContext());
+                const current = this.ensureStreamContext();
                 if (!this.isEmpty(currentChunk)) {
                     current.isEmptyChunk = false;
                 }
@@ -76,13 +76,12 @@ export class ChunkifierSink<W extends Chunk> implements UnderlyingSink<W> {
                 continue;
             }
 
-            const current = (this._context ??= this.createStreamContext());
+            const current = this.ensureStreamContext();
             await current.streamWriter.write(currentChunk);
             current.streamWriter.releaseLock();
 
             // On next loop iteration, or write, create new stream again
-            this._context = undefined;
-            this._splitter = undefined;
+            this.reset();
         }
     }
 
@@ -90,10 +89,29 @@ export class ChunkifierSink<W extends Chunk> implements UnderlyingSink<W> {
         return await this._context?.streamWriter.close();
     }
 
+    private ensureStreamContext() {
+        if (!this._context) {
+            return (this._context = this.createStreamContext());
+        }
+        return this._context;
+    }
+
+    private ensureSplitter() {
+        if (!this._splitter) {
+            return (this._splitter = this._options.splitter());
+        }
+        return this._splitter;
+    }
+
     private createStreamContext(): StreamContext<W> {
         const stream = this._options.sink(this._chunkCount++);
         const writer = stream.getWriter();
         return { stream, streamWriter: writer, isEmptyChunk: true };
+    }
+
+    private reset() {
+        this._context = undefined;
+        this._splitter = undefined;
     }
 
     private isEmpty(chunk: W) {
