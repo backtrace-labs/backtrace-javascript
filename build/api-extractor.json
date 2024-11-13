@@ -1,0 +1,15 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
+    "compiler": {
+        "tsconfigFilePath": "<projectFolder>/tsconfig.build.json"
+    },
+    "apiReport": {
+        "enabled": false
+    },
+    "docModel": {
+        "enabled": false
+    },
+    "tsdocMetadata": {
+        "enabled": false
+    }
+}
