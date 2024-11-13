@@ -5,6 +5,7 @@ import replace from '@rollup/plugin-replace';
 import terser from '@rollup/plugin-terser';
 import typescript from '@rollup/plugin-typescript';
 import path from 'path';
+import { apiExtractor } from '../../build/rollup/apiExtractorPlugin.mjs';
 import packageJson from './package.json' with { type: 'json' };
 
 const extensions = ['.js', '.ts', '.tsx'];
@@ -50,5 +51,6 @@ export default {
             preventAssignment: true,
         }),
         json(),
+        apiExtractor(),
     ],
 };

@@ -4,6 +4,7 @@
     "compilerOptions": {
         "rootDir": "./src",
         "outDir": "./lib",
+        "declarationDir": "./lib/types",
         "module": "NodeNext",
         "moduleResolution": "NodeNext"
     }
