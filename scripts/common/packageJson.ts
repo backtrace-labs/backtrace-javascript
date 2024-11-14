@@ -75,3 +75,8 @@ export function npmRun(script: string, options?: { args: string[]; packageJsonPa
         cwd: options?.packageJsonPath && path.dirname(options.packageJsonPath),
     };
 }
+
+export function shortName(packageJsonOrName: PackageJson | string): string {
+    const name = typeof packageJsonOrName === 'string' ? packageJsonOrName : packageJsonOrName.name;
+    return name.replace('@backtrace/', '');
+}

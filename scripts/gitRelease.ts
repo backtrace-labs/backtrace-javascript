@@ -24,7 +24,7 @@ import {
     gitRestoreFile,
 } from './common/git';
 import { log } from './common/output';
-import { PackageJson, loadPackageJson, npmInstall, npmRun, savePackageJson } from './common/packageJson';
+import { PackageJson, loadPackageJson, npmInstall, npmRun, savePackageJson, shortName } from './common/packageJson';
 import { TrasnactionFn, transaction } from './common/transaction';
 
 const rootDir = path.join(__dirname, '..');
@@ -60,15 +60,7 @@ function updateVersion(
 }
 
 async function main() {
-    const options = [
-        '--dry-run',
-        '--no-push',
-        '--no-commit',
-        '--no-checkout',
-        '--no-add',
-        '--no-sync',
-        '--name',
-    ] as const;
+    const options = ['--dry-run', '--name'] as const;
 
     const argv = process.argv.slice(2);
     const [packageJsonPath, versionOrRelease, identifier] = argv.filter((v) => !options.some((o) => v.startsWith(o)));
@@ -131,41 +123,50 @@ async function main() {
         await savePackageJson(packageJsonPath, updatedPackageJson);
     }
 
-    if (!optionValues['--no-sync']) {
-        const execute = executor();
-        const args = dryRun ? ['--dry-run'] : [];
-        const syncedPackages = execute(npmRun('syncVersions', { args }))
-            .trim()
-            .split('\n')
-            .filter((f) => !!f);
-        for (const path of syncedPackages) {
-            filesToAdd.push(path);
-        }
-    }
-
-    const run = transaction(
-        ['npm install', () => execute(npmInstall()), () => execute(gitRestoreFile(packageLockPath))],
-        optionValues['--no-add']
-            ? exit
-            : ['add files to git', () => execute(gitAdd(...filesToAdd)), () => execute(gitReset(...filesToAdd))],
-        optionValues['--no-checkout']
-            ? exit
-            : ['create branch', () => execute(gitCreateBranch(branchName)), () => execute(gitDeleteBranch(branchName))],
+    const actions: TrasnactionFn[] = [
+        ['create branch', () => execute(gitCreateBranch(branchName)), () => execute(gitDeleteBranch(branchName))],
         [
             'checkout to branch',
             () => execute(gitCheckoutToBranch(branchName)),
             () => execute(gitCheckoutToBranch(currentBranch)),
         ],
-        optionValues['--no-commit']
-            ? exit
-            : [
-                  'commit changes',
-                  () => execute(gitCommit(`${packageName}: version ${updatedPackageJson.version}`)),
-                  () => execute(gitResetToCommit('HEAD~1')),
-              ],
-        optionValues['--no-push'] ? exit : ['push to remote', () => log(execute(gitPush(branchName)))],
+    ];
+
+    const syncArgs = dryRun ? ['--dry-run'] : [];
+    const syncedPackages = executor()(npmRun('syncVersions', { args: syncArgs }))
+        .trim()
+        .split('\n')
+        .filter((f) => !!f)
+        .map((l) => l.split(' '))
+        .map(([path, ...updated]) => ({ path, updated: updated.map((u) => u.split(':')) }));
+
+    for (const { path, updated } of syncedPackages) {
+        const syncedPackageJson = await loadPackageJson(path);
+        const syncedPackageName = shortName(syncedPackageJson);
+        const commitName =
+            `${syncedPackageName}: update ` + updated.map(([name, version]) => `${name} to ${version}`).join(', ');
+
+        actions.push(['add package sync to git', () => execute(gitAdd(path)), () => execute(gitReset(path))]);
+        actions.push([
+            'commit package sync',
+            () => execute(gitCommit(commitName)),
+            () => execute(gitResetToCommit('HEAD~1')),
+        ]);
+    }
+
+    actions.push(
+        ['npm install', () => execute(npmInstall()), () => execute(gitRestoreFile(packageLockPath))],
+        ['add files to git', () => execute(gitAdd(...filesToAdd)), () => execute(gitReset(...filesToAdd))],
+        [
+            'commit changes',
+            () => execute(gitCommit(`${packageName}: version ${updatedPackageJson.version}`)),
+            () => execute(gitResetToCommit('HEAD~1')),
+        ],
+        ['push to remote', () => log(execute(gitPush(branchName)))],
         exit,
     );
+
+    const run = transaction(...actions);
 
     run();
 }

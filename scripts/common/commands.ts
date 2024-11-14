@@ -22,7 +22,7 @@ export function spawnCommandSync(opts: SpawnCommandOptions) {
 }
 
 export function printCommand(opts: SpawnCommandOptions) {
-    console.log('+', opts.command, ...(opts.args ?? []));
+    console.log('+', opts.command, ...(opts.args ?? []).map((a) => (/\s/.test(a) ? `"${a}"` : a)));
     return opts;
 }
 

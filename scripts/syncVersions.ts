@@ -17,6 +17,11 @@ import {
     savePackageJson,
 } from './common/packageJson';
 
+interface UpdatedDependency {
+    readonly name: string;
+    readonly version: string;
+}
+
 const rootDir = path.join(__dirname, '..');
 
 function parseRange(version: string): readonly [op: string, version?: string] {
@@ -28,20 +33,25 @@ function parseRange(version: string): readonly [op: string, version?: string] {
     return [version.substring(0, num.index), version.substring(num.index)];
 }
 
-function updateDependency(packageJson: PackageJson, type: DependencyType, name: string, newVersion: string) {
+function updateDependency(
+    packageJson: PackageJson,
+    type: DependencyType,
+    name: string,
+    newVersion: string,
+): UpdatedDependency | undefined {
     const deps = packageJson[type];
     if (!deps) {
-        return false;
+        return undefined;
     }
 
     const currentRange = deps[name];
     if (!currentRange) {
-        return false;
+        return undefined;
     }
 
     const [currentOp, currentVersion] = parseRange(currentRange);
     if (currentOp === '*' && !currentVersion) {
-        return false;
+        return undefined;
     }
 
     const newRange = `${currentOp}${newVersion}`;
@@ -49,20 +59,24 @@ function updateDependency(packageJson: PackageJson, type: DependencyType, name: 
     if (currentVersion !== newVersion) {
         deps[name] = newRange;
         log(`[${packageJson.name}] - updated ${name} from ${currentRange} to ${newRange} in ${type}`);
-
-        return true;
+        return { name, version: newRange };
     }
 
-    return false;
+    return undefined;
 }
 
 function updateVersions(packageJson: PackageJson, currentVersions: Record<string, string>) {
-    let updated = false;
+    const updated: UpdatedDependency[] = [];
+    function pushIfUpdated(dep: UpdatedDependency | undefined) {
+        if (dep) {
+            updated.push(dep);
+        }
+    }
 
     for (const [name, newVersion] of Object.entries(currentVersions)) {
-        updated = updateDependency(packageJson, 'dependencies', name, newVersion) || updated;
-        updated = updateDependency(packageJson, 'devDependencies', name, newVersion) || updated;
-        updated = updateDependency(packageJson, 'peerDependencies', name, newVersion) || updated;
+        pushIfUpdated(updateDependency(packageJson, 'dependencies', name, newVersion));
+        pushIfUpdated(updateDependency(packageJson, 'devDependencies', name, newVersion));
+        pushIfUpdated(updateDependency(packageJson, 'peerDependencies', name, newVersion));
     }
 
     if (!updated) {
@@ -96,11 +110,14 @@ function updateVersions(packageJson: PackageJson, currentVersions: Record<string
     for (const packageJsonPath of packageJsonPathsToSync) {
         const packageJson = await loadPackageJson(packageJsonPath);
         const updated = updateVersions(packageJson, currentVersions);
-        if (updated) {
+        if (updated.length) {
             if (!dryRun) {
                 await savePackageJson(packageJsonPath, packageJson);
             }
-            console.log(path.relative(process.cwd(), packageJsonPath));
+            console.log(
+                path.relative(process.cwd(), packageJsonPath),
+                ...updated.map(({ name, version }) => `${name}:${version}`),
+            );
         }
     }
 })();
