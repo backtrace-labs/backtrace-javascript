@@ -19,20 +19,36 @@ import {
 
 const rootDir = path.join(__dirname, '..');
 
+function parseRange(version: string): readonly [op: string, version?: string] {
+    const num = /\d/.exec(version);
+    if (!num) {
+        return [version, undefined];
+    }
+
+    return [version.substring(0, num.index), version.substring(num.index)];
+}
+
 function updateDependency(packageJson: PackageJson, type: DependencyType, name: string, newVersion: string) {
     const deps = packageJson[type];
     if (!deps) {
         return false;
     }
 
-    const currentVersion = deps[name];
-    if (!currentVersion) {
+    const currentRange = deps[name];
+    if (!currentRange) {
         return false;
     }
 
+    const [currentOp, currentVersion] = parseRange(currentRange);
+    if (currentOp === '*' && !currentVersion) {
+        return false;
+    }
+
+    const newRange = `${currentOp}${newVersion}`;
+
     if (currentVersion !== newVersion) {
-        deps[name] = newVersion;
-        log(`[${packageJson.name}] - updated ${name} from ${currentVersion} to ${newVersion} in ${type}`);
+        deps[name] = newRange;
+        log(`[${packageJson.name}] - updated ${name} from ${currentRange} to ${newRange} in ${type}`);
 
         return true;
     }
@@ -43,9 +59,7 @@ function updateDependency(packageJson: PackageJson, type: DependencyType, name: 
 function updateVersions(packageJson: PackageJson, currentVersions: Record<string, string>) {
     let updated = false;
 
-    for (const [name, version] of Object.entries(currentVersions)) {
-        const newVersion = `^${version}`;
-
+    for (const [name, newVersion] of Object.entries(currentVersions)) {
         updated = updateDependency(packageJson, 'dependencies', name, newVersion) || updated;
         updated = updateDependency(packageJson, 'devDependencies', name, newVersion) || updated;
         updated = updateDependency(packageJson, 'peerDependencies', name, newVersion) || updated;

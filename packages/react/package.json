@@ -39,9 +39,10 @@
     "files": [
         "/lib"
     ],
+    "dependencies": {
+        "@backtrace/browser": "0.4.1"
+    },
     "devDependencies": {
-        "@backtrace/browser": "^0.4.1",
-        "@backtrace/sdk-core": "^0.6.0",
         "@rollup/plugin-commonjs": "^26.0.1",
         "@rollup/plugin-json": "^6.1.0",
         "@rollup/plugin-node-resolve": "^15.2.3",
