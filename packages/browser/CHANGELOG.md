@@ -1,3 +1,7 @@
+# Version 0.4.2
+
+-   add `@backtrace/sdk-core` as normal dependency to fix typings
+
 # Version 0.4.1
 
 -   fix old `@backtrace/sdk-core` bundled with the package
