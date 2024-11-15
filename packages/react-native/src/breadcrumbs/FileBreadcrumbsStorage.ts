@@ -25,8 +25,8 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
     }
 
     private _lastBreadcrumbId: number = TimeHelper.toTimestampInSec(TimeHelper.now());
-    private readonly _dest: WritableStream;
-    private readonly _writer: WritableStreamDefaultWriter;
+    private readonly _destinationStream: WritableStream;
+    private readonly _destinationWriter: WritableStreamDefaultWriter;
     private readonly _sink: FileChunkSink;
 
     constructor(
@@ -40,14 +40,14 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
             file: (n) => session.getFileName(FileBreadcrumbsStorage.getFileName(n)),
         });
 
-        this._dest = new WritableStream(
+        this._destinationStream = new WritableStream(
             new ChunkifierSink({
                 sink: this._sink.getSink(),
                 splitter: () => lineChunkSplitter(Math.ceil(maximumBreadcrumbs / 2)),
             }),
         );
 
-        this._writer = this._dest.getWriter();
+        this._destinationWriter = this._destinationStream.getWriter();
     }
 
     public static create(fileSystem: FileSystem, session: SessionFiles, maximumBreadcrumbs: number) {
@@ -93,7 +93,7 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
         };
 
         const breadcrumbJson = JSON.stringify(breadcrumb, jsonEscaper());
-        this._writer.write(breadcrumbJson + '\n');
+        this._destinationWriter.write(breadcrumbJson + '\n');
 
         return id;
     }
