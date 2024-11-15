@@ -1,3 +1,7 @@
+# Version 0.4.1
+
+-   add `@backtrace/browser` as normal dependency to fix typings
+
 # Version 0.4.0
 
 -   update `@backtrace/browser` to `0.4.0`
