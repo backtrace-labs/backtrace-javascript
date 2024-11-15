@@ -93,7 +93,9 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
         };
 
         const breadcrumbJson = JSON.stringify(breadcrumb, jsonEscaper());
-        this._destinationWriter.write(breadcrumbJson + '\n');
+        this._destinationWriter.write(breadcrumbJson + '\n').catch(() => {
+            // Fail silently here, there's not much we can do about this
+        });
 
         return id;
     }

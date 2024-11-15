@@ -37,7 +37,16 @@ export class FileChunkSink {
     constructor(private readonly _options: FileChunkSinkOptions) {
         // Track files using a FIFO queue
         this._streamTracker = limitedFifo<FileWritableStream>(_options.maxFiles, async (stream) => {
-            await stream.close().finally(() => _options.fs.unlink(stream.path));
+            await stream
+                .close()
+                .catch(() => {
+                    // Fail silently here, there's not much we can do about this
+                })
+                .finally(() =>
+                    _options.fs.unlink(stream.path).catch(() => {
+                        // Fail silently here, there's not much we can do about this
+                    }),
+                );
         });
     }
 
@@ -54,7 +63,6 @@ export class FileChunkSink {
 
     private createStream(n: number) {
         const path = this._options.file(n);
-        // TODO: What to do if this returns undefined?
         return this._options.fs.createWriteStream(path);
     }
 }
