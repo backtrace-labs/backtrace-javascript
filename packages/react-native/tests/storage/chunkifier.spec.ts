@@ -35,6 +35,21 @@ describe('ChunkifierSink', () => {
         expect(splitter).toHaveBeenCalledTimes(10);
     });
 
+    it('should not call splitter function chunk if data is empty', async () => {
+        const data = dataStream('');
+        const splitter = jest.fn(noopSplitter());
+
+        const instance = new WritableStream(
+            new ChunkifierSink({
+                sink: blackholeChunkSink(),
+                splitter: () => splitter,
+            }),
+        );
+
+        await data.pipeTo(instance);
+        expect(splitter).not.toHaveBeenCalled();
+    });
+
     it('should call splitter factory with every new chunk', async () => {
         const data = randomString(500);
 
