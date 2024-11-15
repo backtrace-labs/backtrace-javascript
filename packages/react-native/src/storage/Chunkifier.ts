@@ -109,8 +109,13 @@ export class ChunkifierSink<W extends Chunk> implements UnderlyingSink<W> {
         return { stream, streamWriter: writer, isEmptyChunk: true };
     }
 
+    /**
+     * Resets the chunkifier to it's initial state. Use when switching streams.
+     */
     private reset() {
         this._context = undefined;
+
+        // Splitter may have an internal state which we need to recreate with new stream
         this._splitter = undefined;
     }
 
