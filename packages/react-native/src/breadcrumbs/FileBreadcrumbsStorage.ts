@@ -4,7 +4,6 @@ import {
     jsonEscaper,
     SessionFiles,
     TimeHelper,
-    type BacktraceAttachment,
     type BacktraceAttachmentProvider,
     type Breadcrumb,
     type BreadcrumbsStorage,
@@ -77,7 +76,7 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
         return ({ limits }) => new FileBreadcrumbsStorage(session, fileSystem, limits);
     }
 
-    public getAttachments(): BacktraceAttachment<unknown>[] {
+    public getAttachments(): BacktraceFileAttachment[] {
         const files = [...this._sink.files].map((f) => f.path);
         return files.map(
             (f, i) => new BacktraceFileAttachment(this._fileSystem, f, `bt-breadcrumbs-${i}`, 'application/json'),
