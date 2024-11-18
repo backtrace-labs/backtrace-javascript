@@ -51,7 +51,7 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
 
         const maximumTotalBreadcrumbsSize = this._limits.maximumTotalBreadcrumbsSize;
         if (maximumTotalBreadcrumbsSize !== undefined) {
-            splitters.push(() => lengthChunkSplitter(Math.ceil(maximumTotalBreadcrumbsSize), 'skip'));
+            splitters.push(() => lengthChunkSplitter(Math.ceil(maximumTotalBreadcrumbsSize / 2), 'skip'));
         }
 
         if (!splitters[0]) {

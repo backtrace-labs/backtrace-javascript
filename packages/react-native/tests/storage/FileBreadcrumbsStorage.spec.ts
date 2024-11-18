@@ -295,7 +295,7 @@ describe('FileBreadcrumbsStorage', () => {
 
         const storage = new FileBreadcrumbsStorage(session, fs, {
             maximumBreadcrumbs: 100,
-            maximumTotalBreadcrumbsSize: JSON.stringify(expectedMain[0]).length + 10,
+            maximumTotalBreadcrumbsSize: (JSON.stringify(expectedMain[0]).length + 10) * 2,
         });
 
         for (const breadcrumb of breadcrumbs) {
