@@ -8,12 +8,14 @@ import {
     type BacktraceAttachmentProvider,
     type Breadcrumb,
     type BreadcrumbsStorage,
+    type BreadcrumbsStorageFactory,
+    type BreadcrumbsStorageLimits,
     type RawBreadcrumb,
 } from '@backtrace/sdk-core';
 import { WritableStream } from 'web-streams-polyfill';
 import { BacktraceFileAttachment } from '..';
 import { type FileSystem } from '../storage';
-import { ChunkifierSink } from '../storage/Chunkifier';
+import { ChunkifierSink, type ChunkSplitterFactory } from '../storage/Chunkifier';
 import { FileChunkSink } from '../storage/FileChunkSink';
 import { lineChunkSplitter } from '../storage/lineChunkSplitter';
 
@@ -32,7 +34,7 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
     constructor(
         session: SessionFiles,
         private readonly _fileSystem: FileSystem,
-        maximumBreadcrumbs: number,
+        private readonly _limits: BreadcrumbsStorageLimits,
     ) {
         this._sink = new FileChunkSink({
             maxFiles: 2,
@@ -40,18 +42,28 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
             file: (n) => session.getFileName(FileBreadcrumbsStorage.getFileName(n)),
         });
 
-        this._destinationStream = new WritableStream(
-            new ChunkifierSink({
-                sink: this._sink.getSink(),
-                splitter: () => lineChunkSplitter(Math.ceil(maximumBreadcrumbs / 2)),
-            }),
-        );
+        const splitters: ChunkSplitterFactory<string>[] = [];
+        const maximumBreadcrumbs = this._limits.maximumBreadcrumbs;
+        if (maximumBreadcrumbs !== undefined) {
+            splitters.push(() => lineChunkSplitter(Math.ceil(maximumBreadcrumbs / 2)));
+        }
+
+        if (!splitters[0]) {
+            this._destinationStream = this._sink.getSink()(0);
+        } else {
+            this._destinationStream = new WritableStream(
+                new ChunkifierSink({
+                    sink: this._sink.getSink(),
+                    splitter: splitters[0],
+                }),
+            );
+        }
 
         this._destinationWriter = this._destinationStream.getWriter();
     }
 
-    public static create(fileSystem: FileSystem, session: SessionFiles, maximumBreadcrumbs: number) {
-        return new FileBreadcrumbsStorage(session, fileSystem, maximumBreadcrumbs);
+    public static factory(session: SessionFiles, fileSystem: FileSystem): BreadcrumbsStorageFactory {
+        return ({ limits }) => new FileBreadcrumbsStorage(session, fileSystem, limits);
     }
 
     public getAttachments(): BacktraceAttachment<unknown>[] {
