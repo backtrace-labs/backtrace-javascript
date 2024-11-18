@@ -4,7 +4,7 @@ import { BacktraceFileAttachment } from '../attachment/BacktraceFileAttachment';
 import { type FileSystem } from './FileSystem';
 import { type ReactNativeDirectoryProvider } from './ReactNativeDirectoryProvider';
 import { type ReactNativeFileProvider } from './ReactNativeFileProvider';
-import { type StreamWriter } from './StreamWriter';
+import { FileWritableStream, type StreamWriter } from './StreamWriter';
 export class ReactNativeFileSystem implements FileSystem {
     private readonly _fileSystemProvider: ReactNativeFileProvider = NativeModules.BacktraceFileSystemProvider;
     private readonly _directoryProvider: ReactNativeDirectoryProvider = NativeModules.BacktraceDirectoryProvider;
@@ -88,5 +88,9 @@ export class ReactNativeFileSystem implements FileSystem {
 
     public createAttachment(path: string, name?: string | undefined): BacktraceAttachment<unknown> {
         return new BacktraceFileAttachment(this, path, name);
+    }
+
+    public createWriteStream(path: string): FileWritableStream {
+        return new FileWritableStream(path, this.streamWriter);
     }
 }
