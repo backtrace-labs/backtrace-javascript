@@ -186,7 +186,7 @@ describe('FileBreadcrumbsStorage', () => {
         const breadcrumbs: RawBreadcrumb[] = [
             {
                 level: BreadcrumbLogLevel.Info,
-                message: 'a',
+                message: 'a\n1',
                 type: BreadcrumbType.Manual,
                 attributes: {
                     foo: 'bar',
@@ -194,12 +194,12 @@ describe('FileBreadcrumbsStorage', () => {
             },
             {
                 level: BreadcrumbLogLevel.Debug,
-                message: 'b',
+                message: 'b\n2',
                 type: BreadcrumbType.Http,
             },
             {
                 level: BreadcrumbLogLevel.Warning,
-                message: 'c',
+                message: 'c\n3',
                 type: BreadcrumbType.Navigation,
                 attributes: {},
             },
@@ -209,7 +209,7 @@ describe('FileBreadcrumbsStorage', () => {
             {
                 id: expect.any(Number),
                 level: 'warning',
-                message: 'c',
+                message: 'c\n3',
                 timestamp: expect.any(Number),
                 type: 'navigation',
                 attributes: {},
@@ -220,7 +220,7 @@ describe('FileBreadcrumbsStorage', () => {
             {
                 id: expect.any(Number),
                 level: 'debug',
-                message: 'b',
+                message: 'b\n2',
                 timestamp: expect.any(Number),
                 type: 'http',
             },
