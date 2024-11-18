@@ -16,7 +16,9 @@ import { WritableStream } from 'web-streams-polyfill';
 import { BacktraceFileAttachment } from '..';
 import { type FileSystem } from '../storage';
 import { ChunkifierSink, type ChunkSplitterFactory } from '../storage/Chunkifier';
+import { combinedChunkSplitter } from '../storage/combinedChunkSplitter';
 import { FileChunkSink } from '../storage/FileChunkSink';
+import { lengthChunkSplitter } from '../storage/lengthChunkSplitter';
 import { lineChunkSplitter } from '../storage/lineChunkSplitter';
 
 const FILE_PREFIX = 'bt-breadcrumbs';
@@ -48,13 +50,22 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
             splitters.push(() => lineChunkSplitter(Math.ceil(maximumBreadcrumbs / 2)));
         }
 
+        const maximumTotalBreadcrumbsSize = this._limits.maximumTotalBreadcrumbsSize;
+        if (maximumTotalBreadcrumbsSize !== undefined) {
+            splitters.push(() => lengthChunkSplitter(Math.ceil(maximumTotalBreadcrumbsSize), 'skip'));
+        }
+
         if (!splitters[0]) {
             this._destinationStream = this._sink.getSink()(0);
         } else {
             this._destinationStream = new WritableStream(
                 new ChunkifierSink({
                     sink: this._sink.getSink(),
-                    splitter: splitters[0],
+                    splitter:
+                        splitters.length === 1
+                            ? splitters[0]
+                            : () =>
+                                  combinedChunkSplitter<string>((strs) => strs.join(''), ...splitters.map((s) => s())),
                 }),
             );
         }
