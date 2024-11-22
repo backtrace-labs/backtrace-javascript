@@ -4,17 +4,20 @@ import {
     jsonEscaper,
     SessionFiles,
     TimeHelper,
-    type BacktraceAttachment,
     type BacktraceAttachmentProvider,
     type Breadcrumb,
     type BreadcrumbsStorage,
+    type BreadcrumbsStorageFactory,
+    type BreadcrumbsStorageLimits,
     type RawBreadcrumb,
 } from '@backtrace/sdk-core';
 import { WritableStream } from 'web-streams-polyfill';
 import { BacktraceFileAttachment } from '..';
 import { type FileSystem } from '../storage';
-import { ChunkifierSink } from '../storage/Chunkifier';
+import { ChunkifierSink, type ChunkSplitterFactory } from '../storage/Chunkifier';
+import { combinedChunkSplitter } from '../storage/combinedChunkSplitter';
 import { FileChunkSink } from '../storage/FileChunkSink';
+import { lengthChunkSplitter } from '../storage/lengthChunkSplitter';
 import { lineChunkSplitter } from '../storage/lineChunkSplitter';
 
 const FILE_PREFIX = 'bt-breadcrumbs';
@@ -32,7 +35,7 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
     constructor(
         session: SessionFiles,
         private readonly _fileSystem: FileSystem,
-        maximumBreadcrumbs: number,
+        private readonly _limits: BreadcrumbsStorageLimits,
     ) {
         this._sink = new FileChunkSink({
             maxFiles: 2,
@@ -40,21 +43,40 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
             file: (n) => session.getFileName(FileBreadcrumbsStorage.getFileName(n)),
         });
 
-        this._destinationStream = new WritableStream(
-            new ChunkifierSink({
-                sink: this._sink.getSink(),
-                splitter: () => lineChunkSplitter(Math.ceil(maximumBreadcrumbs / 2)),
-            }),
-        );
+        const splitters: ChunkSplitterFactory<string>[] = [];
+        const maximumBreadcrumbs = this._limits.maximumBreadcrumbs;
+        if (maximumBreadcrumbs !== undefined) {
+            splitters.push(() => lineChunkSplitter(Math.ceil(maximumBreadcrumbs / 2)));
+        }
+
+        const maximumTotalBreadcrumbsSize = this._limits.maximumTotalBreadcrumbsSize;
+        if (maximumTotalBreadcrumbsSize !== undefined) {
+            splitters.push(() => lengthChunkSplitter(Math.ceil(maximumTotalBreadcrumbsSize / 2), 'skip'));
+        }
+
+        if (!splitters[0]) {
+            this._destinationStream = this._sink.getSink()(0);
+        } else {
+            this._destinationStream = new WritableStream(
+                new ChunkifierSink({
+                    sink: this._sink.getSink(),
+                    splitter:
+                        splitters.length === 1
+                            ? splitters[0]
+                            : () =>
+                                  combinedChunkSplitter<string>((strs) => strs.join(''), ...splitters.map((s) => s())),
+                }),
+            );
+        }
 
         this._destinationWriter = this._destinationStream.getWriter();
     }
 
-    public static create(fileSystem: FileSystem, session: SessionFiles, maximumBreadcrumbs: number) {
-        return new FileBreadcrumbsStorage(session, fileSystem, maximumBreadcrumbs);
+    public static factory(session: SessionFiles, fileSystem: FileSystem): BreadcrumbsStorageFactory {
+        return ({ limits }) => new FileBreadcrumbsStorage(session, fileSystem, limits);
     }
 
-    public getAttachments(): BacktraceAttachment<unknown>[] {
+    public getAttachments(): BacktraceFileAttachment[] {
         const files = [...this._sink.files].map((f) => f.path);
         return files.map(
             (f, i) => new BacktraceFileAttachment(this._fileSystem, f, `bt-breadcrumbs-${i}`, 'application/json'),

@@ -1,6 +1,6 @@
 import { lineChunkSplitter } from '../../src/storage/lineChunkSplitter';
 import { chunkify, splitToEnd } from '../_helpers/chunks';
-import { generatorStream, randomLines } from '../_helpers/generators';
+import { dataStream, generatorStream, randomLines } from '../_helpers/generators';
 
 function countNewlines(buffer: string) {
     return [...buffer.matchAll(/\n/g)].length;
@@ -75,5 +75,16 @@ describe('lineChunkSplitter', () => {
                 expect(countNewlines(chunk)).toEqual(maxLines);
             }
         }
+    });
+
+    it('should not split escaped newlines', async () => {
+        const maxLines = 3;
+        const chunk = 'a\\n1\nb\\n2\nc\\n3\nd\\n4';
+        const expected = ['a\\n1\nb\\n2\nc\\n3\n', 'd\\n4'];
+
+        const splitter = lineChunkSplitter(maxLines);
+        const actual = await splitToEnd(dataStream(chunk), splitter);
+
+        expect(actual).toEqual(expected);
     });
 });

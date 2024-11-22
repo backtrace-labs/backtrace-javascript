@@ -2,7 +2,7 @@ import { type BacktraceFileAttachment as CoreBacktraceFileAttachment } from '@ba
 import { Platform } from 'react-native';
 import { type FileSystem } from '../storage/';
 import { type FileLocation } from '../types/FileLocation';
-export class BacktraceFileAttachment implements CoreBacktraceFileAttachment {
+export class BacktraceFileAttachment implements CoreBacktraceFileAttachment<FileLocation> {
     public readonly name: string;
     public readonly mimeType: string;
 
@@ -18,7 +18,7 @@ export class BacktraceFileAttachment implements CoreBacktraceFileAttachment {
         this._uploadUri = Platform.OS === 'android' ? `file://${this.filePath}` : this.filePath;
     }
 
-    public get(): FileLocation | string | undefined {
+    public get(): FileLocation | undefined {
         const exists = this._fileSystemProvider.existsSync(this.filePath);
 
         if (!exists) {

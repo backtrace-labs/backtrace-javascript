@@ -55,13 +55,7 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
 
         const breadcrumbsManager = this.modules.get(BreadcrumbsManager);
         if (breadcrumbsManager && this.sessionFiles) {
-            breadcrumbsManager.setStorage(
-                FileBreadcrumbsStorage.create(
-                    fileSystem,
-                    this.sessionFiles,
-                    (clientSetup.options.breadcrumbs?.maximumBreadcrumbs ?? 100) || 100,
-                ),
-            );
+            breadcrumbsManager.setStorage(FileBreadcrumbsStorage.factory(this.sessionFiles, fileSystem));
         }
 
         this.attributeManager.attributeEvents.on(
