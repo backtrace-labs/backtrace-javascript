@@ -89,7 +89,7 @@
         "/renderer"
     ],
     "dependencies": {
-        "@backtrace/node": "^0.6.1"
+        "@backtrace/node": "^0.6.2"
     },
     "peerDependencies": {
         "electron": ">=12"
