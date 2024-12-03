@@ -1,3 +1,7 @@
+# Version 0.6.2
+
+-   fix invalid error handler in `fileChunkSink` (#322)
+
 # Version 0.6.1
 
 -   fix invalid breadcrumb name in `FileBreadcrumbsStorage` (#303)
