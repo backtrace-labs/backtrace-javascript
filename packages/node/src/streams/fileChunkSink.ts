@@ -17,7 +17,7 @@ interface FileChunkSinkOptions {
     /**
      * File system implementation to use.
      */
-    readonly fs?: NodeFileSystem;
+    readonly fs: NodeFileSystem;
 }
 
 /**
@@ -70,7 +70,7 @@ export class FileChunkSink extends EventEmitter {
     private emitDeleteOrDelete(file: fs.WriteStream) {
         // If 'delete' event is not handled, delete the file
         if (!this.emit('delete', file)) {
-            (this._options.fs ?? fs).unlink(file.path.toString('utf-8'), () => {
+            this._options.fs.unlink(file.path.toString('utf-8')).catch(() => {
                 // Do nothing on error
             });
         }
