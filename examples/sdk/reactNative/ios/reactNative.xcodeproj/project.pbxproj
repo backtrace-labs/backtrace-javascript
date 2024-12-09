@@ -45,7 +45,7 @@
 		5DCACB8F33CDC322A6C60F78 /* libPods-reactNative.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-reactNative.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = reactNative/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		89C6BE57DB24E9ADA2F236DE /* Pods-reactNative-reactNativeTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-reactNative-reactNativeTests.release.xcconfig"; path = "Target Support Files/Pods-reactNative-reactNativeTests/Pods-reactNative-reactNativeTests.release.xcconfig"; sourceTree = "<group>"; };
-		CFB9667E00B6B43022D1D583 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = reactNative/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		CFB9667E00B6B43022D1D583 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = reactNative/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -269,7 +269,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -e\n\nWITH_ENVIRONMENT=\"$REACT_NATIVE_PATH/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"$REACT_NATIVE_PATH/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"$WITH_ENVIRONMENT $REACT_NATIVE_XCODE\"\n";
+			shellScript = "set -e\nset -x\n# destination source map directory\nSOURCE_MAP_DIR=\"$(pwd)/../build\"\nmkdir -p $SOURCE_MAP_DIR\n\nexport SOURCEMAP_FILE=\"$SOURCE_MAP_DIR/main.js.map\";\nWITH_ENVIRONMENT=\"$REACT_NATIVE_PATH/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"$REACT_NATIVE_PATH/scripts/react-native-xcode.sh\"\n\n# use hermesc script provided by Backtrace to populate source maps\n# if you dont use hermes support, please skip this step.\nexport HERMES_CLI_PATH=\"$(pwd)/../ios-hermesc.sh\"\n\n/bin/sh -c \"$WITH_ENVIRONMENT $REACT_NATIVE_XCODE\"\n\n# copy javascript build output to the build directory\ncp \"$CONFIGURATION_BUILD_DIR/main.jsbundle\" $SOURCE_MAP_DIR \n\nPROCESS_SOURCEMAPS_SCRIPT=\"$(pwd)/../ios-sourcemaps.sh\"\nexport BACKTRACE_JS_CONFIG=\"$(pwd)/../.backtracejsrc\"\nexport BACKTRACE_JS_BUNDLE_PATH=\"$SOURCE_MAP_DIR/main.jsbundle\"\n \n# process source map with javascript code\n/bin/sh -c \"$WITH_ENVIRONMENT $PROCESS_SOURCEMAPS_SCRIPT\"\n";
 		};
 		00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -590,10 +590,7 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -666,10 +663,7 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;
