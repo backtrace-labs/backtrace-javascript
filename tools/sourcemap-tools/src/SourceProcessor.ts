@@ -82,6 +82,36 @@ export class SourceProcessor {
         );
     }
 
+    public processSource(source: string, debugId?: string, force?: boolean) {
+        const sourceDebugId = this.getSourceDebugId(source);
+        if (!debugId) {
+            debugId = sourceDebugId ?? stringToUuid(source);
+        }
+
+        let newSource = source;
+
+        // If source has debug ID, but it is different, we need to only replace it
+        if (sourceDebugId && debugId !== sourceDebugId) {
+            newSource = this._debugIdGenerator.replaceDebugId(source, sourceDebugId, debugId);
+        }
+
+        if (force || !sourceDebugId || !this._debugIdGenerator.hasCodeSnippet(source, debugId)) {
+            const sourceSnippet = this._debugIdGenerator.generateSourceSnippet(debugId);
+
+            const shebang = source.match(/^(#!.+\n)/)?.[1];
+            newSource = shebang
+                ? shebang + sourceSnippet + '\n' + source.substring(shebang.length)
+                : sourceSnippet + '\n' + source;
+        }
+
+        if (force || !sourceDebugId || !this._debugIdGenerator.hasCommentSnippet(source, debugId)) {
+            const sourceComment = this._debugIdGenerator.generateSourceComment(debugId);
+            newSource = appendBeforeWhitespaces(newSource, '\n' + sourceComment);
+        }
+
+        return { debugId, source: newSource };
+    }
+
     /**
      * Adds required snippets and comments to source, and modifies sourcemap to include debug ID.
      * @param source Source content.
