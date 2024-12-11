@@ -14,9 +14,8 @@ export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<Backtrace
     constructor(clientSetup: BacktraceClientSetup) {
         super(clientSetup);
 
-        const debuggerAvailable = DebuggerHelper.isConnected();
         this.addAttributeProvider(new ReactNativeAttributeProvider());
-        if (debuggerAvailable) {
+        if (!DebuggerHelper.isNativeBridgeEnabled()) {
             return;
         }
 

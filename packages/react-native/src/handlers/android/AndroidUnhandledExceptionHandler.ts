@@ -13,7 +13,7 @@ export class AndroidUnhandledExceptionHandler extends UnhandledExceptionHandler 
         if (!this._unhandledExceptionHandler) {
             return;
         }
-        if (DebuggerHelper.isConnected()) {
+        if (!DebuggerHelper.isNativeBridgeEnabled()) {
             return;
         }
 
