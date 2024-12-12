@@ -13,8 +13,8 @@
     "author": "Backtrace <team@backtrace.io>",
     "license": "MIT",
     "devDependencies": {
-        "@types/react": "^18.2.14",
-        "@types/react-dom": "^18.2.6",
+        "@types/react": "^16.14.0",
+        "@types/react-dom": "^16.8.0",
         "@backtrace/browser": "file:../../../packages/react",
         "@backtrace/session-replay": "file:../../../packages/session-replay",
         "http-server": "^14.1.1",
