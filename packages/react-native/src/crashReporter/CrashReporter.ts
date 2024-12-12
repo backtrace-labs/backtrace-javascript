@@ -29,7 +29,7 @@ export class CrashReporter {
             return false;
         }
 
-        if (DebuggerHelper.isConnected()) {
+        if (!DebuggerHelper.isNativeBridgeEnabled()) {
             return false;
         }
 
