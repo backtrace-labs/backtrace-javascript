@@ -7,6 +7,7 @@
 -   remove invalid imports from iOS headers (#307)
 -   replace AlternatingFileWriter with WritableStream and ChunkifierSink for breadcrumbs (#315)
 -   reduce breadcrumb size (#320)
+-   fixed debugger detection in the bridgeless mode (#325)
 
 # Version 0.1.1
 
