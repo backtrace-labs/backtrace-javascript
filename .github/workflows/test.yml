@@ -5,9 +5,9 @@ on:
         branches: [main, dev]
     pull_request:
 
-    concurrency:
-        group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
-        cancel-in-progress: true
+concurrency:
+    group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+    cancel-in-progress: true
 
 jobs:
     test_linux_all:
