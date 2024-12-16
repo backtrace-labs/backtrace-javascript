@@ -1,8 +1,8 @@
 import { Ok, SourceProcessor, SymbolUploader, ZipArchive } from '@backtrace/sourcemap-tools';
 import assert from 'assert';
 import crypto from 'crypto';
-import fs from 'fs';
 import path from 'path';
+import { Readable } from 'stream';
 import webpack from 'webpack';
 import { asyncWebpack, expectSuccess, getFiles, removeDir, webpackModeTest } from './helpers';
 
@@ -19,9 +19,7 @@ export function createE2ETest(configBuilder: (mode: webpack.Configuration['mode'
         }
 
         function mockProcessor() {
-            return jest
-                .spyOn(SourceProcessor.prototype, 'processSourceAndSourceMapFiles')
-                .mockImplementation(async (_, __, debugId) => Ok({ debugId: debugId ?? 'debugId' } as never));
+            return jest.spyOn(SourceProcessor.prototype, 'processSourceAndSourceMapFiles');
         }
 
         function mockZipArchiveAppend() {
@@ -34,7 +32,7 @@ export function createE2ETest(configBuilder: (mode: webpack.Configuration['mode'
         let zipArchiveAppendSpy: ReturnType<typeof mockZipArchiveAppend>;
 
         beforeAll(async () => {
-            jest.resetAllMocks();
+            jest.restoreAllMocks();
 
             uploadSpy = mockUploader();
             processSpy = mockProcessor();
@@ -50,44 +48,35 @@ export function createE2ETest(configBuilder: (mode: webpack.Configuration['mode'
             result = webpackResult;
         }, 120000);
 
-        it('should call SourceProcessor for every emitted source file and sourcemap pair', async () => {
+        it('should call SourceProcessor for every emitted source file', async () => {
             const outputDir = result.compilation.outputOptions.path;
             assert(outputDir);
 
             const jsFiles = await getFiles(outputDir, /.js$/);
             expect(jsFiles.length).toBeGreaterThan(0);
 
-            const processedPairs = processSpy.mock.calls.map(
-                ([p1, p2]) => [path.resolve(p1), p2 ? path.resolve(p2) : undefined] as const,
-            );
-            for (const file of jsFiles) {
-                const content = await fs.promises.readFile(file, 'utf8');
-                const matches = [...content.matchAll(/^\/\/# sourceMappingURL=(.+)$/gm)];
-                expect(matches.length).toEqual(1);
-                const [, sourceMapPath] = matches[0];
+            const processedFiles = processSpy.mock.calls
+                .map(([sourcePath]) => path.resolve(sourcePath))
+                .sort((a, b) => a.localeCompare(b));
 
-                expect(processedPairs).toContainEqual([
-                    path.resolve(file),
-                    path.resolve(path.dirname(file), sourceMapPath),
-                ]);
-            }
+            expect(processedFiles).toEqual(jsFiles.sort((a, b) => a.localeCompare(b)));
         });
 
         it('should append every emitted sourcemap to archive', async () => {
             const outputDir = result.compilation.outputOptions.path;
             assert(outputDir);
 
-            const mapFiles = await getFiles(outputDir, /.js.map$/);
+            const mapFiles = (await getFiles(outputDir, /.js.map$/)).map((f) => path.basename(f));
             expect(mapFiles.length).toBeGreaterThan(0);
 
-            const uploadedFiles = zipArchiveAppendSpy.mock.calls.map((c) => path.resolve(c[1] as string));
+            const uploadedFiles = zipArchiveAppendSpy.mock.calls.map(([name]) => name);
             for (const file of mapFiles) {
-                expect(uploadedFiles).toContain(path.resolve(file));
+                expect(uploadedFiles).toContainEqual(expect.stringContaining(file));
             }
         });
 
         it('should upload archive', async () => {
-            expect(uploadSpy).toBeCalledWith(expect.any(ZipArchive));
+            expect(uploadSpy).toHaveBeenCalledWith(expect.any(Readable));
         });
     });
 }
