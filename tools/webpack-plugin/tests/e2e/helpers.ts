@@ -2,7 +2,6 @@ import fs from 'fs';
 import path from 'path';
 import webpack from 'webpack';
 import { BacktracePlugin, BacktracePluginOptions } from '../../src';
-import { TestDebugIdGenerator } from '../__mocks__/TestDebugIdGenerator';
 
 export interface BaseConfigOptions {
     tsconfigPath?: string;
@@ -60,18 +59,6 @@ export function expectSuccess(stats?: webpack.Stats): asserts stats is webpack.S
     if (stats?.hasErrors()) {
         throw new Error(stats.toString());
     }
-}
-
-export async function expectSourceSnippet(content: string) {
-    TestDebugIdGenerator.testForSourceSnippet(content);
-}
-
-export async function expectSourceComment(content: string) {
-    TestDebugIdGenerator.testForSourceComment(content);
-}
-
-export async function expectSourceMapSnippet(content: string) {
-    TestDebugIdGenerator.testForSourceMapKey(content);
 }
 
 export async function getFiles(dir: string, test?: RegExp) {
