@@ -24,16 +24,13 @@ jobs:
             - run: npm run lint
             - run: npm run format:check
             - run: npm test
-            - run: npm run smoketest:node
-              env:
-                  SMOKETESTS_SUBMIT_LAYER_URL: ${{ secrets.SMOKETESTS_SUBMIT_LAYER_URL }}
-                  SMOKETESTS_DIRECT_SUBMIT_URL: ${{ secrets.SMOKETESTS_DIRECT_SUBMIT_URL }}
-            - run: npm run smoketest:browser
-              env:
-                  SMOKETESTS_SUBMIT_LAYER_URL: ${{ secrets.SMOKETESTS_SUBMIT_LAYER_URL }}
-                  SMOKETESTS_DIRECT_SUBMIT_URL: ${{ secrets.SMOKETESTS_DIRECT_SUBMIT_URL }}
-                  SMOKETESTS_SAUCE_USERNAME: ${{ secrets.SMOKETESTS_SAUCE_USERNAME }}
-                  SMOKETESTS_SAUCE_ACCESS_KEY: ${{ secrets.SMOKETESTS_SAUCE_ACCESS_KEY }}
+            - name: smoke-test
+              uses: ./.github/actions/smoke-tests
+              with:
+                  submit-url: ${{ secrets.SMOKETESTS_SUBMIT_LAYER_URL }}
+                  direct-submit-url: ${{ secrets.SMOKETESTS_DIRECT_SUBMIT_URL }}
+                  sauce-username: ${{ secrets.SMOKETESTS_SAUCE_USERNAME }}
+                  sauce-access-key: ${{ secrets.SMOKETESTS_SAUCE_ACCESS_KEY }}
 
     test_linux:
         runs-on: ubuntu-latest
@@ -56,10 +53,14 @@ jobs:
               with:
                   node-version: ${{ matrix.node-version }}
             - run: npm test
-            - run: npm run smoketest:node
-              env:
-                  SMOKETESTS_SUBMIT_LAYER_URL: ${{ secrets.SMOKETESTS_SUBMIT_LAYER_URL }}
-                  SMOKETESTS_DIRECT_SUBMIT_URL: ${{ secrets.SMOKETESTS_DIRECT_SUBMIT_URL }}
+            - name: smoke-test
+              uses: ./.github/actions/smoke-tests
+              with:
+                  submit-url: ${{ secrets.SMOKETESTS_SUBMIT_LAYER_URL }}
+                  direct-submit-url: ${{ secrets.SMOKETESTS_DIRECT_SUBMIT_URL }}
+                  sauce-username: ${{ secrets.SMOKETESTS_SAUCE_USERNAME }}
+                  sauce-access-key: ${{ secrets.SMOKETESTS_SAUCE_ACCESS_KEY }}
+                  ignore-browser: 'true'
 
     test_linux_pre_workspaces:
         runs-on: ubuntu-latest
@@ -83,10 +84,14 @@ jobs:
                   node-version: ${{ matrix.node-version }}
             - run: npm i -g npm@8
             - run: npm test
-            - run: npm run smoketest:node
-              env:
-                  SMOKETESTS_SUBMIT_LAYER_URL: ${{ secrets.SMOKETESTS_SUBMIT_LAYER_URL }}
-                  SMOKETESTS_DIRECT_SUBMIT_URL: ${{ secrets.SMOKETESTS_DIRECT_SUBMIT_URL }}
+            - name: smoke-test
+              uses: ./.github/actions/smoke-tests
+              with:
+                  submit-url: ${{ secrets.SMOKETESTS_SUBMIT_LAYER_URL }}
+                  direct-submit-url: ${{ secrets.SMOKETESTS_DIRECT_SUBMIT_URL }}
+                  sauce-username: ${{ secrets.SMOKETESTS_SAUCE_USERNAME }}
+                  sauce-access-key: ${{ secrets.SMOKETESTS_SAUCE_ACCESS_KEY }}
+                  ignore-browser: 'true'
 
     test_windows:
         runs-on: windows-latest
@@ -104,7 +109,11 @@ jobs:
             - run: npm ci
             - run: npm run build
             - run: npm test
-            - run: npm run smoketest:node
-              env:
-                  SMOKETESTS_SUBMIT_LAYER_URL: ${{ secrets.SMOKETESTS_SUBMIT_LAYER_URL }}
-                  SMOKETESTS_DIRECT_SUBMIT_URL: ${{ secrets.SMOKETESTS_DIRECT_SUBMIT_URL }}
+            - name: smoke-test
+              uses: ./.github/actions/smoke-tests
+              with:
+                  submit-url: ${{ secrets.SMOKETESTS_SUBMIT_LAYER_URL }}
+                  direct-submit-url: ${{ secrets.SMOKETESTS_DIRECT_SUBMIT_URL }}
+                  sauce-username: ${{ secrets.SMOKETESTS_SAUCE_USERNAME }}
+                  sauce-access-key: ${{ secrets.SMOKETESTS_SAUCE_ACCESS_KEY }}
+                  ignore-browser: 'true'

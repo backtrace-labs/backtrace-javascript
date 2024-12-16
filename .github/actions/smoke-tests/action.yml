@@ -1,0 +1,55 @@
+name: Smoke test
+description: 'Execute smoke tests'
+
+inputs:
+    submit-url:
+        description: 'Submit layer url'
+        required: true
+    direct-submit-url:
+        description: 'Direct submission URL to Backtrace instance'
+        required: true
+    sauce-username:
+        description: 'Sauce labs user name'
+        required: true
+    sauce-access-key:
+        description: 'Sauce labs secret'
+        required: true
+    ignore-browser:
+        description: 'Ignore browser smoke-tests'
+        required: false
+        default: 'false'
+    ignore-node:
+        description: 'Ignore node smoke-tests'
+        required: false
+        default: 'false'
+
+runs:
+    using: 'composite'
+    steps:
+        - uses: dorny/paths-filter@v3
+          id: filter
+          with:
+              filters: |
+                  browser:
+                      - 'packages/browser/**'
+                      - 'packages/react/**'
+                      - 'packages/sdk-core/**'
+                  node:
+                      - 'packages/sdk-core/**'
+                      - 'packages/node/**'
+
+        - run: npm run smoketest:node
+          shell: bash
+          if: steps.filter.outputs.node == 'true' && inputs.ignore-node == 'false'
+          env:
+              SMOKETESTS_SUBMIT_LAYER_URL: ${{ inputs.submit-url }}
+              SMOKETESTS_DIRECT_SUBMIT_URL: ${{ inputs.direct-submit-url }}
+
+        - run: npm run smoketest:browser
+          shell: bash
+          if: steps.filter.outputs.browser == 'true' && inputs.ignore-browser == 'false'
+          env:
+              SMOKETESTS_SUBMIT_LAYER_URL: ${{ inputs.submit-url }}
+              SMOKETESTS_DIRECT_SUBMIT_URL: ${{ inputs.direct-submit-url }}
+              SMOKETESTS_SAUCE_USERNAME: ${{ inputs.sauce-username }}
+              SMOKETESTS_SAUCE_ACCESS_KEY: ${{ inputs.sauce-access-key }}
