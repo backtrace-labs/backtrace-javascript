@@ -49,11 +49,16 @@ export class GpuAttributeProvider implements BacktraceAttributeProvider {
     private _attributes?: Record<string, unknown>;
 
     constructor() {
+        // getGPUInfo may not be supported on earlier versions of Electron
         if (!app.getGPUInfo) {
             return;
         }
 
-        app.on('gpu-info-update', () =>
+        // Collect this information only once
+        // getGPUInfo causes 'gpu-info-update' to be emitted again essentially causing a loop
+        // https://github.com/electron/electron/issues/30827
+        // It is unlikely to change again within runtime of the application
+        app.once('gpu-info-update', () =>
             app
                 .getGPUInfo('complete')
                 .then((info) => {
