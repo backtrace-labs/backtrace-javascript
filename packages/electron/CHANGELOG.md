@@ -1,3 +1,8 @@
+# Version 0.6.2
+
+-   update `@backtrace/node` to `0.6.2`
+-   fix potential loop with gpu-info-update (#330)
+
 # Version 0.6.1
 
 -   update `@backtrace/node` to `0.6.1`
