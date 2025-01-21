@@ -19,7 +19,7 @@ tasks.register("uploadSourceMapsToBacktrace") {
                 .asFile
 
         if (!debugIdFile.exists()) {
-            println("Backtrace: Cannot find .backtrace-sourcemap-id debug info.")
+            println("Backtrace: Cannot find .backtrace-sourcemap-id file. Check if customSerializer has been set to Backtrace serializer in metro.config.js.")
             return
         }
 

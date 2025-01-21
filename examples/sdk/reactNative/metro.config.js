@@ -16,9 +16,7 @@ const config = {
         path.resolve('../../../packages/sdk-core'),
     ],
     serializer: {
-        async customSerializer(entryPoint, preModules, graph, options) {
-            return backtraceSourceMapProcessor.processSourceMap(entryPoint, preModules, graph, options);
-        },
+        customSerializer: backtraceSourceMapProcessor.processSourceMap
     },
 };
 module.exports = mergeConfig(getDefaultConfig(__dirname), config);

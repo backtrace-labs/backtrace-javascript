@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Script responsible for preprocessing source maps with debugid and uploading it to Backtrace via backtrace-js. 
-# Usage:    ./ios-sourcemap-upload.sh <source_map_file_path> <debug_id_file_path> <backtrace_configuration_path
+# Usage:    ./ios-sourcemap-upload.sh <source_map_file_path> <debug_id_file_path> <backtrace_configuration_path>
 # Parameters:
 #   <source_map_file_path>        (Required) Path to the source map file.
 #   <debug_id_file_path>            (Required) path to generated backtrace debug id.
@@ -44,7 +44,7 @@ backtrace_configuration_path="$3"
 
 debug_id=$(<"$debug_id_file_path")
 
-jq ". += {\"debugId\": \"$debug_id\"}" "$source_map_file_path" > tmp.map && mv tmp.map $source_map_file_path
+jq ". += {\"debugId\": \"$debug_id\"}" "$source_map_file_path" > "${source_map_file_path}.tmp" && mv "${source_map_file_path}.tmp" $source_map_file_path
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
