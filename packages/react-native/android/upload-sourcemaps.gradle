@@ -28,7 +28,7 @@ tasks.register("uploadSourceMapsToBacktrace") {
         def mapFile = mapFiles ? mapFiles.iterator().next() : null
 
         if (!mapFile) {
-            println("Backtrace: Cannot find final source map file.")
+            println("Backtrace: Cannot find source map file.")
             return
         }
 
