@@ -125,19 +125,19 @@ export class SourceProcessor {
      * @param force Force adding changes.
      * @returns Used debug ID, new source and new sourcemap.
      */
-    public async processSourceAndAvailableSourceMap(
+    private async processSourceAndAvailableSourceMap(
         source: string,
         sourceMap: RawSourceMap,
         debugId?: string,
         force?: boolean,
     ): Promise<ProcessResultWithSourceMaps>;
-    public async processSourceAndAvailableSourceMap(
+    private async processSourceAndAvailableSourceMap(
         source: string,
         sourceMap?: undefined,
         debugId?: string,
         force?: boolean,
     ): Promise<ProcessResultWithoutSourceMap>;
-    public async processSourceAndAvailableSourceMap(
+    private async processSourceAndAvailableSourceMap(
         source: string,
         sourceMap?: RawSourceMap,
         debugId?: string,
