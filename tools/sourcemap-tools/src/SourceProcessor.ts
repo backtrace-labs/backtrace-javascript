@@ -10,7 +10,7 @@ import { Err, Ok, R, ResultPromise } from './models/Result';
 export interface ProcessResult {
     readonly debugId: string;
     readonly source: string;
-    readonly sourceMap: RawSourceMapWithDebugId;
+    readonly sourceMap?: RawSourceMapWithDebugId;
 }
 
 export interface ProcessResultWithPaths extends ProcessResult {
@@ -82,34 +82,15 @@ export class SourceProcessor {
         );
     }
 
-    public processSource(source: string, debugId?: string, force?: boolean) {
-        const sourceDebugId = this.getSourceDebugId(source);
-        if (!debugId) {
-            debugId = sourceDebugId ?? stringToUuid(source);
-        }
-
-        let newSource = source;
-
-        // If source has debug ID, but it is different, we need to only replace it
-        if (sourceDebugId && debugId !== sourceDebugId) {
-            newSource = this._debugIdGenerator.replaceDebugId(source, sourceDebugId, debugId);
-        }
-
-        if (force || !sourceDebugId || !this._debugIdGenerator.hasCodeSnippet(source, debugId)) {
-            const sourceSnippet = this._debugIdGenerator.generateSourceSnippet(debugId);
-
-            const shebang = source.match(/^(#!.+\n)/)?.[1];
-            newSource = shebang
-                ? shebang + sourceSnippet + '\n' + source.substring(shebang.length)
-                : sourceSnippet + '\n' + source;
-        }
-
-        if (force || !sourceDebugId || !this._debugIdGenerator.hasCommentSnippet(source, debugId)) {
-            const sourceComment = this._debugIdGenerator.generateSourceComment(debugId);
-            newSource = appendBeforeWhitespaces(newSource, '\n' + sourceComment);
-        }
-
-        return { debugId, source: newSource };
+    /**
+     * Adds required snippets and comments to source
+     * @param source Source content.
+     * @param debugId Debug ID. If not provided, one will be generated from `source`.
+     * @param force Force adding changes.
+     * @returns Used debug ID, new source and new sourcemap.
+     */
+    public async processSource(source: string, debugId?: string, force?: boolean) {
+        return await this.processSourceAndAvailableSourceMap(source, undefined, debugId, force);
     }
 
     /**
@@ -117,11 +98,29 @@ export class SourceProcessor {
      * @param source Source content.
      * @param sourceMap Sourcemap object or JSON.
      * @param debugId Debug ID. If not provided, one will be generated from `source`.
+     * @param force Force adding changes.
      * @returns Used debug ID, new source and new sourcemap.
      */
     public async processSourceAndSourceMap(
         source: string,
         sourceMap: RawSourceMap,
+        debugId?: string,
+        force?: boolean,
+    ): Promise<ProcessResult> {
+        return await this.processSourceAndAvailableSourceMap(source, sourceMap, debugId, force);
+    }
+
+    /**
+     * Adds required snippets and comments to source, and modifies sourcemap to include debug ID if available.
+     * @param source Source content.
+     * @param sourceMap Sourcemap object or JSON.
+     * @param debugId Debug ID. If not provided, one will be generated from `source`.
+     * @param force Force adding changes.
+     * @returns Used debug ID, new source and new sourcemap.
+     */
+    private async processSourceAndAvailableSourceMap(
+        source: string,
+        sourceMap?: RawSourceMap,
         debugId?: string,
         force?: boolean,
     ): Promise<ProcessResult> {
@@ -146,14 +145,16 @@ export class SourceProcessor {
                 ? shebang + sourceSnippet + '\n' + source.substring(shebang.length)
                 : sourceSnippet + '\n' + source;
 
-            // We need to offset the source map by amount of lines that we're inserting to the source code
-            // Sourcemaps map code like this:
-            // original code X:Y => generated code A:B
-            // So if we add any code to generated code, mappings after that code will become invalid
-            // We need to offset the mapping lines by sourceSnippetNewlineCount:
-            // original code X:Y => generated code (A + sourceSnippetNewlineCount):B
-            const sourceSnippetNewlineCount = sourceSnippet.match(/\n/g)?.length ?? 0;
-            offsetSourceMap = await this.offsetSourceMap(sourceMap, sourceSnippetNewlineCount + 1);
+            if (sourceMap) {
+                // We need to offset the source map by amount of lines that we're inserting to the source code
+                // Sourcemaps map code like this:
+                // original code X:Y => generated code A:B
+                // So if we add any code to generated code, mappings after that code will become invalid
+                // We need to offset the mapping lines by sourceSnippetNewlineCount:
+                // original code X:Y => generated code (A + sourceSnippetNewlineCount):B
+                const sourceSnippetNewlineCount = sourceSnippet.match(/\n/g)?.length ?? 0;
+                offsetSourceMap = await this.offsetSourceMap(sourceMap, sourceSnippetNewlineCount + 1);
+            }
         }
 
         if (force || !sourceDebugId || !this._debugIdGenerator.hasCommentSnippet(source, debugId)) {
@@ -161,6 +162,9 @@ export class SourceProcessor {
             newSource = appendBeforeWhitespaces(newSource, '\n' + sourceComment);
         }
 
+        if (!sourceMap) {
+            return { debugId, source: newSource };
+        }
         const newSourceMap = this._debugIdGenerator.addSourceMapDebugId(offsetSourceMap ?? sourceMap, debugId);
         return { debugId, source: newSource, sourceMap: newSourceMap };
     }
