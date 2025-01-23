@@ -7,13 +7,16 @@ import { stringToUuid } from './helpers/stringToUuid';
 import { RawSourceMap, RawSourceMapWithDebugId } from './models/RawSourceMap';
 import { Err, Ok, R, ResultPromise } from './models/Result';
 
-export interface ProcessResult {
+export interface ProcessResultWithoutSourceMap {
     readonly debugId: string;
     readonly source: string;
-    readonly sourceMap?: RawSourceMapWithDebugId;
 }
 
-export interface ProcessResultWithPaths extends ProcessResult {
+export interface ProcessResultWithSourceMaps extends ProcessResultWithoutSourceMap {
+    readonly sourceMap: RawSourceMapWithDebugId;
+}
+
+export interface ProcessResultWithPaths extends ProcessResultWithSourceMaps {
     readonly sourcePath: string;
     readonly sourceMapPath: string;
 }
@@ -89,7 +92,11 @@ export class SourceProcessor {
      * @param force Force adding changes.
      * @returns Used debug ID, new source and new sourcemap.
      */
-    public async processSource(source: string, debugId?: string, force?: boolean) {
+    public async processSource(
+        source: string,
+        debugId?: string,
+        force?: boolean,
+    ): Promise<ProcessResultWithoutSourceMap> {
         return await this.processSourceAndAvailableSourceMap(source, undefined, debugId, force);
     }
 
@@ -106,7 +113,7 @@ export class SourceProcessor {
         sourceMap: RawSourceMap,
         debugId?: string,
         force?: boolean,
-    ): Promise<ProcessResult> {
+    ): Promise<ProcessResultWithSourceMaps> {
         return await this.processSourceAndAvailableSourceMap(source, sourceMap, debugId, force);
     }
 
@@ -118,12 +125,24 @@ export class SourceProcessor {
      * @param force Force adding changes.
      * @returns Used debug ID, new source and new sourcemap.
      */
-    private async processSourceAndAvailableSourceMap(
+    public async processSourceAndAvailableSourceMap(
+        source: string,
+        sourceMap: RawSourceMap,
+        debugId?: string,
+        force?: boolean,
+    ): Promise<ProcessResultWithSourceMaps>;
+    public async processSourceAndAvailableSourceMap(
+        source: string,
+        sourceMap?: undefined,
+        debugId?: string,
+        force?: boolean,
+    ): Promise<ProcessResultWithoutSourceMap>;
+    public async processSourceAndAvailableSourceMap(
         source: string,
         sourceMap?: RawSourceMap,
         debugId?: string,
         force?: boolean,
-    ): Promise<ProcessResult> {
+    ): Promise<ProcessResultWithSourceMaps | ProcessResultWithoutSourceMap> {
         const sourceDebugId = this.getSourceDebugId(source);
         if (!debugId) {
             debugId = sourceDebugId ?? stringToUuid(source);
@@ -163,7 +182,7 @@ export class SourceProcessor {
         }
 
         if (!sourceMap) {
-            return { debugId, source: newSource };
+            return { debugId, source: newSource } as ProcessResultWithoutSourceMap;
         }
         const newSourceMap = this._debugIdGenerator.addSourceMapDebugId(offsetSourceMap ?? sourceMap, debugId);
         return { debugId, source: newSource, sourceMap: newSourceMap };
