@@ -28,7 +28,7 @@ fi
 
 DEBUG_ID_PATH_ENV="DEBUG_ID_PATH"
 
-debug_id_file_path=${!DEBUG_ID_PATH_ENV:-${2:-}}
+debug_id_file_path=${DEBUG_ID_PATH_ENV:-${2:-}}
 
 if [ ! -f "$debug_id_file_path" ]; then
     echo "Error: File '$debug_id_file_path' does not exist."

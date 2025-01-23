@@ -36,7 +36,7 @@ tasks.register("uploadSourceMapsToBacktrace") {
         def mapData = jsonSlurper.parse(mapFile)
         mapData.debugId = debugIdFile.text
         def jsonBuilder = new JsonBuilder(mapData)
-        mapFile.text = jsonBuilder.toPrettyString()
+        mapFile.text = jsonBuilder.toString()
 
         // Execute Backtrace JS CLI to process upload processed source maps
         def command = ["npx", "--yes", "@backtrace/javascript-cli", "upload", "-p", mapFile.absolutePath]
