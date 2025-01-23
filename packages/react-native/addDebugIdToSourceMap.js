@@ -20,7 +20,7 @@ function includeDebugIdInSourceMap(sourceMapPath, debugId) {
 
 const args = process.argv.slice(2);
 if (args.length < 2) {
-    console.error('Usage: node update-json.js <sourcemapPath> <debugId>');
+    console.error(`Usage: node ${path.basename(args[1])}  <sourcemapPath> <debugId>`);
     process.exit(1);
 }
 
