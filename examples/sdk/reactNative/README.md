@@ -8,53 +8,61 @@ This example app shows features available in the @backtrace/react-native package
 2. `npm install`. If you're on iOS, navigate to the `ios` directory and run `pod install`
 3. `npm run start` and pick desired platform
 
-#### Source maps
+### Source maps
+
+This example application is integrated with the source map support. Once you change the .backtracejsrc file, source maps will be automatically uploaded to your project.
 
 Before executing any step:
 
--   Please update .backtracejsrc file with your symbols submission URL and your sourcemap settings.
+> Please update .backtracejsrc file with your symbols submission URL and your sourcemap settings.
 
-On Android: You can verify our example app with the source map support. In order to do that, please use the
-android-sourcemap.sh script.
+Backtrace is compatible with metro build system. To enable source map support, set a `customSerializer` method in the `metro.config.js` file to the `processSourceMap` function available in `@backtrace/react-native/processSourceMap`.
 
-```bash
-./android-sourcemap.sh ./optional-path-to-directory
 ```
+const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
+const backtraceSourceMapProcessor = require('@backtrace/react-native/processSourceMap');
 
-The script will prepare a release APK version of your React Native application with the sourcemap and Hermes support.
-The APK can be found in the ./android/app/build/outputs/apk/release/ directory.
-
-On iOS: Backtrace simplify the flow needed to upload source maps by instructing hermesc how to generate and prepare
-source maps for your application. Without this additional step, react-native will not instruct your application to
-support Backtrace source maps.
-
-In order to prepare your application for source maps and automatically upload them to Backtrace, modify your "Build
-Phase" with the following code:
-
-```bash
-set -e
-
-# destination source map directory
-SOURCE_MAP_DIR="$(pwd)/../build"
-mkdir -p $SOURCE_MAP_DIR
-
-export SOURCEMAP_FILE="$SOURCE_MAP_DIR/main.js.map";
-WITH_ENVIRONMENT="../node_modules/react-native/scripts/xcode/with-environment.sh"
-REACT_NATIVE_XCODE="../node_modules/react-native/scripts/react-native-xcode.sh"
-
-# use hermesc script provided by Backtrace to populate source maps
-# if you dont use hermes support, please skip this step.
-export HERMES_CLI_PATH="$(pwd)/../ios-hermesc.sh"
-
-/bin/sh -c "$WITH_ENVIRONMENT $REACT_NATIVE_XCODE"
-
-# copy javascript build output to the build directory
-cp "$CONFIGURATION_BUILD_DIR/main.jsbundle" $SOURCE_MAP_DIR
-
-# process source map with javascript code
-npx --yes @backtrace/javascript-cli run  --config "$(pwd)/../.backtracejsrc" --path "$SOURCE_MAP_DIR/main.jsbundle"
+const config = {
+    serializer: {
+        customSerializer: backtraceSourceMapProcessor.processSourceMap
+    },
+};
+module.exports = mergeConfig(getDefaultConfig(__dirname), config);
 
 ```
 
-Note: this modification copy the output of the javascript build into the build directory created in your application
-folder. Please also put ios-hermesc.
+Add Backtrace to build automation to ensure every build has source map support.
+
+In order to upload source maps to Backtrace, you can:
+
+**On Android:**
+
+Enable source map support in `app/build.gradle` by uncommenting hermes source map flags. With additional parameters, source maps will be generated. To automatically upload them to Backtrace, you can use the gradle task available the @backtrace/react-native library.
+
+`apply from: "$rootDir/../node_modules/@backtrace/react-native/android/upload-sourcemaps.gradle"`
+
+Once you import the gradle task, you can simply add it to your flow for any build/assemble tasks.
+
+```gradle
+tasks.matching {
+    it.name.startsWith("assemble") || it.name.startsWith("build")
+}.configureEach { task ->
+     task.finalizedBy("uploadSourceMapsToBacktrace")
+}
+```
+
+**On iOS.**
+
+Modify the code in the `Bundle React Native code and images` step in the `Build Phases` of your xcode project setting. In the end of the script, you can include the code below, to upload source maps directly to Backtrace after generating the applicaiton.
+
+```bash
+# enable source map support
+export SOURCEMAP_FILE="$(pwd)/../main.jsbundle.map"
+
+...
+
+# upload source maps to Backtrace
+source_map_upload="$(pwd)/../ios-sourcemap-upload.sh"
+backtrace_js_config="$(pwd)/../.backtracejsrc"
+/bin/sh -c "$source_map_upload $SOURCEMAP_FILE $TARGET_BUILD_DIR/.backtrace-sourcemap-id $backtrace_js_config"
+```
