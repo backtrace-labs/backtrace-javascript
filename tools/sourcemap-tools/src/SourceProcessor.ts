@@ -7,13 +7,16 @@ import { stringToUuid } from './helpers/stringToUuid';
 import { RawSourceMap, RawSourceMapWithDebugId } from './models/RawSourceMap';
 import { Err, Ok, R, ResultPromise } from './models/Result';
 
-export interface ProcessResult {
+export interface ProcessResultWithoutSourceMap {
     readonly debugId: string;
     readonly source: string;
+}
+
+export interface ProcessResultWithSourceMaps extends ProcessResultWithoutSourceMap {
     readonly sourceMap: RawSourceMapWithDebugId;
 }
 
-export interface ProcessResultWithPaths extends ProcessResult {
+export interface ProcessResultWithPaths extends ProcessResultWithSourceMaps {
     readonly sourcePath: string;
     readonly sourceMapPath: string;
 }
@@ -83,10 +86,26 @@ export class SourceProcessor {
     }
 
     /**
+     * Adds required snippets and comments to source
+     * @param source Source content.
+     * @param debugId Debug ID. If not provided, one will be generated from `source`.
+     * @param force Force adding changes.
+     * @returns Used debug ID, new source and new sourcemap.
+     */
+    public async processSource(
+        source: string,
+        debugId?: string,
+        force?: boolean,
+    ): Promise<ProcessResultWithoutSourceMap> {
+        return await this.processSourceAndAvailableSourceMap(source, undefined, debugId, force);
+    }
+
+    /**
      * Adds required snippets and comments to source, and modifies sourcemap to include debug ID.
      * @param source Source content.
      * @param sourceMap Sourcemap object or JSON.
      * @param debugId Debug ID. If not provided, one will be generated from `source`.
+     * @param force Force adding changes.
      * @returns Used debug ID, new source and new sourcemap.
      */
     public async processSourceAndSourceMap(
@@ -94,7 +113,36 @@ export class SourceProcessor {
         sourceMap: RawSourceMap,
         debugId?: string,
         force?: boolean,
-    ): Promise<ProcessResult> {
+    ): Promise<ProcessResultWithSourceMaps> {
+        return await this.processSourceAndAvailableSourceMap(source, sourceMap, debugId, force);
+    }
+
+    /**
+     * Adds required snippets and comments to source, and modifies sourcemap to include debug ID if available.
+     * @param source Source content.
+     * @param sourceMap Sourcemap object or JSON.
+     * @param debugId Debug ID. If not provided, one will be generated from `source`.
+     * @param force Force adding changes.
+     * @returns Used debug ID, new source and new sourcemap.
+     */
+    private async processSourceAndAvailableSourceMap(
+        source: string,
+        sourceMap: RawSourceMap,
+        debugId?: string,
+        force?: boolean,
+    ): Promise<ProcessResultWithSourceMaps>;
+    private async processSourceAndAvailableSourceMap(
+        source: string,
+        sourceMap?: undefined,
+        debugId?: string,
+        force?: boolean,
+    ): Promise<ProcessResultWithoutSourceMap>;
+    private async processSourceAndAvailableSourceMap(
+        source: string,
+        sourceMap?: RawSourceMap,
+        debugId?: string,
+        force?: boolean,
+    ): Promise<ProcessResultWithSourceMaps | ProcessResultWithoutSourceMap> {
         const sourceDebugId = this.getSourceDebugId(source);
         if (!debugId) {
             debugId = sourceDebugId ?? stringToUuid(source);
@@ -116,14 +164,16 @@ export class SourceProcessor {
                 ? shebang + sourceSnippet + '\n' + source.substring(shebang.length)
                 : sourceSnippet + '\n' + source;
 
-            // We need to offset the source map by amount of lines that we're inserting to the source code
-            // Sourcemaps map code like this:
-            // original code X:Y => generated code A:B
-            // So if we add any code to generated code, mappings after that code will become invalid
-            // We need to offset the mapping lines by sourceSnippetNewlineCount:
-            // original code X:Y => generated code (A + sourceSnippetNewlineCount):B
-            const sourceSnippetNewlineCount = sourceSnippet.match(/\n/g)?.length ?? 0;
-            offsetSourceMap = await this.offsetSourceMap(sourceMap, sourceSnippetNewlineCount + 1);
+            if (sourceMap) {
+                // We need to offset the source map by amount of lines that we're inserting to the source code
+                // Sourcemaps map code like this:
+                // original code X:Y => generated code A:B
+                // So if we add any code to generated code, mappings after that code will become invalid
+                // We need to offset the mapping lines by sourceSnippetNewlineCount:
+                // original code X:Y => generated code (A + sourceSnippetNewlineCount):B
+                const sourceSnippetNewlineCount = sourceSnippet.match(/\n/g)?.length ?? 0;
+                offsetSourceMap = await this.offsetSourceMap(sourceMap, sourceSnippetNewlineCount + 1);
+            }
         }
 
         if (force || !sourceDebugId || !this._debugIdGenerator.hasCommentSnippet(source, debugId)) {
@@ -131,6 +181,9 @@ export class SourceProcessor {
             newSource = appendBeforeWhitespaces(newSource, '\n' + sourceComment);
         }
 
+        if (!sourceMap) {
+            return { debugId, source: newSource } as ProcessResultWithoutSourceMap;
+        }
         const newSourceMap = this._debugIdGenerator.addSourceMapDebugId(offsetSourceMap ?? sourceMap, debugId);
         return { debugId, source: newSource, sourceMap: newSourceMap };
     }
