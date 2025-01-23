@@ -10,7 +10,7 @@ const DEBUG_ID_PATH = process.env.DEBUG_ID_PATH;
 /**
  * Process metro build with source map support powered by Backtrace.
  */
-function processSourceMap(entryPoint, preModules, graph, options) {
+async function processSourceMap(entryPoint, preModules, graph, options) {
     const bundle = bundleToString(baseJSBundle(entryPoint, preModules, graph, options));
 
     // development build - skip source map upload
@@ -30,7 +30,7 @@ function processSourceMap(entryPoint, preModules, graph, options) {
 
     const debugIdGenerator = new DebugIdGenerator();
     const sourceProcessor = new SourceProcessor(debugIdGenerator);
-    const { source, debugId } = sourceProcessor.processSource(bundle.code);
+    const { source, debugId } = await sourceProcessor.processSource(bundle.code);
     const snippet = debugIdGenerator.generateSourceSnippet(debugId);
 
     console.debug(`Backtrace: saving debugId ${debugId} to ${backtraceSourceMapId}.`);

@@ -1,6 +1,6 @@
 const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
 const path = require('path');
-const backtraceSourceMapProcessor = require('@backtrace/react-native/processSourceMap');
+const backtraceSourceMapProcessor = require('@backtrace/react-native/scripts/processSourceMap');
 
 /**
  * Metro configuration

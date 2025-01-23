@@ -16,11 +16,11 @@ Before executing any step:
 
 > Please update .backtracejsrc file with your symbols submission URL and your sourcemap settings.
 
-Backtrace is compatible with metro build system. To enable source map support, set a `customSerializer` method in the `metro.config.js` file to the `processSourceMap` function available in `@backtrace/react-native/processSourceMap`.
+Backtrace is compatible with metro build system. To enable source map support, set a `customSerializer` method in the `metro.config.js` file to the `processSourceMap` function available in `@backtrace/react-native/scripts/processSourceMap`.
 
 ```
 const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
-const backtraceSourceMapProcessor = require('@backtrace/react-native/processSourceMap');
+const backtraceSourceMapProcessor = require('@backtrace/react-native/scripts/processSourceMap');
 
 const config = {
     serializer: {
@@ -56,13 +56,16 @@ tasks.matching {
 Modify the code in the `Bundle React Native code and images` step in the `Build Phases` of your xcode project setting. In the end of the script, you can include the code below, to upload source maps directly to Backtrace after generating the applicaiton.
 
 ```bash
+project_directory="$(pwd)/.."
 # enable source map support
-export SOURCEMAP_FILE="$(pwd)/../main.jsbundle.map"
+export SOURCEMAP_FILE="$project_directory/main.jsbundle.map"
 
 ...
 
 # upload source maps to Backtrace
-source_map_upload="$(pwd)/../ios-sourcemap-upload.sh"
-backtrace_js_config="$(pwd)/../.backtracejsrc"
-/bin/sh -c "$source_map_upload $SOURCEMAP_FILE $TARGET_BUILD_DIR/.backtrace-sourcemap-id $backtrace_js_config"
+source_map_upload="$project_directory/node_modules/@backtrace/react-native/scripts/ios-sourcemap-upload.sh"
+backtrace_js_config="$project_directory/.backtracejsrc"
+
+/bin/sh -c "$source_map_upload $SOURCEMAP_FILE $TARGET_BUILD_DIR/.backtrace-sourcemap-id $backtrace_js_config $project_directory"
+
 ```
