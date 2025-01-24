@@ -1,6 +1,6 @@
 {
     "name": "@backtrace/sourcemap-tools",
-    "version": "0.2.3",
+    "version": "0.2.4",
     "description": "Backtrace-JavaScript sourcemap tools",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
