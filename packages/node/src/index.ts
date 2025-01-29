@@ -12,6 +12,7 @@ export {
     RawBreadcrumb,
 } from '@backtrace/sdk-core';
 export * from './attachment/index.js';
+export * from './BacktraceApi.js';
 export * from './BacktraceClient.js';
 export * from './BacktraceConfiguration.js';
 export * from './BacktraceNodeRequestHandler.js';
