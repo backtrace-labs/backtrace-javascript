@@ -11,6 +11,12 @@ import FormData from 'form-data';
 import http, { ClientRequest, IncomingMessage } from 'http';
 import https from 'https';
 import { Readable } from 'stream';
+
+export interface BacktraceNodeRequestHandlerOptions {
+    readonly timeout?: number;
+    readonly ignoreSslCertificate?: boolean;
+}
+
 export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
     private readonly UPLOAD_FILE_NAME = 'upload_file';
     private readonly _timeout: number;
@@ -24,15 +30,8 @@ export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
         'Transfer-Encoding': 'chunked',
     };
 
-    constructor(
-        private readonly _options: {
-            url: string;
-            token?: string;
-            timeout?: number;
-            ignoreSslCertificate?: boolean;
-        },
-    ) {
-        this._timeout = this._options.timeout ?? DEFAULT_TIMEOUT;
+    constructor(private readonly _options?: BacktraceNodeRequestHandlerOptions) {
+        this._timeout = this._options?.timeout ?? DEFAULT_TIMEOUT;
     }
 
     public async postError(
@@ -71,7 +70,7 @@ export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
                 const request = httpClient.request(
                     url,
                     {
-                        rejectUnauthorized: this._options.ignoreSslCertificate === true,
+                        rejectUnauthorized: this._options?.ignoreSslCertificate === true,
                         timeout: this._timeout,
                         method: 'POST',
                     },
@@ -129,7 +128,7 @@ export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
                 const request = httpClient.request(
                     url,
                     {
-                        rejectUnauthorized: this._options.ignoreSslCertificate === true,
+                        rejectUnauthorized: this._options?.ignoreSslCertificate === true,
                         timeout: this._timeout,
                         method: 'POST',
                         headers:
