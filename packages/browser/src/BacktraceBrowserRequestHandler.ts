@@ -22,8 +22,8 @@ export class BacktraceBrowserRequestHandler implements BacktraceRequestHandler {
     private readonly MULTIPART_HEADERS = {
         'Transfer-Encoding': 'chunked',
     };
-    constructor(private readonly _options?: BacktraceBrowserRequestHandlerOptions) {
-        this._timeout = this._options?.timeout ?? DEFAULT_TIMEOUT;
+    constructor(options?: BacktraceBrowserRequestHandlerOptions) {
+        this._timeout = options?.timeout ?? DEFAULT_TIMEOUT;
     }
     public async postError<T>(
         submissionUrl: string,
