@@ -20,6 +20,7 @@ export interface BacktraceNodeRequestHandlerOptions {
 export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
     private readonly UPLOAD_FILE_NAME = 'upload_file';
     private readonly _timeout: number;
+    private readonly _ignoreSslCertificate?: boolean;
 
     private readonly JSON_HEADERS = {
         'Content-type': 'application/json',
@@ -30,8 +31,9 @@ export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
         'Transfer-Encoding': 'chunked',
     };
 
-    constructor(private readonly _options?: BacktraceNodeRequestHandlerOptions) {
-        this._timeout = this._options?.timeout ?? DEFAULT_TIMEOUT;
+    constructor(options?: BacktraceNodeRequestHandlerOptions) {
+        this._timeout = options?.timeout ?? DEFAULT_TIMEOUT;
+        this._ignoreSslCertificate = options?.ignoreSslCertificate;
     }
 
     public async postError(
@@ -70,7 +72,7 @@ export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
                 const request = httpClient.request(
                     url,
                     {
-                        rejectUnauthorized: this._options?.ignoreSslCertificate === true,
+                        rejectUnauthorized: this._ignoreSslCertificate === true,
                         timeout: this._timeout,
                         method: 'POST',
                     },
@@ -128,7 +130,7 @@ export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
                 const request = httpClient.request(
                     url,
                     {
-                        rejectUnauthorized: this._options?.ignoreSslCertificate === true,
+                        rejectUnauthorized: this._ignoreSslCertificate === true,
                         timeout: this._timeout,
                         method: 'POST',
                         headers:
