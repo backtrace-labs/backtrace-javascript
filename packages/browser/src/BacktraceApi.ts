@@ -1,4 +1,4 @@
-import { BacktraceCoreApi, BacktraceCoreApiOptions } from '@backtrace/sdk-core';
+import { BacktraceCoreApi, BacktraceCoreApiOptions, BacktraceRequestHandler } from '@backtrace/sdk-core';
 import {
     BacktraceBrowserRequestHandler,
     BacktraceBrowserRequestHandlerOptions,
@@ -6,6 +6,7 @@ import {
 
 export interface BacktraceApiOptions extends BacktraceCoreApiOptions {
     readonly requestHandlerOptions?: BacktraceBrowserRequestHandlerOptions;
+    readonly requestHandler?: BacktraceRequestHandler;
 }
 
 export class BacktraceApi extends BacktraceCoreApi {

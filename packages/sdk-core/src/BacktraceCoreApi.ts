@@ -21,7 +21,6 @@ export interface BacktraceCoreApiOptions {
         readonly url?: string;
     };
 
-    readonly requestHandler?: BacktraceRequestHandler;
     readonly requestBacktraceReportSubmission?: RequestBacktraceReportSubmission;
 }
 
@@ -29,10 +28,12 @@ export class BacktraceCoreApi {
     private readonly _summedMetricsSubmissionUrl?: string;
     private readonly _uniqueMetricsSubmissionUrl?: string;
 
-    private readonly _requestHandler: BacktraceRequestHandler;
     private readonly _requestBacktraceReportSubmission: RequestBacktraceReportSubmission;
 
-    constructor(options: BacktraceCoreApiOptions, requestHandler: BacktraceRequestHandler) {
+    constructor(
+        options: BacktraceCoreApiOptions,
+        private readonly _requestHandler: BacktraceRequestHandler,
+    ) {
         this._summedMetricsSubmissionUrl = MetricsUrlInformation.generateSummedEventsUrl(
             options.metrics?.url ?? 'https://events.backtrace.io',
             options.url,
@@ -44,8 +45,6 @@ export class BacktraceCoreApi {
             options.url,
             options.token,
         );
-
-        this._requestHandler = options.requestHandler ?? requestHandler;
 
         this._requestBacktraceReportSubmission =
             options.requestBacktraceReportSubmission ??
