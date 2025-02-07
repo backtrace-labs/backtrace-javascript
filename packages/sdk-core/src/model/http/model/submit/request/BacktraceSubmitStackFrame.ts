@@ -1,4 +1,4 @@
-interface BaseBacktraceSubmitStackFrame {
+interface BacktraceSubmitBaseStackFrame {
     /**
      * A boolean value that is true if the stack frame is created by hueristic method due to missing CFI,
      * and false otherwise.
@@ -55,11 +55,11 @@ interface BaseBacktraceSubmitStackFrame {
     registers?: Record<string, number | string>;
 }
 
-export interface BacktraceSubmitFuncStackFrame extends BaseBacktraceSubmitStackFrame {
+export interface BacktraceSubmitFuncStackFrame extends BacktraceSubmitBaseStackFrame {
     funcName: string;
 }
 
-export interface BacktraceSubmitAddressStackFrame extends BaseBacktraceSubmitStackFrame {
+export interface BacktraceSubmitAddressStackFrame extends BacktraceSubmitBaseStackFrame {
     address: string;
 }
 
