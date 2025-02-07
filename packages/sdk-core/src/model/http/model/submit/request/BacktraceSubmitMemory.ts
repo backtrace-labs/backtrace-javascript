@@ -1,4 +1,4 @@
-export interface BacktraceDataSubmitMemory {
+export interface BacktraceSubmitDataMemory {
     /**
      * An integer offset that this slice of memory starts at. The 64 bit integers are represented as strings.
      */
@@ -24,7 +24,7 @@ export interface BacktraceDataSubmitMemory {
     };
 }
 
-export interface BacktraceSizedSubmitMemory {
+export interface BacktraceSubmitSizedMemory {
     /**
      * An integer offset that this slice of memory starts at. The 64 bit integers are represented as strings.
      */
@@ -45,4 +45,4 @@ export interface BacktraceSizedSubmitMemory {
     };
 }
 
-export type BacktraceSubmitMemory = BacktraceDataSubmitMemory | BacktraceSizedSubmitMemory;
+export type BacktraceSubmitMemory = BacktraceSubmitDataMemory | BacktraceSubmitSizedMemory;

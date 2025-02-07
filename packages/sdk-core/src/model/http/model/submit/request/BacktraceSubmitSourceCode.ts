@@ -1,4 +1,4 @@
-export interface TextBacktraceSubmitSourceCode {
+export interface BacktraceSubmitTextSourceCode {
     /**
      * A string that provides the full source file or a subset of it.
      * If provided, then also `startLine` should be provided. If not provided, then `path` must be provided.
@@ -28,7 +28,7 @@ export interface TextBacktraceSubmitSourceCode {
     tabWidth?: number;
 }
 
-export interface PathBacktraceSubmitSourceCode {
+export interface BacktraceSubmitPathSourceCode {
     /**
      * A string value that provides the file system path to the original source code file.
      * If not provided, then `text` must be provided.
@@ -58,4 +58,4 @@ export interface PathBacktraceSubmitSourceCode {
     tabWidth?: number;
 }
 
-export type BacktraceSubmitSourceCode = TextBacktraceSubmitSourceCode | PathBacktraceSubmitSourceCode;
+export type BacktraceSubmitSourceCode = BacktraceSubmitTextSourceCode | BacktraceSubmitPathSourceCode;

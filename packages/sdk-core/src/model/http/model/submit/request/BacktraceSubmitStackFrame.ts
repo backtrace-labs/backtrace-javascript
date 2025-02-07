@@ -55,12 +55,12 @@ interface BaseBacktraceSubmitStackFrame {
     registers?: Record<string, number | string>;
 }
 
-export interface FuncBacktraceSubmitStackFrame extends BaseBacktraceSubmitStackFrame {
+export interface BacktraceSubmitFuncStackFrame extends BaseBacktraceSubmitStackFrame {
     funcName: string;
 }
 
-export interface AddressBacktraceSubmitStackFrame extends BaseBacktraceSubmitStackFrame {
+export interface BacktraceSubmitAddressStackFrame extends BaseBacktraceSubmitStackFrame {
     address: string;
 }
 
-export type BacktraceSubmitStackFrame = FuncBacktraceSubmitStackFrame | AddressBacktraceSubmitStackFrame;
+export type BacktraceSubmitStackFrame = BacktraceSubmitFuncStackFrame | BacktraceSubmitAddressStackFrame;
