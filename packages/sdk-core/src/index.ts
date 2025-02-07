@@ -1,3 +1,4 @@
+export * from './BacktraceCoreApi.js';
 export * from './BacktraceCoreClient.js';
 export * from './builder/BacktraceCoreClientBuilder.js';
 export * from './builder/CoreClientSetup.js';

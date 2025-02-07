@@ -1,16 +1,15 @@
 import { jsonEscaper } from '../../common/jsonEscaper.js';
 import { BacktraceAttachment } from '../attachment/index.js';
-import { BacktraceConfiguration } from '../configuration/BacktraceConfiguration.js';
-import { BacktraceData } from '../data/BacktraceData.js';
 import { BacktraceReportSubmissionResult } from '../data/BacktraceSubmissionResult.js';
 import { BacktraceRequestHandler } from './BacktraceRequestHandler.js';
-import { BacktraceAttachmentResponse } from './model/BacktraceAttachmentResponse.js';
-import { BacktraceSubmissionResponse } from './model/BacktraceSubmissionResponse.js';
+import { BacktraceAttachmentResponse } from './model/attachment/response/BacktraceAttachmentResponse.js';
+import { BacktraceSubmissionResponse } from './model/submit/index.js';
+import { BacktraceSubmitBody } from './model/submit/request/BacktraceSubmitBody.js';
 import { SubmissionUrlInformation } from './SubmissionUrlInformation.js';
 
 export interface BacktraceReportSubmission {
     send(
-        data: BacktraceData,
+        data: BacktraceSubmitBody,
         attachments: BacktraceAttachment[],
         abortSignal?: AbortSignal,
     ): Promise<BacktraceReportSubmissionResult<BacktraceSubmissionResponse>>;
@@ -25,13 +24,13 @@ export interface BacktraceReportSubmission {
 export class RequestBacktraceReportSubmission implements BacktraceReportSubmission {
     private readonly _submissionUrl: string;
     constructor(
-        options: BacktraceConfiguration,
+        options: { url: string; token?: string },
         private readonly _requestHandler: BacktraceRequestHandler,
     ) {
         this._submissionUrl = SubmissionUrlInformation.toJsonReportSubmissionUrl(options.url, options.token);
     }
 
-    public send(data: BacktraceData, attachments: BacktraceAttachment[], abortSignal?: AbortSignal) {
+    public send(data: BacktraceSubmitBody, attachments: BacktraceAttachment[], abortSignal?: AbortSignal) {
         const json = JSON.stringify(data, jsonEscaper());
         return this._requestHandler.postError(this._submissionUrl, json, attachments, abortSignal);
     }

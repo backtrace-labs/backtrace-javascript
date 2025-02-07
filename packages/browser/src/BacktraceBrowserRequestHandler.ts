@@ -7,6 +7,10 @@ import {
     DEFAULT_TIMEOUT,
 } from '@backtrace/sdk-core';
 
+export interface BacktraceBrowserRequestHandlerOptions {
+    readonly timeout?: number;
+}
+
 export class BacktraceBrowserRequestHandler implements BacktraceRequestHandler {
     private readonly UPLOAD_FILE_NAME = 'upload_file';
     private readonly _timeout: number;
@@ -18,14 +22,8 @@ export class BacktraceBrowserRequestHandler implements BacktraceRequestHandler {
     private readonly MULTIPART_HEADERS = {
         'Transfer-Encoding': 'chunked',
     };
-    constructor(
-        private readonly _options: {
-            url: string;
-            token?: string;
-            timeout?: number;
-        },
-    ) {
-        this._timeout = this._options.timeout ?? DEFAULT_TIMEOUT;
+    constructor(options?: BacktraceBrowserRequestHandlerOptions) {
+        this._timeout = options?.timeout ?? DEFAULT_TIMEOUT;
     }
     public async postError<T>(
         submissionUrl: string,
