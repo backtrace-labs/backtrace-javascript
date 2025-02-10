@@ -1,3 +1,8 @@
+# Version 0.7.0
+
+-   update `@backtrace/sdk-core` to `0.7.0`
+-   add `BacktraceApi` (#335)
+
 # Version 0.6.2
 
 -   fix invalid error handler in `fileChunkSink` (#322)
