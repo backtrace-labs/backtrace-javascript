@@ -1,3 +1,7 @@
+# Version 0.7.0
+
+-   add `BacktraceCoreApi` and HTTP models for submission of reports, metrics and attachments (#335)
+
 # Version 0.6.0
 
 -   add `setInterval` unreffing, fixing blocking of application exit (#291)
