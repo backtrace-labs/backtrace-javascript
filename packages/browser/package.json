@@ -39,7 +39,7 @@
         "/lib"
     ],
     "dependencies": {
-        "@backtrace/sdk-core": "0.6.0"
+        "@backtrace/sdk-core": "0.7.0"
     },
     "devDependencies": {
         "@reduxjs/toolkit": "^1.9.5",
