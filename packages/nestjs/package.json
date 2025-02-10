@@ -62,7 +62,7 @@
         "typescript": "^5.0.4"
     },
     "dependencies": {
-        "@backtrace/node": "^0.6.2"
+        "@backtrace/node": "^0.7.0"
     },
     "peerDependencies": {
         "@nestjs/common": "^9 || ^10"
