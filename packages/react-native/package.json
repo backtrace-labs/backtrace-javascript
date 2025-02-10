@@ -92,7 +92,7 @@
         "typescript": "^5.0.2"
     },
     "dependencies": {
-        "@backtrace/sdk-core": "^0.6.0",
+        "@backtrace/sdk-core": "^0.7.0",
         "web-streams-polyfill": "^4.0.0"
     }
 }
