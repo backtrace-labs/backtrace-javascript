@@ -1,3 +1,8 @@
+# Version 0.5.0
+
+-   update `@backtrace/sdk-core` to `0.7.0`
+-   add `BacktraceApi` (#335)
+
 # Version 0.4.2
 
 -   add `@backtrace/sdk-core` as normal dependency to fix typings
