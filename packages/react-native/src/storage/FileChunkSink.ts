@@ -1,5 +1,6 @@
+import type { BacktraceStorage } from '@backtrace/sdk-core';
 import type { ChunkSink } from './Chunkifier';
-import type { FileSystem } from './FileSystem';
+import type { BacktraceStreamStorage } from './storage';
 import type { FileWritableStream } from './StreamWriter';
 
 interface FileChunkSinkOptions {
@@ -16,7 +17,7 @@ interface FileChunkSinkOptions {
     /**
      * File system to use.
      */
-    readonly fs: FileSystem;
+    readonly storage: BacktraceStorage & BacktraceStreamStorage;
 }
 
 /**
@@ -43,7 +44,7 @@ export class FileChunkSink {
                     // Fail silently here, there's not much we can do about this
                 })
                 .finally(() =>
-                    _options.fs.unlink(stream.path).catch(() => {
+                    _options.storage.remove(stream.path).catch(() => {
                         // Fail silently here, there's not much we can do about this
                     }),
                 );
@@ -63,7 +64,7 @@ export class FileChunkSink {
 
     private createStream(n: number) {
         const path = this._options.file(n);
-        return this._options.fs.createWriteStream(path);
+        return this._options.storage.createWriteStream(path);
     }
 }
 

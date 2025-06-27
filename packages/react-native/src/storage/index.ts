@@ -1,5 +1,5 @@
-export * from './FileSystem';
+export * from './ReactNativeBacktraceStorage';
 export * from './ReactNativeDirectoryProvider';
 export * from './ReactNativeFileProvider';
-export * from './ReactNativeFileSystem';
+export * from './storage';
 export * from './StreamWriter';

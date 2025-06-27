@@ -7,7 +7,8 @@ import { AppStateBreadcrumbSubscriber } from '../breadcrumbs/events/AppStateBrea
 import { DimensionChangeBreadcrumbSubscriber } from '../breadcrumbs/events/DimensionChangeBreadcrumbSubscriber';
 import { WebRequestEventSubscriber } from '../breadcrumbs/events/WebRequestEventSubscriber';
 import { DebuggerHelper } from '../common/DebuggerHelper';
-import { ReactNativeFileSystem } from '../storage';
+import { ReactNativePathBacktraceStorageFactory } from '../storage';
+import type { BacktraceStorageModuleFactory } from '../storage/PathBacktraceStorageFactory';
 import type { BacktraceClientSetup } from './BacktraceClientSetup';
 
 export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<BacktraceClientSetup> {
@@ -45,14 +46,14 @@ export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<Backtrace
             this.addAttributeProvider(provider);
         }
 
-        this.useFileSystem(new ReactNativeFileSystem());
+        this.useStorageFactory(new ReactNativePathBacktraceStorageFactory());
         this.useBreadcrumbSubscriber(new AppStateBreadcrumbSubscriber());
         this.useBreadcrumbSubscriber(new DimensionChangeBreadcrumbSubscriber());
         this.useBreadcrumbSubscriber(new WebRequestEventSubscriber());
     }
 
-    public useFileSystem(fileSystem: ReactNativeFileSystem): this {
-        super.useFileSystem(fileSystem);
+    public useStorageFactory(factory: BacktraceStorageModuleFactory) {
+        this.clientSetup.storageFactory = factory;
         return this;
     }
 
