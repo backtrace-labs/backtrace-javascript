@@ -1,5 +1,12 @@
-import { FileAttachmentsManager, FileBreadcrumbsStorage, NodeFileSystem } from '@backtrace/node';
-import type { BacktraceDatabase } from '@backtrace/sdk-core';
+import {
+    AttachmentBacktraceDatabaseRecordFactory,
+    BacktraceConfiguration,
+    BacktraceStorageModule,
+    BacktraceStreamStorage,
+    FileAttachmentsManager,
+    FileBreadcrumbsStorage,
+} from '@backtrace/node';
+import type { BacktraceDatabase, BacktraceStorage, BacktraceSyncStorage } from '@backtrace/sdk-core';
 import {
     BacktraceData,
     BacktraceModule,
@@ -18,10 +25,10 @@ import { MainIpcTransportHandler } from '../ipc/MainIpcTransportHandler.js';
 import { WindowIpcTransport } from '../ipc/WindowIpcTransport.js';
 import { IpcAttachment } from './IpcAttachment.js';
 
-export class BacktraceMainElectronModule implements BacktraceModule {
-    private _bindData?: BacktraceModuleBindData;
+export class BacktraceMainElectronModule implements BacktraceModule<BacktraceConfiguration> {
+    private _bindData?: BacktraceModuleBindData<BacktraceConfiguration>;
 
-    public bind(bindData: BacktraceModuleBindData): void {
+    public bind(bindData: BacktraceModuleBindData<BacktraceConfiguration>): void {
         const { requestHandler, reportSubmission, client, attributeManager } = bindData;
 
         const getSyncData = (): SyncData => ({
@@ -102,7 +109,7 @@ export class BacktraceMainElectronModule implements BacktraceModule {
             return;
         }
 
-        const { options, attributeManager, sessionFiles, fileSystem, database } = this._bindData;
+        const { options, attributeManager, sessionFiles, storage, database } = this._bindData;
 
         if (options.database?.captureNativeCrashes) {
             if (options.database.path) {
@@ -125,9 +132,9 @@ export class BacktraceMainElectronModule implements BacktraceModule {
                 }
             });
 
-            if (sessionFiles && database && fileSystem) {
+            if (sessionFiles && database && storage) {
                 const lockId = sessionFiles.lockPreviousSessions();
-                this.sendPreviousCrashAttachments(database, sessionFiles, fileSystem as NodeFileSystem).finally(
+                this.sendPreviousCrashAttachments(database, sessionFiles, storage as BacktraceStorageModule).finally(
                     () => lockId && sessionFiles.unlockPreviousSessions(lockId),
                 );
             }
@@ -145,7 +152,7 @@ export class BacktraceMainElectronModule implements BacktraceModule {
     private async sendPreviousCrashAttachments(
         database: BacktraceDatabase,
         session: SessionFiles,
-        fileSystem: NodeFileSystem,
+        storage: BacktraceStorage & BacktraceSyncStorage & BacktraceStreamStorage,
     ) {
         // Sort crashes and sessions by timestamp descending
         const crashes = crashReporter.getUploadedReports().sort((a, b) => b.date.getTime() - a.date.getTime());
@@ -167,22 +174,24 @@ export class BacktraceMainElectronModule implements BacktraceModule {
 
                 const crashLock = session.getFileName(`electron-crash-lock-${rxid}`);
                 // If crash lock exists, do not attempt to add attachments twice
-                if (await fileSystem.exists(crashLock)) {
+                if (await storage.has(crashLock)) {
                     continue;
                 }
 
-                const fileAttachmentsManager = FileAttachmentsManager.createFromSession(session, fileSystem);
+                const fileAttachmentsManager = FileAttachmentsManager.createFromSession(session, storage);
                 const sessionAttachments = [
-                    ...FileBreadcrumbsStorage.getSessionAttachments(session, fileSystem),
+                    ...FileBreadcrumbsStorage.getSessionAttachments(session, storage),
                     ...(await fileAttachmentsManager.get()),
                 ];
 
+                const recordFactory = AttachmentBacktraceDatabaseRecordFactory.default();
                 for (const attachment of sessionAttachments) {
-                    database.addAttachment(rxid, attachment, session.sessionId);
+                    const record = recordFactory.create(rxid, session.sessionId, attachment);
+                    database.addRecord(record);
                 }
 
                 // Write an empty crash lock, so we know that this crash is already taken care of
-                await fileSystem.writeFile(crashLock, '');
+                await storage.set(crashLock, '');
             } catch {
                 // Do nothing, skip the report
             }
