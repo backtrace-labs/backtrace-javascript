@@ -1,7 +1,7 @@
 import { BacktraceAttachment } from '../../model/attachment/index.js';
 import { BacktraceData } from '../../model/data/index.js';
 import { isFileAttachment } from '../attachments/isFileAttachment.js';
-import { FileSystem } from '../storage/index.js';
+import { FileSystem, SessionId } from '../storage/index.js';
 import { BacktraceDatabaseFileRecord } from './BacktraceDatabaseFileRecord.js';
 import { ReportBacktraceDatabaseRecord } from './model/BacktraceDatabaseRecord.js';
 
@@ -10,7 +10,7 @@ export class ReportBacktraceDatabaseFileRecord implements ReportBacktraceDatabas
     public readonly data: BacktraceData;
     public readonly id: string;
     public readonly timestamp: number;
-    public readonly sessionId?: string;
+    public readonly sessionId?: SessionId;
     public locked: boolean;
 
     private constructor(

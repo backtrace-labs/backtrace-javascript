@@ -5,14 +5,18 @@ import { FileSystem } from './FileSystem.js';
 
 interface FileSession {
     readonly file: string;
-    readonly sessionId: string;
+    readonly sessionId: SessionId;
     readonly escapedSessionId: string;
-    readonly timestamp: number;
 }
 
 type SessionEvents = {
     unlocked: [];
 };
+
+export interface SessionId {
+    readonly id: string;
+    readonly timestamp: number;
+}
 
 const SESSION_MARKER_PREFIX = 'bt-session';
 
@@ -30,17 +34,16 @@ export class SessionFiles implements BacktraceModule {
     constructor(
         private readonly _fileSystem: FileSystem,
         private readonly _directory: string,
-        public readonly sessionId: string,
+        public readonly sessionId: SessionId,
         private readonly _maxPreviousLockedSessions = 1,
-        public readonly timestamp = Date.now(),
         private readonly _lockable = true,
     ) {
-        this._escapedSessionId = this.escapeFileName(sessionId);
+        this._escapedSessionId = this.escapeFileName(sessionId.id);
         this.marker = this.getFileName(SESSION_MARKER_PREFIX);
     }
 
     public initialize(): void {
-        this.createSessionMarker();
+        return this.createSessionMarker();
     }
 
     public getPreviousSession() {
@@ -57,12 +60,14 @@ export class SessionFiles implements BacktraceModule {
             .filter((f) => f.startsWith(SESSION_MARKER_PREFIX))
             .map((f) => this.getFileSession(f))
             .filter(isDefined)
-            .sort((a, b) => b.timestamp - a.timestamp);
+            .sort((a, b) => b.sessionId.timestamp - a.sessionId.timestamp);
 
-        const currentSessionMarker = sessionMarkers.find((s) => s.sessionId === this.sessionId);
+        const currentSessionMarker = sessionMarkers.find((s) => this.sessionIdEquals(s.sessionId, this.sessionId));
 
         const lastSessionMarker = currentSessionMarker
-            ? sessionMarkers.filter(({ timestamp }) => currentSessionMarker.timestamp > timestamp)[0]
+            ? sessionMarkers.filter(
+                  ({ sessionId }) => currentSessionMarker.sessionId.timestamp > sessionId.timestamp,
+              )[0]
             : sessionMarkers[0];
 
         if (!lastSessionMarker) {
@@ -74,15 +79,14 @@ export class SessionFiles implements BacktraceModule {
             this._directory,
             lastSessionMarker.sessionId,
             this._maxPreviousLockedSessions - 1,
-            lastSessionMarker.timestamp,
             this._maxPreviousLockedSessions > 0,
         ));
     }
 
-    public getSessionWithId(sessionId: string) {
+    public getSessionWithId(sessionId: SessionId) {
         // eslint-disable-next-line @typescript-eslint/no-this-alias
         let session: SessionFiles | undefined = this;
-        while (session && session.sessionId !== sessionId) {
+        while (session && this.sessionIdEquals(session.sessionId, sessionId)) {
             session = session.getPreviousSession();
         }
 
@@ -124,7 +128,11 @@ export class SessionFiles implements BacktraceModule {
     public getFileName(prefix: string) {
         this.throwIfCleared();
 
-        return this._directory + '/' + `${this.escapeFileName(prefix)}_${this._escapedSessionId}_${this.timestamp}`;
+        return (
+            this._directory +
+            '/' +
+            `${this.escapeFileName(prefix)}_${this._escapedSessionId}_${this.sessionId.timestamp}`
+        );
     }
 
     public getSessionFiles() {
@@ -134,7 +142,7 @@ export class SessionFiles implements BacktraceModule {
         return files
             .map((file) => this.getFileSession(file))
             .filter(isDefined)
-            .filter(({ sessionId }) => sessionId === this.sessionId)
+            .filter(({ sessionId }) => this.sessionIdEquals(sessionId, this.sessionId))
             .map(({ file }) => this._directory + '/' + file);
     }
 
@@ -184,7 +192,14 @@ export class SessionFiles implements BacktraceModule {
             return undefined;
         }
 
-        return { file, escapedSessionId, timestamp, sessionId: this.unescapeFileName(escapedSessionId) };
+        return {
+            file,
+            escapedSessionId,
+            sessionId: {
+                timestamp,
+                id: this.unescapeFileName(escapedSessionId),
+            },
+        };
     }
 
     private readDirectoryFiles() {
@@ -231,5 +246,9 @@ export class SessionFiles implements BacktraceModule {
         if (this._cleared) {
             throw new Error('This session files are cleared.');
         }
+    }
+
+    private sessionIdEquals(a: SessionId, b: SessionId) {
+        return a.id === b.id && a.timestamp === b.timestamp;
     }
 }
