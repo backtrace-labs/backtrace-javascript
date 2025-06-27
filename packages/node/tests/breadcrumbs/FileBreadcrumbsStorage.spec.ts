@@ -3,7 +3,7 @@ import assert from 'assert';
 import { Readable } from 'stream';
 import { promisify } from 'util';
 import { FileBreadcrumbsStorage } from '../../src/breadcrumbs/FileBreadcrumbsStorage.js';
-import { mockStreamFileSystem } from '../_mocks/fileSystem.js';
+import { mockStreamFileSystem } from '../_mocks/storage.js';
 
 async function readToEnd(readable: Readable) {
     return new Promise<Buffer>((resolve, reject) => {
@@ -34,7 +34,7 @@ const nextTick = promisify(process.nextTick);
 describe('FileBreadcrumbsStorage', () => {
     it('should return added breadcrumbs', async () => {
         const fs = mockStreamFileSystem();
-        const session = new SessionFiles(fs, '.', 'sessionId');
+        const session = new SessionFiles(fs, 'sessionId');
 
         const breadcrumbs: RawBreadcrumb[] = [
             {
@@ -108,7 +108,7 @@ describe('FileBreadcrumbsStorage', () => {
 
     it('should return added breadcrumbs in two attachments', async () => {
         const fs = mockStreamFileSystem();
-        const session = new SessionFiles(fs, '.', 'sessionId');
+        const session = new SessionFiles(fs, 'sessionId');
 
         const breadcrumbs: RawBreadcrumb[] = [
             {
@@ -190,7 +190,7 @@ describe('FileBreadcrumbsStorage', () => {
 
     it('should return no more than maximumBreadcrumbs breadcrumbs', async () => {
         const fs = mockStreamFileSystem();
-        const session = new SessionFiles(fs, '.', 'sessionId');
+        const session = new SessionFiles(fs, 'sessionId');
 
         const breadcrumbs: RawBreadcrumb[] = [
             {
@@ -262,7 +262,7 @@ describe('FileBreadcrumbsStorage', () => {
 
     it('should return breadcrumbs up to the json size', async () => {
         const fs = mockStreamFileSystem();
-        const session = new SessionFiles(fs, '.', 'sessionId');
+        const session = new SessionFiles(fs, 'sessionId');
 
         const breadcrumbs: RawBreadcrumb[] = [
             {
@@ -330,7 +330,7 @@ describe('FileBreadcrumbsStorage', () => {
 
     it('should return attachments with a valid name from getAttachments', async () => {
         const fs = mockStreamFileSystem();
-        const session = new SessionFiles(fs, '.', 'sessionId');
+        const session = new SessionFiles(fs, 'sessionId');
 
         const breadcrumbs: RawBreadcrumb[] = [
             {
@@ -374,7 +374,7 @@ describe('FileBreadcrumbsStorage', () => {
 
     it('should return attachments with a valid name from getAttachmentProviders', async () => {
         const fs = mockStreamFileSystem();
-        const session = new SessionFiles(fs, '.', 'sessionId');
+        const session = new SessionFiles(fs, 'sessionId');
 
         const breadcrumbs: RawBreadcrumb[] = [
             {

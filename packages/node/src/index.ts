@@ -6,9 +6,9 @@ export {
     BacktraceStackFrame,
     BacktraceStackTraceConverter,
     BreadcrumbLogLevel,
-    BreadcrumbType,
     BreadcrumbsEventSubscriber,
     BreadcrumbsManager,
+    BreadcrumbType,
     RawBreadcrumb,
 } from '@backtrace/sdk-core';
 export * from './attachment/index.js';
@@ -19,4 +19,5 @@ export * from './BacktraceNodeRequestHandler.js';
 export * from './breadcrumbs/index.js';
 export * from './builder/BacktraceClientBuilder.js';
 export * from './builder/BacktraceClientSetup.js';
+export * from './database/index.js';
 export * from './storage/index.js';

@@ -9,9 +9,12 @@ import {
     ProcessStatusAttributeProvider,
 } from '../attributes/index.js';
 import { BacktraceClient } from '../BacktraceClient.js';
+import { BacktraceStorageModuleFactory } from '../storage/BacktraceStorageModuleFactory.js';
 import { BacktraceClientSetup, BacktraceNodeClientSetup } from './BacktraceClientSetup.js';
 
 export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<BacktraceClientSetup> {
+    private storageFactory?: BacktraceStorageModuleFactory;
+
     constructor(clientSetup: BacktraceNodeClientSetup) {
         super({
             ...clientSetup,
@@ -26,8 +29,16 @@ export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<Backtrace
         this.addAttributeProvider(new MachineIdentitfierAttributeProvider());
     }
 
+    public useStorageFactory(factory: BacktraceStorageModuleFactory) {
+        this.storageFactory = factory;
+        return this;
+    }
+
     public build(): BacktraceClient {
-        const instance = new BacktraceClient(this.clientSetup as BacktraceNodeClientSetup);
+        const instance = new BacktraceClient({
+            ...this.clientSetup,
+            storageFactory: this.storageFactory,
+        } as BacktraceNodeClientSetup);
         instance.initialize();
         return instance;
     }
