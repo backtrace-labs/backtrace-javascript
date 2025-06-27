@@ -28,7 +28,7 @@ function randomAttachmentRecord(): AttachmentBacktraceDatabaseRecord {
         timestamp: Date.now(),
         attachment: { name: 'x', get: () => undefined },
         rxid: 'x',
-        sessionId: crypto.randomUUID(),
+        sessionId: { id: crypto.randomUUID(), timestamp: Date.now() },
     };
 }
 

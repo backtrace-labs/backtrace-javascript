@@ -149,7 +149,9 @@ export class BacktraceMainElectronModule implements BacktraceModule {
     ) {
         // Sort crashes and sessions by timestamp descending
         const crashes = crashReporter.getUploadedReports().sort((a, b) => b.date.getTime() - a.date.getTime());
-        const previousSessions = session.getPreviousSessions().sort((a, b) => b.timestamp - a.timestamp);
+        const previousSessions = session
+            .getPreviousSessions()
+            .sort((a, b) => b.sessionId.timestamp - a.sessionId.timestamp);
 
         for (const crash of crashes) {
             const rxid = this.getCrashRxid(crash.id);
@@ -159,7 +161,7 @@ export class BacktraceMainElectronModule implements BacktraceModule {
 
             try {
                 // Get first session that happened before the crash
-                const session = previousSessions.find((p) => p.timestamp < crash.date.getTime());
+                const session = previousSessions.find((p) => p.sessionId.timestamp < crash.date.getTime());
                 // If there is no such session, there won't be any other sessions
                 if (!session) {
                     break;
