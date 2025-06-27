@@ -36,7 +36,7 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
 
     constructor(
         session: SessionFiles,
-        private readonly _storage: BacktraceStorage & BacktraceSyncStorage & BacktraceStreamStorage,
+        private readonly _storage: BacktraceStorage & BacktraceStreamStorage,
         private readonly _limits: BreadcrumbsStorageLimits,
     ) {
         this._sink = new FileChunkSink({
@@ -83,9 +83,7 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
 
     public getAttachments(): BacktraceFileAttachment[] {
         const files = [...this._sink.files].map((f) => f.path);
-        return files.map(
-            (f, i) => new BacktraceFileAttachment(this._storage, f, `bt-breadcrumbs-${i}`, 'application/json'),
-        );
+        return files.map((f, i) => new BacktraceFileAttachment(f, `bt-breadcrumbs-${i}`, 'application/json'));
     }
 
     public getAttachmentProviders(): BacktraceAttachmentProvider[] {

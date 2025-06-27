@@ -1,16 +1,15 @@
-import {
-    type BacktraceSyncStorage,
-    type BacktraceFileAttachment as CoreBacktraceFileAttachment,
-} from '@backtrace/sdk-core';
-import { Platform } from 'react-native';
+import { type BacktraceAttachment } from '@backtrace/sdk-core';
+import { NativeModules, Platform } from 'react-native';
+import type { ReactNativeFileProvider } from '../storage';
 import { type FileLocation } from '../types/FileLocation';
-export class BacktraceFileAttachment implements CoreBacktraceFileAttachment<FileLocation> {
+export class BacktraceFileAttachment implements BacktraceAttachment<FileLocation> {
+    private readonly _fileSystemProvider: ReactNativeFileProvider = NativeModules.BacktraceFileSystemProvider;
+
     public readonly name: string;
     public readonly mimeType: string;
 
     private readonly _uploadUri: string;
     constructor(
-        private readonly _storage: BacktraceSyncStorage,
         public readonly filePath: string,
         name?: string,
         mimeType?: string,
@@ -21,8 +20,7 @@ export class BacktraceFileAttachment implements CoreBacktraceFileAttachment<File
     }
 
     public get(): FileLocation | undefined {
-        const exists = this._storage.hasSync(this.filePath);
-
+        const exists = this._fileSystemProvider.existsSync(this.filePath);
         if (!exists) {
             return undefined;
         }
