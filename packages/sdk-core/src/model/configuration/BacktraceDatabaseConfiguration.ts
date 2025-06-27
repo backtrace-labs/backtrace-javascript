@@ -3,15 +3,6 @@ export interface EnabledBacktraceDatabaseConfiguration {
      * Determine if the Database is enabled
      */
     enable: true;
-    /**
-     * Path where the SDK can store data.
-     */
-    path: string;
-    /**
-     * Determine if the directory should be auto created by the SDK.
-     * @default true
-     */
-    createDatabaseDirectory?: boolean;
 
     /**
      * Sends reports to the server based on the retry settings.

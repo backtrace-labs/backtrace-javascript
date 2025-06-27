@@ -1,7 +1,15 @@
 import crypto from 'crypto';
 import { nextTick } from 'process';
 import { promisify } from 'util';
-import { AttachmentBacktraceDatabaseRecord, BacktraceData, ReportBacktraceDatabaseRecord } from '../../src/index.js';
+import {
+    BacktraceData,
+    BacktraceDatabaseConfiguration,
+    BacktraceDatabaseRecord,
+    BacktraceDatabaseStorageProvider,
+    DefaultReportBacktraceDatabaseRecordFactory,
+    ReportBacktraceDatabaseRecord,
+    ReportBacktraceDatabaseRecordSender,
+} from '../../src/index.js';
 import { RequestBacktraceReportSubmission } from '../../src/model/http/BacktraceReportSubmission.js';
 import { BacktraceDatabase } from '../../src/modules/database/BacktraceDatabase.js';
 import { BacktraceDatabaseContext } from '../../src/modules/database/BacktraceDatabaseContext.js';
@@ -15,12 +23,11 @@ function randomReportRecord(): ReportBacktraceDatabaseRecord {
         type: 'report',
         data: { uuid: crypto.randomUUID() } as BacktraceData,
         locked: false,
-        attachments: [],
         timestamp: Date.now(),
     };
 }
 
-function randomAttachmentRecord(): AttachmentBacktraceDatabaseRecord {
+function randomAttachmentRecord(): BacktraceDatabaseRecord {
     return {
         id: crypto.randomUUID(),
         type: 'attachment',
@@ -29,39 +36,45 @@ function randomAttachmentRecord(): AttachmentBacktraceDatabaseRecord {
         attachment: { name: 'x', get: () => undefined },
         rxid: 'x',
         sessionId: { id: crypto.randomUUID(), timestamp: Date.now() },
-    };
+    } as BacktraceDatabaseRecord;
 }
 
 describe('Database setup tests', () => {
+    function createDatabase(
+        options: BacktraceDatabaseConfiguration | undefined,
+        storageProvider: BacktraceDatabaseStorageProvider,
+    ) {
+        return new BacktraceDatabase(
+            options,
+            storageProvider,
+            {
+                report: new ReportBacktraceDatabaseRecordSender(
+                    new RequestBacktraceReportSubmission(
+                        {
+                            url: TEST_SUBMISSION_URL,
+                        },
+                        testHttpClient,
+                    ),
+                ),
+            },
+            DefaultReportBacktraceDatabaseRecordFactory.default(),
+        );
+    }
+
     it('The database should be disabled by default', () => {
         const testStorageProvider = getTestStorageProvider();
-        const database = new BacktraceDatabase(
-            undefined,
-            testStorageProvider,
-            new RequestBacktraceReportSubmission(
-                {
-                    url: TEST_SUBMISSION_URL,
-                },
-                testHttpClient,
-            ),
-        );
+        const database = createDatabase(undefined, testStorageProvider);
 
         expect(database.enabled).toBeFalsy();
     });
 
     it('Should be enabled after returning true from the start method', () => {
         const testStorageProvider = getTestStorageProvider();
-        const database = new BacktraceDatabase(
+        const database = createDatabase(
             {
                 autoSend: false,
             },
             testStorageProvider,
-            new RequestBacktraceReportSubmission(
-                {
-                    url: TEST_SUBMISSION_URL,
-                },
-                testHttpClient,
-            ),
         );
 
         const databaseStartResult = database.initialize();
@@ -72,16 +85,7 @@ describe('Database setup tests', () => {
 
     it('Should not enable the database if the enable option is set to false', () => {
         const testStorageProvider = getTestStorageProvider();
-        const database = new BacktraceDatabase(
-            { enable: false },
-            testStorageProvider,
-            new RequestBacktraceReportSubmission(
-                {
-                    url: TEST_SUBMISSION_URL,
-                },
-                testHttpClient,
-            ),
-        );
+        const database = createDatabase({ enable: false }, testStorageProvider);
 
         const databaseStartResult = database.initialize();
 
@@ -91,18 +95,11 @@ describe('Database setup tests', () => {
 
     it('Should not enable the database if the storage is not prepared', () => {
         const testStorageProvider = getTestStorageProvider();
-        const database = new BacktraceDatabase(
+        const database = createDatabase(
             {
                 enable: true,
-                path: '/path/to/fake/dir',
             },
             testStorageProvider,
-            new RequestBacktraceReportSubmission(
-                {
-                    url: TEST_SUBMISSION_URL,
-                },
-                testHttpClient,
-            ),
         );
         jest.spyOn(testStorageProvider, 'start').mockReturnValue(false);
 
@@ -114,16 +111,7 @@ describe('Database setup tests', () => {
 
     it('Should be disabled after disposing database', () => {
         const testStorageProvider = getTestStorageProvider();
-        const database = new BacktraceDatabase(
-            undefined,
-            testStorageProvider,
-            new RequestBacktraceReportSubmission(
-                {
-                    url: TEST_SUBMISSION_URL,
-                },
-                testHttpClient,
-            ),
-        );
+        const database = createDatabase(undefined, testStorageProvider);
 
         database.initialize();
         database.dispose();
@@ -133,16 +121,7 @@ describe('Database setup tests', () => {
 
     it('Should not add a record to disabled database', () => {
         const testStorageProvider = getTestStorageProvider();
-        const database = new BacktraceDatabase(
-            undefined,
-            testStorageProvider,
-            new RequestBacktraceReportSubmission(
-                {
-                    url: TEST_SUBMISSION_URL,
-                },
-                testHttpClient,
-            ),
-        );
+        const database = createDatabase(undefined, testStorageProvider);
 
         const result = database.add({} as BacktraceData, []);
         expect(result).toBeFalsy();
@@ -155,17 +134,11 @@ describe('Database setup tests', () => {
 
         const contextLoad = jest.spyOn(BacktraceDatabaseContext.prototype, 'load');
 
-        const database = new BacktraceDatabase(
+        const database = createDatabase(
             {
                 autoSend: false,
             },
             testStorageProvider,
-            new RequestBacktraceReportSubmission(
-                {
-                    url: TEST_SUBMISSION_URL,
-                },
-                testHttpClient,
-            ),
         );
 
         const databaseStartResult = database.initialize();
@@ -187,18 +160,12 @@ describe('Database setup tests', () => {
 
         const contextLoad = jest.spyOn(BacktraceDatabaseContext.prototype, 'load');
 
-        const database = new BacktraceDatabase(
+        const database = createDatabase(
             {
                 autoSend: false,
                 maximumNumberOfRecords: 2,
             },
             testStorageProvider,
-            new RequestBacktraceReportSubmission(
-                {
-                    url: TEST_SUBMISSION_URL,
-                },
-                testHttpClient,
-            ),
         );
 
         const databaseStartResult = database.initialize();
@@ -241,12 +208,17 @@ describe('Database setup tests', () => {
                 maximumNumberOfAttachmentRecords: 3,
             },
             testStorageProvider,
-            new RequestBacktraceReportSubmission(
-                {
-                    url: TEST_SUBMISSION_URL,
-                },
-                testHttpClient,
-            ),
+            {
+                report: new ReportBacktraceDatabaseRecordSender(
+                    new RequestBacktraceReportSubmission(
+                        {
+                            url: TEST_SUBMISSION_URL,
+                        },
+                        testHttpClient,
+                    ),
+                ),
+            },
+            DefaultReportBacktraceDatabaseRecordFactory.default(),
         );
 
         const databaseStartResult = database.initialize();

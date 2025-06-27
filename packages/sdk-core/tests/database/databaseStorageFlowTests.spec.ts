@@ -2,7 +2,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { BacktraceReportSubmissionResult } from '../../src/index.js';
 import { BacktraceDatabase } from '../../src/modules/database/BacktraceDatabase.js';
-import { mockFileSystem } from '../_mocks/fileSystem.js';
+import { mockBacktraceStorage } from '../_mocks/storage.js';
 import { BacktraceTestClient } from '../mocks/BacktraceTestClient.js';
 describe('Database storage provider flow tests', () => {
     const testDatabaseSettings = {
@@ -28,7 +28,7 @@ describe('Database storage provider flow tests', () => {
                 },
                 [],
                 [],
-                mockFileSystem(),
+                mockBacktraceStorage(),
             );
             const database = client.database as BacktraceDatabase;
             if (!database) {
@@ -54,14 +54,13 @@ describe('Database storage provider flow tests', () => {
                 },
                 [],
                 [],
-                mockFileSystem(),
+                mockBacktraceStorage(),
             );
             const database = client.database as BacktraceDatabase;
             if (!database) {
                 throw new Error('Invalid database setup. Database must be defined!');
             }
 
-            const addSpy = jest.spyOn(database, 'add');
             const removeSpy = jest.spyOn(database, 'remove');
 
             jest.spyOn(client.requestHandler, 'postError').mockResolvedValue(
@@ -70,7 +69,6 @@ describe('Database storage provider flow tests', () => {
 
             await client.send(new Error(testingErrorMessage));
 
-            expect(addSpy).toHaveBeenCalled();
             expect(removeSpy).toHaveBeenCalled();
         });
     });

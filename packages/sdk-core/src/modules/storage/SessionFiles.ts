@@ -1,7 +1,7 @@
 import { Events } from '../../common/Events.js';
 import { IdGenerator } from '../../common/IdGenerator.js';
 import { BacktraceModule } from '../BacktraceModule.js';
-import { FileSystem } from './FileSystem.js';
+import { BacktraceIterableSyncStorage, BacktraceSyncStorage } from './BacktraceStorage.js';
 
 interface FileSession {
     readonly file: string;
@@ -32,8 +32,7 @@ export class SessionFiles implements BacktraceModule {
     private _cleared = false;
 
     constructor(
-        private readonly _fileSystem: FileSystem,
-        private readonly _directory: string,
+        private readonly _storage: BacktraceSyncStorage & BacktraceIterableSyncStorage,
         public readonly sessionId: SessionId,
         private readonly _maxPreviousLockedSessions = 1,
         private readonly _lockable = true,
@@ -75,8 +74,7 @@ export class SessionFiles implements BacktraceModule {
         }
 
         return (this._previousSession = new SessionFiles(
-            this._fileSystem,
-            this._directory,
+            this._storage,
             lastSessionMarker.sessionId,
             this._maxPreviousLockedSessions - 1,
             this._maxPreviousLockedSessions > 0,
@@ -128,11 +126,7 @@ export class SessionFiles implements BacktraceModule {
     public getFileName(prefix: string) {
         this.throwIfCleared();
 
-        return (
-            this._directory +
-            '/' +
-            `${this.escapeFileName(prefix)}_${this._escapedSessionId}_${this.sessionId.timestamp}`
-        );
+        return `${this.escapeFileName(prefix)}_${this._escapedSessionId}_${this.sessionId.timestamp}`;
     }
 
     public getSessionFiles() {
@@ -143,7 +137,7 @@ export class SessionFiles implements BacktraceModule {
             .map((file) => this.getFileSession(file))
             .filter(isDefined)
             .filter(({ sessionId }) => this.sessionIdEquals(sessionId, this.sessionId))
-            .map(({ file }) => this._directory + '/' + file);
+            .map(({ file }) => file);
     }
 
     public clearSession() {
@@ -159,7 +153,7 @@ export class SessionFiles implements BacktraceModule {
         try {
             const sessionFiles = this.getSessionFiles();
             for (const file of sessionFiles) {
-                this._fileSystem.unlinkSync(file);
+                this._storage.removeSync(file);
             }
         } catch {
             // Don't propagate errors
@@ -204,14 +198,14 @@ export class SessionFiles implements BacktraceModule {
 
     private readDirectoryFiles() {
         try {
-            return this._fileSystem.readDirSync(this._directory);
+            return [...this._storage.keysSync()];
         } catch {
             return [];
         }
     }
 
     private createSessionMarker() {
-        this._fileSystem.writeFileSync(this.marker, '');
+        this._storage.setSync(this.marker, '');
     }
 
     private escapeFileName(name: string) {

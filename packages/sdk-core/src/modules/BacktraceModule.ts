@@ -2,7 +2,7 @@ import {
     BacktraceConfiguration,
     BacktraceCoreClient,
     BacktraceRequestHandler,
-    FileSystem,
+    BacktraceStorageModule,
     SessionFiles,
 } from '../index.js';
 import { BacktraceReportSubmission } from '../model/http/BacktraceReportSubmission.js';
@@ -10,20 +10,20 @@ import { AttachmentManager } from './attachments/AttachmentManager.js';
 import { AttributeManager } from './attribute/AttributeManager.js';
 import { BacktraceDatabase } from './database/BacktraceDatabase.js';
 
-export interface BacktraceModuleBindData {
+export interface BacktraceModuleBindData<O extends BacktraceConfiguration = BacktraceConfiguration> {
     readonly client: BacktraceCoreClient;
-    readonly options: BacktraceConfiguration;
+    readonly options: O;
     readonly attributeManager: AttributeManager;
     readonly attachmentManager: AttachmentManager;
     readonly reportSubmission: BacktraceReportSubmission;
     readonly requestHandler: BacktraceRequestHandler;
     readonly database?: BacktraceDatabase;
     readonly sessionFiles?: SessionFiles;
-    readonly fileSystem?: FileSystem;
+    readonly storage?: BacktraceStorageModule;
 }
 
-export interface BacktraceModule {
-    bind?(client: BacktraceModuleBindData): void;
+export interface BacktraceModule<O extends BacktraceConfiguration = BacktraceConfiguration> {
+    bind?(client: BacktraceModuleBindData<O>): void;
     initialize?(): void;
     dispose?(): void;
 }
