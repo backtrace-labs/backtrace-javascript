@@ -11,6 +11,7 @@ import { BacktraceConfiguration } from './BacktraceConfiguration.js';
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder.js';
 import { BacktraceClientSetup } from './builder/BacktraceClientSetup.js';
 import { getStackTraceConverter } from './converters/getStackTraceConverter.js';
+import { BrowserFileSystem } from './storage/BrowserFileSystem.js';
 
 export class BacktraceClient<O extends BacktraceConfiguration = BacktraceConfiguration> extends BacktraceCoreClient<O> {
     private readonly _disposeController: AbortController = new AbortController();
@@ -22,6 +23,7 @@ export class BacktraceClient<O extends BacktraceConfiguration = BacktraceConfigu
             requestHandler: new BacktraceBrowserRequestHandler(clientSetup.options),
             debugIdMapProvider: new VariableDebugIdMapProvider(window as DebugIdContainer),
             sessionProvider: new BacktraceBrowserSessionProvider(),
+            fileSystem: new BrowserFileSystem(),
             ...clientSetup,
         });
 
