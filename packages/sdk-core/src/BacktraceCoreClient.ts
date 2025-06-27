@@ -202,6 +202,7 @@ export abstract class BacktraceCoreClient<
                     },
                     setup.database?.reportRecordFactory ?? DefaultReportBacktraceDatabaseRecordFactory.default(),
                     this.sessionFiles,
+                    setup.database.recordLimits,
                 );
                 this._modules.set(BacktraceDatabase, database);
             }

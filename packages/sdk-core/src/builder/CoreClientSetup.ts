@@ -8,6 +8,7 @@ import { BacktraceStackTraceConverter } from '../modules/converter/index.js';
 import { BacktraceDatabaseRecordSenders } from '../modules/database/BacktraceDatabaseRecordSender.js';
 import { BacktraceDatabaseRecordSerializers } from '../modules/database/BacktraceDatabaseRecordSerializer.js';
 import { ReportBacktraceDatabaseRecordFactory } from '../modules/database/ReportBacktraceDatabaseRecordFactory.js';
+import { BacktraceDatabaseRecordCountByType } from '../modules/database/index.js';
 import { BacktraceSessionProvider } from '../modules/metrics/BacktraceSessionProvider.js';
 import { MetricsQueue } from '../modules/metrics/MetricsQueue.js';
 import { SummedEvent } from '../modules/metrics/model/SummedEvent.js';
@@ -39,5 +40,6 @@ export interface CoreClientSetup<O extends BacktraceConfiguration = BacktraceCon
         readonly recordSerializers?: BacktraceDatabaseRecordSerializers;
         readonly recordSenders?: (submission: BacktraceReportSubmission) => BacktraceDatabaseRecordSenders;
         readonly reportRecordFactory?: ReportBacktraceDatabaseRecordFactory;
+        readonly recordLimits?: BacktraceDatabaseRecordCountByType;
     };
 }

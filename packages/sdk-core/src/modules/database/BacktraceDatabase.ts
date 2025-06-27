@@ -44,13 +44,14 @@ export class BacktraceDatabase extends Events<BacktraceDatabaseEvents> implement
         private readonly _recordSenders: BacktraceDatabaseRecordSenders,
         private readonly _reportRecordFactory: ReportBacktraceDatabaseRecordFactory,
         private readonly _sessionFiles?: SessionFiles,
+        recordLimits?: BacktraceDatabaseRecordCountByType,
     ) {
         super();
 
         this._databaseRecordContext = new BacktraceDatabaseContext(this._options?.maximumRetries);
         this._recordLimits = {
             report: this._options?.maximumNumberOfRecords ?? 8,
-            attachment: this._options?.maximumNumberOfAttachmentRecords ?? 10,
+            ...recordLimits,
         };
         this._retryInterval = this._options?.retryInterval ?? 60_000;
     }

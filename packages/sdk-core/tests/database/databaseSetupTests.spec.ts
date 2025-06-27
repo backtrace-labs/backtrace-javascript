@@ -204,8 +204,6 @@ describe('Database setup tests', () => {
         const database = new BacktraceDatabase(
             {
                 autoSend: false,
-                maximumNumberOfRecords: 2,
-                maximumNumberOfAttachmentRecords: 3,
             },
             testStorageProvider,
             {
@@ -219,6 +217,11 @@ describe('Database setup tests', () => {
                 ),
             },
             DefaultReportBacktraceDatabaseRecordFactory.default(),
+            undefined,
+            {
+                report: 2,
+                attachment: 3,
+            },
         );
 
         const databaseStartResult = database.initialize();
