@@ -6,6 +6,7 @@ import {
     BacktraceReportSubmissionResult,
     BacktraceSubmitResponse,
     jsonEscaper,
+    SessionId,
 } from '@backtrace/sdk-core';
 import { BacktraceDatabaseRecordSender } from '@backtrace/sdk-core/lib/modules/database/BacktraceDatabaseRecordSender.js';
 import { BacktraceDatabaseRecordSerializer } from '@backtrace/sdk-core/lib/modules/database/BacktraceDatabaseRecordSerializer.js';
@@ -15,7 +16,7 @@ import { isFileAttachment } from '../attachment/isFileAttachment.js';
 export interface AttachmentBacktraceDatabaseRecord extends BacktraceDatabaseRecord<'attachment'> {
     readonly rxid: string;
     readonly attachment: BacktraceAttachment;
-    readonly sessionId: string;
+    readonly sessionId: SessionId;
 }
 
 export class AttachmentBacktraceDatabaseRecordSerializer
@@ -82,7 +83,11 @@ export class AttachmentBacktraceDatabaseRecordFactory {
         return new AttachmentBacktraceDatabaseRecordFactory(new BacktraceDatabaseRecordFactory());
     }
 
-    public create(rxid: string, sessionId: string, attachment: BacktraceAttachment): AttachmentBacktraceDatabaseRecord {
+    public create(
+        rxid: string,
+        sessionId: SessionId,
+        attachment: BacktraceAttachment,
+    ): AttachmentBacktraceDatabaseRecord {
         const record: AttachmentBacktraceDatabaseRecord = {
             ...this._reportFactory.create('attachment'),
             sessionId,
