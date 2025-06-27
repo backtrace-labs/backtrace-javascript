@@ -10,7 +10,7 @@ import {
 import FormData from 'form-data';
 import http, { ClientRequest, IncomingMessage } from 'http';
 import https from 'https';
-import { Readable } from 'stream';
+import { PassThrough, Readable } from 'stream';
 
 export interface BacktraceNodeRequestHandlerOptions {
     readonly timeout?: number;
@@ -238,13 +238,39 @@ export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
         }
 
         for (const attachment of attachments) {
-            const data = attachment.get();
+            let data = attachment.get();
             if (!data) {
                 continue;
             }
+
+            if (data instanceof Readable) {
+                data = wrapReadableSuppressErrors(data);
+            }
+
             formData.append(`attachment_${attachment.name}`, data, attachment.name);
         }
 
         return formData;
     }
+}
+
+/**
+ * When inputStream emits an error, it will be suppressed, and the stream will be closed.
+ */
+function wrapReadableSuppressErrors(inputStream: Readable) {
+    const safeStream = new PassThrough();
+
+    inputStream.on('data', (chunk) => {
+        safeStream.write(chunk);
+    });
+
+    inputStream.on('end', () => {
+        safeStream.end();
+    });
+
+    inputStream.on('error', () => {
+        safeStream.end();
+    });
+
+    return safeStream;
 }
