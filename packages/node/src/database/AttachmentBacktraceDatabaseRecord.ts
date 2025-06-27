@@ -9,8 +9,7 @@ import {
 } from '@backtrace/sdk-core';
 import { BacktraceDatabaseRecordSender } from '@backtrace/sdk-core/lib/modules/database/BacktraceDatabaseRecordSender.js';
 import { BacktraceDatabaseRecordSerializer } from '@backtrace/sdk-core/lib/modules/database/BacktraceDatabaseRecordSerializer.js';
-import nodeFs from 'fs';
-import { BacktraceFileAttachment } from '../attachment/BacktraceFileAttachment.js';
+import { BacktraceFileAttachmentFactory } from '../attachment/BacktraceFileAttachment.js';
 import { isFileAttachment } from '../attachment/isFileAttachment.js';
 
 export interface AttachmentBacktraceDatabaseRecord extends BacktraceDatabaseRecord<'attachment'> {
@@ -24,7 +23,7 @@ export class AttachmentBacktraceDatabaseRecordSerializer
 {
     public readonly type = 'attachment';
 
-    constructor(private readonly _fs: typeof nodeFs) {}
+    constructor(private readonly _fileAttachmentFactory: BacktraceFileAttachmentFactory) {}
 
     public save(record: AttachmentBacktraceDatabaseRecord): string | undefined {
         if (!isFileAttachment(record.attachment)) {
@@ -46,10 +45,9 @@ export class AttachmentBacktraceDatabaseRecordSerializer
                 return undefined;
             }
 
-            const attachment = new BacktraceFileAttachment(
+            const attachment = this._fileAttachmentFactory.create(
                 attachmentRecord.attachment.filePath,
                 attachmentRecord.attachment.name,
-                this._fs,
             );
 
             return {

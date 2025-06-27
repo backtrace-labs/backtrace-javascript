@@ -11,6 +11,10 @@ import nodeFs from 'fs';
 import { BacktraceConfiguration, BacktraceSetupConfiguration } from './BacktraceConfiguration.js';
 import { BacktraceNodeRequestHandler } from './BacktraceNodeRequestHandler.js';
 import { AGENT } from './agentDefinition.js';
+import {
+    BacktraceFileAttachmentFactory,
+    NodeFsBacktraceFileAttachmentFactory,
+} from './attachment/BacktraceFileAttachment.js';
 import { FileAttachmentsManager } from './attachment/FileAttachmentsManager.js';
 import { transformAttachment } from './attachment/transformAttachments.js';
 import { FileBreadcrumbsStorage } from './breadcrumbs/FileBreadcrumbsStorage.js';
@@ -37,6 +41,7 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
     private _listeners: Record<string, NodeJS.UnhandledRejectionListener | NodeJS.UncaughtExceptionListener> = {};
 
     protected readonly storageFactory: BacktraceStorageModuleFactory;
+    protected readonly fileAttachmentFactory: BacktraceFileAttachmentFactory;
     protected readonly fs: typeof nodeFs;
 
     protected get databaseNodeFsStorage() {
@@ -46,6 +51,7 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
     constructor(clientSetup: BacktraceNodeClientSetup) {
         const storageFactory = clientSetup.storageFactory ?? new NodeFsBacktraceStorageModuleFactory();
         const fs = clientSetup.fs ?? nodeFs;
+        const fileAttachmentFactory = new NodeFsBacktraceFileAttachmentFactory(fs);
         const storage =
             clientSetup.database?.storage ??
             (clientSetup.options.database?.enable
@@ -72,8 +78,8 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
                               ...clientSetup.database?.recordSenders?.(submission),
                           }),
                           recordSerializers: {
-                              report: new ReportBacktraceDatabaseRecordWithAttachmentsSerializer(storage),
-                              attachment: new AttachmentBacktraceDatabaseRecordSerializer(fs),
+                              report: new ReportBacktraceDatabaseRecordWithAttachmentsSerializer(fileAttachmentFactory),
+                              attachment: new AttachmentBacktraceDatabaseRecordSerializer(fileAttachmentFactory),
                               ...clientSetup.database?.recordSerializers,
                           },
                       }
@@ -81,21 +87,24 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
             ...clientSetup,
             options: {
                 ...clientSetup.options,
-                attachments: clientSetup.options.attachments?.map(transformAttachment),
+                attachments: clientSetup.options.attachments?.map(transformAttachment(fileAttachmentFactory)),
             },
         });
 
         this.storageFactory = storageFactory;
+        this.fileAttachmentFactory = fileAttachmentFactory;
         this.fs = fs;
 
         const breadcrumbsManager = this.modules.get(BreadcrumbsManager);
         if (breadcrumbsManager && this.sessionFiles && storage) {
-            breadcrumbsManager.setStorage(FileBreadcrumbsStorage.factory(this.sessionFiles, storage));
+            breadcrumbsManager.setStorage(
+                FileBreadcrumbsStorage.factory(this.sessionFiles, storage, this.fileAttachmentFactory),
+            );
         }
 
         if (this.sessionFiles && storage && clientSetup.options.database?.captureNativeCrashes) {
             this.addModule(FileAttributeManager, FileAttributeManager.create(storage));
-            this.addModule(FileAttachmentsManager, FileAttachmentsManager.create(storage));
+            this.addModule(FileAttachmentsManager, FileAttachmentsManager.create(storage, fileAttachmentFactory));
         }
     }
 
@@ -346,12 +355,18 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
         for (const [recordName, report, session] of reports) {
             try {
                 if (session) {
-                    report.attachments.push(...FileBreadcrumbsStorage.getSessionAttachments(session, storage));
+                    report.attachments.push(
+                        ...FileBreadcrumbsStorage.getSessionAttachments(session, this.fileAttachmentFactory),
+                    );
 
                     const fileAttributes = FileAttributeManager.createFromSession(session, storage);
                     Object.assign(report.attributes, await fileAttributes.get());
 
-                    const fileAttachments = FileAttachmentsManager.createFromSession(session, storage);
+                    const fileAttachments = FileAttachmentsManager.createFromSession(
+                        session,
+                        storage,
+                        this.fileAttachmentFactory,
+                    );
                     report.attachments.push(...(await fileAttachments.get()));
 
                     report.attributes['application.session'] = session.sessionId;

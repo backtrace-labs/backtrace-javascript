@@ -5,7 +5,7 @@ import {
     BacktraceStorage,
     SessionFiles,
 } from '@backtrace/sdk-core';
-import { BacktraceFileAttachment } from './BacktraceFileAttachment.js';
+import { BacktraceFileAttachment, BacktraceFileAttachmentFactory } from './BacktraceFileAttachment.js';
 
 const ATTACHMENT_FILE_NAME = 'bt-attachments';
 
@@ -16,16 +16,21 @@ export class FileAttachmentsManager implements BacktraceModule {
 
     constructor(
         private readonly _storage: BacktraceStorage,
+        private readonly _fileAttachmentFactory: BacktraceFileAttachmentFactory,
         private _fileName?: string,
     ) {}
 
-    public static create(storage: BacktraceStorage) {
-        return new FileAttachmentsManager(storage);
+    public static create(storage: BacktraceStorage, fileAttachmentFactory: BacktraceFileAttachmentFactory) {
+        return new FileAttachmentsManager(storage, fileAttachmentFactory);
     }
 
-    public static createFromSession(sessionFiles: SessionFiles, fileSystem: BacktraceStorage) {
+    public static createFromSession(
+        sessionFiles: SessionFiles,
+        fileSystem: BacktraceStorage,
+        fileAttachmentFactory: BacktraceFileAttachmentFactory,
+    ) {
         const fileName = sessionFiles.getFileName(ATTACHMENT_FILE_NAME);
-        return new FileAttachmentsManager(fileSystem, fileName);
+        return new FileAttachmentsManager(fileSystem, fileAttachmentFactory, fileName);
     }
 
     public initialize(): void {
@@ -61,7 +66,7 @@ export class FileAttachmentsManager implements BacktraceModule {
                 return [];
             }
             const attachments = JSON.parse(content) as SavedAttachment[];
-            return attachments.map(([path, name]) => new BacktraceFileAttachment(path, name));
+            return attachments.map(([path, name]) => this._fileAttachmentFactory.create(path, name));
         } catch {
             return [];
         }

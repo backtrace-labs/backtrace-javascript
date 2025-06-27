@@ -5,7 +5,6 @@ import {
     BacktraceReportSubmission,
     BacktraceReportSubmissionResult,
     BacktraceSubmitResponse,
-    BacktraceSyncStorage,
     DefaultReportBacktraceDatabaseRecordFactory,
     jsonEscaper,
     ReportBacktraceDatabaseRecord,
@@ -13,9 +12,8 @@ import {
 } from '@backtrace/sdk-core';
 import { BacktraceDatabaseRecordSender } from '@backtrace/sdk-core/lib/modules/database/BacktraceDatabaseRecordSender.js';
 import { BacktraceDatabaseRecordSerializer } from '@backtrace/sdk-core/lib/modules/database/BacktraceDatabaseRecordSerializer.js';
-import { BacktraceFileAttachment } from '../attachment/BacktraceFileAttachment.js';
+import { BacktraceFileAttachment, BacktraceFileAttachmentFactory } from '../attachment/BacktraceFileAttachment.js';
 import { isFileAttachment } from '../attachment/isFileAttachment.js';
-import { BacktraceStreamStorage } from '../storage/BacktraceStorage.js';
 
 export interface ReportBacktraceDatabaseRecordWithAttachments extends ReportBacktraceDatabaseRecord {
     readonly attachments: BacktraceAttachment[];
@@ -26,7 +24,7 @@ export class ReportBacktraceDatabaseRecordWithAttachmentsSerializer
 {
     public readonly type = 'report';
 
-    constructor(private readonly _storage: BacktraceSyncStorage & BacktraceStreamStorage) {}
+    constructor(private readonly _fileAttachmentFactory: BacktraceFileAttachmentFactory) {}
 
     public save(record: ReportBacktraceDatabaseRecordWithAttachments): string {
         return JSON.stringify(
@@ -51,7 +49,7 @@ export class ReportBacktraceDatabaseRecordWithAttachmentsSerializer
                     ...reportRecord,
                     attachments: reportRecord.attachments
                         .filter(isFileAttachment)
-                        .map((a) => new BacktraceFileAttachment(a.filePath, a.name, this._storage)),
+                        .map((a) => this._fileAttachmentFactory.create(a.filePath, a.name)),
                 };
             }
 
