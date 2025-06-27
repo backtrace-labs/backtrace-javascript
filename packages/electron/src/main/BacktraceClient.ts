@@ -12,8 +12,10 @@ export class BacktraceClient extends NodeBacktraceClient {
     constructor(clientSetup: BacktraceNodeClientSetup) {
         super({
             ...clientSetup,
-            modules: [new BacktraceMainElectronModule()],
+            modules: [],
         });
+
+        this.addModule(new BacktraceMainElectronModule(this.fs));
     }
 
     public static builder(options: BacktraceSetupConfiguration): BacktraceClientBuilder {
