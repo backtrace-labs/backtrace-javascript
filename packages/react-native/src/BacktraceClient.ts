@@ -15,11 +15,12 @@ import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 import type { BacktraceClientSetup } from './builder/BacktraceClientSetup';
 import { version } from './common/platformHelper';
 import { CrashReporter } from './crashReporter/CrashReporter';
+import { assertDatabasePath } from './database/utils';
 import { generateUnhandledExceptionHandler } from './handlers';
 import { type ExceptionHandler } from './handlers/ExceptionHandler';
 import { ReactNativeRequestHandler } from './ReactNativeRequestHandler';
 import { ReactStackTraceConverter } from './ReactStackTraceConverter';
-import { type FileSystem } from './storage/FileSystem';
+import { ReactNativePathBacktraceStorageFactory, type BacktraceStorageModule } from './storage';
 
 export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration> {
     private readonly _crashReporter?: CrashReporter;
@@ -33,7 +34,21 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
         return NativeModules.BacktraceDirectoryProvider?.applicationDirectory() ?? '';
     }
 
+    protected get databaseRnStorage() {
+        return this.databaseStorage as BacktraceStorageModule | undefined;
+    }
+
     constructor(clientSetup: BacktraceClientSetup) {
+        const storageFactory = clientSetup.storageFactory ?? new ReactNativePathBacktraceStorageFactory();
+        const storage =
+            clientSetup.database?.storage ??
+            (clientSetup.options.database?.enable
+                ? storageFactory.create({
+                      path: assertDatabasePath(clientSetup.options.database?.path),
+                      createDirectory: clientSetup.options.database.createDatabaseDirectory,
+                  })
+                : undefined);
+
         super({
             sdkOptions: {
                 agent: '@backtrace/react-native',
@@ -48,14 +63,9 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
             ...clientSetup,
         });
 
-        const fileSystem = clientSetup.fileSystem as FileSystem;
-        if (!fileSystem) {
-            return;
-        }
-
         const breadcrumbsManager = this.modules.get(BreadcrumbsManager);
-        if (breadcrumbsManager && this.sessionFiles) {
-            breadcrumbsManager.setStorage(FileBreadcrumbsStorage.factory(this.sessionFiles, fileSystem));
+        if (breadcrumbsManager && this.sessionFiles && storage) {
+            breadcrumbsManager.setStorage(FileBreadcrumbsStorage.factory(this.sessionFiles, storage));
         }
 
         this.attributeManager.attributeEvents.on(
@@ -137,21 +147,20 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
             return;
         }
 
-        const fileSystem = this.fileSystem;
-        if (!fileSystem) {
+        const storage = this.databaseRnStorage;
+        if (!storage) {
             return;
         }
 
         const submissionUrl = SubmissionUrlInformation.toJsonReportSubmissionUrl(this.options.url);
 
-        const crashReporter = new CrashReporter(fileSystem);
+        const crashReporter = new CrashReporter(storage);
         crashReporter.initialize(
             Platform.select({
                 ios: SubmissionUrlInformation.toPlCrashReporterSubmissionUrl(submissionUrl),
                 android: SubmissionUrlInformation.toMinidumpSubmissionUrl(submissionUrl),
                 default: submissionUrl,
             }),
-            this.options.database.path,
             this.attributeManager.get('scoped').attributes,
             this.attachments,
         );

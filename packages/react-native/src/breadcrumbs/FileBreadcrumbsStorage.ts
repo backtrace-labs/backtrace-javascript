@@ -5,6 +5,8 @@ import {
     SessionFiles,
     TimeHelper,
     type BacktraceAttachmentProvider,
+    type BacktraceStorage,
+    type BacktraceSyncStorage,
     type Breadcrumb,
     type BreadcrumbsStorage,
     type BreadcrumbsStorageFactory,
@@ -13,7 +15,7 @@ import {
 } from '@backtrace/sdk-core';
 import { WritableStream } from 'web-streams-polyfill';
 import { BacktraceFileAttachment } from '..';
-import { type FileSystem } from '../storage';
+import { type BacktraceStreamStorage } from '../storage';
 import { ChunkifierSink, type ChunkSplitterFactory } from '../storage/Chunkifier';
 import { combinedChunkSplitter } from '../storage/combinedChunkSplitter';
 import { FileChunkSink } from '../storage/FileChunkSink';
@@ -34,12 +36,12 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
 
     constructor(
         session: SessionFiles,
-        private readonly _fileSystem: FileSystem,
+        private readonly _storage: BacktraceStorage & BacktraceSyncStorage & BacktraceStreamStorage,
         private readonly _limits: BreadcrumbsStorageLimits,
     ) {
         this._sink = new FileChunkSink({
             maxFiles: 2,
-            fs: this._fileSystem,
+            storage: this._storage,
             file: (n) => session.getFileName(FileBreadcrumbsStorage.getFileName(n)),
         });
 
@@ -72,14 +74,17 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
         this._destinationWriter = this._destinationStream.getWriter();
     }
 
-    public static factory(session: SessionFiles, fileSystem: FileSystem): BreadcrumbsStorageFactory {
-        return ({ limits }) => new FileBreadcrumbsStorage(session, fileSystem, limits);
+    public static factory(
+        session: SessionFiles,
+        storage: BacktraceStorage & BacktraceSyncStorage & BacktraceStreamStorage,
+    ): BreadcrumbsStorageFactory {
+        return ({ limits }) => new FileBreadcrumbsStorage(session, storage, limits);
     }
 
     public getAttachments(): BacktraceFileAttachment[] {
         const files = [...this._sink.files].map((f) => f.path);
         return files.map(
-            (f, i) => new BacktraceFileAttachment(this._fileSystem, f, `bt-breadcrumbs-${i}`, 'application/json'),
+            (f, i) => new BacktraceFileAttachment(this._storage, f, `bt-breadcrumbs-${i}`, 'application/json'),
         );
     }
 

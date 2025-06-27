@@ -1,14 +1,15 @@
-import { type AttributeType, type BacktraceAttachment, type FileSystem } from '@backtrace/sdk-core';
+import { type AttributeType, type BacktraceAttachment } from '@backtrace/sdk-core';
 import { NativeModules } from 'react-native';
 import { BacktraceFileAttachment } from '../attachment/BacktraceFileAttachment';
 import { DebuggerHelper } from '../common/DebuggerHelper';
+import type { BacktraceDirectorySyncStorage, BacktracePathStorage } from '../storage';
 
 export class CrashReporter {
     private static readonly BacktraceReactNative = NativeModules.BacktraceReactNative;
 
     private _enabled = false;
 
-    constructor(private readonly _fileSystem: FileSystem) {}
+    constructor(private readonly _storage: BacktraceDirectorySyncStorage & BacktracePathStorage) {}
 
     /**
      * Determines if the crash reporting solution was already initialized.
@@ -17,7 +18,6 @@ export class CrashReporter {
 
     public initialize(
         submissionUrl: string,
-        databasePath: string,
         attributes: Record<string, AttributeType>,
         attachments: readonly BacktraceAttachment[],
     ): boolean {
@@ -33,9 +33,9 @@ export class CrashReporter {
             return false;
         }
 
-        const nativeDatabasePath = `${databasePath}/native`;
-        this._fileSystem.createDirSync(nativeDatabasePath);
+        this._storage.createDirSync('native');
 
+        const nativeDatabasePath = this._storage.getFullPath('native');
         CrashReporter.BacktraceReactNative.initialize(
             submissionUrl,
             nativeDatabasePath,
