@@ -1,4 +1,3 @@
-import path from 'path';
 import { WritableStream } from 'web-streams-polyfill';
 import { FileChunkSink } from '../../src/storage/FileChunkSink';
 import { mockStreamFileSystem } from '../_mocks/fileSystem';
@@ -15,18 +14,17 @@ function sortString(a: string, b: string) {
 
 describe('fileChunkSink', () => {
     it('should create a filestream with name from filename', async () => {
-        const fs = mockStreamFileSystem();
+        const storage = mockStreamFileSystem();
         const filename = 'abc';
-        const sink = new FileChunkSink({ file: () => filename, maxFiles: Infinity, fs });
+        const sink = new FileChunkSink({ file: () => filename, maxFiles: Infinity, storage });
 
         const stream = sink.getSink()(0);
         expect(stream.path).toEqual(filename);
     });
 
     it('should create a filestream each time it is called', async () => {
-        const fs = mockStreamFileSystem();
-        const dir = 'test';
-        const sink = new FileChunkSink({ file: (n) => path.join(dir, n.toString()), maxFiles: Infinity, fs });
+        const storage = mockStreamFileSystem();
+        const sink = new FileChunkSink({ file: (n) => n.toString(), maxFiles: Infinity, storage });
         const expected = [0, 2, 5];
 
         for (const n of expected) {
@@ -34,15 +32,14 @@ describe('fileChunkSink', () => {
             await writeAndClose(stream, 'a');
         }
 
-        const actual = await fs.readDir(dir);
+        const actual = Object.keys(storage.files);
         expect(actual.sort(sortString)).toEqual(expected.map((e) => e.toString()).sort(sortString));
     });
 
     it('should remove previous files if count exceeds maxFiles', async () => {
-        const fs = mockStreamFileSystem();
-        const dir = 'test';
+        const storage = mockStreamFileSystem();
         const maxFiles = 3;
-        const sink = new FileChunkSink({ file: (n) => path.join(dir, n.toString()), maxFiles, fs });
+        const sink = new FileChunkSink({ file: (n) => n.toString(), maxFiles, storage });
         const files = [0, 2, 5, 6, 79, 81, 38, -1, 3];
         const expected = files.slice(-maxFiles);
 
@@ -51,7 +48,7 @@ describe('fileChunkSink', () => {
             await writeAndClose(stream, 'a');
         }
 
-        const actual = await fs.readDir(dir);
+        const actual = Object.keys(storage.files);
         expect(actual.sort(sortString)).toEqual(expected.map((e) => e.toString()).sort(sortString));
     });
 });

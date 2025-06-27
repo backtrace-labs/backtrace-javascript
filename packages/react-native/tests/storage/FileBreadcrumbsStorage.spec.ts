@@ -1,23 +1,28 @@
 import { Breadcrumb, BreadcrumbLogLevel, BreadcrumbType, RawBreadcrumb, SessionFiles } from '@backtrace/sdk-core';
-import { MockedFileSystem } from '@backtrace/sdk-core/tests/_mocks/fileSystem';
+import { MockedBacktraceStorage } from '@backtrace/sdk-core/tests/_mocks/storage';
 import assert from 'assert';
 import { promisify } from 'util';
+import { BacktraceStorageModule } from '../../src';
 import { FileBreadcrumbsStorage } from '../../src/breadcrumbs/FileBreadcrumbsStorage';
-import { FileSystem } from '../../src/storage/FileSystem';
 import { FileLocation } from '../../src/types/FileLocation';
 import { mockStreamFileSystem } from '../_mocks/fileSystem';
 
-async function loadBreadcrumbs(fs: MockedFileSystem<FileSystem>, location: FileLocation): Promise<Breadcrumb[]> {
-    return (await fs.readFile(location.filepath))
-        .split('\n')
-        .filter((n) => !!n)
-        .map((x) => {
-            try {
-                return JSON.parse(x);
-            } catch (err) {
-                throw new Error(`failed to parse "${x}": ${err}`);
-            }
-        });
+async function loadBreadcrumbs(
+    fs: MockedBacktraceStorage<Omit<BacktraceStorageModule, 'bind'>>,
+    location: FileLocation,
+): Promise<Breadcrumb[]> {
+    return (
+        (await fs.get(location.filepath))
+            ?.split('\n')
+            .filter((n) => !!n)
+            .map((x) => {
+                try {
+                    return JSON.parse(x);
+                } catch (err) {
+                    throw new Error(`failed to parse "${x}": ${err}`);
+                }
+            }) ?? []
+    );
 }
 
 const nextTick = promisify(process.nextTick);
@@ -25,7 +30,7 @@ const nextTick = promisify(process.nextTick);
 describe('FileBreadcrumbsStorage', () => {
     it('should return added breadcrumbs', async () => {
         const fs = mockStreamFileSystem();
-        const session = new SessionFiles(fs, '.', 'sessionId');
+        const session = new SessionFiles(fs, 'sessionId');
 
         const breadcrumbs: RawBreadcrumb[] = [
             {
@@ -99,7 +104,7 @@ describe('FileBreadcrumbsStorage', () => {
 
     it('should return added breadcrumbs in two attachments', async () => {
         const fs = mockStreamFileSystem();
-        const session = new SessionFiles(fs, '.', 'sessionId');
+        const session = new SessionFiles(fs, 'sessionId');
 
         const breadcrumbs: RawBreadcrumb[] = [
             {
@@ -181,7 +186,7 @@ describe('FileBreadcrumbsStorage', () => {
 
     it('should return no more than maximumBreadcrumbs breadcrumbs', async () => {
         const fs = mockStreamFileSystem();
-        const session = new SessionFiles(fs, '.', 'sessionId');
+        const session = new SessionFiles(fs, 'sessionId');
 
         const breadcrumbs: RawBreadcrumb[] = [
             {
@@ -253,7 +258,7 @@ describe('FileBreadcrumbsStorage', () => {
 
     it('should return breadcrumbs up to the json size', async () => {
         const fs = mockStreamFileSystem();
-        const session = new SessionFiles(fs, '.', 'sessionId');
+        const session = new SessionFiles(fs, 'sessionId');
 
         const breadcrumbs: RawBreadcrumb[] = [
             {
@@ -322,7 +327,7 @@ describe('FileBreadcrumbsStorage', () => {
 
     it('should return attachments with a valid name from getAttachments', async () => {
         const fs = mockStreamFileSystem();
-        const session = new SessionFiles(fs, '.', 'sessionId');
+        const session = new SessionFiles(fs, 'sessionId');
 
         const breadcrumbs: RawBreadcrumb[] = [
             {
@@ -366,7 +371,7 @@ describe('FileBreadcrumbsStorage', () => {
 
     it('should return attachments with a valid name from getAttachmentProviders', async () => {
         const fs = mockStreamFileSystem();
-        const session = new SessionFiles(fs, '.', 'sessionId');
+        const session = new SessionFiles(fs, 'sessionId');
 
         const breadcrumbs: RawBreadcrumb[] = [
             {

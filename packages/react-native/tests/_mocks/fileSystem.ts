@@ -1,36 +1,26 @@
-import { MockedFileSystem, mockFileSystem } from '@backtrace/sdk-core/tests/_mocks/fileSystem';
-import path from 'path';
+import { MockedBacktraceStorage, mockBacktraceStorage } from '@backtrace/sdk-core/tests/_mocks/storage';
 import { WritableStream } from 'web-streams-polyfill';
-import { FileSystem } from '../../src/storage/FileSystem';
+import { BacktraceStorageModule } from '../../src';
 
-export function mockStreamFileSystem(files?: Record<string, string>): MockedFileSystem<FileSystem> {
-    const fs = mockFileSystem(files);
+export function mockStreamFileSystem(
+    files?: Record<string, string>,
+): MockedBacktraceStorage<Omit<BacktraceStorageModule, 'bind'>> {
+    const fs = mockBacktraceStorage(files);
 
     return {
         ...fs,
 
-        copy: jest.fn().mockImplementation((sourceFile, destinationFile) => {
-            fs.files[path.resolve(destinationFile)] = fs.files[path.resolve(sourceFile)];
-            return Promise.resolve(true);
-        }),
+        createDirSync: jest.fn().mockReturnValue(true),
 
-        copySync: jest.fn().mockImplementation((sourceFile, destinationFile) => {
-            fs.files[path.resolve(destinationFile)] = fs.files[path.resolve(sourceFile)];
-            return true;
-        }),
-
-        applicationDirectory: jest.fn().mockImplementation(() => {
-            return '/';
-        }),
+        getFullPath: jest.fn().mockImplementation((v) => v),
 
         createWriteStream: jest.fn().mockImplementation((p: string) => {
             const writable = new WritableStream<string>({
                 write(str) {
-                    const fullPath = path.resolve(p);
-                    if (!fs.files[fullPath]) {
-                        fs.files[fullPath] = str;
+                    if (!fs.files[p]) {
+                        fs.files[p] = str;
                     } else {
-                        fs.files[fullPath] += str;
+                        fs.files[p] += str;
                     }
                 },
             });
