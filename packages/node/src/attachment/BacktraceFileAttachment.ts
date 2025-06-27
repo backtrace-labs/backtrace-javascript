@@ -1,10 +1,10 @@
-import { BacktraceSyncStorage, BacktraceFileAttachment as CoreBacktraceFileAttachment } from '@backtrace/sdk-core';
+import { BacktraceAttachment, BacktraceSyncStorage } from '@backtrace/sdk-core';
 import fs from 'fs';
 import path from 'path';
 import { Readable } from 'stream';
 import { BacktraceStreamStorage } from '../storage/BacktraceStorage.js';
 
-export class BacktraceFileAttachment implements CoreBacktraceFileAttachment<Readable> {
+export class BacktraceFileAttachment implements BacktraceAttachment<Readable> {
     public readonly name: string;
 
     constructor(
