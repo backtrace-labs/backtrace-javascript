@@ -12,7 +12,7 @@ import { BacktraceSessionProvider } from '../modules/metrics/BacktraceSessionPro
 import { MetricsQueue } from '../modules/metrics/MetricsQueue.js';
 import { SummedEvent } from '../modules/metrics/model/SummedEvent.js';
 import { UniqueEvent } from '../modules/metrics/model/UniqueEvent.js';
-import { FileSystem } from '../modules/storage/index.js';
+import { BacktraceStorageModule } from '../modules/storage/index.js';
 import { CoreClientSetup } from './CoreClientSetup.js';
 
 type Writeable<T> = { -readonly [P in keyof T]: T[P] };
@@ -77,8 +77,11 @@ export abstract class BacktraceCoreClientBuilder<S extends Partial<CoreClientSet
         return this;
     }
 
-    public useFileSystem(fileSystem: FileSystem): this {
-        this.clientSetup.fileSystem = fileSystem;
+    public useDatabaseStorage(storage: BacktraceStorageModule): this {
+        this.clientSetup.database = {
+            ...this.clientSetup.database,
+            storage,
+        };
         return this;
     }
 

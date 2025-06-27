@@ -1,7 +1,8 @@
 import { jsonEscaper } from '../../common/jsonEscaper.js';
 import { AttributeType } from '../../model/data/index.js';
 import { BacktraceModule, BacktraceModuleBindData } from '../BacktraceModule.js';
-import { FileSystem, SessionFiles } from '../storage/index.js';
+import { BacktraceStorage, BacktraceSyncStorage } from '../storage/BacktraceStorage.js';
+import { SessionFiles } from '../storage/index.js';
 import { AttributeManager } from './AttributeManager.js';
 
 const ATTRIBUTE_FILE_NAME = 'bt-attributes';
@@ -10,17 +11,17 @@ export class FileAttributeManager implements BacktraceModule {
     private _attributeManager?: AttributeManager;
 
     constructor(
-        private readonly _fileSystem: FileSystem,
+        private readonly _storage: BacktraceStorage,
         private _fileName?: string,
     ) {}
 
-    public static create(fileSystem: FileSystem) {
-        return new FileAttributeManager(fileSystem);
+    public static create(storage: BacktraceStorage) {
+        return new FileAttributeManager(storage);
     }
 
-    public static createFromSession(sessionFiles: SessionFiles, fileSystem: FileSystem) {
+    public static createFromSession(sessionFiles: SessionFiles, storage: BacktraceStorage & BacktraceSyncStorage) {
         const fileName = sessionFiles.getFileName(ATTRIBUTE_FILE_NAME);
-        return new FileAttributeManager(fileSystem, fileName);
+        return new FileAttributeManager(storage, fileName);
     }
 
     public initialize(): void {
@@ -51,7 +52,10 @@ export class FileAttributeManager implements BacktraceModule {
         }
 
         try {
-            const content = await this._fileSystem.readFile(this._fileName);
+            const content = await this._storage.get(this._fileName);
+            if (!content) {
+                return {};
+            }
             return JSON.parse(content);
         } catch {
             return {};
@@ -64,6 +68,6 @@ export class FileAttributeManager implements BacktraceModule {
         }
 
         const reportData = this._attributeManager.get('scoped');
-        await this._fileSystem.writeFile(this._fileName, JSON.stringify(reportData.attributes, jsonEscaper()));
+        await this._storage.set(this._fileName, JSON.stringify(reportData.attributes, jsonEscaper()));
     }
 }

@@ -1,23 +1,19 @@
 import { anySignal, createAbortController } from '../../common/AbortController.js';
 import { Events } from '../../common/Events.js';
-import { IdGenerator } from '../../common/IdGenerator.js';
 import { unrefInterval } from '../../common/intervalHelper.js';
 import { TimeHelper } from '../../common/TimeHelper.js';
-import { BacktraceAttachment } from '../../model/attachment/index.js';
+import { BacktraceAttachment } from '../../model/attachment/BacktraceAttachment.js';
 import { BacktraceDatabaseConfiguration } from '../../model/configuration/BacktraceDatabaseConfiguration.js';
 import { BacktraceData } from '../../model/data/BacktraceData.js';
-import { BacktraceReportSubmission } from '../../model/http/BacktraceReportSubmission.js';
 import { BacktraceModule, BacktraceModuleBindData } from '../BacktraceModule.js';
 import { SessionFiles } from '../storage/index.js';
 import { BacktraceDatabaseContext } from './BacktraceDatabaseContext.js';
 import { BacktraceDatabaseEvents } from './BacktraceDatabaseEvents.js';
+import { BacktraceDatabaseRecordSenders } from './BacktraceDatabaseRecordSender.js';
 import { BacktraceDatabaseStorageProvider } from './BacktraceDatabaseStorageProvider.js';
-import {
-    AttachmentBacktraceDatabaseRecord,
-    BacktraceDatabaseRecord,
-    BacktraceDatabaseRecordCountByType,
-    ReportBacktraceDatabaseRecord,
-} from './model/BacktraceDatabaseRecord.js';
+import { BacktraceDatabaseRecord, BacktraceDatabaseRecordCountByType } from './model/BacktraceDatabaseRecord.js';
+import { ReportBacktraceDatabaseRecord } from './model/ReportBacktraceDatabaseRecord.js';
+import { ReportBacktraceDatabaseRecordFactory } from './ReportBacktraceDatabaseRecordFactory.js';
 
 export class BacktraceDatabase extends Events<BacktraceDatabaseEvents> implements BacktraceModule {
     /**
@@ -45,7 +41,8 @@ export class BacktraceDatabase extends Events<BacktraceDatabaseEvents> implement
     constructor(
         private readonly _options: BacktraceDatabaseConfiguration | undefined,
         private readonly _storageProvider: BacktraceDatabaseStorageProvider,
-        private readonly _requestHandler: BacktraceReportSubmission,
+        private readonly _recordSenders: BacktraceDatabaseRecordSenders,
+        private readonly _reportRecordFactory: ReportBacktraceDatabaseRecordFactory,
         private readonly _sessionFiles?: SessionFiles,
     ) {
         super();
@@ -108,7 +105,8 @@ export class BacktraceDatabase extends Events<BacktraceDatabaseEvents> implement
 
         client.on('after-send', (_, data, __, submissionResult) => {
             const record = this._databaseRecordContext.find(
-                (record) => record.type === 'report' && record.data.uuid === data.uuid,
+                (record) =>
+                    record.type === 'report' && (record as ReportBacktraceDatabaseRecord).data.uuid === data.uuid,
             );
             if (!record) {
                 return;
@@ -135,58 +133,11 @@ export class BacktraceDatabase extends Events<BacktraceDatabaseEvents> implement
             return undefined;
         }
 
-        const sessionId = backtraceData.attributes?.['application.session'];
-
-        const record: ReportBacktraceDatabaseRecord = {
-            type: 'report',
-            data: backtraceData,
-            timestamp: TimeHelper.now(),
-            id: IdGenerator.uuid(),
-            locked: false,
-            attachments: attachments,
-            sessionId: typeof sessionId === 'string' ? sessionId : undefined,
-        };
-
-        this.prepareDatabase([record]);
-        const saveResult = this._storageProvider.add(record);
-        if (!saveResult) {
-            return undefined;
-        }
-
-        this._databaseRecordContext.add(record);
-        this.lockSessionWithRecord(record);
-
-        this.emit('added', record);
-
-        return record;
+        const reportRecord = this._reportRecordFactory.create(backtraceData, attachments);
+        return this.addRecord(reportRecord);
     }
 
-    /**
-     * Adds Bactrace attachment to the database
-     * @param backtraceData diagnostic data object
-     * @param attachment the attachment to add
-     * @param sessionId session ID to use
-     * @returns record if database is enabled. Otherwise undefined.
-     */
-    public addAttachment(
-        rxid: string,
-        attachment: BacktraceAttachment,
-        sessionId: string,
-    ): AttachmentBacktraceDatabaseRecord | undefined {
-        if (!this._enabled) {
-            return undefined;
-        }
-
-        const record: AttachmentBacktraceDatabaseRecord = {
-            type: 'attachment',
-            timestamp: TimeHelper.now(),
-            id: IdGenerator.uuid(),
-            rxid,
-            locked: false,
-            attachment,
-            sessionId,
-        };
-
+    public addRecord<R extends BacktraceDatabaseRecord>(record: R): R | undefined {
         this.prepareDatabase([record]);
         const saveResult = this._storageProvider.add(record);
         if (!saveResult) {
@@ -298,12 +249,15 @@ export class BacktraceDatabase extends Events<BacktraceDatabaseEvents> implement
                     try {
                         record.locked = true;
 
+                        const sender = this._recordSenders[record.type];
+                        if (!sender) {
+                            this.remove(record);
+                            continue;
+                        }
+
                         this.emit('before-send', record);
 
-                        const result =
-                            record.type === 'report'
-                                ? await this._requestHandler.send(record.data, record.attachments, signal)
-                                : await this._requestHandler.sendAttachment(record.rxid, record.attachment, signal);
+                        const result = await sender.send(record, signal);
 
                         this.emit('after-send', record, result);
 

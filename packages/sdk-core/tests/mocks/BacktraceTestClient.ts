@@ -5,7 +5,7 @@ import {
     BacktraceCoreClient,
     BacktraceDatabaseStorageProvider,
     BacktraceRequestHandler,
-    FileSystem,
+    BacktraceStorageModule,
 } from '../../src/index.js';
 import { testHttpClient } from '../mocks/testHttpClient.js';
 export const TOKEN = '590d39eb154cff1d30f2b689f9a928bb592b25e7e7c10192fe208485ea68d91c';
@@ -21,7 +21,7 @@ export class BacktraceTestClient extends BacktraceCoreClient {
         handler: BacktraceRequestHandler,
         attributeProviders: BacktraceAttributeProvider[] = [],
         attachments: BacktraceAttachment[] = [],
-        fileSystem?: FileSystem,
+        storage?: BacktraceStorageModule,
     ) {
         super({
             options: {
@@ -41,7 +41,9 @@ export class BacktraceTestClient extends BacktraceCoreClient {
             },
             requestHandler: handler,
             attributeProviders,
-            fileSystem,
+            database: {
+                storage,
+            },
         });
         this.requestHandler = handler;
     }
@@ -50,7 +52,7 @@ export class BacktraceTestClient extends BacktraceCoreClient {
         options: Partial<BacktraceConfiguration> = {},
         attributeProviders: BacktraceAttributeProvider[] = [],
         attachments: BacktraceAttachment[] = [],
-        fileSystem?: FileSystem,
+        storage?: BacktraceStorageModule,
     ) {
         attributeProviders.push({
             type: 'scoped',
@@ -61,7 +63,7 @@ export class BacktraceTestClient extends BacktraceCoreClient {
                 };
             },
         });
-        const instance = new BacktraceTestClient(options, testHttpClient, attributeProviders, attachments, fileSystem);
+        const instance = new BacktraceTestClient(options, testHttpClient, attributeProviders, attachments, storage);
         instance.initialize();
         return instance;
     }

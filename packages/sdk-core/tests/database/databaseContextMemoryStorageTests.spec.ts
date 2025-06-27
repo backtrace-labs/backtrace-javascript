@@ -1,21 +1,19 @@
 import assert from 'assert';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import { TimeHelper } from '../../src/common/TimeHelper.js';
-import { BacktraceData, BacktraceDatabaseRecord, BacktraceReportSubmissionResult } from '../../src/index.js';
+import {
+    BacktraceData,
+    BacktraceDatabaseConfiguration,
+    BacktraceReportSubmissionResult,
+    ReportBacktraceDatabaseRecord,
+} from '../../src/index.js';
 import { BacktraceDatabase } from '../../src/modules/database/BacktraceDatabase.js';
-import { mockFileSystem } from '../_mocks/fileSystem.js';
+import { mockBacktraceStorage } from '../_mocks/storage.js';
 import { BacktraceTestClient } from '../mocks/BacktraceTestClient.js';
 
 describe('Database context memory storage tests', () => {
-    const testDatabaseSettings = {
+    const testDatabaseSettings: BacktraceDatabaseConfiguration = {
         enable: true,
         autoSend: false,
-        // this option doesn't matter because we mock the database provider
-        // interface. However, if bug happen we want to be sure to not create
-        // anything. Instead we want to fail loud and hard.
-        createDatabaseDirectory: false,
-        path: path.join(path.dirname(fileURLToPath(import.meta.url)), 'database'),
     };
 
     afterEach(() => {
@@ -31,7 +29,7 @@ describe('Database context memory storage tests', () => {
                 },
                 [],
                 [],
-                mockFileSystem(),
+                mockBacktraceStorage(),
             );
             const database = client.database as BacktraceDatabase;
             if (!database) {
@@ -48,7 +46,9 @@ describe('Database context memory storage tests', () => {
 
             expect(records.length).toBe(1);
             assert(records[0].type === 'report');
-            expect(records[0].data.attributes['error.message']).toEqual(testingErrorMessage);
+            expect((records[0] as ReportBacktraceDatabaseRecord).data.attributes['error.message']).toEqual(
+                testingErrorMessage,
+            );
         });
 
         it('Should remove report from the database after succesful submission', async () => {
@@ -59,7 +59,7 @@ describe('Database context memory storage tests', () => {
                 },
                 [],
                 [],
-                mockFileSystem(),
+                mockBacktraceStorage(),
             );
             const database = client.database as BacktraceDatabase;
             if (!database) {
@@ -83,7 +83,7 @@ describe('Database context memory storage tests', () => {
 
     describe('Record load on the database start', () => {
         it('Shouldn not fail when no records are available in the database dir', () => {
-            const fileSystem = mockFileSystem();
+            const fileSystem = mockBacktraceStorage();
 
             const client = BacktraceTestClient.buildFakeClient(
                 {
@@ -98,17 +98,15 @@ describe('Database context memory storage tests', () => {
         });
 
         it('Should load records from the storage provider to context', async () => {
-            const record: BacktraceDatabaseRecord = {
+            const record: ReportBacktraceDatabaseRecord = {
                 type: 'report',
-                attachments: [],
                 timestamp: TimeHelper.now(),
                 data: {} as BacktraceData,
                 id: '123',
                 locked: false,
-                sessionId: undefined,
             };
-            const fileSystem = mockFileSystem({
-                [path.join(testDatabaseSettings.path, 'abc-record.json')]: JSON.stringify(record),
+            const fileSystem = mockBacktraceStorage({
+                ['abc-record.json']: JSON.stringify(record),
             });
             const client = BacktraceTestClient.buildFakeClient(
                 {

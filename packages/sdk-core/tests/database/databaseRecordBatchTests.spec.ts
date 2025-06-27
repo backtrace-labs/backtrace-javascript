@@ -1,7 +1,5 @@
-import path from 'path';
-import { fileURLToPath } from 'url';
 import { BacktraceReportSubmissionResult } from '../../src/index.js';
-import { mockFileSystem } from '../_mocks/fileSystem.js';
+import { mockBacktraceStorage } from '../_mocks/storage.js';
 import { BacktraceTestClient } from '../mocks/BacktraceTestClient.js';
 import { testHttpClient } from '../mocks/testHttpClient.js';
 
@@ -26,14 +24,13 @@ describe('Database record batch tests', () => {
                 database: {
                     enable: true,
                     autoSend: true,
-                    path: path.join(path.dirname(fileURLToPath(import.meta.url)), 'database'),
                     maximumRetries,
                     retryInterval: 1000,
                 },
             },
             [],
             [],
-            mockFileSystem(),
+            mockBacktraceStorage(),
         );
         const database = client.database;
         if (!database) {
@@ -59,14 +56,13 @@ describe('Database record batch tests', () => {
                 database: {
                     enable: true,
                     autoSend: true,
-                    path: path.join(path.dirname(fileURLToPath(import.meta.url)), 'database'),
                     maximumRetries,
                     retryInterval: 1000,
                 },
             },
             [],
             [],
-            mockFileSystem(),
+            mockBacktraceStorage(),
         );
         const database = client.database;
         if (!database) {

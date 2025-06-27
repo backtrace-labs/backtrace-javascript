@@ -1,9 +1,11 @@
 import assert from 'assert';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { BacktraceDatabaseConfiguration, BacktraceReportSubmissionResult } from '../../src/index.js';
+import {
+    BacktraceDatabaseConfiguration,
+    BacktraceReportSubmissionResult,
+    ReportBacktraceDatabaseRecord,
+} from '../../src/index.js';
 import { BacktraceDatabase } from '../../src/modules/database/BacktraceDatabase.js';
-import { mockFileSystem } from '../_mocks/fileSystem.js';
+import { mockBacktraceStorage } from '../_mocks/storage.js';
 import { BacktraceTestClient } from '../mocks/BacktraceTestClient.js';
 
 describe('Database context validation tests', () => {
@@ -11,11 +13,6 @@ describe('Database context validation tests', () => {
         const testDatabaseSettings: BacktraceDatabaseConfiguration = {
             enable: true,
             autoSend: false,
-            // this option doesn't matter because we mock the database provider
-            // interface. However, if bug happen we want to be sure to not create
-            // anything. Instead we want to fail loud and hard.
-            createDatabaseDirectory: false,
-            path: path.join(path.dirname(fileURLToPath(import.meta.url)), 'database'),
         };
 
         afterEach(() => {
@@ -40,7 +37,7 @@ describe('Database context validation tests', () => {
                     },
                     [],
                     [],
-                    mockFileSystem(),
+                    mockBacktraceStorage(),
                 );
                 jest.spyOn(client.requestHandler, 'postError').mockResolvedValue(
                     Promise.resolve(BacktraceReportSubmissionResult.OnInternalServerError('test')),
@@ -59,7 +56,9 @@ describe('Database context validation tests', () => {
                     const record = records[index];
                     const expectedMessage = overflowEvents + index;
                     assert(record.type === 'report');
-                    expect(record.data.attributes['error.message']).toEqual(expectedMessage.toString());
+                    expect((record as ReportBacktraceDatabaseRecord).data.attributes['error.message']).toEqual(
+                        expectedMessage.toString(),
+                    );
                 }
             });
         }

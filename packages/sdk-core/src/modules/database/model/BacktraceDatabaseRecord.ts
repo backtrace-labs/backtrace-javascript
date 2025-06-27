@@ -1,32 +1,26 @@
-import { BacktraceAttachment } from '../../../model/attachment/index.js';
-import { BacktraceData } from '../../../model/data/BacktraceData.js';
+import { IdGenerator } from '../../../common/IdGenerator.js';
+import { TimeHelper } from '../../../common/TimeHelper.js';
 
-export interface ReportBacktraceDatabaseRecord {
-    readonly type: 'report';
-    readonly data: BacktraceData;
+export interface BacktraceDatabaseRecord<Type extends string = string> {
     readonly id: string;
+    readonly type: Type;
     readonly timestamp: number;
     readonly sessionId?: string;
-    attachments: BacktraceAttachment[];
     /**
      * Determines if the record is in use
      */
     locked: boolean;
 }
 
-export interface AttachmentBacktraceDatabaseRecord {
-    readonly type: 'attachment';
-    readonly id: string;
-    readonly rxid: string;
-    readonly timestamp: number;
-    readonly attachment: BacktraceAttachment;
-    readonly sessionId: string;
-    /**
-     * Determines if the record is in use
-     */
-    locked: boolean;
+export class BacktraceDatabaseRecordFactory {
+    public create<Type extends string>(type: Type): BacktraceDatabaseRecord<Type> {
+        return {
+            id: IdGenerator.uuid(),
+            timestamp: TimeHelper.now(),
+            type,
+            locked: false,
+        };
+    }
 }
-
-export type BacktraceDatabaseRecord = ReportBacktraceDatabaseRecord | AttachmentBacktraceDatabaseRecord;
 
 export type BacktraceDatabaseRecordCountByType = Record<BacktraceDatabaseRecord['type'], number>;
