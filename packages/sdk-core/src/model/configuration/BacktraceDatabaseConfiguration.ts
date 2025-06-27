@@ -3,15 +3,6 @@ export interface EnabledBacktraceDatabaseConfiguration {
      * Determine if the Database is enabled
      */
     enable: true;
-    /**
-     * Path where the SDK can store data.
-     */
-    path: string;
-    /**
-     * Determine if the directory should be auto created by the SDK.
-     * @default true
-     */
-    createDatabaseDirectory?: boolean;
 
     /**
      * Sends reports to the server based on the retry settings.
@@ -25,13 +16,6 @@ export interface EnabledBacktraceDatabaseConfiguration {
      * @default 8
      */
     maximumNumberOfRecords?: number;
-
-    /**
-     * The maximum number of attachments stored in the offline database. When the limit is reached,
-     * the oldest attachments are removed. If the value is equal to '0', then no limit is set.
-     * @default 10
-     */
-    maximumNumberOfAttachmentRecords?: number;
 
     /**
      * The amount of time (in ms) to wait between retries if the database is unable to send a report.

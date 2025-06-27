@@ -1,7 +1,7 @@
-import { jsonEscaper } from '../../common/jsonEscaper.js';
+import { toArray } from '../../common/asyncGenerator.js';
 import { BacktraceDatabaseConfiguration } from '../../model/configuration/BacktraceDatabaseConfiguration.js';
-import { FileSystem } from '../storage/index.js';
-import { BacktraceDatabaseFileRecord } from './BacktraceDatabaseFileRecord.js';
+import { BacktraceIterableStorage, BacktraceStorage, BacktraceSyncStorage } from '../storage/BacktraceStorage.js';
+import { BacktraceDatabaseRecordSerializers } from './BacktraceDatabaseRecordSerializer.js';
 import { BacktraceDatabaseStorageProvider } from './BacktraceDatabaseStorageProvider.js';
 import { BacktraceDatabaseRecord } from './model/BacktraceDatabaseRecord.js';
 
@@ -10,8 +10,8 @@ export class BacktraceDatabaseFileStorageProvider implements BacktraceDatabaseSt
 
     private readonly RECORD_SUFFIX = '-record.json';
     private constructor(
-        private readonly _fileSystem: FileSystem,
-        private readonly _path: string,
+        private readonly _serializers: BacktraceDatabaseRecordSerializers,
+        private readonly _storage: BacktraceSyncStorage & BacktraceStorage & BacktraceIterableStorage,
     ) {}
 
     /**
@@ -20,7 +20,8 @@ export class BacktraceDatabaseFileStorageProvider implements BacktraceDatabaseSt
      * @returns database file storage provider
      */
     public static createIfValid(
-        fileSystem: FileSystem,
+        serializers: BacktraceDatabaseRecordSerializers,
+        storage: BacktraceSyncStorage & BacktraceStorage & BacktraceIterableStorage,
         options?: BacktraceDatabaseConfiguration,
     ): BacktraceDatabaseFileStorageProvider | undefined {
         if (!options) {
@@ -31,13 +32,7 @@ export class BacktraceDatabaseFileStorageProvider implements BacktraceDatabaseSt
             return undefined;
         }
 
-        if (options.enable && !options.path) {
-            throw new Error(
-                'Missing mandatory path to the database. Please define the database.path option in the configuration.',
-            );
-        }
-
-        return new BacktraceDatabaseFileStorageProvider(fileSystem, options.path);
+        return new BacktraceDatabaseFileStorageProvider(serializers, storage);
     }
 
     public start(): boolean {
@@ -56,11 +51,18 @@ export class BacktraceDatabaseFileStorageProvider implements BacktraceDatabaseSt
 
     public add(record: BacktraceDatabaseRecord): boolean {
         const recordPath = this.getRecordPath(record.id);
+        const serializer = this._serializers[record.type];
+        if (!serializer) {
+            return false;
+        }
+
         try {
-            this._fileSystem.writeFileSync(
-                recordPath,
-                JSON.stringify(BacktraceDatabaseFileRecord.fromRecord(record), jsonEscaper()),
-            );
+            const serialized = serializer.save(record);
+            if (!serialized) {
+                return false;
+            }
+
+            this._storage.setSync(recordPath, serialized);
             return true;
         } catch {
             return false;
@@ -68,24 +70,35 @@ export class BacktraceDatabaseFileStorageProvider implements BacktraceDatabaseSt
     }
 
     public async get(): Promise<BacktraceDatabaseRecord[]> {
-        const databaseFiles = await this._fileSystem.readDir(this._path);
+        const databaseFiles = await toArray(this._storage.keys());
 
-        const recordNames = databaseFiles
-            .filter((file) => file.endsWith(this.RECORD_SUFFIX))
-            .map((f) => this._path + '/' + f);
+        const recordNames = databaseFiles.filter((file) => file.endsWith(this.RECORD_SUFFIX));
 
         const records: BacktraceDatabaseRecord[] = [];
         for (const recordName of recordNames) {
             try {
-                const recordJson = await this._fileSystem.readFile(recordName);
-                const record = BacktraceDatabaseFileRecord.fromJson(recordJson, this._fileSystem);
-                if (!record) {
-                    await this._fileSystem.unlink(recordName);
+                const recordJson = await this._storage.get(recordName);
+                if (!recordJson) {
+                    await this._storage.remove(recordName);
                     continue;
                 }
+
+                let record: BacktraceDatabaseRecord | undefined;
+                for (const serializer of Object.values(this._serializers)) {
+                    record = serializer.load(recordJson);
+                    if (record) {
+                        break;
+                    }
+                }
+
+                if (!record) {
+                    await this._storage.remove(recordName);
+                    continue;
+                }
+
                 records.push(record);
             } catch {
-                await this._fileSystem.unlink(recordName);
+                await this._storage.remove(recordName);
             }
         }
 
@@ -93,12 +106,12 @@ export class BacktraceDatabaseFileStorageProvider implements BacktraceDatabaseSt
     }
 
     private unlinkRecord(recordPath: string): boolean {
-        if (!this._fileSystem.existsSync(recordPath)) {
+        if (!this._storage.hasSync(recordPath)) {
             return false;
         }
 
         try {
-            this._fileSystem.unlinkSync(recordPath);
+            this._storage.removeSync(recordPath);
             return true;
         } catch {
             return false;
@@ -106,6 +119,6 @@ export class BacktraceDatabaseFileStorageProvider implements BacktraceDatabaseSt
     }
 
     private getRecordPath(id: string): string {
-        return this._path + '/' + `${id}${this.RECORD_SUFFIX}`;
+        return `${id}${this.RECORD_SUFFIX}`;
     }
 }

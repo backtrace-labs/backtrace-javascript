@@ -1,8 +1,6 @@
-import path from 'path';
-import { fileURLToPath } from 'url';
 import { BacktraceDatabaseConfiguration, BacktraceReportSubmissionResult } from '../../src/index.js';
 import { BacktraceDatabase } from '../../src/modules/database/BacktraceDatabase.js';
-import { mockFileSystem } from '../_mocks/fileSystem.js';
+import { mockBacktraceStorage } from '../_mocks/storage.js';
 import { BacktraceTestClient } from '../mocks/BacktraceTestClient.js';
 
 describe('Database send tests', () => {
@@ -12,11 +10,6 @@ describe('Database send tests', () => {
     const testDatabaseSettings: BacktraceDatabaseConfiguration = {
         enable: true,
         autoSend: false,
-        // this option doesn't matter because we mock the database provider
-        // interface. However, if bug happen we want to be sure to not create
-        // anything. Instead we want to fail loud and hard.
-        createDatabaseDirectory: false,
-        path: path.join(path.dirname(fileURLToPath(import.meta.url)), 'database'),
     };
 
     describe('Flush', () => {
@@ -27,7 +20,7 @@ describe('Database send tests', () => {
                 },
                 [],
                 [],
-                mockFileSystem(),
+                mockBacktraceStorage(),
             );
             const database = client.database as BacktraceDatabase;
             if (!database) {
@@ -52,7 +45,7 @@ describe('Database send tests', () => {
                 },
                 [],
                 [],
-                mockFileSystem(),
+                mockBacktraceStorage(),
             );
             const database = client.database as BacktraceDatabase;
             if (!database) {
@@ -83,7 +76,7 @@ describe('Database send tests', () => {
                 },
                 [],
                 [],
-                mockFileSystem(),
+                mockBacktraceStorage(),
             );
             const database = client.database as BacktraceDatabase;
             if (!database) {
@@ -109,7 +102,7 @@ describe('Database send tests', () => {
                 },
                 [],
                 [],
-                mockFileSystem(),
+                mockBacktraceStorage(),
             );
             const database = client.database as BacktraceDatabase;
             if (!database) {

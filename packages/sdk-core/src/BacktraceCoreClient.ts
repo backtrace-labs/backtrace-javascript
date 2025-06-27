@@ -9,9 +9,12 @@ import {
     BacktraceReportSubmissionResult,
     BacktraceRequestHandler,
     BacktraceSessionProvider,
+    BacktraceStorageModule,
     BacktraceSubmissionResponse,
     DebugIdProvider,
-    FileSystem,
+    DefaultReportBacktraceDatabaseRecordFactory,
+    ReportBacktraceDatabaseRecordSender,
+    ReportBacktraceDatabaseRecordSerializer,
     SdkOptions,
     SessionFiles,
 } from './index.js';
@@ -117,7 +120,7 @@ export abstract class BacktraceCoreClient<
 
     protected readonly attributeManager: AttributeManager;
     protected readonly attachmentManager: AttachmentManager;
-    protected readonly fileSystem?: FileSystem;
+    protected readonly databaseStorage?: BacktraceStorageModule;
 
     private readonly _modules: BacktraceModules = new Map();
     private readonly _dataBuilder: BacktraceDataBuilder;
@@ -133,7 +136,6 @@ export abstract class BacktraceCoreClient<
         super();
 
         this.options = setup.options;
-        this.fileSystem = setup.fileSystem;
         this._sdkOptions = setup.sdkOptions;
         this._sessionProvider = setup.sessionProvider ?? new SingleSessionProvider();
         this._reportSubmission =
@@ -167,31 +169,40 @@ export abstract class BacktraceCoreClient<
             new DebugIdProvider(stackTraceConverter, setup.debugIdMapProvider),
         );
 
-        if (this.options?.database?.enable === true && setup.fileSystem) {
+        if (this.options?.database?.enable === true && setup.database?.storage) {
+            this.databaseStorage = setup.database.storage;
+            this.addModule(this.databaseStorage);
+
             const provider = BacktraceDatabaseFileStorageProvider.createIfValid(
-                setup.fileSystem,
+                {
+                    report: new ReportBacktraceDatabaseRecordSerializer(),
+                    ...setup.database?.recordSerializers,
+                },
+                this.databaseStorage,
                 this.options.database,
             );
 
-            if (this.fileSystem) {
-                const sessionFiles = new SessionFiles(
-                    this.fileSystem,
-                    this.options.database.path,
-                    {
-                        id: this.sessionId,
-                        timestamp: Date.now(),
-                    },
-                    this.options.database.maximumOldSessions ?? 1,
-                );
-                this._modules.set(SessionFiles, sessionFiles);
-            }
+            const sessionFiles = new SessionFiles(
+                this.databaseStorage,
+                {
+                    id: this.sessionId,
+                    timestamp: Date.now(),
+                },
+                this.options.database.maximumOldSessions ?? 1,
+            );
+            this._modules.set(SessionFiles, sessionFiles);
 
             if (provider) {
                 const database = new BacktraceDatabase(
                     this.options.database,
                     provider,
-                    this._reportSubmission,
+                    {
+                        report: new ReportBacktraceDatabaseRecordSender(this._reportSubmission),
+                        ...setup.database?.recordSenders?.(this._reportSubmission),
+                    },
+                    setup.database?.reportRecordFactory ?? DefaultReportBacktraceDatabaseRecordFactory.default(),
                     this.sessionFiles,
+                    setup.database.recordLimits,
                 );
                 this._modules.set(BacktraceDatabase, database);
             }
@@ -222,16 +233,6 @@ export abstract class BacktraceCoreClient<
 
     public initialize() {
         this.validateAttributes();
-
-        if (this.fileSystem && this.options.database?.createDatabaseDirectory) {
-            if (!this.options.database.path) {
-                throw new Error(
-                    'Missing mandatory path to the database. Please define the database.path option in the configuration.',
-                );
-            }
-
-            this.fileSystem.createDirSync(this.options.database?.path);
-        }
 
         for (const module of this._modules.values()) {
             if (module.bind) {
@@ -406,7 +407,7 @@ export abstract class BacktraceCoreClient<
         return data instanceof BacktraceReport;
     }
 
-    private getModuleBindData(): BacktraceModuleBindData {
+    private getModuleBindData(): BacktraceModuleBindData<O> {
         return {
             client: this,
             options: this.options,
@@ -416,7 +417,7 @@ export abstract class BacktraceCoreClient<
             requestHandler: this._requestHandler,
             database: this.database,
             sessionFiles: this.sessionFiles,
-            fileSystem: this.fileSystem,
+            storage: this.databaseStorage,
         };
     }
 
