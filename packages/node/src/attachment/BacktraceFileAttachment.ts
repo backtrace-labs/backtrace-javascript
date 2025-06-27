@@ -2,6 +2,7 @@ import { BacktraceAttachment } from '@backtrace/sdk-core';
 import nodeFs from 'fs';
 import path from 'path';
 import { Readable } from 'stream';
+import { NodeFs } from '../storage/nodeFs.js';
 
 export class BacktraceFileAttachment implements BacktraceAttachment<Readable> {
     public readonly name: string;
@@ -9,7 +10,7 @@ export class BacktraceFileAttachment implements BacktraceAttachment<Readable> {
     constructor(
         public readonly filePath: string,
         name?: string,
-        private readonly _fs: typeof nodeFs = nodeFs,
+        private readonly _fs: Pick<NodeFs, 'existsSync' | 'createReadStream'> = nodeFs,
     ) {
         this.name = name ?? path.basename(this.filePath);
     }
@@ -28,7 +29,7 @@ export interface BacktraceFileAttachmentFactory {
 }
 
 export class NodeFsBacktraceFileAttachmentFactory implements BacktraceFileAttachmentFactory {
-    constructor(private readonly _fs: typeof nodeFs = nodeFs) {}
+    constructor(private readonly _fs: Pick<NodeFs, 'existsSync' | 'createReadStream'> = nodeFs) {}
 
     public create(filePath: string, name?: string): BacktraceFileAttachment {
         return new BacktraceFileAttachment(filePath, name, this._fs);

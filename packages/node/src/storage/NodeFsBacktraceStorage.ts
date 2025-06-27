@@ -2,10 +2,11 @@ import nodeFs from 'fs';
 import path from 'path';
 import { BacktraceStorageModule, BacktraceStorageModuleOptions } from './BacktraceStorage.js';
 import { BacktraceStorageModuleFactory } from './BacktraceStorageModuleFactory.js';
+import { NodeFs } from './nodeFs.js';
 
 export class NodeFsBacktraceStorage implements BacktraceStorageModule {
     private readonly _path: string;
-    private readonly _fs: typeof nodeFs;
+    private readonly _fs: NodeFs;
     private readonly _createDirectory: boolean;
 
     constructor(options: BacktraceStorageModuleOptions) {
@@ -115,11 +116,11 @@ export class NodeFsBacktraceStorage implements BacktraceStorageModule {
     }
 
     public createWriteStream(key: string): nodeFs.WriteStream {
-        return nodeFs.createWriteStream(this.resolvePath(key), 'utf-8');
+        return this._fs.createWriteStream(this.resolvePath(key), 'utf-8');
     }
 
     public createReadStream(key: string): nodeFs.ReadStream {
-        return nodeFs.createReadStream(this.resolvePath(key), 'utf-8');
+        return this._fs.createReadStream(this.resolvePath(key), 'utf-8');
     }
 
     protected resolvePath(key: string) {

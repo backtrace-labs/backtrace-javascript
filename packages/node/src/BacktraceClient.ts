@@ -36,13 +36,14 @@ import { assertDatabasePath } from './database/utils.js';
 import { BacktraceStorageModule } from './storage/BacktraceStorage.js';
 import { BacktraceStorageModuleFactory } from './storage/BacktraceStorageModuleFactory.js';
 import { NodeFsBacktraceStorageModuleFactory } from './storage/NodeFsBacktraceStorage.js';
+import { NodeFs } from './storage/nodeFs.js';
 
 export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration> {
     private _listeners: Record<string, NodeJS.UnhandledRejectionListener | NodeJS.UncaughtExceptionListener> = {};
 
     protected readonly storageFactory: BacktraceStorageModuleFactory;
     protected readonly fileAttachmentFactory: BacktraceFileAttachmentFactory;
-    protected readonly fs: typeof nodeFs;
+    protected readonly fs: NodeFs;
 
     protected get databaseNodeFsStorage() {
         return this.databaseStorage as BacktraceStorageModule | undefined;

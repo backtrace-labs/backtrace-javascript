@@ -1,6 +1,6 @@
 import { Writable } from 'stream';
 import { FileChunkSink } from '../../src/streams/fileChunkSink.js';
-import { mockStreamFileSystem } from '../_mocks/storage.js';
+import { mockNodeStorageAndFs } from '../_mocks/storage.js';
 
 function writeAndClose(stream: Writable, value: string) {
     return new Promise((resolve, reject) => {
@@ -17,7 +17,7 @@ function sortString(a: string, b: string) {
 
 describe('fileChunkSink', () => {
     it('should create a filestream with name from filename', async () => {
-        const fs = mockStreamFileSystem();
+        const fs = mockNodeStorageAndFs();
         const filename = 'abc';
         const sink = new FileChunkSink({ file: () => filename, maxFiles: Infinity, storage: fs });
 
@@ -26,7 +26,7 @@ describe('fileChunkSink', () => {
     });
 
     it('should create a filestream each time it is called', async () => {
-        const fs = mockStreamFileSystem();
+        const fs = mockNodeStorageAndFs();
         const sink = new FileChunkSink({ file: (n) => n.toString(), maxFiles: Infinity, storage: fs });
         const expected = [0, 2, 5];
 
@@ -40,7 +40,7 @@ describe('fileChunkSink', () => {
     });
 
     it('should remove previous files if count exceeds maxFiles', async () => {
-        const fs = mockStreamFileSystem();
+        const fs = mockNodeStorageAndFs();
         const maxFiles = 3;
         const sink = new FileChunkSink({ file: (n) => n.toString(), maxFiles, storage: fs });
         const files = [0, 2, 5, 6, 79, 81, 38, -1, 3];

@@ -3,7 +3,8 @@ import assert from 'assert';
 import { Readable } from 'stream';
 import { promisify } from 'util';
 import { FileBreadcrumbsStorage } from '../../src/breadcrumbs/FileBreadcrumbsStorage.js';
-import { mockStreamFileSystem } from '../_mocks/storage.js';
+import { NodeFsBacktraceFileAttachmentFactory } from '../../src/index.js';
+import { mockNodeStorageAndFs } from '../_mocks/storage.js';
 
 async function readToEnd(readable: Readable) {
     return new Promise<Buffer>((resolve, reject) => {
@@ -33,8 +34,8 @@ const nextTick = promisify(process.nextTick);
 
 describe('FileBreadcrumbsStorage', () => {
     it('should return added breadcrumbs', async () => {
-        const fs = mockStreamFileSystem();
-        const session = new SessionFiles(fs, 'sessionId');
+        const fs = mockNodeStorageAndFs();
+        const session = new SessionFiles(fs, { id: 'sessionId', timestamp: Date.now() });
 
         const breadcrumbs: RawBreadcrumb[] = [
             {
@@ -86,7 +87,7 @@ describe('FileBreadcrumbsStorage', () => {
             },
         ];
 
-        const storage = new FileBreadcrumbsStorage(session, fs, {
+        const storage = new FileBreadcrumbsStorage(session, fs, new NodeFsBacktraceFileAttachmentFactory(fs), {
             maximumBreadcrumbs: 100,
         });
 
@@ -107,8 +108,8 @@ describe('FileBreadcrumbsStorage', () => {
     });
 
     it('should return added breadcrumbs in two attachments', async () => {
-        const fs = mockStreamFileSystem();
-        const session = new SessionFiles(fs, 'sessionId');
+        const fs = mockNodeStorageAndFs();
+        const session = new SessionFiles(fs, { id: 'sessionId', timestamp: Date.now() });
 
         const breadcrumbs: RawBreadcrumb[] = [
             {
@@ -163,7 +164,7 @@ describe('FileBreadcrumbsStorage', () => {
             },
         ];
 
-        const storage = new FileBreadcrumbsStorage(session, fs, {
+        const storage = new FileBreadcrumbsStorage(session, fs, new NodeFsBacktraceFileAttachmentFactory(fs), {
             maximumBreadcrumbs: 4,
         });
 
@@ -189,8 +190,8 @@ describe('FileBreadcrumbsStorage', () => {
     });
 
     it('should return no more than maximumBreadcrumbs breadcrumbs', async () => {
-        const fs = mockStreamFileSystem();
-        const session = new SessionFiles(fs, 'sessionId');
+        const fs = mockNodeStorageAndFs();
+        const session = new SessionFiles(fs, { id: 'sessionId', timestamp: Date.now() });
 
         const breadcrumbs: RawBreadcrumb[] = [
             {
@@ -235,7 +236,7 @@ describe('FileBreadcrumbsStorage', () => {
             },
         ];
 
-        const storage = new FileBreadcrumbsStorage(session, fs, {
+        const storage = new FileBreadcrumbsStorage(session, fs, new NodeFsBacktraceFileAttachmentFactory(fs), {
             maximumBreadcrumbs: 2,
         });
 
@@ -261,8 +262,8 @@ describe('FileBreadcrumbsStorage', () => {
     });
 
     it('should return breadcrumbs up to the json size', async () => {
-        const fs = mockStreamFileSystem();
-        const session = new SessionFiles(fs, 'sessionId');
+        const fs = mockNodeStorageAndFs();
+        const session = new SessionFiles(fs, { id: 'sessionId', timestamp: Date.now() });
 
         const breadcrumbs: RawBreadcrumb[] = [
             {
@@ -302,7 +303,7 @@ describe('FileBreadcrumbsStorage', () => {
             },
         ];
 
-        const storage = new FileBreadcrumbsStorage(session, fs, {
+        const storage = new FileBreadcrumbsStorage(session, fs, new NodeFsBacktraceFileAttachmentFactory(fs), {
             maximumBreadcrumbs: 100,
             maximumTotalBreadcrumbsSize: JSON.stringify(expectedMain[0]).length + 10,
         });
@@ -329,8 +330,8 @@ describe('FileBreadcrumbsStorage', () => {
     });
 
     it('should return attachments with a valid name from getAttachments', async () => {
-        const fs = mockStreamFileSystem();
-        const session = new SessionFiles(fs, 'sessionId');
+        const fs = mockNodeStorageAndFs();
+        const session = new SessionFiles(fs, { id: 'sessionId', timestamp: Date.now() });
 
         const breadcrumbs: RawBreadcrumb[] = [
             {
@@ -354,7 +355,7 @@ describe('FileBreadcrumbsStorage', () => {
             },
         ];
 
-        const storage = new FileBreadcrumbsStorage(session, fs, {
+        const storage = new FileBreadcrumbsStorage(session, fs, new NodeFsBacktraceFileAttachmentFactory(fs), {
             maximumBreadcrumbs: 4,
         });
 
@@ -373,8 +374,8 @@ describe('FileBreadcrumbsStorage', () => {
     });
 
     it('should return attachments with a valid name from getAttachmentProviders', async () => {
-        const fs = mockStreamFileSystem();
-        const session = new SessionFiles(fs, 'sessionId');
+        const fs = mockNodeStorageAndFs();
+        const session = new SessionFiles(fs, { id: 'sessionId', timestamp: Date.now() });
 
         const breadcrumbs: RawBreadcrumb[] = [
             {
@@ -398,7 +399,7 @@ describe('FileBreadcrumbsStorage', () => {
             },
         ];
 
-        const storage = new FileBreadcrumbsStorage(session, fs, {
+        const storage = new FileBreadcrumbsStorage(session, fs, new NodeFsBacktraceFileAttachmentFactory(fs), {
             maximumBreadcrumbs: 4,
         });
 
