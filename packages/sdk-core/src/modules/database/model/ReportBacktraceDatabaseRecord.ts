@@ -1,7 +1,9 @@
 import { jsonEscaper } from '../../../common/jsonEscaper.js';
+import { BacktraceAttachment } from '../../../model/attachment/BacktraceAttachment.js';
 import { BacktraceData } from '../../../model/data/BacktraceData.js';
 import { BacktraceReportSubmission } from '../../../model/http/BacktraceReportSubmission.js';
 import { BacktraceReportSubmissionResult, BacktraceSubmitResponse } from '../../../model/http/index.js';
+import { SessionId } from '../../storage/SessionFiles.js';
 import { BacktraceDatabaseRecordSender } from '../BacktraceDatabaseRecordSender.js';
 import { BacktraceDatabaseRecordSerializer } from '../BacktraceDatabaseRecordSerializer.js';
 import { ReportBacktraceDatabaseRecordFactory } from '../ReportBacktraceDatabaseRecordFactory.js';
@@ -55,12 +57,14 @@ export class DefaultReportBacktraceDatabaseRecordFactory implements ReportBacktr
         return new DefaultReportBacktraceDatabaseRecordFactory(new BacktraceDatabaseRecordFactory());
     }
 
-    public create(data: BacktraceData): ReportBacktraceDatabaseRecord {
-        const sessionId = data.attributes?.['application.session'];
-
+    public create(
+        data: BacktraceData,
+        _attachments: BacktraceAttachment[],
+        sessionId?: SessionId,
+    ): ReportBacktraceDatabaseRecord {
         const record: ReportBacktraceDatabaseRecord = {
             ...this._recordFactory.create('report'),
-            sessionId: typeof sessionId === 'string' ? sessionId : undefined,
+            sessionId,
             data,
             locked: false,
         };

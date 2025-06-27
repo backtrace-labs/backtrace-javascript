@@ -134,7 +134,11 @@ export class BacktraceDatabase extends Events<BacktraceDatabaseEvents> implement
             return undefined;
         }
 
-        const reportRecord = this._reportRecordFactory.create(backtraceData, attachments);
+        const reportRecord = this._reportRecordFactory.create(
+            backtraceData,
+            attachments,
+            this._sessionFiles?.sessionId,
+        );
         return this.addRecord(reportRecord);
     }
 
