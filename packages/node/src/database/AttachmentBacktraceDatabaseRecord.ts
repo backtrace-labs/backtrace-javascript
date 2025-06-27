@@ -1,0 +1,97 @@
+import {
+    BacktraceAttachment,
+    BacktraceDatabaseRecord,
+    BacktraceDatabaseRecordFactory,
+    BacktraceReportSubmission,
+    BacktraceReportSubmissionResult,
+    BacktraceSubmitResponse,
+    jsonEscaper,
+} from '@backtrace/sdk-core';
+import { BacktraceDatabaseRecordSender } from '@backtrace/sdk-core/lib/modules/database/BacktraceDatabaseRecordSender.js';
+import { BacktraceDatabaseRecordSerializer } from '@backtrace/sdk-core/lib/modules/database/BacktraceDatabaseRecordSerializer.js';
+import nodeFs from 'fs';
+import { BacktraceFileAttachment } from '../attachment/BacktraceFileAttachment.js';
+import { isFileAttachment } from '../attachment/isFileAttachment.js';
+
+export interface AttachmentBacktraceDatabaseRecord extends BacktraceDatabaseRecord<'attachment'> {
+    readonly rxid: string;
+    readonly attachment: BacktraceAttachment;
+    readonly sessionId: string;
+}
+
+export class AttachmentBacktraceDatabaseRecordSerializer
+    implements BacktraceDatabaseRecordSerializer<AttachmentBacktraceDatabaseRecord>
+{
+    public readonly type = 'attachment';
+
+    constructor(private readonly _fs: typeof nodeFs) {}
+
+    public save(record: AttachmentBacktraceDatabaseRecord): string | undefined {
+        if (!isFileAttachment(record.attachment)) {
+            return undefined;
+        }
+
+        return JSON.stringify(record, jsonEscaper());
+    }
+
+    public load(json: string): AttachmentBacktraceDatabaseRecord | undefined {
+        try {
+            const record = JSON.parse(json) as BacktraceDatabaseRecord;
+            if (record.type !== this.type) {
+                return undefined;
+            }
+
+            const attachmentRecord = record as AttachmentBacktraceDatabaseRecord;
+            if (!isFileAttachment(attachmentRecord.attachment)) {
+                return undefined;
+            }
+
+            const attachment = new BacktraceFileAttachment(
+                attachmentRecord.attachment.filePath,
+                attachmentRecord.attachment.name,
+                this._fs,
+            );
+
+            return {
+                ...attachmentRecord,
+                attachment,
+            };
+        } catch {
+            return undefined;
+        }
+    }
+}
+
+export class AttachmentBacktraceDatabaseRecordSender
+    implements BacktraceDatabaseRecordSender<AttachmentBacktraceDatabaseRecord>
+{
+    public readonly type = 'attachment';
+
+    constructor(private readonly _reportSubmission: BacktraceReportSubmission) {}
+
+    public send(
+        record: AttachmentBacktraceDatabaseRecord,
+        abortSignal?: AbortSignal,
+    ): Promise<BacktraceReportSubmissionResult<BacktraceSubmitResponse>> {
+        return this._reportSubmission.sendAttachment(record.rxid, record.attachment, abortSignal);
+    }
+}
+
+export class AttachmentBacktraceDatabaseRecordFactory {
+    constructor(private readonly _reportFactory: BacktraceDatabaseRecordFactory) {}
+
+    public static default() {
+        return new AttachmentBacktraceDatabaseRecordFactory(new BacktraceDatabaseRecordFactory());
+    }
+
+    public create(rxid: string, sessionId: string, attachment: BacktraceAttachment): AttachmentBacktraceDatabaseRecord {
+        const record: AttachmentBacktraceDatabaseRecord = {
+            ...this._reportFactory.create('attachment'),
+            sessionId,
+            rxid,
+            attachment,
+        };
+
+        return record;
+    }
+}

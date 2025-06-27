@@ -1,28 +1,20 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore The following import fails due to missing extension, but it cannot have one (it imports a .ts file)
-import { MockedFileSystem, mockFileSystem } from '@backtrace/sdk-core/tests/_mocks/fileSystem';
+import { mockBacktraceStorage } from '@backtrace/sdk-core/tests/_mocks/storage';
+import type { MockedBacktraceStorage } from '@backtrace/sdk-core/tests/_mocks/storage.js';
 import { ReadStream, WriteStream } from 'fs';
-import path from 'path';
 import { Readable, Writable } from 'stream';
-import { NodeFileSystem } from '../../src/storage/interfaces/NodeFileSystem.js';
+import { NodeFsBacktraceStorage } from '../../src/storage/NodeFsBacktraceStorage.js';
 
-export function mockStreamFileSystem(files?: Record<string, string>): MockedFileSystem<NodeFileSystem> {
-    const fs = mockFileSystem(files);
+export function mockStreamFileSystem(
+    files?: Record<string, string>,
+): MockedBacktraceStorage<Omit<NodeFsBacktraceStorage, 'fs' | 'initialize'>> {
+    const fs = mockBacktraceStorage(files);
 
     return {
         ...fs,
 
-        rename: jest.fn().mockImplementation((oldPath: string, newPath: string) => {
-            const old = fs.files[path.resolve(oldPath)];
-            delete fs.files[path.resolve(oldPath)];
-            fs.files[path.resolve(newPath)] = old;
-            return Promise.resolve();
-        }),
-        renameSync: jest.fn().mockImplementation((oldPath: string, newPath: string) => {
-            const old = fs.files[path.resolve(oldPath)];
-            delete fs.files[path.resolve(oldPath)];
-            fs.files[path.resolve(newPath)] = old;
-        }),
+        ofPath: jest.fn().mockImplementation(() => mockStreamFileSystem()),
 
         createWriteStream: jest.fn().mockImplementation((p: string) => {
             const writable = new Writable({
@@ -33,11 +25,10 @@ export function mockStreamFileSystem(files?: Record<string, string>): MockedFile
                           ? chunk
                           : String(chunk).toString();
 
-                    const fullPath = path.resolve(p);
-                    if (!fs.files[fullPath]) {
-                        fs.files[fullPath] = str;
+                    if (!fs.files[p]) {
+                        fs.files[p] = str;
                     } else {
-                        fs.files[fullPath] += str;
+                        fs.files[p] += str;
                     }
 
                     callback && callback();
@@ -48,8 +39,7 @@ export function mockStreamFileSystem(files?: Record<string, string>): MockedFile
         }),
 
         createReadStream: jest.fn().mockImplementation((p: string) => {
-            const fullPath = path.resolve(p);
-            const file = fs.files[fullPath];
+            const file = fs.files[p];
             if (!file) {
                 throw new Error(`File ${p} does not exist`);
             }

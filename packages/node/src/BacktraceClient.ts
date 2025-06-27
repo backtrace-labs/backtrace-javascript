@@ -7,7 +7,7 @@ import {
     SessionFiles,
     VariableDebugIdMapProvider,
 } from '@backtrace/sdk-core';
-import path from 'path';
+import nodeFs from 'fs';
 import { BacktraceConfiguration, BacktraceSetupConfiguration } from './BacktraceConfiguration.js';
 import { BacktraceNodeRequestHandler } from './BacktraceNodeRequestHandler.js';
 import { AGENT } from './agentDefinition.js';
@@ -17,39 +17,85 @@ import { FileBreadcrumbsStorage } from './breadcrumbs/FileBreadcrumbsStorage.js'
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder.js';
 import { BacktraceNodeClientSetup } from './builder/BacktraceClientSetup.js';
 import { NodeOptionReader } from './common/NodeOptionReader.js';
+import { toArray } from './common/asyncGenerator.js';
 import { NodeDiagnosticReportConverter } from './converter/NodeDiagnosticReportConverter.js';
-import { FsNodeFileSystem } from './storage/FsNodeFileSystem.js';
-import { NodeFileSystem } from './storage/interfaces/NodeFileSystem.js';
+import {
+    AttachmentBacktraceDatabaseRecordSender,
+    AttachmentBacktraceDatabaseRecordSerializer,
+} from './database/AttachmentBacktraceDatabaseRecord.js';
+import {
+    ReportBacktraceDatabaseRecordWithAttachmentsFactory,
+    ReportBacktraceDatabaseRecordWithAttachmentsSender,
+    ReportBacktraceDatabaseRecordWithAttachmentsSerializer,
+} from './database/ReportBacktraceDatabaseRecordWithAttachments.js';
+import { assertDatabasePath } from './database/utils.js';
+import { BacktraceStorageModule } from './storage/BacktraceStorage.js';
+import { BacktraceStorageModuleFactory } from './storage/BacktraceStorageModuleFactory.js';
+import { NodeFsBacktraceStorageModuleFactory } from './storage/NodeFsBacktraceStorage.js';
 
 export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration> {
     private _listeners: Record<string, NodeJS.UnhandledRejectionListener | NodeJS.UncaughtExceptionListener> = {};
 
-    protected get nodeFileSystem() {
-        return this.fileSystem as NodeFileSystem | undefined;
+    protected readonly storageFactory: BacktraceStorageModuleFactory;
+    protected readonly fs: typeof nodeFs;
+
+    protected get databaseNodeFsStorage() {
+        return this.databaseStorage as BacktraceStorageModule | undefined;
     }
 
     constructor(clientSetup: BacktraceNodeClientSetup) {
-        const fileSystem = clientSetup.fileSystem ?? new FsNodeFileSystem();
+        const storageFactory = clientSetup.storageFactory ?? new NodeFsBacktraceStorageModuleFactory();
+        const fs = clientSetup.fs ?? nodeFs;
+        const storage =
+            clientSetup.database?.storage ??
+            (clientSetup.options.database?.enable
+                ? storageFactory.create({
+                      path: assertDatabasePath(clientSetup.options.database.path),
+                      createDirectory: clientSetup.options.database.createDatabaseDirectory,
+                      fs,
+                  })
+                : undefined);
+
         super({
             sdkOptions: AGENT,
             requestHandler: new BacktraceNodeRequestHandler(clientSetup.options),
             debugIdMapProvider: new VariableDebugIdMapProvider(global as DebugIdContainer),
+            database:
+                clientSetup.options.database?.enable && storage
+                    ? {
+                          storage,
+                          reportRecordFactory: ReportBacktraceDatabaseRecordWithAttachmentsFactory.default(),
+                          ...clientSetup.database,
+                          recordSenders: (submission) => ({
+                              report: new ReportBacktraceDatabaseRecordWithAttachmentsSender(submission),
+                              attachment: new AttachmentBacktraceDatabaseRecordSender(submission),
+                              ...clientSetup.database?.recordSenders?.(submission),
+                          }),
+                          recordSerializers: {
+                              report: new ReportBacktraceDatabaseRecordWithAttachmentsSerializer(storage),
+                              attachment: new AttachmentBacktraceDatabaseRecordSerializer(fs),
+                              ...clientSetup.database?.recordSerializers,
+                          },
+                      }
+                    : undefined,
             ...clientSetup,
-            fileSystem,
             options: {
                 ...clientSetup.options,
                 attachments: clientSetup.options.attachments?.map(transformAttachment),
             },
         });
 
+        this.storageFactory = storageFactory;
+        this.fs = fs;
+
         const breadcrumbsManager = this.modules.get(BreadcrumbsManager);
-        if (breadcrumbsManager && this.sessionFiles) {
-            breadcrumbsManager.setStorage(FileBreadcrumbsStorage.factory(this.sessionFiles, fileSystem));
+        if (breadcrumbsManager && this.sessionFiles && storage) {
+            breadcrumbsManager.setStorage(FileBreadcrumbsStorage.factory(this.sessionFiles, storage));
         }
 
-        if (this.sessionFiles && clientSetup.options.database?.captureNativeCrashes) {
-            this.addModule(FileAttributeManager, FileAttributeManager.create(fileSystem));
-            this.addModule(FileAttachmentsManager, FileAttachmentsManager.create(fileSystem));
+        if (this.sessionFiles && storage && clientSetup.options.database?.captureNativeCrashes) {
+            this.addModule(FileAttributeManager, FileAttributeManager.create(storage));
+            this.addModule(FileAttachmentsManager, FileAttachmentsManager.create(storage));
         }
     }
 
@@ -58,6 +104,7 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
 
         try {
             super.initialize();
+
             this.captureUnhandledErrors(
                 this.options.captureUnhandledErrors,
                 this.options.captureUnhandledPromiseRejections,
@@ -242,18 +289,19 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
     }
 
     private async loadNodeCrashes() {
-        if (!this.database || !this.nodeFileSystem || !this.options.database?.captureNativeCrashes) {
+        if (!this.database || !this.options.database?.captureNativeCrashes) {
             return;
         }
 
         const reportName = process.report?.filename;
-        const databasePath = process.report?.directory
-            ? process.report.directory
-            : (this.options.database?.path ?? process.cwd());
+        const storage = this.storageFactory.create({
+            path: process.report?.directory ? process.report.directory : (this.options.database?.path ?? process.cwd()),
+            fs: this.fs,
+        });
 
         let databaseFiles: string[];
         try {
-            databaseFiles = await this.nodeFileSystem.readDir(databasePath);
+            databaseFiles = await toArray(storage.keys());
         } catch {
             return;
         }
@@ -271,11 +319,14 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
 
         const reports: [path: string, report: BacktraceReport, sessionFiles?: SessionFiles][] = [];
         for (const recordName of recordNames) {
-            const recordPath = path.join(databasePath, recordName);
             try {
-                const recordJson = await this.nodeFileSystem.readFile(recordPath);
+                const recordJson = await storage.get(recordName);
+                if (!recordJson) {
+                    continue;
+                }
+
                 const report = converter.convert(JSON.parse(recordJson));
-                reports.push([recordPath, report]);
+                reports.push([recordName, report]);
             } catch {
                 // Do nothing, skip the report
             }
@@ -292,17 +343,15 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
             currentSession = currentSession?.getPreviousSession();
         }
 
-        for (const [recordPath, report, session] of reports) {
+        for (const [recordName, report, session] of reports) {
             try {
                 if (session) {
-                    report.attachments.push(
-                        ...FileBreadcrumbsStorage.getSessionAttachments(session, this.nodeFileSystem),
-                    );
+                    report.attachments.push(...FileBreadcrumbsStorage.getSessionAttachments(session, storage));
 
-                    const fileAttributes = FileAttributeManager.createFromSession(session, this.nodeFileSystem);
+                    const fileAttributes = FileAttributeManager.createFromSession(session, storage);
                     Object.assign(report.attributes, await fileAttributes.get());
 
-                    const fileAttachments = FileAttachmentsManager.createFromSession(session, this.nodeFileSystem);
+                    const fileAttachments = FileAttachmentsManager.createFromSession(session, storage);
                     report.attachments.push(...(await fileAttachments.get()));
 
                     report.attributes['application.session'] = session.sessionId;
@@ -318,7 +367,7 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
                 // Do nothing, skip the report
             } finally {
                 try {
-                    await this.nodeFileSystem.unlink(recordPath);
+                    await storage.remove(recordName);
                 } catch {
                     // Do nothing
                 }

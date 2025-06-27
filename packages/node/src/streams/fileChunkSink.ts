@@ -1,6 +1,7 @@
+import { BacktraceStorage } from '@backtrace/sdk-core';
 import EventEmitter from 'events';
 import fs from 'fs';
-import { NodeFileSystem } from '../storage/interfaces/NodeFileSystem.js';
+import { BacktraceStreamStorage } from '../storage/BacktraceStorage.js';
 import { ChunkSink } from './chunkifier.js';
 
 interface FileChunkSinkOptions {
@@ -17,7 +18,7 @@ interface FileChunkSinkOptions {
     /**
      * File system implementation to use.
      */
-    readonly fs: NodeFileSystem;
+    readonly storage: BacktraceStorage & BacktraceStreamStorage;
 }
 
 /**
@@ -64,13 +65,13 @@ export class FileChunkSink extends EventEmitter {
 
     private createStream(n: number) {
         const path = this._options.file(n);
-        return (this._options.fs ?? fs).createWriteStream(path);
+        return this._options.storage.createWriteStream(path);
     }
 
     private emitDeleteOrDelete(file: fs.WriteStream) {
         // If 'delete' event is not handled, delete the file
         if (!this.emit('delete', file)) {
-            this._options.fs.unlink(file.path.toString('utf-8')).catch(() => {
+            this._options.storage.remove(file.path.toString('utf-8')).catch(() => {
                 // Do nothing on error
             });
         }

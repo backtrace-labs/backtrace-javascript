@@ -1,8 +1,8 @@
-import { BacktraceFileAttachment as CoreBacktraceFileAttachment } from '@backtrace/sdk-core';
+import { BacktraceSyncStorage, BacktraceFileAttachment as CoreBacktraceFileAttachment } from '@backtrace/sdk-core';
 import fs from 'fs';
 import path from 'path';
 import { Readable } from 'stream';
-import { NodeFileSystem } from '../storage/interfaces/NodeFileSystem.js';
+import { BacktraceStreamStorage } from '../storage/BacktraceStorage.js';
 
 export class BacktraceFileAttachment implements CoreBacktraceFileAttachment<Readable> {
     public readonly name: string;
@@ -10,15 +10,22 @@ export class BacktraceFileAttachment implements CoreBacktraceFileAttachment<Read
     constructor(
         public readonly filePath: string,
         name?: string,
-        private readonly _fileSystem?: NodeFileSystem,
+        private readonly _fs: typeof fs | (BacktraceSyncStorage & BacktraceStreamStorage) = fs,
     ) {
         this.name = name ?? path.basename(this.filePath);
     }
 
     public get(): Readable | undefined {
-        if (!(this._fileSystem ?? fs).existsSync(this.filePath)) {
-            return undefined;
+        if ('hasSync' in this._fs) {
+            if (!this._fs.hasSync(this.filePath)) {
+                return undefined;
+            }
+        } else {
+            if (!this._fs.existsSync(this.filePath)) {
+                return undefined;
+            }
         }
-        return (this._fileSystem ?? fs).createReadStream(this.filePath);
+
+        return this._fs.createReadStream(this.filePath);
     }
 }

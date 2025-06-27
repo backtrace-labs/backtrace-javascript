@@ -2,7 +2,7 @@ import {
     AttachmentManager,
     BacktraceModule,
     BacktraceModuleBindData,
-    FileSystem,
+    BacktraceStorage,
     SessionFiles,
 } from '@backtrace/sdk-core';
 import { BacktraceFileAttachment } from './BacktraceFileAttachment.js';
@@ -15,15 +15,15 @@ export class FileAttachmentsManager implements BacktraceModule {
     private _attachmentsManager?: AttachmentManager;
 
     constructor(
-        private readonly _fileSystem: FileSystem,
+        private readonly _storage: BacktraceStorage,
         private _fileName?: string,
     ) {}
 
-    public static create(fileSystem: FileSystem) {
-        return new FileAttachmentsManager(fileSystem);
+    public static create(storage: BacktraceStorage) {
+        return new FileAttachmentsManager(storage);
     }
 
-    public static createFromSession(sessionFiles: SessionFiles, fileSystem: FileSystem) {
+    public static createFromSession(sessionFiles: SessionFiles, fileSystem: BacktraceStorage) {
         const fileName = sessionFiles.getFileName(ATTACHMENT_FILE_NAME);
         return new FileAttachmentsManager(fileSystem, fileName);
     }
@@ -56,7 +56,10 @@ export class FileAttachmentsManager implements BacktraceModule {
         }
 
         try {
-            const content = await this._fileSystem.readFile(this._fileName);
+            const content = await this._storage.get(this._fileName);
+            if (!content) {
+                return [];
+            }
             const attachments = JSON.parse(content) as SavedAttachment[];
             return attachments.map(([path, name]) => new BacktraceFileAttachment(path, name));
         } catch {
@@ -74,6 +77,6 @@ export class FileAttachmentsManager implements BacktraceModule {
             .filter((f): f is BacktraceFileAttachment => f instanceof BacktraceFileAttachment)
             .map<SavedAttachment>((f) => [f.filePath, f.name]);
 
-        await this._fileSystem.writeFile(this._fileName, JSON.stringify(fileAttachments));
+        await this._storage.set(this._fileName, JSON.stringify(fileAttachments));
     }
 }
