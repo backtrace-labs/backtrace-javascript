@@ -1,6 +1,8 @@
 import {
     BacktraceAttachment,
     BacktraceAttachmentProvider,
+    BacktraceStorage,
+    BacktraceSyncStorage,
     Breadcrumb,
     BreadcrumbLogLevel,
     BreadcrumbsStorage,
@@ -14,8 +16,8 @@ import {
 } from '@backtrace/sdk-core';
 import path from 'path';
 import { Readable, Writable } from 'stream';
-import { BacktraceFileAttachment } from '../attachment/index.js';
-import { NodeFileSystem } from '../storage/interfaces/NodeFileSystem.js';
+import { BacktraceFileAttachmentFactory } from '../attachment/index.js';
+import { BacktraceStreamStorage } from '../storage/BacktraceStorage.js';
 import { chunkifier, ChunkSplitterFactory } from '../streams/chunkifier.js';
 import { combinedChunkSplitter } from '../streams/combinedChunkSplitter.js';
 import { FileChunkSink } from '../streams/fileChunkSink.js';
@@ -36,7 +38,8 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
 
     constructor(
         session: SessionFiles,
-        private readonly _fileSystem: NodeFileSystem,
+        private readonly _storage: BacktraceStorage & BacktraceSyncStorage & BacktraceStreamStorage,
+        private readonly _fileAttachmentFactory: BacktraceFileAttachmentFactory,
         private readonly _limits: BreadcrumbsStorageLimits,
     ) {
         const splitters: ChunkSplitterFactory[] = [];
@@ -52,7 +55,7 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
 
         this._sink = new FileChunkSink({
             maxFiles: 2,
-            fs: this._fileSystem,
+            storage: this._storage,
             file: (n) => session.getFileName(FileBreadcrumbsStorage.getFileName(n)),
         });
 
@@ -71,22 +74,26 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
         });
     }
 
-    public static getSessionAttachments(session: SessionFiles, fileSystem?: NodeFileSystem) {
+    public static getSessionAttachments(session: SessionFiles, fileAttachmentFactory: BacktraceFileAttachmentFactory) {
         const files = session
             .getSessionFiles()
             .filter((f) => path.basename(f).startsWith(FILE_PREFIX))
             .slice(0, 2);
 
-        return files.map((file) => new BacktraceFileAttachment(file, path.basename(file), fileSystem));
+        return files.map((file) => fileAttachmentFactory.create(file, path.basename(file)));
     }
 
-    public static factory(session: SessionFiles, fileSystem: NodeFileSystem): BreadcrumbsStorageFactory {
-        return ({ limits }) => new FileBreadcrumbsStorage(session, fileSystem, limits);
+    public static factory(
+        session: SessionFiles,
+        storage: BacktraceStorage & BacktraceSyncStorage & BacktraceStreamStorage,
+        fileAttachmentFactory: BacktraceFileAttachmentFactory,
+    ): BreadcrumbsStorageFactory {
+        return ({ limits }) => new FileBreadcrumbsStorage(session, storage, fileAttachmentFactory, limits);
     }
 
     public getAttachments(): BacktraceAttachment<Readable>[] {
         const files = [...this._sink.files].map((f) => f.path.toString('utf-8'));
-        return files.map((f) => new BacktraceFileAttachment(f, path.basename(f), this._fileSystem));
+        return files.map((f) => this._fileAttachmentFactory.create(f, path.basename(f)));
     }
 
     public getAttachmentProviders(): BacktraceAttachmentProvider[] {

@@ -1,2 +1,2 @@
-export * from './FsNodeFileSystem.js';
-export * from './interfaces/NodeFileSystem.js';
+export * from './BacktraceStorage.js';
+export * from './NodeFsBacktraceStorage.js';
