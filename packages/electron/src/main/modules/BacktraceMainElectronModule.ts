@@ -5,7 +5,9 @@ import {
     BacktraceStreamStorage,
     FileAttachmentsManager,
     FileBreadcrumbsStorage,
+    NodeFsBacktraceFileAttachmentFactory,
 } from '@backtrace/node';
+import { NodeFs } from '@backtrace/node/lib/storage/nodeFs.js';
 import type { BacktraceDatabase, BacktraceStorage, BacktraceSyncStorage } from '@backtrace/sdk-core';
 import {
     BacktraceData,
@@ -17,6 +19,7 @@ import {
     SummedEvent,
 } from '@backtrace/sdk-core';
 import { app, crashReporter } from 'electron';
+import nodeFs from 'fs';
 import { IpcAttachmentReference } from '../../common/ipc/IpcAttachmentReference.js';
 import { IpcEvents } from '../../common/ipc/IpcEvents.js';
 import { SyncData } from '../../common/models/SyncData.js';
@@ -27,6 +30,8 @@ import { IpcAttachment } from './IpcAttachment.js';
 
 export class BacktraceMainElectronModule implements BacktraceModule<BacktraceConfiguration> {
     private _bindData?: BacktraceModuleBindData<BacktraceConfiguration>;
+
+    constructor(private readonly _fs: NodeFs = nodeFs) {}
 
     public bind(bindData: BacktraceModuleBindData<BacktraceConfiguration>): void {
         const { requestHandler, reportSubmission, client, attributeManager } = bindData;
@@ -180,9 +185,16 @@ export class BacktraceMainElectronModule implements BacktraceModule<BacktraceCon
                     continue;
                 }
 
-                const fileAttachmentsManager = FileAttachmentsManager.createFromSession(session, storage);
+                const fileAttachmentsManager = FileAttachmentsManager.createFromSession(
+                    session,
+                    storage,
+                    new NodeFsBacktraceFileAttachmentFactory(this._fs),
+                );
                 const sessionAttachments = [
-                    ...FileBreadcrumbsStorage.getSessionAttachments(session, storage),
+                    ...FileBreadcrumbsStorage.getSessionAttachments(
+                        session,
+                        new NodeFsBacktraceFileAttachmentFactory(this._fs),
+                    ),
                     ...(await fileAttachmentsManager.get()),
                 ];
 
