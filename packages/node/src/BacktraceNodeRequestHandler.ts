@@ -244,7 +244,7 @@ export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
             }
 
             if (data instanceof Readable) {
-                data = wrapReadableSuppressErrors(data);
+                data = this.wrapReadableSuppressErrors(data);
             }
 
             formData.append(`attachment_${attachment.name}`, data, attachment.name);
@@ -252,25 +252,25 @@ export class BacktraceNodeRequestHandler implements BacktraceRequestHandler {
 
         return formData;
     }
-}
 
-/**
- * When inputStream emits an error, it will be suppressed, and the stream will be closed.
- */
-function wrapReadableSuppressErrors(inputStream: Readable) {
-    const safeStream = new PassThrough();
+    /**
+     * When inputStream emits an error, it will be suppressed, and the stream will be closed.
+     */
+    private wrapReadableSuppressErrors(inputStream: Readable) {
+        const safeStream = new PassThrough();
 
-    inputStream.on('data', (chunk) => {
-        safeStream.write(chunk);
-    });
+        inputStream.on('data', (chunk) => {
+            safeStream.write(chunk);
+        });
 
-    inputStream.on('end', () => {
-        safeStream.end();
-    });
+        inputStream.on('end', () => {
+            safeStream.end();
+        });
 
-    inputStream.on('error', () => {
-        safeStream.end();
-    });
+        inputStream.on('error', () => {
+            safeStream.end();
+        });
 
-    return safeStream;
+        return safeStream;
+    }
 }
