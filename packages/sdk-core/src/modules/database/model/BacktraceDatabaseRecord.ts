@@ -7,7 +7,7 @@ export interface ReportBacktraceDatabaseRecord {
     readonly data: BacktraceData;
     readonly id: string;
     readonly timestamp: number;
-    readonly sessionId?: SessionId;
+    readonly sessionId?: string | SessionId;
     attachments: BacktraceAttachment[];
     /**
      * Determines if the record is in use
@@ -21,7 +21,7 @@ export interface AttachmentBacktraceDatabaseRecord {
     readonly rxid: string;
     readonly timestamp: number;
     readonly attachment: BacktraceAttachment;
-    readonly sessionId: SessionId;
+    readonly sessionId: string | SessionId;
     /**
      * Determines if the record is in use
      */

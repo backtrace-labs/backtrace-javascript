@@ -10,7 +10,7 @@ export class ReportBacktraceDatabaseFileRecord implements ReportBacktraceDatabas
     public readonly data: BacktraceData;
     public readonly id: string;
     public readonly timestamp: number;
-    public readonly sessionId?: SessionId;
+    public readonly sessionId?: SessionId | string;
     public locked: boolean;
 
     private constructor(

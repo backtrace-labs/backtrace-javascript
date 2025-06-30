@@ -251,4 +251,15 @@ export class SessionFiles implements BacktraceModule {
     private sessionIdEquals(a: SessionId, b: SessionId) {
         return a.id === b.id && a.timestamp === b.timestamp;
     }
+
+    public static isValidSessionId(value: unknown): value is SessionId {
+        return (
+            typeof value === 'object' &&
+            !!value &&
+            'id' in value &&
+            'timestamp' in value &&
+            typeof value.id === 'string' &&
+            typeof value.timestamp === 'number'
+        );
+    }
 }

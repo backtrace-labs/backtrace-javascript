@@ -396,7 +396,7 @@ export class BacktraceDatabase extends Events<BacktraceDatabaseEvents> implement
         }
 
         const sessionId = record.sessionId;
-        if (typeof sessionId !== 'string') {
+        if (!SessionFiles.isValidSessionId(sessionId)) {
             this._sessionFiles.lockPreviousSessions(record.id);
             return;
         }

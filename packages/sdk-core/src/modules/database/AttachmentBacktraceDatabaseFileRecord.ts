@@ -10,7 +10,7 @@ export class AttachmentBacktraceDatabaseFileRecord implements AttachmentBacktrac
     public readonly rxid: string;
     public readonly timestamp: number;
     public readonly attachment: BacktraceAttachment<unknown>;
-    public readonly sessionId: SessionId;
+    public readonly sessionId: SessionId | string;
     public locked: boolean;
 
     private constructor(record: AttachmentBacktraceDatabaseRecord) {
