@@ -8,7 +8,7 @@ import { BacktraceDatabaseConfiguration } from '../../model/configuration/Backtr
 import { BacktraceData } from '../../model/data/BacktraceData.js';
 import { BacktraceReportSubmission } from '../../model/http/BacktraceReportSubmission.js';
 import { BacktraceModule, BacktraceModuleBindData } from '../BacktraceModule.js';
-import { SessionFiles } from '../storage/index.js';
+import { SessionFiles, SessionId } from '../storage/index.js';
 import { BacktraceDatabaseContext } from './BacktraceDatabaseContext.js';
 import { BacktraceDatabaseEvents } from './BacktraceDatabaseEvents.js';
 import { BacktraceDatabaseStorageProvider } from './BacktraceDatabaseStorageProvider.js';
@@ -135,8 +135,6 @@ export class BacktraceDatabase extends Events<BacktraceDatabaseEvents> implement
             return undefined;
         }
 
-        const sessionId = backtraceData.attributes?.['application.session'];
-
         const record: ReportBacktraceDatabaseRecord = {
             type: 'report',
             data: backtraceData,
@@ -144,7 +142,7 @@ export class BacktraceDatabase extends Events<BacktraceDatabaseEvents> implement
             id: IdGenerator.uuid(),
             locked: false,
             attachments: attachments,
-            sessionId: typeof sessionId === 'string' ? sessionId : undefined,
+            sessionId: this._sessionFiles?.sessionId,
         };
 
         this.prepareDatabase([record]);
@@ -171,7 +169,7 @@ export class BacktraceDatabase extends Events<BacktraceDatabaseEvents> implement
     public addAttachment(
         rxid: string,
         attachment: BacktraceAttachment,
-        sessionId: string,
+        sessionId: SessionId,
     ): AttachmentBacktraceDatabaseRecord | undefined {
         if (!this._enabled) {
             return undefined;
@@ -398,7 +396,7 @@ export class BacktraceDatabase extends Events<BacktraceDatabaseEvents> implement
         }
 
         const sessionId = record.sessionId;
-        if (typeof sessionId !== 'string') {
+        if (!SessionFiles.isValidSessionId(sessionId)) {
             this._sessionFiles.lockPreviousSessions(record.id);
             return;
         }

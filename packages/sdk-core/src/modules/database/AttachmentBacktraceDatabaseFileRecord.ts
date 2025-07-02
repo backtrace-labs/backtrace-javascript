@@ -1,6 +1,6 @@
 import { BacktraceAttachment } from '../../model/attachment/index.js';
 import { isFileAttachment } from '../attachments/isFileAttachment.js';
-import { FileSystem } from '../storage/index.js';
+import { FileSystem, SessionId } from '../storage/index.js';
 import { BacktraceDatabaseFileRecord } from './BacktraceDatabaseFileRecord.js';
 import { AttachmentBacktraceDatabaseRecord } from './model/BacktraceDatabaseRecord.js';
 
@@ -10,7 +10,7 @@ export class AttachmentBacktraceDatabaseFileRecord implements AttachmentBacktrac
     public readonly rxid: string;
     public readonly timestamp: number;
     public readonly attachment: BacktraceAttachment<unknown>;
-    public readonly sessionId: string;
+    public readonly sessionId: SessionId | string;
     public locked: boolean;
 
     private constructor(record: AttachmentBacktraceDatabaseRecord) {
