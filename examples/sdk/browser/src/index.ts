@@ -14,6 +14,10 @@ const client = BacktraceClient.builder({
             prop2: 123,
         },
     },
+    database: {
+        enable: true,
+        path: '/',
+    },
 })
     .useModule(
         new BacktraceSessionReplayModule({
