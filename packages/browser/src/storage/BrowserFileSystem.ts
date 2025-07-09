@@ -69,16 +69,33 @@ export class BrowserFileSystem implements FileSystem {
     }
 
     public createAttachment(path: string, name?: string): BacktraceAttachment {
-        return new BacktraceStringAttachment(name ?? path, this.readFileSync(path));
+        return new BacktraceStringAttachment(name ?? this.basename(path), this.readFileSync(path));
     }
 
     private resolvePath(key: string) {
-        return PREFIX + key;
+        return PREFIX + this.ensureLeadingSlash(key);
+    }
+
+    private basename(path: string) {
+        const lastSlashIndex = path.lastIndexOf('/');
+        return lastSlashIndex === -1 ? path : path.substring(lastSlashIndex + 1);
+    }
+
+    private ensureLeadingSlash(path: string) {
+        if (path === '/') {
+            return '/';
+        }
+
+        while (path.startsWith('/')) {
+            path = path.substring(1);
+        }
+
+        return '/' + path;
     }
 
     private ensureTrailingSlash(path: string) {
         if (path === '/') {
-            return '//';
+            return path;
         }
 
         while (path.endsWith('/')) {
