@@ -1,3 +1,7 @@
+# Version 0.8.0
+
+-   fix endless loop when loading SessionFiles (#347)
+
 # Version 0.7.0
 
 -   add `BacktraceCoreApi` and HTTP models for submission of reports, metrics and attachments (#335)
