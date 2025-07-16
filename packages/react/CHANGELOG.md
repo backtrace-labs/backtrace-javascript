@@ -1,3 +1,8 @@
+# Version 0.5.0
+
+-   update `@backtrace/browser` to `0.6.0`
+-   add `BrowserFileSystem` based on localStorage (#348)
+
 # Version 0.4.1
 
 -   add `@backtrace/browser` as normal dependency to fix typings
