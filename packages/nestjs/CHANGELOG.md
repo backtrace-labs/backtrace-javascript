@@ -1,3 +1,8 @@
+# Version 0.6.0
+
+-   update `@backtrace/node` to `0.8.0`
+-   suppress stream errors when uploading (#346)
+
 # Version 0.5.1
 
 -   fix `skipIfClientUndefined` not working in `BacktraceModule` (#309)
