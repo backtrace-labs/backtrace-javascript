@@ -1,3 +1,8 @@
+# Version 0.6.0
+
+-   update `@backtrace/sdk-core` to `0.8.0`
+-   add `BrowserFileSystem` based on localStorage (#348)
+
 # Version 0.5.0
 
 -   update `@backtrace/sdk-core` to `0.7.0`
