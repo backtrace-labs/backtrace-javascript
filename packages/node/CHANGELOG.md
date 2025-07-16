@@ -1,3 +1,8 @@
+# Version 0.8.0
+
+-   update `@backtrace/sdk-core` to `0.8.0`
+-   suppress stream errors when uploading (#346)
+
 # Version 0.7.0
 
 -   update `@backtrace/sdk-core` to `0.7.0`
