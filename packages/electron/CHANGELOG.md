@@ -1,3 +1,9 @@
+# Version 0.7.0
+
+-   update `@backtrace/node` to `0.8.0`
+-   fix endless loop when loading SessionFiles (#347)
+-   suppress stream errors when uploading (#346)
+
 # Version 0.6.2
 
 -   update `@backtrace/node` to `0.6.2`
