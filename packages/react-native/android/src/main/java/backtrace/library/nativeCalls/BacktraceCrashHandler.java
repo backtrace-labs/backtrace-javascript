@@ -5,9 +5,4 @@ public class BacktraceCrashHandler {
 
     public static native boolean initializeJavaCrashHandler(String url, String databasePath, String classPath, String[] attributeKeys, String[] attributeValues,
                                                             String[] attachmentPaths, String[] environmentVariables);
-
-    public static native boolean initializeCrashHandler(String url, String databasePath, String handlerPath,
-                                                        String[] attributeKeys, String[] attributeValues,
-                                                        String[] attachmentPaths, boolean enableClientSideUnwinding,
-                                                        Integer unwindingMode);
 }
