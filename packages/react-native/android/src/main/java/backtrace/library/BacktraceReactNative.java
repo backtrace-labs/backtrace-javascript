@@ -59,7 +59,6 @@ public class BacktraceReactNative extends ReactContextBaseJavaModule {
         String[] values = attributes.values().toArray(new String[0]);
 
         BacktraceCrashHandlerWrapper nativeCommunication = new BacktraceCrashHandlerWrapper();
-        // Always use the Java crash handler path
         Boolean result = nativeCommunication.initializeJavaCrashHandler(
                 minidumpSubmissionUrl,
                 databasePath,
