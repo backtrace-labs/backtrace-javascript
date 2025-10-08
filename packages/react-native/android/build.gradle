@@ -5,7 +5,7 @@ buildscript {
   }
 
   dependencies {
-    classpath "com.android.tools.build:gradle:8.5.2"
+    classpath "com.android.tools.build:gradle:8.7.2"
   }
 }
 
@@ -53,11 +53,6 @@ android {
     minSdkVersion getExtOrIntegerDefault("minSdkVersion")
     targetSdkVersion getExtOrIntegerDefault("targetSdkVersion")
     buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
-
-
-    ndk {
-      abiFilters 'x86', 'x86_64', 'armeabi-v7a', 'arm64-v8a'
-    }
   }
   buildTypes {
     release {
