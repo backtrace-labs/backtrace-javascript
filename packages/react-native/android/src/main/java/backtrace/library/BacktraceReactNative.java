@@ -28,7 +28,6 @@ public class BacktraceReactNative extends ReactContextBaseJavaModule {
     }
 
     public static final String NAME = "BacktraceReactNative";
-    private final String _crashpadHandlerName = "/libcrashpad_handler.so";
 
     public native void Crash();
 
@@ -54,43 +53,22 @@ public class BacktraceReactNative extends ReactContextBaseJavaModule {
             Log.d(this.NAME, "Unsupported ABI detected.");
             return false;
         }
-        String handlerPath = context.getApplicationInfo().nativeLibraryDir + _crashpadHandlerName;
  
         HashMap<String, Object> attributes = readableAttributes.toHashMap();
-
         String[] keys = attributes.keySet().toArray(new String[0]);
         String[] values = attributes.values().toArray(new String[0]);
+
         BacktraceCrashHandlerWrapper nativeCommunication = new BacktraceCrashHandlerWrapper();
+        Boolean result = nativeCommunication.initializeJavaCrashHandler(
+                minidumpSubmissionUrl,
+                databasePath,
+                crashHandlerConfiguration.getClassPath(),
+                keys,
+                values,
+                attachmentPaths.toArrayList().toArray(new String[0]),
+                crashHandlerConfiguration.getCrashHandlerEnvironmentVariables(this.context.getApplicationInfo()).toArray(new String[0])
+                );        
 
-        // Depending on the AGP version, the crash handler executable might be extracted from APK or not.
-        // Due to that, we need to have an option, to capture and send exceptions without the crash handler executable.
-        // We can achieve the same via Java Crash Handler - the Java class that will be executed via app_process. 
-
-        // The reason why we don't want to enable java crash handler by default is because of the proguard 
-        // support and testing potential limitations of the new java crash handler.
-        Boolean result =
-                new File(handlerPath).exists()
-                    ?   nativeCommunication.initializeCrashHandler(
-                            minidumpSubmissionUrl,
-                            databasePath,
-                            handlerPath,
-                            keys,
-                            values,
-                            attachmentPaths.toArrayList().toArray(new String[0]),
-                            false,
-                            null
-                        )
-                    :   nativeCommunication.initializeJavaCrashHandler(
-                            minidumpSubmissionUrl,
-                            databasePath,
-                            crashHandlerConfiguration.getClassPath(),
-                            keys,
-                            values,
-                            attachmentPaths.toArrayList().toArray(new String[0]),
-                            crashHandlerConfiguration
-                                .getCrashHandlerEnvironmentVariables(this.context.getApplicationInfo())
-                                .toArray(new String[0])
-                    );
         return result;
     }
 
