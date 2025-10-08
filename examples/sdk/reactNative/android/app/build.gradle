@@ -1,4 +1,5 @@
 apply plugin: "com.android.application"
+apply plugin: "kotlin-android"
 apply plugin: "com.facebook.react"
 apply from: "$rootDir/../node_modules/@backtrace/react-native/android/upload-sourcemaps.gradle"
 
@@ -72,6 +73,9 @@ def enableProguardInReleaseBuilds = false
  * this variant is about 6MiB larger per architecture than default.
  */
 def jscFlavor = 'org.webkit:android-jsc:+'
+def isNewArchitectureEnabled() {
+    return project.hasProperty("newArchEnabled") && project.newArchEnabled == "true"
+}
 
 android {
     ndkVersion rootProject.ext.ndkVersion
@@ -85,6 +89,15 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+    }
+
+    if (isNewArchitectureEnabled()) {
+    externalNativeBuild {
+        cmake {
+            path "src/main/jni/CMakeLists.txt"
+            version "3.22.1"
+        }
+    }
     }
     signingConfigs {
         debug {
