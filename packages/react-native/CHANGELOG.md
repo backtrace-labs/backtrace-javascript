@@ -1,3 +1,8 @@
+# Version 0.2.1
+
+-   update the React-Native SDK Android native libraries with 16KB support (#355)
+-   set JavaCrashHandler as Android default (#355)
+
 # Version 0.2.0
 
 -   update `@backtrace/sdk-core` to `0.6.0`
