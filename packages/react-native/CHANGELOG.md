@@ -1,7 +1,7 @@
 # Version 0.2.1
 
 -   update the React-Native SDK Android native libraries with 16KB support (#355)
--   set JavaCrashHandler as Android default (#355)
+-   improve crash handling on Android for better compatibility and stability on the latest Android versions (#355)
 
 # Version 0.2.0
 
