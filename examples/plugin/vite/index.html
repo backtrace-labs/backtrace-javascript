@@ -1,50 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Backtrace Vite Plugin Example</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/src/index.css" />
-  </head>
-  <body>
-    <div class="card center">
-      <a href="https://www.saucelabs.com/">
-        <img
-          src="https://info.saucelabs.com/rs/468-XBT-687/images/SL%20logo%20horizontal%20color%2Bdark%402x.png"
-          width="250"
-          alt="Sauce Labs"
-          class="center"
-        />
-      </a>
-      <br />
-      <h1 class="card-header">Backtrace Vite Plugin Example</h1>
-      <p style="text-align: center">Please pick one of the available options:</p>
-      <br />
-      <div class="action-container center">
-        <div class="action-button center">
-          <a class="text" id="send-error">Send an error</a>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Backtrace Vite Plugin Example</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&display=swap" rel="stylesheet" />
+        <link rel="stylesheet" href="/src/index.css" />
+    </head>
+    <body>
+        <div class="card center">
+            <a href="https://www.saucelabs.com/">
+                <img
+                    src="https://info.saucelabs.com/rs/468-XBT-687/images/SL%20logo%20horizontal%20color%2Bdark%402x.png"
+                    width="250"
+                    alt="Sauce Labs"
+                    class="center"
+                />
+            </a>
+            <br />
+            <h1 class="card-header">Backtrace Vite Plugin Example</h1>
+            <p style="text-align: center">Please pick one of the available options:</p>
+            <br />
+            <div class="action-container center">
+                <div class="action-button center">
+                    <a class="text" id="send-error">Send an error</a>
+                </div>
+                <div class="action-button center">
+                    <a class="text" id="send-message">Send a message</a>
+                </div>
+                <div class="action-button center">
+                    <a class="text" id="send-unhandled-exception">Send an unhandled exception</a>
+                </div>
+                <div class="action-button center">
+                    <a class="text" id="send-promise-rejection">Send a promise rejection</a>
+                </div>
+            </div>
+            <div class="summary-information">
+                <p>If you have any questions or concerns, please contact us at</p>
+                <a href="mailto:help@saucelabs.com">help@saucelabs.com</a>
+                <br /><br />
+                <p>Happy testing,</p>
+                <p>The Sauce Labs Team</p>
+            </div>
         </div>
-        <div class="action-button center">
-          <a class="text" id="send-message">Send a message</a>
-        </div>
-        <div class="action-button center">
-          <a class="text" id="send-unhandled-exception">Send an unhandled exception</a>
-        </div>
-        <div class="action-button center">
-          <a class="text" id="send-promise-rejection">Send a promise rejection</a>
-        </div>
-      </div>
-      <div class="summary-information">
-        <p>If you have any questions or concerns, please contact us at</p>
-        <a href="mailto:help@saucelabs.com">help@saucelabs.com</a>
-        <br /><br />
-        <p>Happy testing,</p>
-        <p>The Sauce Labs Team</p>
-      </div>
-    </div>
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+        <script type="module" src="/src/main.ts"></script>
+    </body>
 </html>
