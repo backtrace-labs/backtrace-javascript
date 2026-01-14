@@ -1,11 +1,11 @@
 {
     "name": "@backtrace/rollup-plugin",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "Backtrace Rollup plugin",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
     "engines": {
-        "node": ">=14"
+        "node": ">=16"
     },
     "scripts": {
         "build": "tsc -b ./tsconfig.build.json",
@@ -52,6 +52,6 @@
         "@backtrace/sourcemap-tools": "^0.2.4"
     },
     "peerDependencies": {
-        "rollup": "^3.26.3"
+        "rollup": "^3.26.3 || ^4.0.0"
     }
 }

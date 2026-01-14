@@ -1,0 +1,19 @@
+{
+  "name": "vite-plugin-example",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@backtrace/browser": "^0.6.0"
+  },
+  "devDependencies": {
+    "@backtrace/vite-plugin": "file:../../../tools/vite-plugin",
+    "typescript": "^5.0.4",
+    "vite": "7.1.5"
+  }
+}

@@ -1,11 +1,11 @@
 {
     "name": "@backtrace/vite-plugin",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "Backtrace Vite plugin",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
     "engines": {
-        "node": ">=14"
+        "node": ">=18"
     },
     "scripts": {
         "build": "tsc -b ./tsconfig.build.json",
@@ -42,10 +42,10 @@
         "/lib"
     ],
     "peerDependencies": {
-        "vite": "^4.4.9"
+        "vite": "^4.4.9 || ^5.0.0 || ^6.0.0 || ^7.0.0"
     },
     "dependencies": {
-        "@backtrace/rollup-plugin": "^0.1.0"
+        "@backtrace/rollup-plugin": "^0.2.0"
     },
     "devDependencies": {
         "typescript": "^5.0.4"
