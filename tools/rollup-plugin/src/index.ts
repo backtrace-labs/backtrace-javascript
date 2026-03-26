@@ -22,6 +22,8 @@ export function BacktracePlugin(options?: BacktracePluginOptions): Plugin {
                 afterWrite: (asset) => debug(`[${asset.asset.name}] wrote source and sourcemap to file`),
                 assetFinished: (asset) => info(`[${asset.asset.name}] asset processed successfully`),
                 assetError: (asset) => this.warn(`[${asset.asset.name}] ${asset.error}`),
+                assetSkipped: (asset) => debug(`[${asset.asset.name}] skipped: ${asset.error}`),
+                processingSummary: (message) => info(message),
 
                 beforeUpload: (paths) => info(`uploading ${paths.length} sourcemaps...`),
                 afterUpload: (result) => info(`sourcemaps uploaded to Backtrace: ${result.rxid}`),

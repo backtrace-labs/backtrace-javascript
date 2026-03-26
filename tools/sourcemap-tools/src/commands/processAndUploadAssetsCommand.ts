@@ -7,7 +7,7 @@ import { inspect, mapAsync, pass } from '../helpers/common';
 import { flow, pipe } from '../helpers/flow';
 import { Asset, AssetWithContent } from '../models/Asset';
 import { ProcessAssetError, ProcessAssetResult } from '../models/ProcessAssetResult';
-import { R, Result } from '../models/Result';
+import { R, Result, ResultOk } from '../models/Result';
 import { createArchive, finalizeArchive } from './archiveSourceMaps';
 import { loadSourceMap, stripSourcesContent } from './loadSourceMaps';
 import { processAsset } from './processAsset';
@@ -22,6 +22,15 @@ interface BacktracePluginUploadOptions {
     readonly includeSources: boolean;
 }
 
+/**
+ * Determines what happens when an individual asset fails to process.
+ *
+ * - `'exit'` — abort the entire process and upload (default).
+ * - `'skip'` — silently skip the failed asset; successfully processed assets are still uploaded.
+ * - `'warn'` — log the failure via the `assetError` callback and continue uploading the rest.
+ */
+export type AssetErrorBehavior = 'exit' | 'skip' | 'warn';
+
 export interface BacktracePluginOptions {
     /**
      * Upload URL for uploading sourcemap files.
@@ -35,6 +44,20 @@ export interface BacktracePluginOptions {
      * Additional upload options.
      */
     readonly uploadOptions?: SymbolUploaderOptions & BacktracePluginUploadOptions;
+
+    /**
+     * What to do when an individual asset fails to process (e.g. a missing sourcemap file).
+     *
+     * - `'exit'` — abort the entire process and upload. No sourcemaps will be uploaded. (default)
+     * - `'skip'` — silently skip the failed asset. Successfully processed assets are still uploaded.
+     * - `'warn'` — report the failure via the `assetError` callback and continue uploading the rest.
+     *
+     * In large projects where some JS files may not have corresponding sourcemaps, set this to `'skip'` or `'warn'`
+     * to ensure the remaining sourcemaps are still uploaded.
+     *
+     * @default 'exit'
+     */
+    readonly assetErrorBehavior?: AssetErrorBehavior;
 }
 
 interface ProcessResult {
@@ -55,6 +78,8 @@ export interface ProcessAndUploadAssetsCommandOptions {
     beforeUpload?(assets: AssetWithContent<RawSourceMap>[]): unknown;
     afterUpload?(result: UploadResult): unknown;
     assetError?(error: ProcessAssetError): unknown;
+    assetSkipped?(error: ProcessAssetError): unknown;
+    processingSummary?(message: string): unknown;
     uploadError?(error: string): unknown;
 }
 
@@ -84,28 +109,73 @@ export function processAndUploadAssetsCommand(
                     R.map(writeAsset),
                     R.map(options?.afterWrite ? inspect(options.afterWrite) : pass),
                     R.map(options?.assetFinished ? inspect(options.assetFinished) : pass),
-                    R.mapErr(options?.assetError ? inspect(options.assetError) : pass),
                 ),
             ),
         );
 
-        const assetsResult = R.flatMap(assetResults);
-        if (assetsResult.isErr()) {
+        const assetErrorBehavior = pluginOptions.assetErrorBehavior ?? 'exit';
+        const failedAssets = assetResults.filter((r) => r.isErr());
+        const successfulAssets = assetResults.filter((r): r is ResultOk<ProcessAssetResult> => r.isOk());
+
+        if (failedAssets.length > 0) {
+            const summary =
+                `${failedAssets.length} of ${assets.length} asset(s) failed to process, ` +
+                `${successfulAssets.length} succeeded`;
+
+            switch (assetErrorBehavior) {
+                case 'exit':
+                    // Report each failure via assetError, then throw to fail the build.
+                    for (const failed of failedAssets) {
+                        if (failed.isErr()) {
+                            options?.assetError && options.assetError(failed.data);
+                        }
+                    }
+                    options?.afterAll && options.afterAll({ assetResults });
+                    throw new Error(
+                        `Backtrace: ${summary}. ` +
+                            `Upload aborted. Set assetErrorBehavior to 'skip' or 'warn' to upload the remaining assets.`,
+                    );
+
+                case 'warn':
+                    // Report each failure via assetError and continue uploading the rest.
+                    for (const failed of failedAssets) {
+                        if (failed.isErr()) {
+                            options?.assetError && options.assetError(failed.data);
+                        }
+                    }
+                    options?.processingSummary &&
+                        options.processingSummary(
+                            `${summary}. Continuing with ${successfulAssets.length} successfully processed asset(s).`,
+                        );
+                    break;
+
+                case 'skip':
+                    // Silently skip — report via assetSkipped (not assetError).
+                    for (const failed of failedAssets) {
+                        if (failed.isErr()) {
+                            options?.assetSkipped && options.assetSkipped(failed.data);
+                        }
+                    }
+                    options?.processingSummary &&
+                        options.processingSummary(
+                            `${summary}. Skipped failed asset(s), continuing with ${successfulAssets.length} successfully processed asset(s).`,
+                        );
+                    break;
+            }
+        }
+
+        if (!uploadCommand || successfulAssets.length === 0) {
             const result: ProcessResult = { assetResults };
             options?.afterAll && options.afterAll(result);
             return result;
         }
 
-        if (!uploadCommand) {
-            const result: ProcessResult = { assetResults };
-            options?.afterAll && options.afterAll(result);
-            return result;
-        }
-
-        const sourceMapAssets = assetsResult.data.map<Asset>((r) => ({
-            name: path.basename(r.result.sourceMapPath),
-            path: r.result.sourceMapPath,
-        }));
+        const sourceMapAssets = successfulAssets
+            .map((r) => r.data)
+            .map<Asset>((r) => ({
+                name: path.basename(r.result.sourceMapPath),
+                path: r.result.sourceMapPath,
+            }));
 
         const includeSources = pluginOptions?.uploadOptions?.includeSources;
 
