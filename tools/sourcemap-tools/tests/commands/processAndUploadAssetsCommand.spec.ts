@@ -88,21 +88,35 @@ describe('processAndUploadAssetsCommand', () => {
             expect(afterAll).toHaveBeenCalled();
         });
 
-        it('should throw by default (no assetErrorBehavior set) when an asset fails', async () => {
+        it('should default to warn behavior (no throw, upload rest) when assetErrorBehavior is not set', async () => {
             createSourceFile('good.js');
             createSourceMapFile('good.js');
             createSourceFile('bad.js'); // No sourcemap
 
+            const assetError = jest.fn();
+            const assetSkipped = jest.fn();
+            const assetFinished = jest.fn();
+
             const options: BacktracePluginOptions = {
                 uploadUrl: 'https://submit.backtrace.io/test/token/sourcemap',
-                // assetErrorBehavior not set — defaults to 'exit'
+                // assetErrorBehavior not set — defaults to 'warn'
             };
 
-            const command = processAndUploadAssetsCommand(options);
+            const callbacks: ProcessAndUploadAssetsCommandOptions = {
+                assetError,
+                assetSkipped,
+                assetFinished,
+            };
 
-            await expect(command([createAsset('good.js'), createAsset('bad.js')])).rejects.toThrow(
-                /asset\(s\) failed to process.*Upload aborted/,
-            );
+            const command = processAndUploadAssetsCommand(options, callbacks);
+            const result = await command([createAsset('good.js'), createAsset('bad.js')]);
+
+            // Default is warn: assetError called, not assetSkipped
+            expect(assetError).toHaveBeenCalledTimes(1);
+            expect(assetSkipped).not.toHaveBeenCalled();
+            expect(assetFinished).toHaveBeenCalledTimes(1);
+            // Upload should still happen
+            expect(result.uploadResult).toBeDefined();
         });
 
         it('should use assetSkipped (not assetError) and upload successes when behavior is skip', async () => {

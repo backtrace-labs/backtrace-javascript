@@ -48,14 +48,11 @@ export interface BacktracePluginOptions {
     /**
      * What to do when an individual asset fails to process (e.g. a missing sourcemap file).
      *
-     * - `'exit'` — abort the entire process and upload. No sourcemaps will be uploaded. (default)
+     * - `'warn'` — report the failure via the `assetError` callback and continue uploading the rest. (default)
      * - `'skip'` — silently skip the failed asset. Successfully processed assets are still uploaded.
-     * - `'warn'` — report the failure via the `assetError` callback and continue uploading the rest.
+     * - `'exit'` — abort the entire process and upload. No sourcemaps will be uploaded.
      *
-     * In large projects where some JS files may not have corresponding sourcemaps, set this to `'skip'` or `'warn'`
-     * to ensure the remaining sourcemaps are still uploaded.
-     *
-     * @default 'exit'
+     * @default 'warn'
      */
     readonly assetErrorBehavior?: AssetErrorBehavior;
 }
@@ -113,7 +110,7 @@ export function processAndUploadAssetsCommand(
             ),
         );
 
-        const assetErrorBehavior = pluginOptions.assetErrorBehavior ?? 'exit';
+        const assetErrorBehavior = pluginOptions.assetErrorBehavior ?? 'warn';
         const failedAssets = assetResults.filter((r) => r.isErr());
         const successfulAssets = assetResults.filter((r): r is ResultOk<ProcessAssetResult> => r.isOk());
 
