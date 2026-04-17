@@ -91,8 +91,8 @@
         "typescript": "^5.0.2"
     },
     "dependencies": {
-        "@backtrace/react-native": "^0.2.0",
-        "@backtrace/sdk-core": "^0.8.0",
+        "@backtrace/react-native": "^0.2.1",
+        "@backtrace/sdk-core": "^0.8.1",
         "web-streams-polyfill": "^4.0.0"
     }
 }
