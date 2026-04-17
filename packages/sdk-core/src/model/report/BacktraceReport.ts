@@ -106,10 +106,7 @@ export class BacktraceReport {
         }
     }
 
-    private unwrapErrorToAnnotation(
-        error: Error,
-        seen = new WeakSet<object>(),
-    ): Record<string, string | undefined | object> {
+    private unwrapErrorToAnnotation(error: Error, seen = new WeakSet<object>()): Record<string, unknown> {
         seen.add(error);
         return {
             ...error,
@@ -121,11 +118,7 @@ export class BacktraceReport {
                     ? seen.has(error.cause)
                         ? `[Circular] ${error.cause.message}`
                         : this.unwrapErrorToAnnotation(error.cause, seen)
-                    : error.cause
-                      ? typeof error.cause === 'object'
-                          ? { ...error.cause }
-                          : String(error.cause)
-                      : undefined,
+                    : error.cause,
         };
     }
 
