@@ -102,7 +102,7 @@ describe('Backtrace report generation tests', () => {
     });
 
     describe('error annotation cause unwrapping', () => {
-        type ErrorWithCause = Error & { cause?: ErrorWithCause };
+        type ErrorWithCause = Error & { cause?: unknown };
 
         /**
          * This function is a helper to fix a potential type issue between different
