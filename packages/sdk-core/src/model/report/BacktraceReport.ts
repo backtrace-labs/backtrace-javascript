@@ -120,7 +120,7 @@ export class BacktraceReport {
                 error.cause instanceof Error && !seen.has(error.cause)
                     ? this.unwrapErrorToAnnotation(error.cause, seen)
                     : error.cause != null
-                      ? { value: String(error.cause) }
+                      ? { ...error.cause }
                       : undefined,
         };
     }

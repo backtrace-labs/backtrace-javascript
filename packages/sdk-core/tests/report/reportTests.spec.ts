@@ -102,7 +102,7 @@ describe('Backtrace report generation tests', () => {
     });
 
     describe('error annotation cause unwrapping', () => {
-        type ErrorWithCause = Error & { cause?: unknown };
+        type ErrorWithCause = Error & { cause?: ErrorWithCause };
 
         /**
          * This function is a helper to fix a potential type issue between different
@@ -115,13 +115,14 @@ describe('Backtrace report generation tests', () => {
         }
 
         it('should include cause in error annotation', () => {
-            const cause = new Error('root cause');
+            const causeMessage = 'cause';
+            const cause = new Error(causeMessage);
             const error = createError('top level', cause);
             const report = new BacktraceReport(error);
 
-            const annotation = report.annotations['error'] as Record<string, unknown>;
-            const causeAnnotation = annotation.cause as Record<string, unknown>;
-            expect(causeAnnotation.message).toBe('root cause');
+            const annotation = report.annotations['error'] as ErrorWithCause;
+            const causeAnnotation = annotation.cause as ErrorWithCause;
+            expect(causeAnnotation.message).toBe(causeMessage);
             expect(causeAnnotation.name).toBe('Error');
         });
 
@@ -131,25 +132,25 @@ describe('Backtrace report generation tests', () => {
             const top = createError('top', mid);
             const report = new BacktraceReport(top);
 
-            const annotation = report.annotations['error'] as Record<string, unknown>;
-            const midAnnotation = annotation.cause as Record<string, unknown>;
-            const rootAnnotation = midAnnotation.cause as Record<string, unknown>;
-            expect(midAnnotation.message).toBe('mid');
-            expect(rootAnnotation.message).toBe('root');
+            const annotation = report.annotations['error'] as ErrorWithCause;
+            const midAnnotation = annotation.cause as ErrorWithCause;
+            const rootAnnotation = midAnnotation.cause as ErrorWithCause;
+            expect(midAnnotation.message).toBe(mid.message);
+            expect(rootAnnotation.message).toBe(root.message);
             expect(rootAnnotation.cause).toBeUndefined();
         });
 
         it('should handle circular cause without stack overflow', () => {
-            const a = createError('error a');
-            const b = createError('error b');
-            a.cause = b;
-            b.cause = a;
+            const topLevelError = createError('error a');
+            const cause = createError('error b');
+            topLevelError.cause = cause;
+            cause.cause = topLevelError;
 
-            const report = new BacktraceReport(a);
+            const report = new BacktraceReport(topLevelError);
 
-            const annotation = report.annotations['error'] as Record<string, unknown>;
-            const causeAnnotation = annotation.cause as Record<string, unknown>;
-            expect(causeAnnotation.message).toBe('error b');
+            const annotation = report.annotations['error'] as ErrorWithCause;
+            const causeAnnotation = annotation.cause as ErrorWithCause;
+            expect(causeAnnotation.message).toBe(cause.message);
             // circular reference back to `a` — not recursed, falls through to string fallback
             expect(causeAnnotation.cause).toEqual({ value: 'Error: error a' });
         });
@@ -160,7 +161,7 @@ describe('Backtrace report generation tests', () => {
 
             const report = new BacktraceReport(error);
 
-            const annotation = report.annotations['error'] as Record<string, unknown>;
+            const annotation = report.annotations['error'] as ErrorWithCause;
             // cause points to itself — not recursed, falls through to string fallback
             expect(annotation.cause).toEqual({ value: 'Error: self' });
         });
@@ -169,7 +170,7 @@ describe('Backtrace report generation tests', () => {
             const error = createError('fail', 'timeout');
             const report = new BacktraceReport(error);
 
-            const annotation = report.annotations['error'] as Record<string, unknown>;
+            const annotation = report.annotations['error'] as ErrorWithCause;
             expect(annotation.cause).toEqual({ value: 'timeout' });
         });
 
@@ -177,15 +178,15 @@ describe('Backtrace report generation tests', () => {
             const error = createError('fail', { code: 'ENOENT' });
             const report = new BacktraceReport(error);
 
-            const annotation = report.annotations['error'] as Record<string, unknown>;
-            expect(annotation.cause).toEqual({ value: '[object Object]' });
+            const annotation = report.annotations['error'] as ErrorWithCause;
+            expect(annotation.cause).toEqual({ code: 'ENOENT' });
         });
 
         it('should set cause to undefined when no cause exists', () => {
             const error = new Error('no cause');
             const report = new BacktraceReport(error);
 
-            const annotation = report.annotations['error'] as Record<string, unknown>;
+            const annotation = report.annotations['error'] as ErrorWithCause;
             expect(annotation.cause).toBeUndefined();
         });
     });
