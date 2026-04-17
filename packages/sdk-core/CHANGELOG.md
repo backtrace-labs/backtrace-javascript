@@ -1,3 +1,7 @@
+# Version 0.8.1
+
+-   Added support for error.cause serialization (#360)
+
 # Version 0.8.0
 
 -   fix endless loop when loading SessionFiles (#347)
