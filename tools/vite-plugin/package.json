@@ -45,7 +45,7 @@
         "vite": "^4.4.9 || ^5.0.0 || ^6.0.0 || ^7.0.0"
     },
     "dependencies": {
-        "@backtrace/rollup-plugin": "^0.2.0"
+        "@backtrace/rollup-plugin": "^0.2.1"
     },
     "devDependencies": {
         "typescript": "^5.0.4"
