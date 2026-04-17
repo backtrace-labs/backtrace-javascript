@@ -1,3 +1,7 @@
+# Version 0.6.1
+
+-   Added support for error.cause serialization (#360)
+
 # Version 0.6.0
 
 -   update `@backtrace/sdk-core` to `0.8.0`
