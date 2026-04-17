@@ -71,12 +71,7 @@ export class BacktraceReport {
         let errorType: BacktraceErrorType = 'Exception';
         if (data instanceof Error) {
             this.message = this.generateErrorMessage(data.message);
-            this.annotations['error'] = {
-                ...data,
-                message: this.message,
-                name: data.name,
-                stack: data.stack,
-            };
+            this.annotations['error'] = this.unwrapErrorToAnnotation(data);
             this.classifiers = [data.name];
             this.stackTrace['main'] = {
                 stack: data.stack ?? '',
@@ -109,6 +104,25 @@ export class BacktraceReport {
         if (options?.classifiers) {
             this.classifiers.unshift(...options.classifiers);
         }
+    }
+
+    private unwrapErrorToAnnotation(
+        error: Error,
+        seen = new WeakSet<object>(),
+    ): Record<string, string | undefined | object> {
+        seen.add(error);
+        return {
+            ...error,
+            message: this.generateErrorMessage(error.message),
+            name: error.name,
+            stack: error.stack,
+            cause:
+                error.cause instanceof Error && !seen.has(error.cause)
+                    ? this.unwrapErrorToAnnotation(error.cause, seen)
+                    : error.cause != null
+                      ? { value: String(error.cause) }
+                      : undefined,
+        };
     }
 
     private generateErrorMessage(data: unknown) {
