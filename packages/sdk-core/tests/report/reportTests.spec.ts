@@ -151,8 +151,8 @@ describe('Backtrace report generation tests', () => {
             const annotation = report.annotations['error'] as ErrorWithCause;
             const causeAnnotation = annotation.cause as ErrorWithCause;
             expect(causeAnnotation.message).toBe(cause.message);
-            // circular reference back to `a` — not recursed, falls through to string fallback
-            expect(causeAnnotation.cause).toEqual({ value: 'Error: error a' });
+            // circular reference back to `topLevelError` — not recursed, produces circular placeholder
+            expect(causeAnnotation.cause).toEqual(`[Circular] ${topLevelError.message}`);
         });
 
         it('should handle self-referencing cause without stack overflow', () => {
@@ -162,8 +162,8 @@ describe('Backtrace report generation tests', () => {
             const report = new BacktraceReport(error);
 
             const annotation = report.annotations['error'] as ErrorWithCause;
-            // cause points to itself — not recursed, falls through to string fallback
-            expect(annotation.cause).toEqual({ value: 'Error: self' });
+            // cause points to itself — not recursed, produces circular placeholder
+            expect(annotation.cause).toEqual(`[Circular] ${error.message}`);
         });
 
         it('should handle non-Error cause as string value', () => {
@@ -171,7 +171,7 @@ describe('Backtrace report generation tests', () => {
             const report = new BacktraceReport(error);
 
             const annotation = report.annotations['error'] as ErrorWithCause;
-            expect(annotation.cause).toEqual({ value: 'timeout' });
+            expect(annotation.cause).toEqual('timeout');
         });
 
         it('should handle non-Error object cause as string value', () => {

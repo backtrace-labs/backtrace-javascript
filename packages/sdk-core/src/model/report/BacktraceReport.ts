@@ -117,10 +117,14 @@ export class BacktraceReport {
             name: error.name,
             stack: error.stack,
             cause:
-                error.cause instanceof Error && !seen.has(error.cause)
-                    ? this.unwrapErrorToAnnotation(error.cause, seen)
-                    : error.cause != null
-                      ? { ...error.cause }
+                error.cause instanceof Error
+                    ? seen.has(error.cause)
+                        ? `[Circular] ${error.cause.message}`
+                        : this.unwrapErrorToAnnotation(error.cause, seen)
+                    : error.cause
+                      ? typeof error.cause === 'object'
+                          ? { ...error.cause }
+                          : String(error.cause)
                       : undefined,
         };
     }
