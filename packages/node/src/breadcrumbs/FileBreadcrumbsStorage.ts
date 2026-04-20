@@ -145,11 +145,12 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
                         result[key] = value;
                         break;
                     }
+                    const unknownValue = value as unknown;
                     try {
-                        if (value instanceof Date) {
-                            result[key] = value.toISOString();
-                        } else if (value instanceof URL) {
-                            result[key] = value.toString();
+                        if (unknownValue instanceof Date) {
+                            result[key] = unknownValue.toISOString();
+                        } else if (unknownValue instanceof URL) {
+                            result[key] = unknownValue.toString();
                         }
                     } catch {
                         // revoked proxy or broken object — drop it
