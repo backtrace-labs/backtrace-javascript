@@ -1,3 +1,4 @@
+import { AttributeType } from '../../src/index.js';
 import { BreadcrumbsManager } from '../../src/modules/breadcrumbs/BreadcrumbsManager.js';
 import { BreadcrumbLogLevel, BreadcrumbType } from '../../src/modules/breadcrumbs/index.js';
 import { InMemoryBreadcrumbsStorage } from '../../src/modules/breadcrumbs/storage/InMemoryBreadcrumbsStorage.js';
@@ -122,5 +123,23 @@ describe('Breadcrumbs creation tests', () => {
         const [breadcrumb] = JSON.parse(storage.get() as string);
 
         expect(breadcrumb.attributes).toMatchObject(attributes);
+    });
+    it('Should handle breadcrumb with not serializable attributes', () => {
+        const message = 'test';
+        const level = BreadcrumbLogLevel.Warning;
+        const attributes = {
+            url: new URL('https://example.com/path?q=1'),
+            date: new Date(),
+            objectCreatePrototype: Object.create(Date.prototype),
+            destroyedUrl: { ...new URL('https://example.com/path?q=1'), date: new Date() },
+        } as unknown as Record<string, AttributeType>;
+        const storage = new InMemoryBreadcrumbsStorage({ maximumBreadcrumbs: 100 });
+        const breadcrumbsManager = new BreadcrumbsManager(undefined, { storage: () => storage });
+        breadcrumbsManager.initialize();
+        breadcrumbsManager.log(message, level, attributes);
+        const [breadcrumb] = JSON.parse(storage.get() as string);
+
+        expect(breadcrumb.attributes['url']).toBeDefined();
+        expect(breadcrumb.attributes['date']).toBeDefined();
     });
 });

@@ -2,29 +2,43 @@ type DeepPartial<T extends object> = Partial<{ [K in keyof T]: T[K] extends obje
 
 const REMOVED_PLACEHOLDER = '<removed>';
 
-export type Limited<T extends object> = DeepPartial<T> | typeof REMOVED_PLACEHOLDER;
+export type Limited<T> = (T extends object ? DeepPartial<T> : T) | typeof REMOVED_PLACEHOLDER;
 
-export function limitObjectDepth<T extends object>(obj: T, depth: number): Limited<T> {
+export function limitObjectDepth<T>(val: T, depth: number): Limited<T> {
+    if (typeof val !== 'object' || !val) {
+        return val as Limited<T>;
+    }
+
     if (!(depth < Infinity)) {
-        return obj;
+        return val as Limited<T>;
     }
 
     if (depth < 0) {
         return REMOVED_PLACEHOLDER;
     }
 
-    const limitIfObject = (value: unknown) =>
-        typeof value === 'object' && value ? limitObjectDepth(value, depth - 1) : value;
+    try {
+        if ('toJSON' in val && typeof val.toJSON === 'function') {
+            return limitObjectDepth(val.toJSON(), depth);
+        }
+    } catch (err) {
+        if (err instanceof TypeError) {
+            return REMOVED_PLACEHOLDER;
+        }
+        // broken toJSON — fall through to iterate own properties
+    }
 
-    const result: DeepPartial<T> = {};
-    for (const key in obj) {
-        const value = obj[key];
+    const limitChild = (value: unknown) => limitObjectDepth(value, depth - 1);
+
+    const result: DeepPartial<T & object> = {};
+    for (const key in val) {
+        const value = val[key];
         if (Array.isArray(value)) {
-            result[key] = value.map(limitIfObject) as never;
+            result[key] = value.map(limitChild) as never;
         } else {
-            result[key] = limitIfObject(value) as never;
+            result[key] = limitChild(value) as never;
         }
     }
 
-    return result;
+    return result as Limited<T>;
 }
