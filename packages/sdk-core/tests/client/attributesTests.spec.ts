@@ -1,6 +1,11 @@
 import { BacktraceTestClient } from '../mocks/BacktraceTestClient.js';
+import { testHttpClient } from '../mocks/testHttpClient.js';
 
 describe('Attributes tests', () => {
+    beforeEach(() => {
+        jest.mocked(testHttpClient.postError).mockClear();
+    });
+
     describe('Client attribute add', () => {
         it('Should add an attribute to the client cache', () => {
             const client = BacktraceTestClient.buildFakeClient();
@@ -78,6 +83,95 @@ describe('Attributes tests', () => {
             expect(fakeClient.attributes[providerAttributeKey]).toEqual(providerAttributeValue);
             await fakeClient.send('foo');
             expect(scopedAttributeGetFunction).toHaveBeenCalledTimes(2);
+        });
+    });
+
+    describe('Non-serializable attributes', () => {
+        it('Should convert Date attribute to ISO string', async () => {
+            const client = BacktraceTestClient.buildFakeClient();
+            const date = new Date();
+
+            await client.send(new Error('test'), { date });
+
+            const [[, json]] = (client.requestHandler.postError as jest.Mock).mock.calls;
+            const body = JSON.parse(json);
+            expect(body.attributes.date).toEqual(date.toISOString());
+        });
+
+        it('Should convert URL attribute to string', async () => {
+            const client = BacktraceTestClient.buildFakeClient();
+            const url = new URL('https://example.com/path?q=1');
+
+            await client.send(new Error('test'), { url });
+
+            const [[, json]] = (client.requestHandler.postError as jest.Mock).mock.calls;
+            const body = JSON.parse(json);
+            expect(body.attributes.url).toEqual(url.toString());
+        });
+
+        it('Should handle URL instance as annotation', async () => {
+            const client = BacktraceTestClient.buildFakeClient();
+
+            await client.send(new Error('test'), {
+                destroyedClassInstance: { ...new URL('https://example.com') },
+            });
+
+            const [[, json]] = (client.requestHandler.postError as jest.Mock).mock.calls;
+            expect(() => JSON.parse(json)).not.toThrow();
+        });
+
+        it('Should handle Object.create with URL prototype', async () => {
+            const client = BacktraceTestClient.buildFakeClient();
+
+            await client.send(new Error('test'), {
+                createdObjectViaPrototype: Object.create(URL.prototype),
+            });
+
+            const [[, json]] = (client.requestHandler.postError as jest.Mock).mock.calls;
+            expect(() => JSON.parse(json)).not.toThrow();
+        });
+
+        it('Should return submission error for object with broken toJSON', async () => {
+            const client = BacktraceTestClient.buildFakeClient();
+
+            const result = await client.send(new Error('test'), {
+                brokenToJSON: {
+                    toJSON() {
+                        throw new Error('broken toJSON');
+                    },
+                },
+            });
+
+            expect(result.status).toEqual('Unknown');
+        });
+
+        it('Should handle spread class instance with private fields', async () => {
+            class Strict {
+                #data = 'secret';
+                toJSON() {
+                    return this.#data;
+                }
+            }
+            const client = BacktraceTestClient.buildFakeClient();
+
+            await client.send(new Error('test'), {
+                strict: { ...new Strict() },
+            });
+
+            const [[, json]] = (client.requestHandler.postError as jest.Mock).mock.calls;
+            expect(() => JSON.parse(json)).not.toThrow();
+        });
+
+        it('Should handle revoked proxy nested in object', async () => {
+            const { proxy, revoke } = Proxy.revocable({ toJSON: () => 'ok' }, {});
+            revoke();
+            const client = BacktraceTestClient.buildFakeClient();
+
+            const result = await client.send(new Error('test'), {
+                revokedProxy: { data: proxy },
+            });
+
+            expect(result.status).toEqual('Unknown');
         });
     });
 });

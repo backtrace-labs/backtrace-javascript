@@ -15,6 +15,19 @@ export class ReportDataBuilder {
             }
             switch (typeof attribute) {
                 case 'object': {
+                    try {
+                        // try to convert known objects into attributes
+                        if (attribute instanceof Date) {
+                            result.attributes[attributeKey] = attribute.toISOString();
+                            break;
+                        } else if (attribute instanceof URL) {
+                            result.attributes[attributeKey] = attribute.toString();
+                            break;
+                        }
+                    } catch {
+                        // invalid attribute type - not able to serialize, skip it.
+                        break;
+                    }
                     result.annotations[attributeKey] = attribute;
                     break;
                 }
