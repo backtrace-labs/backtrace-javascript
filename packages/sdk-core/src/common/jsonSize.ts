@@ -30,7 +30,7 @@ function arraySize(array: unknown[], replacer?: JsonReplacer): number {
                 elementsLength += nullSize;
                 break;
             default:
-                elementsLength += _jsonSize(array, i.toString(), element, replacer);
+                elementsLength += _safeJsonSize(array, i.toString(), element, replacer);
         }
     }
 
@@ -45,7 +45,7 @@ const objectSize = (obj: object, replacer?: JsonReplacer): number => {
     let entriesLength = 0;
 
     for (const [k, v] of entries) {
-        const valueSize = _jsonSize(obj, k, v, replacer);
+        const valueSize = _safeJsonSize(obj, k, v, replacer);
         if (valueSize === 0) {
             continue;
         }
@@ -85,9 +85,25 @@ function keySize(key: unknown): number {
     }
 }
 
+function _safeJsonSize(parent: unknown, key: string, value: unknown, replacer?: JsonReplacer): number {
+    try {
+        return _jsonSize(parent, key, value, replacer);
+    } catch (err) {
+        return 0;
+    }
+}
+
 function _jsonSize(parent: unknown, key: string, value: unknown, replacer?: JsonReplacer): number {
-    if (value && typeof value === 'object' && 'toJSON' in value && typeof value.toJSON === 'function') {
-        value = value.toJSON() as object;
+    try {
+        if (value && typeof value === 'object' && 'toJSON' in value && typeof value.toJSON === 'function') {
+            value = value.toJSON() as object;
+        }
+    } catch (err) {
+        // handle proxy errors that will break other parts of the flow
+        if (err instanceof TypeError) {
+            return 0;
+        }
+        // continue in case of the error in the toJSON method or unsupported toJSON method
     }
 
     value = replacer ? replacer.call(parent, key, value) : value;
@@ -133,5 +149,5 @@ function _jsonSize(parent: unknown, key: string, value: unknown, replacer?: Json
  * @returns Final string length.
  */
 export function jsonSize(value: unknown, replacer?: JsonReplacer): number {
-    return _jsonSize(undefined, '', value, replacer);
+    return _safeJsonSize(undefined, '', value, replacer);
 }

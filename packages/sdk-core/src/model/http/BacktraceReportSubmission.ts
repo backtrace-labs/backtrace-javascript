@@ -30,9 +30,20 @@ export class RequestBacktraceReportSubmission implements BacktraceReportSubmissi
         this._submissionUrl = SubmissionUrlInformation.toJsonReportSubmissionUrl(options.url, options.token);
     }
 
-    public send(data: BacktraceSubmitBody, attachments: BacktraceAttachment[], abortSignal?: AbortSignal) {
-        const json = JSON.stringify(data, jsonEscaper());
-        return this._requestHandler.postError(this._submissionUrl, json, attachments, abortSignal);
+    public send(
+        data: BacktraceSubmitBody,
+        attachments: BacktraceAttachment[],
+        abortSignal?: AbortSignal,
+    ): Promise<BacktraceReportSubmissionResult<BacktraceSubmissionResponse>> {
+        try {
+            const json = JSON.stringify(data, jsonEscaper());
+            return this._requestHandler.postError(this._submissionUrl, json, attachments, abortSignal);
+        } catch (error) {
+            // catch error generated during toJSON execution or unsupported objects to not cause the app crash.
+            return Promise.resolve(
+                BacktraceReportSubmissionResult.OnUnknownError(error instanceof Error ? error.message : String(error)),
+            );
+        }
     }
 
     public async sendAttachment(

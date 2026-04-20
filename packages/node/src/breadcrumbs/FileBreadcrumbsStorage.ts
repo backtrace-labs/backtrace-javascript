@@ -1,4 +1,5 @@
 import {
+    AttributeType,
     BacktraceAttachment,
     BacktraceAttachmentProvider,
     Breadcrumb,
@@ -107,9 +108,8 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
             timestamp: TimeHelper.now(),
             type: BreadcrumbType[rawBreadcrumb.type].toLowerCase(),
             level: BreadcrumbLogLevel[rawBreadcrumb.level].toLowerCase(),
-            attributes: rawBreadcrumb.attributes,
+            attributes: this.prepareAttributes(rawBreadcrumb.attributes),
         };
-
         const breadcrumbJson = JSON.stringify(breadcrumb, jsonEscaper());
         const jsonLength = breadcrumbJson.length + 1; // newline
         const sizeLimit = this._limits.maximumTotalBreadcrumbsSize;
@@ -121,6 +121,46 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
 
         this._dest.write(breadcrumbJson + '\n');
         return id;
+    }
+
+    private prepareAttributes(attributes?: Record<string, AttributeType>): Record<string, AttributeType> | undefined {
+        const result: Record<string, AttributeType> = {};
+        if (!attributes) {
+            return undefined;
+        }
+        for (const key in attributes) {
+            const value = attributes[key];
+            switch (typeof value) {
+                case 'number':
+                case 'boolean':
+                case 'string':
+                case 'undefined':
+                    result[key] = value;
+                    break;
+                case 'bigint':
+                    result[key] = (value as bigint).toString();
+                    break;
+                case 'object': {
+                    if (!value) {
+                        result[key] = value;
+                        break;
+                    }
+                    const unknownValue = value as unknown;
+                    try {
+                        if (unknownValue instanceof Date) {
+                            result[key] = unknownValue.toISOString();
+                        } else if (unknownValue instanceof URL) {
+                            result[key] = unknownValue.toString();
+                        }
+                    } catch {
+                        // revoked proxy or broken object — drop it
+                    }
+                    // drop all other objects
+                    break;
+                }
+            }
+        }
+        return result;
     }
 
     private static getFileName(index: number) {

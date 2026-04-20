@@ -500,6 +500,63 @@ describe('jsonSize', () => {
         });
     });
 
+    describe('toJSON objects edge cases', () => {
+        it('should not throw when object has toJSON copied from prototype', () => {
+            const value = { ...new URL('https://example.com') };
+            const size = jsonSize(value);
+            expect(size).toEqual(2);
+        });
+
+        it('should not throw when object is created via Object.create and prototype API', () => {
+            const value = Object.create(URL.prototype);
+
+            expect(() => jsonSize(value)).not.toThrow();
+        });
+
+        it('should not throw when nested object has toJSON copied from the prototype', () => {
+            const url = new URL('https://example.com/path?q=1');
+            const value = {
+                level1: {
+                    level2: {
+                        data: { ...url },
+                    },
+                },
+            };
+
+            expect(() => jsonSize(value)).not.toThrow();
+        });
+
+        it('should not throw when toJSON throws an error', () => {
+            const value = {
+                toJSON() {
+                    throw new Error('broken toJSON');
+                },
+            };
+
+            expect(() => jsonSize(value)).not.toThrow();
+        });
+
+        it('should not throw when class with private field has toJSON spread onto plain object', () => {
+            class Strict {
+                #data = 'secret';
+                toJSON() {
+                    return this.#data;
+                }
+            }
+            const value = { ...new Strict() };
+
+            expect(() => jsonSize(value)).not.toThrow();
+        });
+
+        it('should not throw when revoked Proxy is nested in object', () => {
+            const { proxy, revoke } = Proxy.revocable({ toJSON: () => 'ok' }, {});
+            revoke();
+            const value = { data: proxy };
+
+            expect(() => jsonSize(value)).not.toThrow();
+        });
+    });
+
     describe('circular references', () => {
         it('should compute object size for self-referencing object', () => {
             const value = {
