@@ -92,7 +92,7 @@
     },
     "dependencies": {
         "@backtrace/react-native": "^0.2.1",
-        "@backtrace/sdk-core": "^0.8.1",
+        "@backtrace/sdk-core": "^0.8.2",
         "web-streams-polyfill": "^4.0.0"
     }
 }
