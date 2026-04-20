@@ -1,6 +1,6 @@
 {
     "name": "@backtrace/sdk-core",
-    "version": "0.8.1",
+    "version": "0.8.2",
     "description": "Backtrace-JavaScript SDK core library",
     "main": "lib/bundle.cjs",
     "module": "lib/bundle.mjs",
