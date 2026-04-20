@@ -185,6 +185,13 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
             rawBreadcrumb.message = rawBreadcrumb.message.substring(0, this._limits.maximumBreadcrumbMessageLength);
         }
 
+        if (rawBreadcrumb.attributes) {
+            rawBreadcrumb = {
+                ...rawBreadcrumb,
+                attributes: this.prepareAttributes(rawBreadcrumb.attributes),
+            };
+        }
+
         let limitedBreadcrumb: RawBreadcrumb | LimitedRawBreadcrumb;
         if (this._limits.maximumAttributesDepth !== undefined && rawBreadcrumb.attributes) {
             limitedBreadcrumb = {
@@ -205,6 +212,43 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
 
         const id = this._storage.add(limitedBreadcrumb);
         return id !== undefined;
+    }
+
+    private prepareAttributes(attributes: Record<string, AttributeType>): Record<string, AttributeType> {
+        const result: Record<string, AttributeType> = {};
+        for (const key in attributes) {
+            const value = attributes[key];
+            switch (typeof value) {
+                case 'number':
+                case 'boolean':
+                case 'string':
+                case 'undefined':
+                    result[key] = value;
+                    break;
+                case 'bigint':
+                    result[key] = (value as bigint).toString();
+                    break;
+                case 'object': {
+                    if (!value) {
+                        result[key] = value;
+                        break;
+                    }
+                    const unknownValue = value as unknown;
+                    try {
+                        if (unknownValue instanceof Date) {
+                            result[key] = unknownValue.toISOString();
+                        } else if (unknownValue instanceof URL) {
+                            result[key] = unknownValue.toString();
+                        }
+                    } catch {
+                        // revoked proxy or broken object — drop it
+                    }
+                    // drop all other objects
+                    break;
+                }
+            }
+        }
+        return result;
     }
 
     /**
