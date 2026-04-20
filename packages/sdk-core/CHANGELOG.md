@@ -1,3 +1,7 @@
+# Version 0.8.2
+
+-   Fixed crash when report attributes contain non-serializable objects such as revoked Proxies, broken toJSON, or spread class instances (#365)
+
 # Version 0.8.1
 
 -   Added support for error.cause serialization (#360)
