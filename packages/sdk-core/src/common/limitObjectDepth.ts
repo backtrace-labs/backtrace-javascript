@@ -32,11 +32,16 @@ export function limitObjectDepth<T>(val: T, depth: number): Limited<T> {
 
     const result: DeepPartial<T & object> = {};
     for (const key in val) {
-        const value = val[key];
-        if (Array.isArray(value)) {
-            result[key] = value.map(limitChild) as never;
-        } else {
-            result[key] = limitChild(value) as never;
+        try {
+            const value = val[key];
+            if (Array.isArray(value)) {
+                result[key] = value.map(limitChild) as never;
+            } else {
+                result[key] = limitChild(value) as never;
+            }
+        } catch {
+            // catch revoked proxies and other broken objects
+            result[key] = REMOVED_PLACEHOLDER as never;
         }
     }
 
