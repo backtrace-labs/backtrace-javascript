@@ -19,7 +19,7 @@ export function limitObjectDepth<T>(val: T, depth: number): Limited<T> {
 
     try {
         if ('toJSON' in val && typeof val.toJSON === 'function') {
-            return limitObjectDepth(val.toJSON(), depth);
+            return limitObjectDepth(val.toJSON(), depth - 1);
         }
     } catch (err) {
         if (err instanceof TypeError) {
