@@ -99,7 +99,7 @@ export class BacktraceClient<O extends BacktraceConfiguration = BacktraceConfigu
                         new BacktraceReport(
                             errorEvent.reason,
                             {
-                                'error.type': 'Unhandled exception',
+                                'error.type': 'Unhandled rejection',
                             },
                             [],
                             {

@@ -1,1 +1,8 @@
-export type BacktraceErrorType = 'Message' | 'Exception' | 'Unhandled exception' | 'OOMException' | 'Hang' | 'Crash';
+export type BacktraceErrorType =
+    | 'Message'
+    | 'Exception'
+    | 'Unhandled exception'
+    | 'Unhandled rejection'
+    | 'OOMException'
+    | 'Hang'
+    | 'Crash';
