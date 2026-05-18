@@ -128,10 +128,19 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
             if (origin === 'uncaughtException' && !captureUnhandledExceptions) {
                 return;
             }
+            const isRejection = origin === 'unhandledRejection';
             await this.send(
-                new BacktraceReport(error, { 'error.type': 'Unhandled exception', errorOrigin: origin }, [], {
-                    classifiers: origin === 'unhandledRejection' ? ['UnhandledPromiseRejection'] : undefined,
-                }),
+                new BacktraceReport(
+                    error,
+                    {
+                        'error.type': isRejection ? 'Unhandled rejection' : 'Unhandled exception',
+                        errorOrigin: origin,
+                    },
+                    [],
+                    {
+                        classifiers: isRejection ? ['UnhandledPromiseRejection'] : undefined,
+                    },
+                ),
             );
         };
 
@@ -170,7 +179,7 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
                 new BacktraceReport(
                     isErrorTypeReason ? reason : (reason?.toString() ?? 'Unhandled rejection'),
                     {
-                        'error.type': 'Unhandled exception',
+                        'error.type': 'Unhandled rejection',
                     },
                     [],
                     {

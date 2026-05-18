@@ -46,7 +46,7 @@ export class UnhandledExceptionHandler implements ExceptionHandler {
                         new BacktraceReport(
                             rejection,
                             {
-                                'error.type': 'Unhandled exception',
+                                'error.type': 'Unhandled rejection',
                                 unhandledPromiseRejectionId: id,
                             },
                             [],
@@ -71,7 +71,7 @@ export class UnhandledExceptionHandler implements ExceptionHandler {
                             new BacktraceReport(
                                 rejection,
                                 {
-                                    'error.type': 'Unhandled exception',
+                                    'error.type': 'Unhandled rejection',
                                     unhandledPromiseRejectionId: id,
                                 },
                                 [],
