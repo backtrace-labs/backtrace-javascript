@@ -1,5 +1,6 @@
 import { BacktraceRequestHandler } from '@backtrace/sdk-core';
 import { BacktraceClient } from '../../src/index.js';
+import { NodeOptionReader } from '../../src/common/NodeOptionReader.js';
 
 describe('Unhandled error/rejection labeling', () => {
     let postedJson: string | undefined;
@@ -12,7 +13,9 @@ describe('Unhandled error/rejection labeling', () => {
         breadcrumbs: { enable: false },
     };
 
-    beforeEach(() => {
+    const flushMicrotasks = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+    const buildClient = () => {
         postedJson = undefined;
         requestHandler = {
             post: jest.fn().mockResolvedValue(Promise.resolve()),
@@ -21,40 +24,78 @@ describe('Unhandled error/rejection labeling', () => {
                 return Promise.resolve();
             }),
         };
-        client = BacktraceClient.builder(defaultClientOptions).useRequestHandler(requestHandler).build();
+        return BacktraceClient.builder(defaultClientOptions).useRequestHandler(requestHandler).build();
+    };
+
+    describe('uncaughtExceptionMonitor callback', () => {
+        beforeEach(() => {
+            client = buildClient();
+        });
+
+        afterEach(() => {
+            client.dispose();
+        });
+
+        it("Should tag origin 'unhandledRejection' as 'Unhandled rejection'", async () => {
+            (process as unknown as { emit: (e: string, ...args: unknown[]) => void }).emit(
+                'uncaughtExceptionMonitor',
+                new Error('rejected'),
+                'unhandledRejection',
+            );
+            await flushMicrotasks();
+
+            expect(requestHandler.postError).toHaveBeenCalled();
+            const payload = JSON.parse(postedJson as string);
+            expect(payload.attributes['error.type']).toBe('Unhandled rejection');
+            expect(payload.classifiers).toContain('UnhandledPromiseRejection');
+        });
+
+        it("Should tag origin 'uncaughtException' as 'Unhandled exception'", async () => {
+            (process as unknown as { emit: (e: string, ...args: unknown[]) => void }).emit(
+                'uncaughtExceptionMonitor',
+                new Error('boom'),
+                'uncaughtException',
+            );
+            await flushMicrotasks();
+
+            expect(requestHandler.postError).toHaveBeenCalled();
+            const payload = JSON.parse(postedJson as string);
+            expect(payload.attributes['error.type']).toBe('Unhandled exception');
+            expect(payload.classifiers ?? []).not.toContain('UnhandledPromiseRejection');
+        });
     });
 
-    afterEach(() => {
-        client.dispose();
-    });
+    describe("dedicated 'unhandledRejection' listener", () => {
+        let nodeOptionReaderSpy: jest.SpyInstance;
 
-    const flushMicrotasks = () => new Promise((resolve) => setTimeout(resolve, 0));
+        beforeEach(() => {
+            // Force the dedicated unhandledRejection listener to be registered.
+            // See BacktraceClient.captureUnhandledErrors: the listener is skipped
+            // when running on Node 15+ with default --unhandled-rejections behavior.
+            nodeOptionReaderSpy = jest.spyOn(NodeOptionReader, 'read').mockImplementation((flag: string) => {
+                if (flag === 'unhandled-rejections') return 'warn';
+                return undefined;
+            });
+            client = buildClient();
+        });
 
-    it("Should tag uncaughtExceptionMonitor with origin 'unhandledRejection' as 'Unhandled rejection'", async () => {
-        (process as unknown as { emit: (e: string, ...args: unknown[]) => void }).emit(
-            'uncaughtExceptionMonitor',
-            new Error('rejected'),
-            'unhandledRejection',
-        );
-        await flushMicrotasks();
+        afterEach(() => {
+            client.dispose();
+            nodeOptionReaderSpy.mockRestore();
+        });
 
-        expect(requestHandler.postError).toHaveBeenCalled();
-        const payload = JSON.parse(postedJson as string);
-        expect(payload.attributes['error.type']).toBe('Unhandled rejection');
-        expect(payload.classifiers).toContain('UnhandledPromiseRejection');
-    });
+        it("Should tag emitted 'unhandledRejection' events as 'Unhandled rejection'", async () => {
+            (process as unknown as { emit: (e: string, ...args: unknown[]) => void }).emit(
+                'unhandledRejection',
+                new Error('rejected'),
+                Promise.resolve(),
+            );
+            await flushMicrotasks();
 
-    it("Should tag uncaughtExceptionMonitor with origin 'uncaughtException' as 'Unhandled exception'", async () => {
-        (process as unknown as { emit: (e: string, ...args: unknown[]) => void }).emit(
-            'uncaughtExceptionMonitor',
-            new Error('boom'),
-            'uncaughtException',
-        );
-        await flushMicrotasks();
-
-        expect(requestHandler.postError).toHaveBeenCalled();
-        const payload = JSON.parse(postedJson as string);
-        expect(payload.attributes['error.type']).toBe('Unhandled exception');
-        expect(payload.classifiers ?? []).not.toContain('UnhandledPromiseRejection');
+            expect(requestHandler.postError).toHaveBeenCalled();
+            const payload = JSON.parse(postedJson as string);
+            expect(payload.attributes['error.type']).toBe('Unhandled rejection');
+            expect(payload.classifiers).toContain('UnhandledPromiseRejection');
+        });
     });
 });
