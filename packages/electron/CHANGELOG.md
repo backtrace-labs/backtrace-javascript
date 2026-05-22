@@ -1,3 +1,7 @@
+# Version 0.7.1
+
+-   update `@backtrace/node` to `0.8.3`
+
 # Version 0.7.0
 
 -   update `@backtrace/node` to `0.8.0`

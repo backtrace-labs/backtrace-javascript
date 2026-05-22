@@ -1,3 +1,7 @@
+# Version 0.6.2
+
+-   Fix: label unhandled promise rejections as 'Unhandled rejection' (#370)
+
 # Version 0.6.1
 
 -   Added support for error.cause serialization (#360)

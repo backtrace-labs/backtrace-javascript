@@ -1,3 +1,7 @@
+# Version 0.2.2
+
+-   Fix: label unhandled promise rejections as 'Unhandled rejection' (#370)
+
 # Version 0.2.1
 
 -   update the React-Native SDK Android native libraries with 16KB support (#355)

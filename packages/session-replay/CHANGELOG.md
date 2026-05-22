@@ -1,3 +1,7 @@
+# Version 0.2.1
+
+-   update `@backtrace/sdk-core` to `0.8.3`
+
 # Version 0.2.0
 
 -   fix ES and CJS issues (#279)

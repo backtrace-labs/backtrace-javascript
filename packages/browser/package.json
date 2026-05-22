@@ -1,6 +1,6 @@
 {
     "name": "@backtrace/browser",
-    "version": "0.6.1",
+    "version": "0.6.2",
     "description": "Backtrace-JavaScript web browser integration",
     "main": "lib/bundle.cjs",
     "module": "lib/bundle.mjs",
@@ -39,7 +39,7 @@
         "/lib"
     ],
     "dependencies": {
-        "@backtrace/sdk-core": "0.8.2"
+        "@backtrace/sdk-core": "0.8.3"
     },
     "devDependencies": {
         "@reduxjs/toolkit": "^1.9.5",

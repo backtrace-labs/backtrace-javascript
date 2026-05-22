@@ -1,6 +1,6 @@
 {
     "name": "@backtrace/react",
-    "version": "0.5.0",
+    "version": "0.5.1",
     "description": "Backtrace-Javascript React integration",
     "main": "lib/bundle.cjs",
     "module": "lib/bundle.mjs",
@@ -40,7 +40,7 @@
         "/lib"
     ],
     "dependencies": {
-        "@backtrace/browser": "0.6.1"
+        "@backtrace/browser": "0.6.2"
     },
     "devDependencies": {
         "@rollup/plugin-commonjs": "^26.0.1",
