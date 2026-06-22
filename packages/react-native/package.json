@@ -47,7 +47,10 @@
         "ios",
         "android"
     ],
-    "repository": "https://github.com/konraddysput/backtrace-react-native",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/backtrace-labs/backtrace-javascript.git"
+    },
     "author": "Backtrace <team@backtrace.io>",
     "license": "MIT",
     "bugs": {
