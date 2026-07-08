@@ -87,7 +87,7 @@
         "random-seed": "^0.3.0",
         "react": "18.2.0",
         "react-native": "^0.72.4",
-        "react-native-builder-bob": "^0.43.0",
+        "react-native-builder-bob": "^0.39.1",
         "ts-jest": "^29.1.1",
         "ts-loader": "^9.5.0",
         "typescript": "^5.0.2"
