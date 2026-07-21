@@ -269,7 +269,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -e\nproject_directory=\"$(pwd)/..\"\n# enable source map support\nexport SOURCEMAP_FILE=\"$project_directory/main.jsbundle.map\"\n\nWITH_ENVIRONMENT=\"$REACT_NATIVE_PATH/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"$REACT_NATIVE_PATH/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"$WITH_ENVIRONMENT $REACT_NATIVE_XCODE\"\n\n# upload source maps to Backtrace\nsource_map_upload=\"$project_directory/node_modules/@backtrace/react-native/scripts/ios-sourcemap-upload.sh\"\nbacktrace_js_config=\"$project_directory/.backtracejsrc\"\n\n/bin/sh -c \"$source_map_upload $SOURCEMAP_FILE $TARGET_BUILD_DIR/.backtrace-sourcemap-id $backtrace_js_config $project_directory\" \n\n";
+			shellScript = "set -e\nproject_directory=\"$(pwd)/..\"\n# enable source map support\nexport SOURCEMAP_FILE=\"$project_directory/main.jsbundle.map\"\n\nWITH_ENVIRONMENT=\"$REACT_NATIVE_PATH/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"$REACT_NATIVE_PATH/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"$WITH_ENVIRONMENT $REACT_NATIVE_XCODE\"\n\n# upload source maps to Backtrace only when a bundle/source map was produced\n# for this build (Debug/Simulator builds skip bundling, so there is nothing to\n# upload; require the debug id file too so we never run against a stale map).\ndebug_id_file_path=\"$TARGET_BUILD_DIR/.backtrace-sourcemap-id\"\nbacktrace_js_config=\"$project_directory/.backtracejsrc\"\nif ! [ -f \"$SOURCEMAP_FILE\" ] || ! [ -f \"$debug_id_file_path\" ]; then\n  echo \"Skipping Backtrace source map upload: no bundle/source map produced for this build.\"\nelif grep -q \"<your-backtrace-url>\" \"$backtrace_js_config\" 2>/dev/null; then\n  echo \"Skipping Backtrace source map upload: set your upload URL in .backtracejsrc to enable it.\"\nelse\n  source_map_upload=\"$project_directory/node_modules/@backtrace/react-native/scripts/ios-sourcemap-upload.sh\"\n\n  /bin/sh -c \"$source_map_upload $SOURCEMAP_FILE $debug_id_file_path $backtrace_js_config $project_directory\"\nfi\n\n";
 		};
 		00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -424,7 +424,7 @@
 					"$(inherited)",
 				);
 				INFOPLIST_FILE = reactNativeTests/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -448,7 +448,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				COPY_PHASE_STRIP = NO;
 				INFOPLIST_FILE = reactNativeTests/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -568,7 +568,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD = "";
 				LDPLUSPLUS = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -648,7 +648,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD = "";
 				LDPLUSPLUS = "";
 				LD_RUNPATH_SEARCH_PATHS = (
