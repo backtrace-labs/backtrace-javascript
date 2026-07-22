@@ -72,3 +72,8 @@ yarn-error.log
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# Backtrace sourcemap build artifacts
+main.jsbundle
+main.jsbundle.map
+.backtrace-sourcemap-id

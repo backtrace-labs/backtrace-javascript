@@ -3,10 +3,13 @@
     "version": "0.0.1",
     "private": true,
     "scripts": {
+        "build": "npm run bundle:ios && npm run backtrace:sourcemap",
+        "bundle:ios": "DEBUG_ID_PATH=\"$PWD/.backtrace-sourcemap-id\" react-native bundle --platform ios --dev false --entry-file index.js --bundle-output main.jsbundle --sourcemap-output main.jsbundle.map",
         "android": "react-native run-android",
         "ios": "react-native run-ios",
         "lint": "eslint .",
-        "start": "react-native start"
+        "start": "react-native start",
+        "backtrace:sourcemap": "node node_modules/@backtrace/react-native/scripts/addDebugIdToSourceMap.js main.jsbundle.map \"$(cat .backtrace-sourcemap-id)\" && backtrace-js upload -p main.jsbundle.map"
     },
     "dependencies": {
         "@backtrace/react-native": "file:../../../packages/react-native",
