@@ -5,6 +5,10 @@ jest.mock('promise/setimmediate/rejection-tracking', () => ({
     enable: jest.fn(),
 }));
 
+jest.mock('../src/crashReporter/CrashReporter', () => ({
+    CrashReporter: { markFatalError: jest.fn() },
+}));
+
 const mockHermesInternal: {
     enablePromiseRejectionTracker?: jest.Mock;
     hasPromise?: jest.Mock;
@@ -17,7 +21,10 @@ jest.mock('../src/common/hermesHelper', () => ({
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const rejectionTracking = require('promise/setimmediate/rejection-tracking');
 
+import { CrashReporter } from '../src/crashReporter/CrashReporter';
 import { UnhandledExceptionHandler } from '../src/handlers/UnhandledExceptionHandler';
+
+const markFatalErrorMock = CrashReporter.markFatalError as jest.Mock;
 
 describe('UnhandledExceptionHandler labeling', () => {
     let sendMock: jest.Mock;
@@ -63,5 +70,54 @@ describe('UnhandledExceptionHandler labeling', () => {
         expect(report.attributes['error.type']).toBe('Unhandled rejection');
         expect(report.attributes['unhandledPromiseRejectionId']).toBe(99);
         expect(report.classifiers).toContain('UnhandledPromiseRejection');
+    });
+});
+
+describe('UnhandledExceptionHandler managed errors', () => {
+    let sendMock: jest.Mock;
+    let client: BacktraceClient;
+    let handler: UnhandledExceptionHandler;
+    let registeredHandler: (error: Error, fatal?: boolean) => void;
+    let previousGlobalHandler: jest.Mock;
+    let originalErrorUtils: unknown;
+
+    beforeEach(() => {
+        markFatalErrorMock.mockClear();
+        sendMock = jest.fn();
+        client = { send: sendMock } as unknown as BacktraceClient;
+        handler = new UnhandledExceptionHandler();
+        previousGlobalHandler = jest.fn();
+
+        originalErrorUtils = (global as unknown as { ErrorUtils?: unknown }).ErrorUtils;
+        (global as unknown as { ErrorUtils: unknown }).ErrorUtils = {
+            getGlobalHandler: () => previousGlobalHandler,
+            setGlobalHandler: (fn: typeof registeredHandler) => {
+                registeredHandler = fn;
+            },
+        };
+
+        handler.captureManagedErrors(client);
+    });
+
+    afterEach(() => {
+        (global as unknown as { ErrorUtils: unknown }).ErrorUtils = originalErrorUtils;
+    });
+
+    it('Should mark a fatal unhandled error so the native reporter skips the duplicate, then chain the previous handler', () => {
+        const error = new Error('boom');
+        registeredHandler(error, true);
+
+        expect(sendMock).toHaveBeenCalledWith(error, { 'error.type': 'Unhandled exception', fatal: true });
+        expect(markFatalErrorMock).toHaveBeenCalledTimes(1);
+        expect(previousGlobalHandler).toHaveBeenCalledWith(error, true);
+    });
+
+    it('Should NOT mark a non-fatal unhandled error', () => {
+        const error = new Error('boom');
+        registeredHandler(error, false);
+
+        expect(sendMock).toHaveBeenCalledWith(error, { 'error.type': 'Unhandled exception', fatal: false });
+        expect(markFatalErrorMock).not.toHaveBeenCalled();
+        expect(previousGlobalHandler).toHaveBeenCalledWith(error, false);
     });
 });

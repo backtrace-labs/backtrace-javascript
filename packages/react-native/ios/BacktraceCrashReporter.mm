@@ -33,6 +33,9 @@ NSMutableDictionary* _attributes;
 
 Boolean disabled = TRUE;
 
+// YES while a JS-reported fatal is escalating to a native crash.
+Boolean _jsFatal = FALSE;
+
 static void onCrash(siginfo_t *info, ucontext_t *uap, void *context) {
     if(_oomWatcher) {
         [_oomWatcher cleanup];
@@ -86,7 +89,21 @@ static void onCrash(siginfo_t *info, ucontext_t *uap, void *context) {
     [_attributes setObject:@"Crash" forKey:@"error.type"];
     [reportData setObject: _attributes forKey: @"attributes"];
     [reportData setObject: _attachmentsPaths forKey: @"attachments"];
+    [reportData setObject: @(_jsFatal) forKey: @"jsFatal"];
     [_crashReporter setCustomData: [NSKeyedArchiver archivedDataWithRootObject:reportData]];
+}
+
+- (void) markJsFatalError {
+    _jsFatal = YES;
+    [self saveReportData];
+    // Self-clear after 2s so the flag can't taint a later native crash if this fatal never crashes.
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        if (!_jsFatal) {
+            return;
+        }
+        _jsFatal = NO;
+        [self saveReportData];
+    });
 }
 
 
@@ -163,6 +180,12 @@ static void onCrash(siginfo_t *info, ucontext_t *uap, void *context) {
     }
     if (report){
         NSDictionary* reportData =  (NSDictionary*) [NSKeyedUnarchiver unarchiveObjectWithData: [report customData]];
+        NSNumber* jsFatal = reportData != nil ? [reportData objectForKey:@"jsFatal"] : nil;
+        if (jsFatal != nil && [jsFatal boolValue]) {
+            NSLog(@"Backtrace: pending crash is a JS-reported fatal; skipping the duplicate native report.");
+            [_crashReporter purgePendingCrashReport];
+            return;
+        }
         NSArray* attachments = reportData != nil ? [reportData objectForKey:@"attachments"] :  [NSMutableArray new];
         NSDictionary* attributes = reportData != nil ? [reportData objectForKey:@"attributes"] : [NSDictionary new];
         NSLog(@"Backtrace: Found a crash generated in the last user session. Sending data to Backtrace.");
