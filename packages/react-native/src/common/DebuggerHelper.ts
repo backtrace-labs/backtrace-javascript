@@ -6,13 +6,20 @@ export class DebuggerHelper {
      * @returns true if the native bridge is available. Otherwise false.
      */
     public static isNativeBridgeEnabled(): boolean {
-        // in the bridgeless mode, we always have access to the native layer - there is no risk
-        // on returning true.
-        const isBridgeless = !NativeModules.UIManager;
+        const globals = globalThis as unknown as {
+            RN$Bridgeless?: boolean;
+            nativeCallSyncHook?: boolean;
+        };
+
+        // in the bridgeless mode (New Architecture), we always have access to the native
+        // layer - there is no risk on returning true. RN exposes `RN$Bridgeless` on the
+        // global object as the canonical signal; `NativeModules.UIManager` is unreliable
+        // here because it is still present via the interop layer in RN >= 0.77.
+        const isBridgeless = globals.RN$Bridgeless === true || !NativeModules.UIManager;
         if (isBridgeless) {
             return true;
         }
 
-        return !!(global as unknown as { nativeCallSyncHook: boolean }).nativeCallSyncHook;
+        return !!globals.nativeCallSyncHook;
     }
 }

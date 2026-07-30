@@ -1,9 +1,24 @@
-const bundleToString = require('metro/src/lib/bundleToString');
-const baseJSBundle = require('metro/src/DeltaBundler/Serializers/baseJSBundle');
-const CountingSet = require('metro/src/lib/CountingSet').default;
 const fs = require('fs');
 const path = require('path');
 const { DebugIdGenerator, SourceProcessor } = require('@backtrace/sourcemap-tools');
+
+// Metro's internal modules are not published in its `exports` map, so a bare
+// `require('metro/src/...')` is blocked by Node's exports enforcement in newer
+// Metro (>= 0.82, shipped with RN >= 0.81). Resolve them by absolute path from
+// the metro package root instead, which bypasses the exports gate. The file
+// layout (metro/src/...) has been stable across the supported Metro versions.
+const metroRoot = path.dirname(require.resolve('metro/package.json'));
+// Newer Metro (>= 0.82, RN >= 0.81) compiles these modules to ESM-interop, so the
+// export lives on `.default`; older Metro exported it directly. Prefer `.default`
+// when present, otherwise use the module export itself.
+const requireMetroInternal = (subpath) => {
+    const mod = require(path.join(metroRoot, subpath));
+    return mod && mod.default !== undefined ? mod.default : mod;
+};
+
+const bundleToString = requireMetroInternal('src/lib/bundleToString');
+const baseJSBundle = requireMetroInternal('src/DeltaBundler/Serializers/baseJSBundle');
+const CountingSet = requireMetroInternal('src/lib/CountingSet');
 
 const DEBUG_ID_PATH = process.env.DEBUG_ID_PATH;
 

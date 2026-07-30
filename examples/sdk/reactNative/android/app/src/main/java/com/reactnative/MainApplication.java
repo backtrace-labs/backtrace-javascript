@@ -39,11 +39,6 @@ public class MainApplication extends Application implements ReactApplication {
         public boolean isNewArchEnabled() {
             return BuildConfig.IS_NEW_ARCHITECTURE_ENABLED;
         }
-
-        @Override
-        public Boolean isHermesEnabled() {
-            return BuildConfig.IS_HERMES_ENABLED;
-        }
     };
 
     @NonNull
@@ -54,7 +49,9 @@ public class MainApplication extends Application implements ReactApplication {
 
     @Override
     public ReactHost getReactHost() {
-        return DefaultReactHost.getDefaultReactHost(getApplicationContext(), mReactNativeHost);
+        // RN 0.81's getDefaultReactHost has a third (jsRuntimeFactory) parameter that is
+        // optional in Kotlin but not from Java, so pass null explicitly.
+        return DefaultReactHost.getDefaultReactHost(getApplicationContext(), mReactNativeHost, null);
     }
 
     @Override

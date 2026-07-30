@@ -36,5 +36,19 @@ target 'reactNative' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+
+    # Workaround: RN 0.81 bundles fmt 11.0.2 (RN 0.77 used fmt 9.1.0, which did
+    # not need this). fmt 11's consteval FMT_STRING path fails to compile under
+    # Apple clang from Xcode 26+. fmt's base.h already disables consteval for
+    # older Apple clang; widen that guard to all Apple clang. No-op on the Xcode
+    # versions RN officially targets (fmt just uses constexpr there) and once
+    # patched, so it is safe to keep committed.
+    fmt_base = File.join(__dir__, 'Pods/fmt/include/fmt/base.h')
+    old_guard = '#elif defined(__apple_build_version__) && __apple_build_version__ < 14000029L'
+    if File.exist?(fmt_base) && (contents = File.read(fmt_base)).include?(old_guard)
+      File.chmod(0644, fmt_base) # CocoaPods installs fmt headers read-only
+      File.write(fmt_base, contents.sub(old_guard, '#elif defined(__apple_build_version__)'))
+      Pod::UI.puts '[backtrace] Patched fmt base.h to disable consteval on Apple clang'.green
+    end
   end
 end
