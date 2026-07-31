@@ -78,9 +78,9 @@ export function generateActions(client: BacktraceClient) {
         {
             name: 'Throw an unhandled error',
             platform,
-            action: async () => {
-                notify('Sending an unhandled exception to Backtrace.');
-                throwAnError();
+            action: () => {
+                // fatal synchronous throw (ErrorUtils -> RCTFatal on iOS), not an async promise rejection
+                setTimeout(() => throwAnError(), 0);
             },
         },
         {

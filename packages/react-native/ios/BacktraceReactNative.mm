@@ -40,4 +40,13 @@ RCT_EXPORT_METHOD(crash)
     array[1];
 }
 
+// Synchronous so the flag is set before JS proceeds to RCTFatal.
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(markFatalError)
+{
+    if (instance != nil) {
+        [instance markJsFatalError];
+    }
+    return nil;
+}
+
 @end

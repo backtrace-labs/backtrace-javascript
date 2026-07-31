@@ -67,6 +67,11 @@ export class CrashReporter {
         }
     }
 
+    // Flags the imminent native crash as an already-reported JS fatal (iOS); no-op elsewhere.
+    public static markFatalError(): void {
+        CrashReporter.BacktraceReactNative?.markFatalError?.();
+    }
+
     public dispose(): void {
         this._enabled = false;
     }

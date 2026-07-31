@@ -1,6 +1,7 @@
 import { BacktraceReport } from '@backtrace/sdk-core';
 import { BacktraceClient } from '../BacktraceClient';
 import { hermes } from '../common/hermesHelper';
+import { CrashReporter } from '../crashReporter/CrashReporter';
 import { type ExceptionHandler } from './ExceptionHandler';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -28,6 +29,10 @@ export class UnhandledExceptionHandler implements ExceptionHandler {
                 'error.type': 'Unhandled exception',
                 fatal,
             });
+            // iOS: RCTFatal turns a fatal into a native crash the reporter would double-report.
+            if (fatal) {
+                CrashReporter.markFatalError();
+            }
             globalErrorHandler(error, fatal);
         });
     }
