@@ -4,13 +4,6 @@ export const config: Options.Testrunner & {
     capabilities: WebdriverIO.Capabilities[];
 } = {
     runner: 'local',
-    autoCompileOpts: {
-        autoCompile: true,
-        tsNodeOpts: {
-            project: './tsconfig.json',
-            transpileOnly: true,
-        },
-    },
 
     user: process.env.SMOKETESTS_SAUCE_USERNAME,
     key: process.env.SMOKETESTS_SAUCE_ACCESS_KEY,
