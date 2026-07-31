@@ -1,3 +1,5 @@
+// explicit import so jest matcher types win over expect-webdriverio's global expect
+import { expect } from '@jest/globals';
 import { npm } from '../../__helpers/npm.js';
 import { RXID_REGEX } from '../../__helpers/rxid.js';
 import { DIRECT_SUBMIT_URL, SUBMIT_LAYER_URL } from '../../__helpers/urls.js';
