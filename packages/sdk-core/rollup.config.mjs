@@ -15,6 +15,7 @@ export default {
             sourcemap: true,
         },
     ],
-    external: [/node_modules/],
+    // bundle tslib so the ES5 output is self-contained
+    external: (id) => /node_modules/.test(id) && !/tslib/.test(id),
     plugins: [typescript({ tsconfig: './tsconfig.build.json' })],
 };
