@@ -49,6 +49,10 @@ export const config: Options.Testrunner & {
             'sauce',
             {
                 sauceConnect: true,
+                sauceConnectOpts: {
+                    // sc output is debug-level and dropped under logLevel info, print it so CI shows the exit reason
+                    logger: (output: string) => console.log(`[sauce-connect] ${output}`),
+                },
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 setJobName(config, capabilities: any) {
                     return `@backtrace/javascript smoketests for ${capabilities.browserName} on ${capabilities.platformName}`;
