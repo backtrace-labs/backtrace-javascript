@@ -34,9 +34,13 @@ runs:
                       - 'packages/browser/**'
                       - 'packages/react/**'
                       - 'packages/sdk-core/**'
+                      - 'smoketests/**'
+                      - '.github/actions/smoke-tests/**'
                   node:
                       - 'packages/sdk-core/**'
                       - 'packages/node/**'
+                      - 'smoketests/**'
+                      - '.github/actions/smoke-tests/**'
 
         - run: npm run smoketest:node
           shell: bash

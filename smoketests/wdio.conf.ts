@@ -4,13 +4,6 @@ export const config: Options.Testrunner & {
     capabilities: WebdriverIO.Capabilities[];
 } = {
     runner: 'local',
-    autoCompileOpts: {
-        autoCompile: true,
-        tsNodeOpts: {
-            project: './tsconfig.json',
-            transpileOnly: true,
-        },
-    },
 
     user: process.env.SMOKETESTS_SAUCE_USERNAME,
     key: process.env.SMOKETESTS_SAUCE_ACCESS_KEY,
@@ -56,6 +49,10 @@ export const config: Options.Testrunner & {
             'sauce',
             {
                 sauceConnect: true,
+                sauceConnectOpts: {
+                    // sc output is debug-level and dropped under logLevel info, print it so CI shows the exit reason
+                    logger: (output: string) => console.log(`[sauce-connect] ${output}`),
+                },
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 setJobName(config, capabilities: any) {
                     return `@backtrace/javascript smoketests for ${capabilities.browserName} on ${capabilities.platformName}`;
