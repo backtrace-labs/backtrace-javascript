@@ -4,7 +4,9 @@
     "compilerOptions": {
         "rootDir": "./src",
         "outDir": "./lib",
-        "target": "ESNext",
+        "target": "ES5",
+        "downlevelIteration": true,
+        "lib": ["ESNext"],
         "module": "NodeNext",
         "moduleResolution": "NodeNext"
     }

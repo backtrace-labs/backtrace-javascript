@@ -14,6 +14,7 @@ import { FileBreadcrumbsStorage } from './breadcrumbs/FileBreadcrumbsStorage';
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 import type { BacktraceClientSetup } from './builder/BacktraceClientSetup';
 import { version } from './common/platformHelper';
+import { version as agentVersion } from '../package.json';
 import { CrashReporter } from './crashReporter/CrashReporter';
 import { generateUnhandledExceptionHandler } from './handlers';
 import { type ExceptionHandler } from './handlers/ExceptionHandler';
@@ -37,7 +38,7 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
         super({
             sdkOptions: {
                 agent: '@backtrace/react-native',
-                agentVersion: '0.0.1',
+                agentVersion: agentVersion,
                 langName: 'react-native',
                 langVersion: version(),
             },
