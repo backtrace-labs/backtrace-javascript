@@ -33,8 +33,57 @@ jobs:
               with:
                   submit-url: ${{ secrets.SMOKETESTS_SUBMIT_LAYER_URL }}
                   direct-submit-url: ${{ secrets.SMOKETESTS_DIRECT_SUBMIT_URL }}
+                  ignore-browser: 'true'
+
+    smoke_browser_local:
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    - os: ubuntu-latest
+                      browser: chrome
+                    - os: ubuntu-latest
+                      browser: firefox
+                    - os: macos-latest
+                      browser: safari
+
+        runs-on: ${{ matrix.os }}
+
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 20.x
+            - run: npm ci
+            - run: npm run build
+            - name: smoke-test
+              uses: ./.github/actions/smoke-tests
+              with:
+                  submit-url: ${{ secrets.SMOKETESTS_SUBMIT_LAYER_URL }}
+                  direct-submit-url: ${{ secrets.SMOKETESTS_DIRECT_SUBMIT_URL }}
+                  ignore-node: 'true'
+                  browser-runner: 'local'
+                  browser: ${{ matrix.browser }}
+
+    smoke_browser_sauce:
+        runs-on: ubuntu-latest
+        continue-on-error: true
+
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 20.x
+            - run: npm ci
+            - run: npm run build
+            - name: smoke-test
+              uses: ./.github/actions/smoke-tests
+              with:
+                  submit-url: ${{ secrets.SMOKETESTS_SUBMIT_LAYER_URL }}
+                  direct-submit-url: ${{ secrets.SMOKETESTS_DIRECT_SUBMIT_URL }}
                   sauce-username: ${{ secrets.SMOKETESTS_SAUCE_USERNAME }}
                   sauce-access-key: ${{ secrets.SMOKETESTS_SAUCE_ACCESS_KEY }}
+                  ignore-node: 'true'
 
     test_linux:
         runs-on: ubuntu-latest
