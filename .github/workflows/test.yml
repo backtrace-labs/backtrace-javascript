@@ -4,6 +4,7 @@ on:
     push:
         branches: [main, dev]
     pull_request:
+    workflow_dispatch:
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
@@ -66,6 +67,7 @@ jobs:
                   browser: ${{ matrix.browser }}
 
     smoke_browser_sauce:
+        if: github.event_name == 'workflow_dispatch'
         runs-on: ubuntu-latest
         continue-on-error: true
 
