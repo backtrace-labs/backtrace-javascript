@@ -15,6 +15,7 @@
         "smoketest": "npm run start --workspace=smoketests",
         "smoketest:node": "npm run start:jest --workspace=smoketests",
         "smoketest:browser": "npm run start:wdio --workspace=smoketests",
+        "smoketest:browser:local": "npm run start:wdio:local --workspace=smoketests",
         "syncVersions": "ts-node ./scripts/syncVersions.ts",
         "prepare": "husky"
     },
