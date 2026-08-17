@@ -23,7 +23,7 @@ import { ReactStackTraceConverter } from './ReactStackTraceConverter';
 import { type FileSystem } from './storage/FileSystem';
 
 export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration> {
-    private readonly _crashReporter?: CrashReporter;
+    private _crashReporter?: CrashReporter;
     private readonly _exceptionHandler: ExceptionHandler = generateUnhandledExceptionHandler();
 
     public crash(): void {
@@ -76,7 +76,7 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
                 this.options.captureUnhandledPromiseRejections,
             );
 
-            this.initializeNativeCrashReporter();
+            this._crashReporter = this.initializeNativeCrashReporter();
         } finally {
             lockId && this.sessionFiles?.unlockPreviousSessions(lockId);
         }
