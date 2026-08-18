@@ -1,3 +1,8 @@
 #!/usr/bin/env sh
+# Merge commits
+if git rev-parse -q --verify MERGE_HEAD >/dev/null 2>&1; then
+    exit 0
+fi
+
 message="$(cat "$1")"
 node .husky/scripts/commit-msg.js "$message"

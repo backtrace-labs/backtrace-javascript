@@ -10,7 +10,11 @@ export function addSubmitTests(getUrl: (submitUrl: string) => string, buttonSele
         await button.click();
 
         const statusElement = $('#status');
-        await browser.waitUntil(async () => (await statusElement.getText()) !== 'running');
+        // the app starts at "waiting", so wait for a terminal status, not just "not running"
+        await browser.waitUntil(async () => {
+            const status = await statusElement.getText();
+            return status !== 'waiting' && status !== 'running';
+        });
 
         await expect(statusElement).toHaveText('Ok');
         await expect($('#rxid')).toHaveText(RXID_REGEX);

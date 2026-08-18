@@ -1,5 +1,5 @@
 {
-    "include": ["./tests", "./wdio.conf.ts"],
+    "include": ["./tests", "./wdio.conf.ts", "./wdio.local.conf.ts"],
     "compilerOptions": {
         "target": "ESNext",
         "module": "NodeNext",
