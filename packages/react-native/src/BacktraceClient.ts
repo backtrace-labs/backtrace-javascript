@@ -65,6 +65,10 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
                 this._crashReporter?.updateAttributes(reportData.attributes);
             },
         );
+
+        this.attachmentManager.attachmentEvents.on('scoped-attachments-updated', () => {
+            this._crashReporter?.updateAttachments(this.attachments);
+        });
     }
 
     public initialize(): void {
