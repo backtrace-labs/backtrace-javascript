@@ -43,9 +43,7 @@ export class CrashReporter {
                 ...this.convertAttributes(attributes),
                 'error.type': 'Crash',
             },
-            attachments
-                .filter((n) => n instanceof BacktraceFileAttachment)
-                .map((n) => (n as BacktraceFileAttachment).filePath),
+            this.convertAttachments(attachments),
         );
         this._enabled = true;
         CrashReporter.initialized = true;
@@ -57,6 +55,17 @@ export class CrashReporter {
             return;
         }
         CrashReporter.BacktraceReactNative.useAttributes(this.convertAttributes(attributes));
+    }
+
+    public updateAttachments(attachments: readonly BacktraceAttachment[]) {
+        if (!this._enabled) {
+            return;
+        }
+        // Android does not expose useAttachments.
+        if (typeof CrashReporter.BacktraceReactNative.useAttachments !== 'function') {
+            return;
+        }
+        CrashReporter.BacktraceReactNative.useAttachments(this.convertAttachments(attachments));
     }
 
     public static crash(): void {
@@ -82,5 +91,11 @@ export class CrashReporter {
      */
     private convertAttributes(attributes: Record<string, AttributeType>): Record<string, string> {
         return Object.fromEntries(Object.entries(attributes).map(([key, value]) => [key, value?.toString() ?? '']));
+    }
+
+    private convertAttachments(attachments: readonly BacktraceAttachment[]): string[] {
+        return attachments
+            .filter((n) => n instanceof BacktraceFileAttachment)
+            .map((n) => (n as BacktraceFileAttachment).filePath);
     }
 }
