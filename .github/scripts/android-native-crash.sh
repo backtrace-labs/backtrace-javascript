@@ -5,31 +5,50 @@ set -euo pipefail
 PACKAGE="com.reactnative"
 ACTIVITY="$PACKAGE/.MainActivity"
 APK="examples/sdk/reactNative/android/app/build/outputs/apk/release/app-release.apk"
+UI=/tmp/ui-hierarchy.txt
 
-tap_by_label() {
-    local label="$1"
-    adb shell uiautomator dump /sdcard/ui.xml >/dev/null
+dump_ui() {
+    for _ in 1 2 3; do
+        adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1 || true
+        adb shell cat /sdcard/ui.xml 2>/dev/null | tr '>' '\n' > "$UI" || true
+        if [ -s "$UI" ]; then
+            return 0
+        fi
+        sleep 5
+    done
 
-    # `|| true` so a missing button reports the labels it found instead of failing bare.
+    echo "::error::could not read the UI hierarchy"
+    return 1
+}
+
+tap_node() {
+    local attribute="$1" value="$2" optional="${3:-required}"
+    dump_ui
+
+    # `|| true` so a missing node reports what was on screen instead of failing bare.
     local bounds
-    bounds="$(adb shell cat /sdcard/ui.xml \
-        | tr '>' '\n' \
-        | grep "content-desc=\"$label\"" \
+    bounds="$(grep "$attribute=\"$value\"" "$UI" \
         | grep -oE 'bounds="\[[0-9]+,[0-9]+\]\[[0-9]+,[0-9]+\]"' \
         | head -1 \
         | grep -oE '[0-9]+' \
         | tr '\n' ' ' || true)"
 
     if [ -z "$bounds" ]; then
-        echo "::error::could not find the '$label' button"
-        echo "labels present on screen:"
-        adb shell cat /sdcard/ui.xml | tr '>' '\n' | grep -oE 'content-desc="[^"]+"' | sort -u || true
+        if [ "$optional" = "optional" ]; then
+            return 0
+        fi
+        echo "::error::could not find $attribute=\"$value\""
+        echo "content-desc on screen:"
+        grep -oE 'content-desc="[^"]+"' "$UI" | sort -u || true
+        echo "text on screen:"
+        grep -oE 'text="[^"]+"' "$UI" | sort -u | head -20 || true
         return 1
     fi
 
-    # shellcheck disable=SC2086
-    set -- $bounds
-    adb shell input tap $(((${1} + ${3}) / 2)) $(((${2} + ${4}) / 2))
+    local x1 y1 x2 y2
+    read -r x1 y1 x2 y2 <<<"$bounds"
+    adb shell input tap $(((x1 + x2) / 2)) $(((y1 + y2) / 2))
+    sleep 2
 }
 
 adb wait-for-device
@@ -38,7 +57,7 @@ adb install -r "$APK"
 adb shell pm clear "$PACKAGE" >/dev/null
 adb logcat -c
 adb shell am start -n "$ACTIVITY" >/dev/null
-sleep 15
+sleep 20
 
 if ! adb logcat -d | grep -q "Initializing native crash reporter"; then
     echo "::error::native crash reporter did not initialize"
@@ -46,8 +65,11 @@ if ! adb logcat -d | grep -q "Initializing native crash reporter"; then
     exit 1
 fi
 
-tap_by_label "Update a time attribute"
-sleep 5
+# The example warns about an unset submission url on startup, which covers the buttons.
+tap_node text OK optional
+
+tap_node content-desc "Update a time attribute"
+sleep 3
 
 ATTRIBUTE="$(adb logcat -d | grep -oE "Setting a time attribute to [0-9]+" | tail -1 | grep -oE "[0-9]+" || true)"
 if [ -z "$ATTRIBUTE" ]; then
@@ -57,7 +79,8 @@ if [ -z "$ATTRIBUTE" ]; then
 fi
 echo "attribute set after init: time=$ATTRIBUTE"
 
-tap_by_label "Crash application"
+tap_node text OK optional
+tap_node content-desc "Crash application"
 sleep 15
 
 if adb shell pidof "$PACKAGE" >/dev/null 2>&1; then
