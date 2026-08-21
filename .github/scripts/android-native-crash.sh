@@ -69,7 +69,8 @@ fi
 tap_node text OK optional
 
 tap_node content-desc "Update a time attribute"
-sleep 3
+# useAttributes is an async bridge call, so give a slow emulator time to reach the JNI layer.
+sleep 10
 
 ATTRIBUTE="$(adb logcat -d | grep -oE "Setting a time attribute to [0-9]+" | tail -1 | grep -oE "[0-9]+" || true)"
 if [ -z "$ATTRIBUTE" ]; then
@@ -97,9 +98,22 @@ if [ -z "$DUMP" ]; then
 fi
 echo "minidump written: $DUMP"
 
-adb shell run-as "$PACKAGE" cat "$DUMP" > /tmp/native-crash.dmp
+# exec-out, not shell: a pty mangles binary and would corrupt the minidump.
+adb exec-out run-as "$PACKAGE" cat "$DUMP" > /tmp/native-crash.dmp
+ON_DEVICE_SIZE="$(adb shell run-as "$PACKAGE" stat -c %s "$DUMP" 2>/dev/null | tr -d '\r')"
+PULLED_SIZE="$(wc -c < /tmp/native-crash.dmp | tr -d ' ')"
+if [ "$ON_DEVICE_SIZE" != "$PULLED_SIZE" ]; then
+    echo "::error::minidump transfer is incomplete: $PULLED_SIZE of $ON_DEVICE_SIZE bytes"
+    exit 1
+fi
+echo "minidump pulled: $PULLED_SIZE bytes"
+
 if ! strings -a /tmp/native-crash.dmp | grep -qF "$ATTRIBUTE"; then
     echo "::error::minidump does not carry the attribute set after init (time=$ATTRIBUTE)"
+    echo "annotation keys present in the minidump:"
+    strings -a /tmp/native-crash.dmp \
+        | grep -xE "time|guid|application|application\.version|backtrace\.agent|backtrace\.version|error\.type|uname\.sysname" \
+        | sort -u || true
     exit 1
 fi
 echo "minidump carries the post-init attribute"
