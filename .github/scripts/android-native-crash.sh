@@ -6,6 +6,7 @@ PACKAGE="com.reactnative"
 ACTIVITY="$PACKAGE/.MainActivity"
 APK="examples/sdk/reactNative/android/app/build/outputs/apk/release/app-release.apk"
 UI=/tmp/ui-hierarchy.txt
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 dump_ui() {
     for _ in 1 2 3; do
@@ -65,11 +66,13 @@ if ! adb logcat -d | grep -q "Initializing native crash reporter"; then
     exit 1
 fi
 
+echo "device abis: $(adb shell getprop ro.product.cpu.abilist | tr -d '\r')"
+echo "app abi:$(adb shell dumpsys package "$PACKAGE" | grep -m1 primaryCpuAbi | tr -d '\r' | cut -d= -f2)"
+
 # The example warns about an unset submission url on startup, which covers the buttons.
 tap_node text OK optional
 
 tap_node content-desc "Update a time attribute"
-# useAttributes is an async bridge call, so give a slow emulator time to reach the JNI layer.
 sleep 10
 
 ATTRIBUTE="$(adb logcat -d | grep -oE "Setting a time attribute to [0-9]+" | tail -1 | grep -oE "[0-9]+" || true)"
@@ -108,12 +111,6 @@ if [ "$ON_DEVICE_SIZE" != "$PULLED_SIZE" ]; then
 fi
 echo "minidump pulled: $PULLED_SIZE bytes"
 
-if ! strings -a /tmp/native-crash.dmp | grep -qF "$ATTRIBUTE"; then
-    echo "::error::minidump does not carry the attribute set after init (time=$ATTRIBUTE)"
-    echo "annotation keys present in the minidump:"
-    strings -a /tmp/native-crash.dmp \
-        | grep -xE "time|guid|application|application\.version|backtrace\.agent|backtrace\.version|error\.type|uname\.sysname" \
-        | sort -u || true
-    exit 1
-fi
-echo "minidump carries the post-init attribute"
+adb logcat -d > /tmp/logcat.txt
+
+ATTRIBUTE="$ATTRIBUTE" python3 "$HERE/check-minidump-annotations.py" /tmp/native-crash.dmp
