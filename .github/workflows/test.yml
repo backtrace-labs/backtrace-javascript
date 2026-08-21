@@ -67,7 +67,6 @@ jobs:
                   browser: ${{ matrix.browser }}
 
     smoke_browser_sauce:
-        if: github.event_name == 'workflow_dispatch'
         runs-on: ubuntu-latest
         continue-on-error: true
 
