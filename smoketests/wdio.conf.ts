@@ -51,6 +51,8 @@ export const config: Options.Testrunner & {
                 sauceConnect: true,
                 sauceConnectOpts: {
                     scVersion: '5.5.3',
+                    // the static server runs on localhost
+                    proxyLocalhost: 'direct',
                     // sc output is debug-level and dropped under logLevel info, print it so CI shows the exit reason
                     logger: (output: string) => console.log(`[sauce-connect] ${output}`),
                 },
