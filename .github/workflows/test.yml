@@ -77,6 +77,13 @@ jobs:
                   node-version: 20.x
             - run: npm ci
             - run: npm run build
+            # NOTE: sc version must match wdio.conf.ts
+            - run: |
+                  SC_VERSION=5.5.3
+                  SC_DIR="node_modules/saucelabs/build/sc-loader/.sc-v$SC_VERSION-linux-x86_64"
+                  mkdir -p "$SC_DIR"
+                  curl -sSf "https://saucelabs.com/downloads/sauce-connect/$SC_VERSION/sauce-connect-${SC_VERSION}_linux.x86_64.tar.gz" | tar xz -C "$SC_DIR"
+                  chmod +x "$SC_DIR/sc"
             - name: smoke-test
               uses: ./.github/actions/smoke-tests
               with:
