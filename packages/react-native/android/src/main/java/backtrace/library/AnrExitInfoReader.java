@@ -21,6 +21,7 @@ import backtraceio.library.anr.AppExitInfoDetailsExtractor;
 import backtraceio.library.anr.ExitInfo;
 import backtraceio.library.anr.ExitInfoStackTraceParser;
 import backtraceio.library.anr.ProcessExitInfoProvider;
+import backtraceio.library.anr.StackFrameMapper;
 
 class AnrExitInfoReader {
     private final static transient String LOG_TAG = AnrExitInfoReader.class.getSimpleName();
@@ -81,34 +82,26 @@ class AnrExitInfoReader {
         record.putString("message", AppExitInfoDetailsExtractor.getANRMessage(exitInfo));
         record.putMap("attributes", toWritableMap(AppExitInfoDetailsExtractor.getANRAttributes(exitInfo)));
         record.putString("stackTrace", stackTrace);
-        record.putString("mainThreadStackTrace", formatMainThreadStackTrace(stackTrace));
+
+        StackTraceElement[] frames = parseMainThreadFrames(stackTrace);
+        if (frames.length > 0) {
+            record.putArray("mainThreadFrames", StackFrameMapper.toWritableFrames(frames));
+        }
         return record;
     }
 
-    private String formatMainThreadStackTrace(String stackTrace) {
+    private StackTraceElement[] parseMainThreadFrames(String stackTrace) {
         if (stackTrace == null || stackTrace.isEmpty()) {
-            return null;
+            return new StackTraceElement[0];
         }
 
-        StackTraceElement[] frames;
         try {
             Map<String, Object> parsed = ExitInfoStackTraceParser.parseANRStackTrace(stackTrace);
-            frames = ExitInfoStackTraceParser.parseMainThreadStackTrace(parsed);
+            return ExitInfoStackTraceParser.parseMainThreadStackTrace(parsed);
         } catch (Exception e) {
             Log.e(LOG_TAG, "Could not parse the ANR stack trace", e);
-            return null;
+            return new StackTraceElement[0];
         }
-
-        if (frames.length == 0) {
-            return null;
-        }
-
-        // StackTraceElement.toString() matches what AndroidStackTraceConverter expects
-        StringBuilder formatted = new StringBuilder();
-        for (StackTraceElement frame : frames) {
-            formatted.append(frame.toString()).append('\n');
-        }
-        return formatted.toString();
     }
 
     private WritableMap toWritableMap(Map<String, Object> values) {

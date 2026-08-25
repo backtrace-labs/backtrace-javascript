@@ -23,6 +23,7 @@ public class ReactNativePackage implements ReactPackage {
         modules.add(new backtraceio.library.MemoryInformationAttributeProvider(reactContext));
         modules.add(new backtraceio.library.ProcessAttributeProvider(reactContext));
         modules.add(new backtraceio.library.BacktraceAndroidBackgroundUnhandledExceptionHandler(reactContext));
+        modules.add(new backtraceio.library.BacktraceAnrWatchdog(reactContext));
 
         modules.add(new backtrace.library.BacktraceFileSystemProvider(reactContext));
         modules.add(new backtrace.library.BacktraceDirectoryProvider(reactContext));
