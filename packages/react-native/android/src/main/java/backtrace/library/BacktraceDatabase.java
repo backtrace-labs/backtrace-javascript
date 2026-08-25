@@ -9,4 +9,6 @@ public class BacktraceDatabase {
 
 
     public static native void addAttribute(String name, String value);
+
+    public static native void addAttachment(String attachmentPath);
 }

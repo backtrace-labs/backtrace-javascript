@@ -61,7 +61,6 @@ export class CrashReporter {
         if (!this._enabled) {
             return;
         }
-        // Android does not expose useAttachments.
         if (typeof CrashReporter.BacktraceReactNative.useAttachments !== 'function') {
             return;
         }

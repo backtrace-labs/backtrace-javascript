@@ -44,11 +44,13 @@ runs:
                       - 'packages/sdk-core/**'
                       - 'smoketests/**'
                       - '.github/actions/smoke-tests/**'
+                      - '.github/workflows/**'
                   node:
                       - 'packages/sdk-core/**'
                       - 'packages/node/**'
                       - 'smoketests/**'
                       - '.github/actions/smoke-tests/**'
+                      - '.github/workflows/**'
 
         - run: npm run smoketest:node
           shell: bash

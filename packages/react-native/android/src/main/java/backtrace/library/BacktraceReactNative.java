@@ -15,7 +15,10 @@ import android.util.Log;
 import android.content.Context;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 import backtraceio.library.nativeCalls.*;
 import backtraceio.library.models.nativeHandler.CrashHandlerConfiguration;
@@ -33,6 +36,8 @@ public class BacktraceReactNative extends ReactContextBaseJavaModule {
     public native void Crash();
 
     private final Context context;
+
+    private final Set<String> registeredAttachments = new HashSet<>();
 
     public BacktraceReactNative(ReactApplicationContext reactContext) {
         super(reactContext);
@@ -59,6 +64,8 @@ public class BacktraceReactNative extends ReactContextBaseJavaModule {
         String[] keys = attributes.keySet().toArray(new String[0]);
         String[] values = attributes.values().toArray(new String[0]);
 
+        String[] attachments = attachmentPaths.toArrayList().toArray(new String[0]);
+
         BacktraceCrashHandlerWrapper nativeCommunication = new BacktraceCrashHandlerWrapper();
         Boolean result = nativeCommunication.initializeJavaCrashHandler(
                 minidumpSubmissionUrl,
@@ -66,9 +73,11 @@ public class BacktraceReactNative extends ReactContextBaseJavaModule {
                 crashHandlerConfiguration.getClassPath(),
                 keys,
                 values,
-                attachmentPaths.toArrayList().toArray(new String[0]),
+                attachments,
                 crashHandlerConfiguration.getCrashHandlerEnvironmentVariables(this.context.getApplicationInfo()).toArray(new String[0])
-                );        
+                );
+
+        this.registeredAttachments.addAll(Arrays.asList(attachments));
 
         return result;
     }
@@ -82,6 +91,18 @@ public class BacktraceReactNative extends ReactContextBaseJavaModule {
         String[] values = attributes.values().toArray(new String[0]);
         for (int attributeIndex = 0; attributeIndex < attributes.size(); attributeIndex++) {
             BacktraceDatabase.addAttribute(keys[attributeIndex], values[attributeIndex]);
+        }
+    }
+
+
+    @ReactMethod()
+    public void useAttachments(ReadableArray attachmentPaths) {
+        for (int attachmentIndex = 0; attachmentIndex < attachmentPaths.size(); attachmentIndex++) {
+            String attachmentPath = attachmentPaths.getString(attachmentIndex);
+            if (attachmentPath == null || !this.registeredAttachments.add(attachmentPath)) {
+                continue;
+            }
+            BacktraceDatabase.addAttachment(attachmentPath);
         }
     }
 
