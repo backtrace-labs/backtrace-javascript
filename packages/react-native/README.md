@@ -302,7 +302,7 @@ Two detection mechanisms are available:
 -   `threshold` monitors the main thread from a separate thread. If the main thread remains unresponsive for longer
     than the configured timeout (default: 5 seconds), an ANR is reported. It works on every Android version and
     reports while the application is still hung, so a report can be lost when the system kills the process before
-    the upload finishes.
+    the upload finishes. Detection pauses while the application is in the background.
 -   `applicationExit` retrieves the ANRs the system recorded for previous runs of the process from
     `ApplicationExitInfo` and reports them on the next application start, including the thread dump the system
     captured when it declared the ANR. It requires API 30 or above and survives the process kill. Reported records
@@ -323,7 +323,7 @@ const options: BacktraceConfiguration = {
 | `enable`    | Boolean                             | Determines if ANR detection is enabled.                                                                               | `false`     | <ul><li>- [ ] </li></ul> |
 | `type`      | `'threshold'` \| `'applicationExit'` | Detection mechanism.                                                                                                  | `threshold` | <ul><li>- [ ] </li></ul> |
 | `timeout`   | Number                              | Time in milliseconds the main thread stays blocked before an ANR is reported. Applies to the `threshold` type only.   | `5000`      | <ul><li>- [ ] </li></ul> |
-| `debug`     | Boolean                             | When true, detection is disabled while a debugger is attached. Applies to the `threshold` type only.                  | `false`     | <ul><li>- [ ] </li></ul> |
+| `disableWhenDebuggerAttached` | Boolean           | When true, detection is disabled while a debugger is attached. Applies to the `threshold` type only.                  | `false`     | <ul><li>- [ ] </li></ul> |
 
 ---
 

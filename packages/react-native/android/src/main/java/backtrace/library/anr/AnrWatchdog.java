@@ -64,5 +64,6 @@ public class AnrWatchdog extends Thread {
 
     public void stopMonitoring() {
         this.shouldStop = true;
+        this.interrupt();
     }
 }

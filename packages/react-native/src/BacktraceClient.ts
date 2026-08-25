@@ -155,7 +155,7 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
         }
 
         this._anrWatchdogHandler = AnrWatchdogHandler.create();
-        this._anrWatchdogHandler?.start(this, anr.timeout ?? 0, anr.debug ?? false);
+        this._anrWatchdogHandler?.start(this, anr.timeout ?? 0, anr.disableWhenDebuggerAttached ?? false);
     }
 
     private initializeNativeCrashReporter(): CrashReporter | undefined {

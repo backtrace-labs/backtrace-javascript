@@ -13,6 +13,9 @@ import java.util.List;
 import java.util.Map;
 import org.junit.Test;
 
+// The report stack comes entirely from parsing the text dump the system writes for an ANR, so
+// a parsing mistake ships reports with a wrong or empty stack. The cases run against a real
+// dump captured from a device and cover both the Java and the native frame formats.
 public class ExitInfoStackTraceParserTest {
     private static final String ANR_APPEXIT_STACKTRACE_FILE = "anrAppExitInfoStacktrace.txt";
 

@@ -1,5 +1,12 @@
 import { BacktraceReport, type BacktraceStackFrame } from '@backtrace/sdk-core';
-import { NativeEventEmitter, NativeModules, Platform, type EmitterSubscription } from 'react-native';
+import {
+    AppState,
+    NativeEventEmitter,
+    NativeModules,
+    Platform,
+    type EmitterSubscription,
+    type NativeEventSubscription,
+} from 'react-native';
 import type { BacktraceClient } from '../BacktraceClient';
 import { DebuggerHelper } from '../common/DebuggerHelper';
 import { AnrException } from './AnrException';
@@ -13,6 +20,7 @@ interface AnrDetectedPayload {
 
 export class AnrWatchdogHandler {
     private _subscription?: EmitterSubscription;
+    private _appStateSubscription?: NativeEventSubscription;
 
     private constructor(private readonly _watchdog: NonNullable<typeof NativeModules.BacktraceAnrWatchdog>) {}
 
@@ -33,7 +41,7 @@ export class AnrWatchdogHandler {
         return new AnrWatchdogHandler(watchdog);
     }
 
-    public start(client: BacktraceClient, timeout: number, debug: boolean): void {
+    public start(client: BacktraceClient, timeout: number, disableWhenDebuggerAttached: boolean): void {
         this._subscription = new NativeEventEmitter(this._watchdog).addListener(
             AnrDetectedEvent,
             (payload: AnrDetectedPayload) => {
@@ -49,12 +57,23 @@ export class AnrWatchdogHandler {
             },
         );
 
-        this._watchdog.start(timeout, debug);
+        // Android freezes backgrounded apps, and the watchdog would misread the resume as a hang
+        this._appStateSubscription = AppState.addEventListener('change', (state) => {
+            if (state === 'background') {
+                this._watchdog.stop();
+            } else if (state === 'active') {
+                this._watchdog.start(timeout, disableWhenDebuggerAttached);
+            }
+        });
+
+        this._watchdog.start(timeout, disableWhenDebuggerAttached);
     }
 
     public dispose(): void {
         this._subscription?.remove();
         this._subscription = undefined;
+        this._appStateSubscription?.remove();
+        this._appStateSubscription = undefined;
         this._watchdog.stop?.();
     }
 }

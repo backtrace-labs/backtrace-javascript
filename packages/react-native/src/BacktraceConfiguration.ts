@@ -27,7 +27,7 @@ export interface BacktraceAnrConfiguration {
      * When true, detection is disabled while a debugger is attached.
      * Applies to the `threshold` type only. By default the value is set to false.
      */
-    debug?: boolean;
+    disableWhenDebuggerAttached?: boolean;
 }
 
 export interface BacktraceConfiguration extends SdkConfiguration {

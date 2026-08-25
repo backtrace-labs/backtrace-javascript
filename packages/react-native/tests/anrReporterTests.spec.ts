@@ -1,3 +1,6 @@
+// The reporter sends each ANR the system recorded exactly once: it saves the timestamp of the
+// last accepted report and resumes from it on the next launch. Faked native records and send
+// results walk the retry and loss orderings a device cannot produce on demand.
 import { NativeModules, Platform } from 'react-native';
 
 // This package's jest config replaces the react-native preset's setupFiles, so the real Platform throws.
@@ -85,6 +88,8 @@ describe('AnrReporter', () => {
 
         expect(send).toHaveBeenCalledTimes(2);
         expect(send.mock.calls[0][0].attributes['error.type']).toBe('Hang');
+        expect(send.mock.calls[0][0].timestamp).toBe(1);
+        expect(send.mock.calls[1][0].timestamp).toBe(2);
         expect(fileSystem.storage.get(MARKER_PATH)).toBe('2');
     });
 
@@ -113,7 +118,7 @@ describe('AnrReporter', () => {
         expect(fileSystem.storage.get(MARKER_PATH)).toBe('7');
     });
 
-    it('attaches the parsed frames as the main thread and the raw dump as an attribute', async () => {
+    it('attaches the parsed frames as the main thread and the raw dump as an attachment', async () => {
         const fileSystem = createFileSystem();
         getAnrExitInfo.mockResolvedValue([record(1, FRAMES)]);
         const send = jest.fn().mockResolvedValue({ status: 'Ok' });
@@ -122,7 +127,8 @@ describe('AnrReporter', () => {
 
         const report = send.mock.calls[0][0];
         expect(report.stackTrace['main']).toEqual(FRAMES);
-        expect(report.attributes['ANR stacktrace']).toBe('raw dump');
+        expect(report.attachments).toHaveLength(1);
+        expect(report.attachments[0].name).toBe('anr-stacktrace.txt');
         expect(report.attributes['PID']).toBe(123);
     });
 });

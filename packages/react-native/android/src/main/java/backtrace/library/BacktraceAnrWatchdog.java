@@ -51,6 +51,12 @@ public class BacktraceAnrWatchdog extends ReactContextBaseJavaModule {
         this.watchdog = null;
     }
 
+    @Override
+    public void invalidate() {
+        stop();
+        super.invalidate();
+    }
+
     @ReactMethod()
     public void addListener(String eventName) {}
 

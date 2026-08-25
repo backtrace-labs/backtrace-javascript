@@ -1,4 +1,4 @@
-import { BacktraceReport, type BacktraceStackFrame } from '@backtrace/sdk-core';
+import { BacktraceReport, BacktraceStringAttachment, type BacktraceStackFrame } from '@backtrace/sdk-core';
 import { NativeModules, Platform } from 'react-native';
 import type { BacktraceClient } from '../BacktraceClient';
 import { DebuggerHelper } from '../common/DebuggerHelper';
@@ -63,20 +63,21 @@ export class AnrReporter {
 
                 await this.writeMarker(record.timestamp);
             }
-        } catch {
-            return;
+        } catch (err) {
+            console.warn('Backtrace: cannot report ANRs from application exit info.', err);
         }
     }
 
     private buildReport(record: AnrExitInfoRecord): BacktraceReport {
+        // an exception stack is copied into the error annotation, so the dump goes only to the attachment
         const report = new BacktraceReport(
-            new AnrException(record.message, record.stackTrace ?? ''),
+            new AnrException(record.message, ''),
             {
                 ...record.attributes,
                 'error.type': 'Hang',
-                'ANR stacktrace': record.stackTrace ?? '',
             },
-            [],
+            record.stackTrace ? [new BacktraceStringAttachment('anr-stacktrace.txt', record.stackTrace)] : [],
+            { timestamp: record.timestamp },
         );
 
         report.addStackTrace('main', record.mainThreadFrames as BacktraceStackFrame[]);
