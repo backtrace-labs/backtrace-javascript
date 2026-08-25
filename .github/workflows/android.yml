@@ -3,7 +3,19 @@ name: Android CI
 on:
     push:
         branches: [main, dev]
+        paths:
+            - packages/react-native/**
+            - packages/sdk-core/**
+            - examples/sdk/reactNative/**
+            - .github/workflows/android.yml
+            - .github/scripts/**
     pull_request:
+        paths:
+            - packages/react-native/**
+            - packages/sdk-core/**
+            - examples/sdk/reactNative/**
+            - .github/workflows/android.yml
+            - .github/scripts/**
     workflow_dispatch:
 
 concurrency:
@@ -13,6 +25,7 @@ concurrency:
 jobs:
     native_crash:
         runs-on: ubuntu-latest
+        timeout-minutes: 30
 
         strategy:
             fail-fast: false
@@ -34,19 +47,28 @@ jobs:
               uses: actions/setup-node@v4
               with:
                   node-version: 20.x
+                  cache: npm
+                  cache-dependency-path: |
+                      package-lock.json
+                      examples/sdk/reactNative/package-lock.json
 
             - name: Use Java 17
               uses: actions/setup-java@v4
               with:
                   distribution: temurin
                   java-version: 17
+                  cache: gradle
 
             - run: npm ci
             - run: npm run build
 
             - name: Install example dependencies
               working-directory: examples/sdk/reactNative
+              # install, not ci: the lock pins the file: SDK's version, so npm ci breaks on every version bump.
               run: npm install --no-audit --no-fund
+
+            - name: Inject the CI crash driver into the example entry point
+              run: cat .github/scripts/ci-crash-driver.js >> examples/sdk/reactNative/index.js
 
             - name: Build example app
               working-directory: examples/sdk/reactNative/android
@@ -61,7 +83,17 @@ jobs:
                   sudo udevadm control --reload-rules
                   sudo udevadm trigger --name-match=kvm
 
-            - name: Capture a native crash on the emulator
+            - name: AVD cache
+              uses: actions/cache@v4
+              id: avd-cache
+              with:
+                  path: |
+                      ~/.android/avd/*
+                      ~/.android/adb*
+                  key: avd-${{ matrix.api-level }}-${{ matrix.arch }}
+
+            - name: Create AVD snapshot for caching
+              if: steps.avd-cache.outputs.cache-hit != 'true'
               uses: reactivecircus/android-emulator-runner@v2
               with:
                   api-level: ${{ matrix.api-level }}
@@ -69,6 +101,17 @@ jobs:
                   target: google_apis
                   force-avd-creation: false
                   emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+                  disable-animations: false
+                  script: echo "Generated AVD snapshot for caching."
+
+            - name: Capture a native crash on the emulator
+              uses: reactivecircus/android-emulator-runner@v2
+              with:
+                  api-level: ${{ matrix.api-level }}
+                  arch: ${{ matrix.arch }}
+                  target: google_apis
+                  force-avd-creation: false
+                  emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
                   disable-animations: true
                   script: bash .github/scripts/android-native-crash.sh
 
@@ -80,6 +123,5 @@ jobs:
                   path: |
                       /tmp/native-crash.dmp
                       /tmp/logcat.txt
-                      /tmp/ui-hierarchy.txt
                   if-no-files-found: warn
                   retention-days: 7

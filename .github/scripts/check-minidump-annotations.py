@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Asserts a minidump carries an expected crashpad annotation value."""
+"""Asserts a minidump carries the per-run marker annotation, key and value."""
 import os
 import re
 import struct
 import sys
 
+EXPECTED_KEY = "ci.marker"
 KNOWN_KEYS = (
     "application",
     "application.version",
@@ -39,26 +40,31 @@ def length_prefixed(data, decoder, width):
 
 def main():
     path = sys.argv[1]
-    expected = os.environ["ATTRIBUTE"]
+    expected = os.environ["MARKER"]
     data = open(path, "rb").read()
 
     if data[:4] != b"MDMP":
         print(f"::error::{path} is not a minidump (magic {data[:4]!r}, {len(data)} bytes)")
         return 1
 
-    utf8 = length_prefixed(data, "ascii", 1)
-    utf16 = length_prefixed(data, "utf-16-le", 2)
-    strings = utf8 | utf16
+    strings = length_prefixed(data, "ascii", 1) | length_prefixed(data, "utf-16-le", 2)
     keys = sorted(k for k in KNOWN_KEYS if k in strings)
 
-    print(f"minidump ok: {len(data)} bytes, {len(utf8)} utf-8 and {len(utf16)} utf-16 strings")
+    print(f"minidump ok: {len(data)} bytes, {len(strings)} length-prefixed strings")
     print(f"annotation keys found: {', '.join(keys) if keys else '<none>'}")
 
-    if expected in strings:
-        print(f"minidump carries the post-init attribute (time={expected})")
+    checks = (
+        (f"post-init key {EXPECTED_KEY}", EXPECTED_KEY in strings),
+        (f"post-init value {expected}", expected in strings),
+        # Set at init through userAttributes in the example, so it asserts init-time propagation.
+        ("init-time key custom-attribute", "custom-attribute" in strings),
+    )
+    missing = [what for what, present in checks if not present]
+    if not missing:
+        print(f"minidump carries the init-time and post-init attributes ({EXPECTED_KEY}={expected})")
         return 0
 
-    print(f"::error::minidump does not carry the attribute set after init (time={expected})")
+    print(f"::error::minidump is missing: {', '.join(missing)}")
     if not keys:
         print("::error::no known annotation keys either, so the dump carries no attributes at all")
     return 1
