@@ -8,6 +8,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 public class ErrorGenerator extends ReactContextBaseJavaModule {
@@ -23,6 +25,16 @@ public class ErrorGenerator extends ReactContextBaseJavaModule {
   @ReactMethod
   public void throwError() throws IOException {
     readUserConfiguration();
+  }
+
+  @ReactMethod
+  public void blockMainThread(int durationMs) {
+    new Handler(Looper.getMainLooper()).post(() -> {
+      try {
+        Thread.sleep(durationMs);
+      } catch (InterruptedException ignored) {
+      }
+    });
   }
 
   private void readUserConfiguration() throws IOException {
