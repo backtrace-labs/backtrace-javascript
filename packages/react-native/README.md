@@ -19,6 +19,7 @@ and easy, after which you can explore the rich set of Backtrace features.
     - [Application Stability Metrics](#application-stability-metrics)
         - [Metrics Configuration](#metrics-configuration)
         - [Metrics Usage](#metrics-usage)
+    - [ANR Detection](#anr-detection)
     - [Offline Database support](#offline-database-support)
         - [Database Configuration](#database-configuration)
         - [Native crash support](#native-crash-support)
@@ -288,6 +289,41 @@ The Backtrace react-native SDK has the ability to send usage Metrics to be viewa
 // metrics will be undefined if not enabled
 client.metrics?.send();
 ```
+
+---
+
+### ANR Detection
+
+The Backtrace react-native SDK can detect Application Not Responding errors on Android and report them with the
+`Hang` error type. The report carries the main thread stack trace from the moment the hang was observed.
+
+Two detection mechanisms are available:
+
+-   `threshold` monitors the main thread from a separate thread. If the main thread remains unresponsive for longer
+    than the configured timeout (default: 5 seconds), an ANR is reported. It works on every Android version and
+    reports while the application is still hung, so a report can be lost when the system kills the process before
+    the upload finishes.
+-   `applicationExit` retrieves the ANRs the system recorded for previous runs of the process from
+    `ApplicationExitInfo` and reports them on the next application start, including the thread dump the system
+    captured when it declared the ANR. It requires API 30 or above and survives the process kill. Reported records
+    are remembered, so each ANR is reported once.
+
+```ts
+const options: BacktraceConfiguration = {
+    url: SUBMISSION_URL,
+    anr: {
+        enable: true,
+        type: 'threshold',
+    },
+};
+```
+
+| Option Name | Type                                | Description                                                                                                          | Default     | Required?                |
+| ----------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ----------- | ------------------------ |
+| `enable`    | Boolean                             | Determines if ANR detection is enabled.                                                                               | `false`     | <ul><li>- [ ] </li></ul> |
+| `type`      | `'threshold'` \| `'applicationExit'` | Detection mechanism.                                                                                                  | `threshold` | <ul><li>- [ ] </li></ul> |
+| `timeout`   | Number                              | Time in milliseconds the main thread stays blocked before an ANR is reported. Applies to the `threshold` type only.   | `5000`      | <ul><li>- [ ] </li></ul> |
+| `debug`     | Boolean                             | When true, detection is disabled while a debugger is attached. Applies to the `threshold` type only.                  | `false`     | <ul><li>- [ ] </li></ul> |
 
 ---
 

@@ -30,8 +30,7 @@ public class StackFrameMapper {
 
         String fileName = frame.getFileName();
         if (fileName != null && fileName.startsWith(NATIVE_FILE_PREFIX)) {
-            // ExitInfoStackTraceParser.parseNativeFrame stores library as the class
-            // name, the symbol as the method name and the address as the file name
+            // parseNativeFrame stores the symbol in the method name and the library in the class name
             map.putString("funcName", frame.getMethodName());
             map.putString("library", frame.getClassName());
             return map;

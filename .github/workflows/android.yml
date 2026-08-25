@@ -69,6 +69,10 @@ jobs:
             - name: Inject the CI crash driver into the example entry point
               run: cat .github/scripts/ci-crash-driver.js >> examples/sdk/reactNative/index.js
 
+            - name: Run SDK unit tests
+              working-directory: examples/sdk/reactNative/android
+              run: ./gradlew :backtrace_react-native:testDebugUnitTest -PnewArchEnabled=${{ matrix.new-arch }} --console=plain
+
             - name: Build example app
               working-directory: examples/sdk/reactNative/android
               run: ./gradlew assembleRelease -PbtCiDebuggable -PnewArchEnabled=${{ matrix.new-arch }} -x uploadSourceMapsToBacktrace --console=plain
