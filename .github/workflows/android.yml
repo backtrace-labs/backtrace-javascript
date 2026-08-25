@@ -30,7 +30,6 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                # x86 has no crash backend upstream.
                 api-level: [34]
                 arch: [x86_64]
                 new-arch: [true, false]
@@ -64,7 +63,7 @@ jobs:
 
             - name: Install example dependencies
               working-directory: examples/sdk/reactNative
-              # install, not ci: the lock pins the file: SDK's version, so npm ci breaks on every version bump.
+              # npm ci fails after an SDK version bump, the lock records the linked package's version.
               run: npm install --no-audit --no-fund
 
             - name: Inject the CI crash driver into the example entry point
