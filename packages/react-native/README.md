@@ -324,8 +324,8 @@ const options: BacktraceConfiguration = {
 | ----------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ----------- | ------------------------ |
 | `enable`    | Boolean                             | Determines if ANR detection is enabled.                                                                               | `false`     | <ul><li>- [ ] </li></ul> |
 | `type`      | `BacktraceAnrType`                  | Detection mechanism: `Threshold` or `ApplicationExit`.                                                                 | `Threshold` | <ul><li>- [ ] </li></ul> |
-| `timeout`   | Number                              | Time in milliseconds the main thread stays blocked before an ANR is reported. Applies to the `threshold` type only.   | `5000`      | <ul><li>- [ ] </li></ul> |
-| `disableWhenDebuggerAttached` | Boolean           | When true, detection is disabled while a debugger is attached. Applies to the `threshold` type only.                  | `false`     | <ul><li>- [ ] </li></ul> |
+| `timeout`   | Number                              | Time in milliseconds the main thread stays blocked before an ANR is reported. Applies to the `Threshold` type only.   | `5000`      | <ul><li>- [ ] </li></ul> |
+| `disableWhenDebuggerAttached` | Boolean           | When true, detection is disabled while a debugger is attached. Applies to the `Threshold` type only.                  | `false`     | <ul><li>- [ ] </li></ul> |
 
 ---
 

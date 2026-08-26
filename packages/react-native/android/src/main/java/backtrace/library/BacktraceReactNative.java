@@ -117,7 +117,7 @@ public class BacktraceReactNative extends ReactContextBaseJavaModule {
         try {
             promise.resolve(new AnrExitInfoReader(this.context).read((long) sinceEpochMillis));
         } catch (Exception e) {
-            Log.d(this.NAME, "Could not read ANR exit info");
+            Log.w(this.NAME, "Could not read ANR exit info", e);
             promise.reject("backtrace_anr_exit_info", e);
         }
     }
