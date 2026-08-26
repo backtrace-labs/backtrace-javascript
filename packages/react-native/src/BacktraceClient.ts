@@ -11,7 +11,7 @@ import {
 import { NativeModules, Platform } from 'react-native';
 import { AnrReporter } from './anr/AnrReporter';
 import { AnrWatchdogHandler } from './anr/AnrWatchdogHandler';
-import { type BacktraceConfiguration } from './BacktraceConfiguration';
+import { BacktraceAnrType, type BacktraceConfiguration } from './BacktraceConfiguration';
 import { FileBreadcrumbsStorage } from './breadcrumbs/FileBreadcrumbsStorage';
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 import type { BacktraceClientSetup } from './builder/BacktraceClientSetup';
@@ -144,7 +144,7 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
             return;
         }
 
-        if (anr.type === 'applicationExit') {
+        if (anr.type === BacktraceAnrType.ApplicationExit) {
             const fileSystem = this.fileSystem as FileSystem | undefined;
             if (!fileSystem) {
                 return;

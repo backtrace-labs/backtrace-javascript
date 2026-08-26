@@ -1,6 +1,9 @@
 import { type BacktraceConfiguration as SdkConfiguration } from '@backtrace/sdk-core';
 
-export type BacktraceAnrType = 'threshold' | 'applicationExit';
+export enum BacktraceAnrType {
+    Threshold = 'threshold',
+    ApplicationExit = 'applicationExit',
+}
 
 export interface BacktraceAnrConfiguration {
     /**
@@ -10,22 +13,22 @@ export interface BacktraceAnrConfiguration {
     enable?: boolean;
 
     /**
-     * Detection mechanism. `threshold` watches the main thread and reports as soon as it is
-     * blocked, on any Android version. `applicationExit` reports ANRs the system recorded,
+     * Detection mechanism. `Threshold` watches the main thread and reports as soon as it is
+     * blocked, on all supported Android versions. `ApplicationExit` reports ANRs the system recorded,
      * on the next application start, and requires API 30 or above.
-     * By default the value is set to `threshold`.
+     * By default the value is set to `Threshold`.
      */
     type?: BacktraceAnrType;
 
     /**
      * Time in milliseconds the main thread must be blocked before an ANR is reported.
-     * Applies to the `threshold` type only. By default the value is set to 5000.
+     * Applies to the `Threshold` type only. By default the value is set to 5000.
      */
     timeout?: number;
 
     /**
      * When true, detection is disabled while a debugger is attached.
-     * Applies to the `threshold` type only. By default the value is set to false.
+     * Applies to the `Threshold` type only. By default the value is set to false.
      */
     disableWhenDebuggerAttached?: boolean;
 }
