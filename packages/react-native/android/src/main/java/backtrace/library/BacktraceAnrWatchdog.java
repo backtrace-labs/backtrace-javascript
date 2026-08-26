@@ -1,13 +1,19 @@
 package backtraceio.library;
 
+import android.os.Looper;
+
 import androidx.annotation.NonNull;
 
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.WritableNativeArray;
 import com.facebook.react.bridge.WritableNativeMap;
 import com.facebook.react.module.annotations.ReactModule;
+
+import java.util.Map;
 
 import backtraceio.library.anr.AnrWatchdog;
 import backtraceio.library.anr.StackFrameMapper;
@@ -63,15 +69,33 @@ public class BacktraceAnrWatchdog extends ReactContextBaseJavaModule {
     @ReactMethod()
     public void removeListeners(Integer count) {}
 
-    private void emitAnrDetected(StackTraceElement[] mainThreadFrames) {
+    private void emitAnrDetected(Map<Thread, StackTraceElement[]> allThreads) {
         ReactApplicationContext context = getReactApplicationContext();
         if (!context.hasActiveReactInstance()) {
             return;
         }
 
+        Thread mainThread = Looper.getMainLooper().getThread();
+        StackTraceElement[] mainThreadFrames = allThreads.get(mainThread);
+        if (mainThreadFrames == null) {
+            mainThreadFrames = mainThread.getStackTrace();
+        }
+
+        WritableArray threads = new WritableNativeArray();
+        for (Map.Entry<Thread, StackTraceElement[]> entry : allThreads.entrySet()) {
+            if (entry.getKey() == mainThread) {
+                continue;
+            }
+            WritableMap thread = new WritableNativeMap();
+            thread.putString("name", entry.getKey().getName());
+            thread.putArray("frames", StackFrameMapper.toWritableFrames(entry.getValue()));
+            threads.pushMap(thread);
+        }
+
         WritableMap event = new WritableNativeMap();
         event.putString("stackTrace", StackFrameMapper.toFormattedString(mainThreadFrames));
         event.putArray("frames", StackFrameMapper.toWritableFrames(mainThreadFrames));
+        event.putArray("threads", threads);
 
         // getJSModule(RCTDeviceEventEmitter) drops events silently in bridgeless mode
         context.emitDeviceEvent(ANR_DETECTED_EVENT, event);

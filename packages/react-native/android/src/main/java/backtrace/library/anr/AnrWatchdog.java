@@ -5,9 +5,11 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
+import java.util.Map;
+
 public class AnrWatchdog extends Thread {
     public interface OnAnrDetected {
-        void onAnrDetected(StackTraceElement[] mainThreadFrames);
+        void onAnrDetected(Map<Thread, StackTraceElement[]> threads);
     }
 
     public static final int DEFAULT_ANR_TIMEOUT = 5000;
@@ -22,6 +24,7 @@ public class AnrWatchdog extends Thread {
     private volatile boolean shouldStop = false;
 
     public AnrWatchdog(int timeout, boolean debug, OnAnrDetected listener) {
+        super("BacktraceAnrWatchdog");
         this.timeout = timeout;
         this.debug = debug;
         this.listener = listener;
@@ -58,7 +61,7 @@ public class AnrWatchdog extends Thread {
             }
             reported = true;
 
-            this.listener.onAnrDetected(Looper.getMainLooper().getThread().getStackTrace());
+            this.listener.onAnrDetected(Thread.getAllStackTraces());
         }
     }
 

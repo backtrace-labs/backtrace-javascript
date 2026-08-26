@@ -301,7 +301,8 @@ Two detection mechanisms are available:
 
 -   `BacktraceAnrType.Threshold` monitors the main thread from a separate thread. If the main thread remains
     unresponsive for longer than the configured timeout (default: 5 seconds), an ANR is reported immediately, while
-    the application is still hung. It works on all supported Android versions.
+    the application is still hung. The report carries the stack traces of every Java thread, with the blocked main
+    thread as the faulting one. It works on all supported Android versions.
 -   `BacktraceAnrType.ApplicationExit` retrieves the ANRs the system recorded for previous runs of the process from
     `ApplicationExitInfo` and reports them on the next application start, including the thread dump the system
     captured when it declared the ANR. It requires API 30 or above and survives the process kill. Reported records

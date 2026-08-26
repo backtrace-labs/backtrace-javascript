@@ -52,6 +52,11 @@ const { NativeEventEmitter: EmitterMock } = require('react-native');
 const PAYLOAD = {
     stackTrace: 'android.os.MessageQueue.next(MessageQueue.java:335)\n',
     frames: [{ funcName: 'android.os.MessageQueue.next', library: 'MessageQueue.java', line: 335 }],
+    threads: [
+        { name: 'worker', frames: [{ funcName: 'java.lang.Object.wait', library: 'Object.java', line: 405 }] },
+        { name: 'worker', frames: [{ funcName: 'java.lang.Thread.run', library: 'Thread.java', line: 1572 }] },
+        { name: 'main', frames: [{ funcName: 'not.the.fault.thread', library: 'Fake.java', line: 1 }] },
+    ],
 };
 
 function createClient() {
@@ -93,6 +98,19 @@ describe('AnrWatchdogHandler', () => {
         const report = client.send.mock.calls[0][0];
         expect(report.attributes['error.type']).toBe('Hang');
         expect(report.stackTrace['main']).toEqual(PAYLOAD.frames);
+    });
+
+    it('adds the other threads without overwriting the fault thread, renaming duplicates', () => {
+        const client = createClient();
+        AnrWatchdogHandler.create()?.start(client as never, 0, false);
+
+        EmitterMock.emit(PAYLOAD);
+
+        const report = client.send.mock.calls[0][0];
+        expect(report.stackTrace['main']).toEqual(PAYLOAD.frames);
+        expect(report.stackTrace['worker']).toEqual(PAYLOAD.threads[0].frames);
+        expect(report.stackTrace['worker-2']).toEqual(PAYLOAD.threads[1].frames);
+        expect(report.stackTrace['main-2']).toEqual(PAYLOAD.threads[2].frames);
     });
 
     it('pauses detection in the background and resumes it in the foreground', () => {
