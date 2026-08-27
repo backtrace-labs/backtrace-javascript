@@ -4,6 +4,7 @@ import type { BacktraceClient } from '../BacktraceClient';
 import { DebuggerHelper } from '../common/DebuggerHelper';
 import type { FileSystem } from '../storage/FileSystem';
 import { AnrException } from './AnrException';
+import { addOtherThreads, type AnrThread } from './AnrThreads';
 
 export interface AnrExitInfoRecord {
     timestamp: number;
@@ -11,6 +12,7 @@ export interface AnrExitInfoRecord {
     attributes: Record<string, unknown>;
     stackTrace?: string;
     mainThreadFrames?: BacktraceStackFrame[];
+    threads?: AnrThread[];
 }
 
 export class AnrReporter {
@@ -81,6 +83,7 @@ export class AnrReporter {
         );
 
         report.addStackTrace('main', record.mainThreadFrames as BacktraceStackFrame[]);
+        addOtherThreads(report, record.threads);
         return report;
     }
 

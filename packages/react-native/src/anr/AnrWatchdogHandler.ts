@@ -10,18 +10,14 @@ import {
 import type { BacktraceClient } from '../BacktraceClient';
 import { DebuggerHelper } from '../common/DebuggerHelper';
 import { AnrException } from './AnrException';
+import { addOtherThreads, type AnrThread } from './AnrThreads';
 
 const AnrDetectedEvent = 'BacktraceAnrDetected';
-
-interface AnrThreadPayload {
-    name: string;
-    frames: BacktraceStackFrame[];
-}
 
 interface AnrDetectedPayload {
     stackTrace: string;
     frames: BacktraceStackFrame[];
-    threads?: AnrThreadPayload[];
+    threads?: AnrThread[];
 }
 
 export class AnrWatchdogHandler {
@@ -59,7 +55,7 @@ export class AnrWatchdogHandler {
                     [],
                 );
                 report.addStackTrace('main', payload.frames);
-                this.addOtherThreads(report, payload.threads);
+                addOtherThreads(report, payload.threads);
                 client.send(report);
             },
         );
@@ -74,19 +70,6 @@ export class AnrWatchdogHandler {
         });
 
         this._watchdog.start(timeout, disableWhenDebuggerAttached);
-    }
-
-    private addOtherThreads(report: BacktraceReport, threads?: AnrThreadPayload[]): void {
-        const usedNames = new Set(['main']);
-        for (const thread of threads ?? []) {
-            const base = thread.name || 'unknown';
-            let name = base;
-            for (let ordinal = 2; usedNames.has(name); ordinal++) {
-                name = `${base}-${ordinal}`;
-            }
-            usedNames.add(name);
-            report.addStackTrace(name, thread.frames);
-        }
     }
 
     public dispose(): void {

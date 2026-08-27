@@ -1,8 +1,10 @@
 package backtraceio.library.anr;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -129,6 +131,51 @@ public class ExitInfoStackTraceParserTest {
         assertEquals(157, anrMainThreadStacktrace[21].getLineNumber());
         assertEquals("MainActivity.java", anrMainThreadStacktrace[21].getFileName());
         assertEquals("backtraceio.backtraceio.MainActivity", anrMainThreadStacktrace[21].getClassName());
+    }
+
+    @Test
+    public void parseAnrOtherThreadStackTraces() {
+        // GIVEN
+        String stacktrace = readResource(ANR_APPEXIT_STACKTRACE_FILE);
+        Map<String, Object> parsed = ExitInfoStackTraceParser.parseANRStackTrace(stacktrace);
+
+        // WHEN
+        List<ExitInfoStackTraceParser.ThreadStackTrace> threads =
+                ExitInfoStackTraceParser.parseOtherThreadStackTraces(parsed);
+
+        // THEN
+        assertNotNull(threads);
+        assertFalse(threads.isEmpty());
+
+        List<String> names = new ArrayList<>();
+        for (ExitInfoStackTraceParser.ThreadStackTrace thread : threads) {
+            names.add(thread.getName());
+        }
+        assertFalse(names.contains("main"));
+        assertTrue(names.contains("Signal Catcher"));
+    }
+
+    @Test
+    public void parseOtherThreadStackTracesKeepsRepeatedNames() {
+        // GIVEN
+        String dump = "\"OkHttp Dispatcher\" daemon prio=5 tid=12 Waiting\n"
+                + "  at java.lang.Object.wait(Object.java:405)\n"
+                + "\n"
+                + "\"OkHttp Dispatcher\" daemon prio=5 tid=13 Waiting\n"
+                + "  at java.lang.Thread.run(Thread.java:1572)\n"
+                + "\n";
+        Map<String, Object> parsed = ExitInfoStackTraceParser.parseANRStackTrace(dump);
+
+        // WHEN
+        List<ExitInfoStackTraceParser.ThreadStackTrace> threads =
+                ExitInfoStackTraceParser.parseOtherThreadStackTraces(parsed);
+
+        // THEN
+        assertEquals(2, threads.size());
+        assertEquals("OkHttp Dispatcher", threads.get(0).getName());
+        assertEquals("OkHttp Dispatcher", threads.get(1).getName());
+        assertEquals("wait", threads.get(0).getFrames()[0].getMethodName());
+        assertEquals("run", threads.get(1).getFrames()[0].getMethodName());
     }
 
     private static String readResource(String fileName) {

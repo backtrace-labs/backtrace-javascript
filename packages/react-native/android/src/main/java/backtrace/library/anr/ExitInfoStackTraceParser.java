@@ -65,8 +65,48 @@ public class ExitInfoStackTraceParser {
             return new StackTraceElement[0];
         }
 
-        List<String> stackFrames = (List<String>) mainThreadInfo.get("stack_trace");
+        return toStackTraceElements((List<String>) mainThreadInfo.get("stack_trace"));
+    }
 
+    // the dump repeats names across pool threads, so these stay a list and are deduplicated by the caller
+    public static List<ThreadStackTrace> parseOtherThreadStackTraces(Map<String, Object> parsedData) {
+        List<ThreadStackTrace> result = new ArrayList<>();
+        List<Map<String, Object>> threads = (List<Map<String, Object>>) parsedData.get("threads");
+
+        if (threads == null) {
+            return result;
+        }
+
+        for (Map<String, Object> thread : threads) {
+            Object name = thread.get("name");
+            if (name == null || MAIN_THREAD_NAME.equals(name)) {
+                continue;
+            }
+            result.add(new ThreadStackTrace(name.toString(),
+                    toStackTraceElements((List<String>) thread.get("stack_trace"))));
+        }
+        return result;
+    }
+
+    public static class ThreadStackTrace {
+        private final String name;
+        private final StackTraceElement[] frames;
+
+        ThreadStackTrace(String name, StackTraceElement[] frames) {
+            this.name = name;
+            this.frames = frames;
+        }
+
+        public String getName() {
+            return this.name;
+        }
+
+        public StackTraceElement[] getFrames() {
+            return this.frames;
+        }
+    }
+
+    private static StackTraceElement[] toStackTraceElements(List<String> stackFrames) {
         if (stackFrames == null) {
             return new StackTraceElement[0];
         }

@@ -47,10 +47,15 @@ function record(timestamp: number, frames?: object[]) {
         attributes: { PID: 123 },
         stackTrace: 'raw dump',
         mainThreadFrames: frames,
-    };
+    } as { threads?: object[] } & Record<string, unknown>;
 }
 
 const FRAMES = [{ funcName: 'android.os.MessageQueue.next', library: 'MessageQueue.java', line: 335 }];
+
+const OTHER_THREADS = [
+    { name: 'FinalizerDaemon', frames: [{ funcName: 'java.lang.Object.wait', library: 'Object.java', line: 405 }] },
+    { name: 'FinalizerDaemon', frames: [{ funcName: 'java.lang.Thread.run', library: 'Thread.java', line: 1572 }] },
+];
 
 describe('AnrReporter', () => {
     beforeEach(() => {
@@ -130,5 +135,20 @@ describe('AnrReporter', () => {
         expect(report.attachments).toHaveLength(1);
         expect(report.attachments[0].name).toBe('anr-stacktrace.txt');
         expect(report.attributes['PID']).toBe(123);
+    });
+
+    it('attaches the other threads from the dump and renames collisions', async () => {
+        const fileSystem = createFileSystem();
+        const anr = record(1, FRAMES);
+        anr.threads = OTHER_THREADS;
+        getAnrExitInfo.mockResolvedValue([anr]);
+        const send = jest.fn().mockResolvedValue({ status: 'Ok' });
+
+        await AnrReporter.create(fileSystem)?.report(createClient(send));
+
+        const report = send.mock.calls[0][0];
+        expect(report.stackTrace['main']).toEqual(FRAMES);
+        expect(report.stackTrace['FinalizerDaemon']).toEqual(OTHER_THREADS[0].frames);
+        expect(report.stackTrace['FinalizerDaemon-2']).toEqual(OTHER_THREADS[1].frames);
     });
 });

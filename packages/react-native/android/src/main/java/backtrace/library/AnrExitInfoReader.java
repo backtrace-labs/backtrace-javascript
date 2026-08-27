@@ -13,6 +13,7 @@ import com.facebook.react.bridge.WritableNativeMap;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -83,25 +84,42 @@ class AnrExitInfoReader {
         record.putMap("attributes", toWritableMap(AppExitInfoDetailsExtractor.getANRAttributes(exitInfo)));
         record.putString("stackTrace", stackTrace);
 
-        StackTraceElement[] frames = parseMainThreadFrames(stackTrace);
+        Map<String, Object> parsed = parseStackTrace(stackTrace);
+
+        StackTraceElement[] frames = ExitInfoStackTraceParser.parseMainThreadStackTrace(parsed);
         if (frames.length > 0) {
             record.putArray("mainThreadFrames", StackFrameMapper.toWritableFrames(frames));
+        }
+
+        WritableArray threads = toWritableThreads(ExitInfoStackTraceParser.parseOtherThreadStackTraces(parsed));
+        if (threads.size() > 0) {
+            record.putArray("threads", threads);
         }
         return record;
     }
 
-    private StackTraceElement[] parseMainThreadFrames(String stackTrace) {
+    private Map<String, Object> parseStackTrace(String stackTrace) {
         if (stackTrace == null || stackTrace.isEmpty()) {
-            return new StackTraceElement[0];
+            return new HashMap<>();
         }
 
         try {
-            Map<String, Object> parsed = ExitInfoStackTraceParser.parseANRStackTrace(stackTrace);
-            return ExitInfoStackTraceParser.parseMainThreadStackTrace(parsed);
+            return ExitInfoStackTraceParser.parseANRStackTrace(stackTrace);
         } catch (Exception e) {
             Log.e(LOG_TAG, "Could not parse the ANR stack trace", e);
-            return new StackTraceElement[0];
+            return new HashMap<>();
         }
+    }
+
+    private WritableArray toWritableThreads(List<ExitInfoStackTraceParser.ThreadStackTrace> threads) {
+        WritableArray result = new WritableNativeArray();
+        for (ExitInfoStackTraceParser.ThreadStackTrace thread : threads) {
+            WritableMap map = new WritableNativeMap();
+            map.putString("name", thread.getName());
+            map.putArray("frames", StackFrameMapper.toWritableFrames(thread.getFrames()));
+            result.pushMap(map);
+        }
+        return result;
     }
 
     private WritableMap toWritableMap(Map<String, Object> values) {
