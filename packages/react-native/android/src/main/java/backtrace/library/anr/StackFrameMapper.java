@@ -33,6 +33,7 @@ public class StackFrameMapper {
             // parseNativeFrame stores the symbol in the method name and the library in the class name
             map.putString("funcName", frame.getMethodName());
             map.putString("library", frame.getClassName());
+            map.putString("address", fileName.substring(NATIVE_FILE_PREFIX.length()));
             return map;
         }
 

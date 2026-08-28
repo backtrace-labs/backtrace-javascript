@@ -154,6 +154,78 @@ public class ExitInfoStackTraceParserTest {
     }
 
     @Test
+    public void parseFrameNativeMethodCapitalized() {
+        // GIVEN
+        String frame = "  at java.lang.Thread.yield(Native Method)";
+
+        // WHEN
+        StackTraceElement element = ExitInfoStackTraceParser.parseFrame(frame);
+
+        // THEN
+        assertNotNull(element);
+        assertEquals("yield", element.getMethodName());
+        assertTrue(element.isNativeMethod());
+    }
+
+    @Test
+    public void parseFrameUnknownSource() {
+        // GIVEN
+        String frame = "  at com.example.Foo.bar(Unknown Source)";
+
+        // WHEN
+        StackTraceElement element = ExitInfoStackTraceParser.parseFrame(frame);
+
+        // THEN
+        assertNotNull(element);
+        assertEquals("com.example.Foo", element.getClassName());
+        assertEquals("bar", element.getMethodName());
+        assertNull(element.getFileName());
+        assertFalse(element.isNativeMethod());
+    }
+
+    @Test
+    public void parseFrameFileWithoutLine() {
+        // GIVEN
+        String frame = "  at com.example.Foo.bar(SourceFile)";
+
+        // WHEN
+        StackTraceElement element = ExitInfoStackTraceParser.parseFrame(frame);
+
+        // THEN
+        assertNotNull(element);
+        assertEquals("SourceFile", element.getFileName());
+        assertEquals(-1, element.getLineNumber());
+    }
+
+    @Test
+    public void parseFrameFileWithColonAndNoLine() {
+        // GIVEN
+        String frame = "  at com.example.Foo.bar(weird:file)";
+
+        // WHEN
+        StackTraceElement element = ExitInfoStackTraceParser.parseFrame(frame);
+
+        // THEN
+        assertNotNull(element);
+        assertEquals("weird:file", element.getFileName());
+        assertEquals(-1, element.getLineNumber());
+    }
+
+    @Test
+    public void parseFrameWithTabAfterAt() {
+        // GIVEN
+        String frame = "\tat\tjava.lang.Thread.sleep(Thread.java:580)";
+
+        // WHEN
+        StackTraceElement element = ExitInfoStackTraceParser.parseFrame(frame);
+
+        // THEN
+        assertNotNull(element);
+        assertEquals("sleep", element.getMethodName());
+        assertEquals(580, element.getLineNumber());
+    }
+
+    @Test
     public void parseAnrOtherThreadStackTraces() {
         // GIVEN
         String stacktrace = readResource(ANR_APPEXIT_STACKTRACE_FILE);

@@ -11,9 +11,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ExitInfoStackTraceParser {
-    private static final Pattern JAVA_FRAME_PATTERN = Pattern.compile("\\s*at (.*?)\\((.*?):(\\d+)\\)");
-    private static final Pattern NATIVE_METHOD_FRAME_PATTERN = Pattern.compile("\\s*at (.*?)\\(Native method\\)");
+    private static final Pattern JAVA_FRAME_PATTERN = Pattern.compile("\\s*at\\s+(.*?)\\((.*?):(\\d+)\\)");
+    private static final Pattern NATIVE_METHOD_FRAME_PATTERN = Pattern.compile("\\s*at\\s+(.*?)\\(Native [Mm]ethod\\)");
+    private static final Pattern FILE_ONLY_FRAME_PATTERN = Pattern.compile("\\s*at\\s+(.*?)\\(([^)]+)\\)");
+    private static final String UNKNOWN_SOURCE_FILE = "Unknown Source";
     private static final int NATIVE_METHOD_LINE_NUMBER = -2;
+    private static final int UNKNOWN_LINE_NUMBER = -1;
     private static final String MAIN_THREAD_NAME = "main";
     private static final int NATIVE_STACK_ELEMENTS_NUMBER = 6;
 
@@ -28,7 +31,25 @@ public class ExitInfoStackTraceParser {
             return nativeMethodFrame;
         }
 
-        return parseNativeFrame(frame);
+        StackTraceElement nativeFrame = parseNativeFrame(frame);
+        if (nativeFrame != null) {
+            return nativeFrame;
+        }
+
+        return parseFileOnlyFrame(frame);
+    }
+
+    static StackTraceElement parseFileOnlyFrame(String frame) {
+        Matcher matcher = FILE_ONLY_FRAME_PATTERN.matcher(frame);
+        if (!matcher.find()) {
+            return null;
+        }
+
+        String fileName = matcher.group(2);
+        if (UNKNOWN_SOURCE_FILE.equals(fileName)) {
+            fileName = null;
+        }
+        return toStackTraceElement(matcher.group(1), fileName, UNKNOWN_LINE_NUMBER);
     }
 
     static StackTraceElement parseNativeMethodFrame(String frame) {
