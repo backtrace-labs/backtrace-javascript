@@ -15,6 +15,9 @@ BacktraceClient.initialize({
             prop2: 123,
         },
     },
+    anr: {
+        enable: true,
+    },
     database: {
         enable: true,
         captureNativeCrashes: true,

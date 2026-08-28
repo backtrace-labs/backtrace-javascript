@@ -9,7 +9,9 @@ import {
     type DebugIdContainer,
 } from '@backtrace/sdk-core';
 import { NativeModules, Platform } from 'react-native';
-import { type BacktraceConfiguration } from './BacktraceConfiguration';
+import { AnrReporter } from './anr/AnrReporter';
+import { AnrWatchdogHandler } from './anr/AnrWatchdogHandler';
+import { BacktraceAnrType, type BacktraceConfiguration } from './BacktraceConfiguration';
 import { FileBreadcrumbsStorage } from './breadcrumbs/FileBreadcrumbsStorage';
 import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 import type { BacktraceClientSetup } from './builder/BacktraceClientSetup';
@@ -24,6 +26,7 @@ import { type FileSystem } from './storage/FileSystem';
 
 export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration> {
     private _crashReporter?: CrashReporter;
+    private _anrWatchdogHandler?: AnrWatchdogHandler;
     private readonly _exceptionHandler: ExceptionHandler = generateUnhandledExceptionHandler();
 
     public crash(): void {
@@ -81,6 +84,7 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
             );
 
             this._crashReporter = this.initializeNativeCrashReporter();
+            this.reportApplicationNotResponding();
         } finally {
             lockId && this.sessionFiles?.unlockPreviousSessions(lockId);
         }
@@ -88,6 +92,7 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
 
     public dispose(): void {
         this._exceptionHandler.dispose();
+        this._anrWatchdogHandler?.dispose();
         this._crashReporter?.dispose();
         super.dispose();
     }
@@ -131,6 +136,26 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
         if (captureUnhandledRejections) {
             this._exceptionHandler.captureUnhandledPromiseRejections(this);
         }
+    }
+
+    private reportApplicationNotResponding(): void {
+        const anr = this.options.anr;
+        if (!anr?.enable) {
+            return;
+        }
+
+        if (anr.type === BacktraceAnrType.ApplicationExit) {
+            const fileSystem = this.fileSystem as FileSystem | undefined;
+            if (!fileSystem) {
+                return;
+            }
+
+            AnrReporter.create(fileSystem)?.report(this);
+            return;
+        }
+
+        this._anrWatchdogHandler = AnrWatchdogHandler.create();
+        this._anrWatchdogHandler?.start(this, anr.timeout ?? 0, anr.disableWhenDebuggerAttached ?? false);
     }
 
     private initializeNativeCrashReporter(): CrashReporter | undefined {

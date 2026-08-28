@@ -9,6 +9,16 @@ const backtraceSourceMapProcessor = require('@backtrace/react-native/scripts/pro
  * @type {import('metro-config').MetroConfig}
  */
 const config = {
+    resolver: {
+        blockList: [
+            // a second react-native copy splits the JS event registry from the native one
+            new RegExp(path.resolve(__dirname, '../../../packages/react-native/node_modules/react-native').replace(/[/\\]/g, '[/\\\\]') + '[/\\\\].*'),
+            new RegExp(path.resolve(__dirname, '../../../node_modules/react-native').replace(/[/\\]/g, '[/\\\\]') + '[/\\\\].*'),
+        ],
+        extraNodeModules: {
+            'react-native': path.resolve(__dirname, 'node_modules/react-native'),
+        },
+    },
     watchFolders: [
         path.resolve('../../../packages/react-native'),
         path.resolve('../../../packages/react-native/node_modules'),
