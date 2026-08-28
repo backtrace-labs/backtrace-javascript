@@ -112,6 +112,29 @@ describe('AnrReporter', () => {
         expect(fileSystem.storage.get(MARKER_PATH)).toBe('1');
     });
 
+    it('advances the marker on a failed send that the database stores for retry', async () => {
+        const fileSystem = createFileSystem();
+        getAnrExitInfo.mockResolvedValue([record(1, FRAMES), record(2, FRAMES)]);
+        const send = jest.fn().mockResolvedValue({ status: 'Network Error' });
+        const client = { send, database: {} } as never;
+
+        await AnrReporter.create(fileSystem)?.report(client);
+
+        expect(send).toHaveBeenCalledTimes(2);
+        expect(fileSystem.storage.get(MARKER_PATH)).toBe('2');
+    });
+
+    it('keeps the marker on a rate-limited send even with a database', async () => {
+        const fileSystem = createFileSystem();
+        getAnrExitInfo.mockResolvedValue([record(1, FRAMES)]);
+        const send = jest.fn().mockResolvedValue({ status: 'Limit reached' });
+        const client = { send, database: {} } as never;
+
+        await AnrReporter.create(fileSystem)?.report(client);
+
+        expect(fileSystem.storage.get(MARKER_PATH)).toBeUndefined();
+    });
+
     it('skips a record without frames but still advances the marker', async () => {
         const fileSystem = createFileSystem();
         getAnrExitInfo.mockResolvedValue([record(7, undefined)]);

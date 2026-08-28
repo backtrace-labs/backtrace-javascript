@@ -1,4 +1,9 @@
-import { BacktraceReport, BacktraceStringAttachment, type BacktraceStackFrame } from '@backtrace/sdk-core';
+import {
+    BacktraceReport,
+    BacktraceStringAttachment,
+    type BacktraceStackFrame,
+    type BacktraceSubmissionStatus,
+} from '@backtrace/sdk-core';
 import { NativeModules, Platform } from 'react-native';
 import type { BacktraceClient } from '../BacktraceClient';
 import { DebuggerHelper } from '../common/DebuggerHelper';
@@ -17,6 +22,13 @@ export interface AnrExitInfoRecord {
 
 export class AnrReporter {
     private static readonly MarkerFileName = 'backtrace-anr-marker';
+    private static readonly DatabaseRetriedStatuses: BacktraceSubmissionStatus[] = [
+        'Network Error',
+        'Server Error',
+        'Invalid token',
+        'Unknown',
+        'Unsupported',
+    ];
 
     private constructor(
         private readonly _fileSystem: FileSystem,
@@ -50,7 +62,7 @@ export class AnrReporter {
                 await this.readMarker(),
             );
 
-            // records arrive oldest first, so stopping on failure leaves the rest for the next launch
+            // records arrive oldest first, so stopping leaves the rest for the next launch
             for (const record of records) {
                 if (!record.mainThreadFrames?.length) {
                     // no groupable stack, but still mark it seen or it is re-read on every launch
@@ -59,7 +71,7 @@ export class AnrReporter {
                 }
 
                 const result = await client.send(this.buildReport(record));
-                if (result.status !== 'Ok') {
+                if (this.needsRetry(client, result.status)) {
                     return;
                 }
 
@@ -68,6 +80,14 @@ export class AnrReporter {
         } catch (err) {
             console.warn('Backtrace: cannot report ANRs from application exit info.', err);
         }
+    }
+
+    // the database stores every report before the send attempt and retries failures from there
+    private needsRetry(client: BacktraceClient, status: BacktraceSubmissionStatus): boolean {
+        if (status === 'Ok') {
+            return false;
+        }
+        return !client.database || !AnrReporter.DatabaseRetriedStatuses.includes(status);
     }
 
     private buildReport(record: AnrExitInfoRecord): BacktraceReport {
