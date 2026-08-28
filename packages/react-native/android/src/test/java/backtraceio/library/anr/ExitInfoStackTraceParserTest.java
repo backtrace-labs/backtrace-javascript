@@ -113,7 +113,7 @@ public class ExitInfoStackTraceParserTest {
         StackTraceElement[] anrMainThreadStacktrace = ExitInfoStackTraceParser.parseMainThreadStackTrace(anrStacktrace);
 
         // THEN
-        assertEquals(33, anrMainThreadStacktrace.length);
+        assertEquals(36, anrMainThreadStacktrace.length);
 
         assertEquals("(__kernel_vsyscall+7)", anrMainThreadStacktrace[0].getMethodName());
         assertEquals(0, anrMainThreadStacktrace[0].getLineNumber());
@@ -127,10 +127,30 @@ public class ExitInfoStackTraceParserTest {
         assertEquals("address: 00379b00", anrMainThreadStacktrace[14].getFileName());
         assertEquals("/apex/com.android.art/lib/libart.so", anrMainThreadStacktrace[14].getClassName());
 
-        assertEquals("handledException", anrMainThreadStacktrace[21].getMethodName());
-        assertEquals(157, anrMainThreadStacktrace[21].getLineNumber());
-        assertEquals("MainActivity.java", anrMainThreadStacktrace[21].getFileName());
-        assertEquals("backtraceio.backtraceio.MainActivity", anrMainThreadStacktrace[21].getClassName());
+        assertEquals("yield", anrMainThreadStacktrace[21].getMethodName());
+        assertEquals("java.lang.Thread", anrMainThreadStacktrace[21].getClassName());
+        assertTrue(anrMainThreadStacktrace[21].isNativeMethod());
+
+        assertEquals("handledException", anrMainThreadStacktrace[22].getMethodName());
+        assertEquals(157, anrMainThreadStacktrace[22].getLineNumber());
+        assertEquals("MainActivity.java", anrMainThreadStacktrace[22].getFileName());
+        assertEquals("backtraceio.backtraceio.MainActivity", anrMainThreadStacktrace[22].getClassName());
+    }
+
+    @Test
+    public void parseFrameNativeMethod() {
+        // GIVEN
+        String frame = "  at java.lang.Thread.sleep(Native method)";
+
+        // WHEN
+        StackTraceElement element = ExitInfoStackTraceParser.parseFrame(frame);
+
+        // THEN
+        assertNotNull(element);
+        assertEquals("java.lang.Thread", element.getClassName());
+        assertEquals("sleep", element.getMethodName());
+        assertNull(element.getFileName());
+        assertTrue(element.isNativeMethod());
     }
 
     @Test

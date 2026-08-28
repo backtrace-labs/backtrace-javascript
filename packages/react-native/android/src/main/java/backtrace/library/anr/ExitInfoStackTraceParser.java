@@ -12,6 +12,8 @@ import java.util.regex.Pattern;
 
 public class ExitInfoStackTraceParser {
     private static final Pattern JAVA_FRAME_PATTERN = Pattern.compile("\\s*at (.*?)\\((.*?):(\\d+)\\)");
+    private static final Pattern NATIVE_METHOD_FRAME_PATTERN = Pattern.compile("\\s*at (.*?)\\(Native method\\)");
+    private static final int NATIVE_METHOD_LINE_NUMBER = -2;
     private static final String MAIN_THREAD_NAME = "main";
     private static final int NATIVE_STACK_ELEMENTS_NUMBER = 6;
 
@@ -21,7 +23,22 @@ public class ExitInfoStackTraceParser {
             return javaFrame;
         }
 
+        StackTraceElement nativeMethodFrame = parseNativeMethodFrame(frame);
+        if (nativeMethodFrame != null) {
+            return nativeMethodFrame;
+        }
+
         return parseNativeFrame(frame);
+    }
+
+    static StackTraceElement parseNativeMethodFrame(String frame) {
+        Matcher matcher = NATIVE_METHOD_FRAME_PATTERN.matcher(frame);
+        if (!matcher.find()) {
+            return null;
+        }
+
+        // isNativeMethod, and so the reported library, keys off this line number
+        return toStackTraceElement(matcher.group(1), null, NATIVE_METHOD_LINE_NUMBER);
     }
 
     static StackTraceElement parseNativeFrame(String frame) {
@@ -47,10 +64,10 @@ public class ExitInfoStackTraceParser {
             return null;
         }
 
-        String fullClassNameMethod = matcher.group(1);
-        String fileName = matcher.group(2);
-        int lineNumber = Integer.parseInt(matcher.group(3));
+        return toStackTraceElement(matcher.group(1), matcher.group(2), Integer.parseInt(matcher.group(3)));
+    }
 
+    private static StackTraceElement toStackTraceElement(String fullClassNameMethod, String fileName, int lineNumber) {
         int lastDot = fullClassNameMethod.lastIndexOf('.');
         String className = (lastDot == -1) ? fullClassNameMethod : fullClassNameMethod.substring(0, lastDot);
         String methodName = (lastDot == -1) ? "" : fullClassNameMethod.substring(lastDot + 1);
