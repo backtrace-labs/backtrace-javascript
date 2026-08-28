@@ -17,6 +17,11 @@ interface FileChunkSinkOptions {
      * File system to use.
      */
     readonly fs: FileSystem;
+
+    /**
+     * Called after the tracked file set changes.
+     */
+    readonly onFilesChange?: () => void;
 }
 
 /**
@@ -57,6 +62,7 @@ export class FileChunkSink {
         return (n) => {
             const stream = this.createStream(n);
             this._streamTracker.push(stream);
+            this._options.onFilesChange?.();
             return stream;
         };
     }
