@@ -21,7 +21,7 @@ export interface AnrExitInfoRecord {
 }
 
 export class AnrReporter {
-    private static readonly MarkerFileName = 'backtrace-anr-marker';
+    private static readonly LastTimestampFileName = 'backtrace-anr-last-timestamp';
     private static readonly DatabaseRetriedStatuses: BacktraceSubmissionStatus[] = [
         'Network Error',
         'Server Error',
@@ -32,7 +32,7 @@ export class AnrReporter {
 
     private constructor(
         private readonly _fileSystem: FileSystem,
-        private readonly _markerPath: string,
+        private readonly _lastTimestampPath: string,
     ) {}
 
     public static create(fileSystem: FileSystem): AnrReporter | undefined {
@@ -53,20 +53,20 @@ export class AnrReporter {
             return undefined;
         }
 
-        return new AnrReporter(fileSystem, `${applicationDirectory}/${AnrReporter.MarkerFileName}`);
+        return new AnrReporter(fileSystem, `${applicationDirectory}/${AnrReporter.LastTimestampFileName}`);
     }
 
     public async report(client: BacktraceClient): Promise<void> {
         try {
             const records: AnrExitInfoRecord[] = await NativeModules.BacktraceReactNative.getAnrExitInfo(
-                await this.readMarker(),
+                await this.readLastTimestamp(),
             );
 
             // records arrive oldest first, so stopping leaves the rest for the next launch
             for (const record of records) {
                 if (!record.mainThreadFrames?.length) {
-                    // no groupable stack, but still mark it seen or it is re-read on every launch
-                    await this.writeMarker(record.timestamp);
+                    // no groupable stack, but still save its timestamp or it is re-read on every launch
+                    await this.saveLastTimestamp(record.timestamp);
                     continue;
                 }
 
@@ -75,7 +75,7 @@ export class AnrReporter {
                     return;
                 }
 
-                await this.writeMarker(record.timestamp);
+                await this.saveLastTimestamp(record.timestamp);
             }
         } catch (err) {
             console.warn('Backtrace: cannot report ANRs from application exit info.', err);
@@ -107,16 +107,16 @@ export class AnrReporter {
         return report;
     }
 
-    private async readMarker(): Promise<number> {
-        if (!(await this._fileSystem.exists(this._markerPath))) {
+    private async readLastTimestamp(): Promise<number> {
+        if (!(await this._fileSystem.exists(this._lastTimestampPath))) {
             return 0;
         }
 
-        const timestamp = parseInt(await this._fileSystem.readFile(this._markerPath), 10);
+        const timestamp = parseInt(await this._fileSystem.readFile(this._lastTimestampPath), 10);
         return Number.isFinite(timestamp) ? timestamp : 0;
     }
 
-    private writeMarker(timestamp: number): Promise<void> {
-        return this._fileSystem.writeFile(this._markerPath, timestamp.toString());
+    private saveLastTimestamp(timestamp: number): Promise<void> {
+        return this._fileSystem.writeFile(this._lastTimestampPath, timestamp.toString());
     }
 }

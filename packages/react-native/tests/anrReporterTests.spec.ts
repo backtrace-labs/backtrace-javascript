@@ -21,7 +21,7 @@ NativeModules.BacktraceReactNative = { getAnrExitInfo };
 const { AnrReporter } = require('../src/anr/AnrReporter');
 /* eslint-enable @typescript-eslint/no-var-requires */
 
-const MARKER_PATH = '/data/backtrace-anr-marker';
+const LAST_TIMESTAMP_PATH = '/data/backtrace-anr-last-timestamp';
 
 function createFileSystem(files: Record<string, string> = {}) {
     const storage = new Map(Object.entries(files));
@@ -75,8 +75,8 @@ describe('AnrReporter', () => {
         NativeModules.BacktraceReactNative = saved;
     });
 
-    it('passes the stored marker to the native reader', async () => {
-        const fileSystem = createFileSystem({ [MARKER_PATH]: '1234' });
+    it('passes the stored last timestamp to the native reader', async () => {
+        const fileSystem = createFileSystem({ [LAST_TIMESTAMP_PATH]: '1234' });
         getAnrExitInfo.mockResolvedValue([]);
 
         await AnrReporter.create(fileSystem)?.report(createClient());
@@ -84,7 +84,7 @@ describe('AnrReporter', () => {
         expect(getAnrExitInfo).toHaveBeenCalledWith(1234);
     });
 
-    it('sends records oldest first and advances the marker after each accepted send', async () => {
+    it('sends records oldest first and saves the timestamp after each accepted send', async () => {
         const fileSystem = createFileSystem();
         getAnrExitInfo.mockResolvedValue([record(1, FRAMES), record(2, FRAMES)]);
         const send = jest.fn().mockResolvedValue({ status: 'Ok' });
@@ -95,10 +95,10 @@ describe('AnrReporter', () => {
         expect(send.mock.calls[0][0].attributes['error.type']).toBe('Hang');
         expect(send.mock.calls[0][0].timestamp).toBe(1);
         expect(send.mock.calls[1][0].timestamp).toBe(2);
-        expect(fileSystem.storage.get(MARKER_PATH)).toBe('2');
+        expect(fileSystem.storage.get(LAST_TIMESTAMP_PATH)).toBe('2');
     });
 
-    it('stops on a failed send and keeps the marker at the last accepted record', async () => {
+    it('stops on a failed send and keeps the last timestamp at the last accepted record', async () => {
         const fileSystem = createFileSystem();
         getAnrExitInfo.mockResolvedValue([record(1, FRAMES), record(2, FRAMES), record(3, FRAMES)]);
         const send = jest
@@ -109,10 +109,10 @@ describe('AnrReporter', () => {
         await AnrReporter.create(fileSystem)?.report(createClient(send));
 
         expect(send).toHaveBeenCalledTimes(2);
-        expect(fileSystem.storage.get(MARKER_PATH)).toBe('1');
+        expect(fileSystem.storage.get(LAST_TIMESTAMP_PATH)).toBe('1');
     });
 
-    it('advances the marker on a failed send that the database stores for retry', async () => {
+    it('saves the timestamp on a failed send that the database stores for retry', async () => {
         const fileSystem = createFileSystem();
         getAnrExitInfo.mockResolvedValue([record(1, FRAMES), record(2, FRAMES)]);
         const send = jest.fn().mockResolvedValue({ status: 'Network Error' });
@@ -121,10 +121,10 @@ describe('AnrReporter', () => {
         await AnrReporter.create(fileSystem)?.report(client);
 
         expect(send).toHaveBeenCalledTimes(2);
-        expect(fileSystem.storage.get(MARKER_PATH)).toBe('2');
+        expect(fileSystem.storage.get(LAST_TIMESTAMP_PATH)).toBe('2');
     });
 
-    it('keeps the marker on a rate-limited send even with a database', async () => {
+    it('keeps the last timestamp on a rate-limited send even with a database', async () => {
         const fileSystem = createFileSystem();
         getAnrExitInfo.mockResolvedValue([record(1, FRAMES)]);
         const send = jest.fn().mockResolvedValue({ status: 'Limit reached' });
@@ -132,10 +132,10 @@ describe('AnrReporter', () => {
 
         await AnrReporter.create(fileSystem)?.report(client);
 
-        expect(fileSystem.storage.get(MARKER_PATH)).toBeUndefined();
+        expect(fileSystem.storage.get(LAST_TIMESTAMP_PATH)).toBeUndefined();
     });
 
-    it('skips a record without frames but still advances the marker', async () => {
+    it('skips a record without frames but still saves its timestamp', async () => {
         const fileSystem = createFileSystem();
         getAnrExitInfo.mockResolvedValue([record(7, undefined)]);
         const send = jest.fn();
@@ -143,7 +143,7 @@ describe('AnrReporter', () => {
         await AnrReporter.create(fileSystem)?.report(createClient(send));
 
         expect(send).not.toHaveBeenCalled();
-        expect(fileSystem.storage.get(MARKER_PATH)).toBe('7');
+        expect(fileSystem.storage.get(LAST_TIMESTAMP_PATH)).toBe('7');
     });
 
     it('attaches the parsed frames as the main thread and the raw dump as an attachment', async () => {
