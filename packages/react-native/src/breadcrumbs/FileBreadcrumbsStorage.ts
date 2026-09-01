@@ -36,11 +36,13 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
         session: SessionFiles,
         private readonly _fileSystem: FileSystem,
         private readonly _limits: BreadcrumbsStorageLimits,
+        onFilesChange?: (lastBreadcrumbId: number) => void,
     ) {
         this._sink = new FileChunkSink({
             maxFiles: 2,
             fs: this._fileSystem,
             file: (n) => session.getFileName(FileBreadcrumbsStorage.getFileName(n)),
+            onFilesChange: onFilesChange && (() => onFilesChange(this._lastBreadcrumbId)),
         });
 
         const splitters: ChunkSplitterFactory<string>[] = [];
@@ -72,8 +74,12 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
         this._destinationWriter = this._destinationStream.getWriter();
     }
 
-    public static factory(session: SessionFiles, fileSystem: FileSystem): BreadcrumbsStorageFactory {
-        return ({ limits }) => new FileBreadcrumbsStorage(session, fileSystem, limits);
+    public static factory(
+        session: SessionFiles,
+        fileSystem: FileSystem,
+        onFilesChange?: (lastBreadcrumbId: number) => void,
+    ): BreadcrumbsStorageFactory {
+        return ({ limits }) => new FileBreadcrumbsStorage(session, fileSystem, limits, onFilesChange);
     }
 
     public getAttachments(): BacktraceFileAttachment[] {

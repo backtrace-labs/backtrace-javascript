@@ -24,6 +24,9 @@ import { ReactNativeRequestHandler } from './ReactNativeRequestHandler';
 import { ReactStackTraceConverter } from './ReactStackTraceConverter';
 import { type FileSystem } from './storage/FileSystem';
 
+// Must match the private attribute name BreadcrumbsManager sets on JS reports.
+const BREADCRUMB_ATTRIBUTE_NAME = 'breadcrumbs.lastId';
+
 export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration> {
     private _crashReporter?: CrashReporter;
     private _anrWatchdogHandler?: AnrWatchdogHandler;
@@ -59,7 +62,11 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
 
         const breadcrumbsManager = this.modules.get(BreadcrumbsManager);
         if (breadcrumbsManager && this.sessionFiles) {
-            breadcrumbsManager.setStorage(FileBreadcrumbsStorage.factory(this.sessionFiles, fileSystem));
+            breadcrumbsManager.setStorage(
+                FileBreadcrumbsStorage.factory(this.sessionFiles, fileSystem, (lastBreadcrumbId) =>
+                    this.refreshNativeBreadcrumbs(lastBreadcrumbId),
+                ),
+            );
         }
 
         this.attributeManager.attributeEvents.on(
@@ -156,6 +163,14 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
 
         this._anrWatchdogHandler = AnrWatchdogHandler.create();
         this._anrWatchdogHandler?.start(this, anr.timeout ?? 0, anr.disableWhenDebuggerAttached ?? false);
+    }
+
+    private refreshNativeBreadcrumbs(lastBreadcrumbId: number) {
+        if (!this._crashReporter) {
+            return;
+        }
+        this._crashReporter.updateAttachments(this.attachments);
+        this._crashReporter.updateAttributes({ [BREADCRUMB_ATTRIBUTE_NAME]: lastBreadcrumbId });
     }
 
     private initializeNativeCrashReporter(): CrashReporter | undefined {
