@@ -2,6 +2,7 @@ package backtraceio.library;
 
 import androidx.annotation.NonNull;
 
+import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
@@ -109,5 +110,15 @@ public class BacktraceReactNative extends ReactContextBaseJavaModule {
     @ReactMethod()
     public void crash() {
         BacktraceBase.crash();
+    }
+
+    @ReactMethod()
+    public void getAnrExitInfo(double sinceEpochMillis, Promise promise) {
+        try {
+            promise.resolve(new AnrExitInfoReader(this.context).read((long) sinceEpochMillis));
+        } catch (Exception e) {
+            Log.w(this.NAME, "Could not read ANR exit info", e);
+            promise.reject("backtrace_anr_exit_info", e);
+        }
     }
 }

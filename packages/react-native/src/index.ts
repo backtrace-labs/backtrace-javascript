@@ -13,7 +13,11 @@ export {
 } from '@backtrace/sdk-core';
 export * from './attachment/';
 export { BacktraceClient } from './BacktraceClient';
-export { type BacktraceConfiguration } from './BacktraceConfiguration';
+export {
+    BacktraceAnrType,
+    type BacktraceAnrConfiguration,
+    type BacktraceConfiguration,
+} from './BacktraceConfiguration';
 export { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 export { ErrorBoundary } from './ErrorBoundary';
 export * from './storage/';

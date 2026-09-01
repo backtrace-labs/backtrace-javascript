@@ -13,11 +13,7 @@ export const actions: DemoAction[] = __DEV__
                       throw new Error('Native modules are not enabled.');
                   }
 
-                  await new Promise<void>((res) => {
-                      setTimeout(() => {
-                          res();
-                      }, 1000);
-                  });
+                  errorGenerator.blockMainThread(10000);
               },
           },
           {
