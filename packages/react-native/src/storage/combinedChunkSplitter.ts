@@ -21,7 +21,8 @@ export function combinedChunkSplitter<W extends Chunk>(
         for (const splitter of splitters) {
             const [c1, c2] = splitter(chunk);
             chunk = c1;
-            if (c2) {
+            // An empty second chunk still means "split here"; dropping it loses the split.
+            if (c2 !== undefined) {
                 // Prepend second chunk to the rest
                 rest.unshift(c2);
             }

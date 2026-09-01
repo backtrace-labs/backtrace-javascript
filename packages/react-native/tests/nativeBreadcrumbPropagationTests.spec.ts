@@ -53,8 +53,10 @@ function breadcrumbPathsSentToNative(): string[] {
         .filter((p: string) => p.includes('breadcrumb'));
 }
 
-function attributesSentToNative(): Record<string, string> {
-    return Object.assign({}, ...nativeMock.useAttributes.mock.calls.map((call) => call[0]));
+async function settle() {
+    for (let i = 0; i < 10; i++) {
+        await nextTick();
+    }
 }
 
 describe('BacktraceClient native breadcrumb propagation', () => {
@@ -67,21 +69,24 @@ describe('BacktraceClient native breadcrumb propagation', () => {
     it('Should tell the native crash reporter about the breadcrumb files created after rotation', async () => {
         const client = createClient();
         client.initialize();
-
-        const pathsAtInit = nativeMock.initialize.mock.calls[0][3].filter((p: string) => p.includes('breadcrumb'));
         nativeMock.useAttachments.mockClear();
 
         for (let i = 0; i < 20; i++) {
             client.breadcrumbs?.info(`breadcrumb-${i}`);
             await nextTick();
         }
+        await settle();
 
         const sentLater = breadcrumbPathsSentToNative();
-        expect(sentLater.length).toBeGreaterThan(0);
-        expect(sentLater.some((p) => !pathsAtInit.includes(p))).toBe(true);
+        expect(sentLater.some((p) => /bt-breadcrumbs-[1-9]/.test(p))).toBe(true);
+
+        const calls = nativeMock.useAttachments.mock.calls;
+        const lastPaths = calls[calls.length - 1][0].filter((p: string) => p.includes('breadcrumb'));
+        expect(lastPaths.length).toBeGreaterThan(0);
+        expect(lastPaths.some((p: string) => p.includes('bt-breadcrumbs-0_'))).toBe(false);
     });
 
-    it('Should send the last breadcrumb id to the native crash reporter', async () => {
+    it('Should send a fresh last breadcrumb id to the native crash reporter on every rotation', async () => {
         const client = createClient();
         client.initialize();
         nativeMock.useAttributes.mockClear();
@@ -90,7 +95,13 @@ describe('BacktraceClient native breadcrumb propagation', () => {
             client.breadcrumbs?.info(`breadcrumb-${i}`);
             await nextTick();
         }
+        await settle();
 
-        expect(attributesSentToNative()['breadcrumbs.lastId']).toBeDefined();
+        const pushed = nativeMock.useAttributes.mock.calls
+            .map((call) => call[0]['breadcrumbs.lastId'])
+            .filter((value) => value !== undefined)
+            .map(Number);
+        expect(pushed.length).toBeGreaterThan(1);
+        expect(pushed[pushed.length - 1]).toBeGreaterThan(pushed[0]);
     });
 });
