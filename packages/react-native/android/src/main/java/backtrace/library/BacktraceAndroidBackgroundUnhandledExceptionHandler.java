@@ -13,6 +13,8 @@ import com.facebook.react.module.annotations.ReactModule;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Handle unhandled Android exceptions from background threads.
@@ -35,6 +37,13 @@ public class BacktraceAndroidBackgroundUnhandledExceptionHandler extends ReactCo
      * React native callback method
      */
     private Callback _callback;
+
+    private boolean _callbackInvoked = false;
+
+    private final CountDownLatch _reportProcessed = new CountDownLatch(1);
+
+    private static final long REPORT_PROCESSED_TIMEOUT_MS = 5000;
+
     public static final String NAME = "BacktraceAndroidBackgroundUnhandledExceptionHandler";
 
     public BacktraceAndroidBackgroundUnhandledExceptionHandler(ReactApplicationContext reactContext) {
@@ -57,18 +66,38 @@ public class BacktraceAndroidBackgroundUnhandledExceptionHandler extends ReactCo
     }
 
     @Override
-    public void uncaughtException(final Thread thread, final Throwable throwable) {
+    public synchronized void uncaughtException(final Thread thread, final Throwable throwable) {
         _lastCaughtBackgroundExceptionThread = thread;
         _lastCaughtBackgroundException = throwable;
         if (_shouldStop == true) {
             finish();
             return;
         }
-        if (throwable instanceof Exception) {
+        // React Native callbacks are single-use; invoking one twice throws.
+        if (throwable instanceof Exception && !_callbackInvoked) {
+            _callbackInvoked = true;
             String throwableType = throwable.getClass().getName();
             _callback.invoke(throwableType, throwable.getMessage(), stackTraceToString(throwable.getStackTrace()));
+            waitForReportProcessing();
         }
         finish();
+    }
+
+    private void waitForReportProcessing() {
+        try {
+            if (!_reportProcessed.await(REPORT_PROCESSED_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
+                Log.d(LOG_TAG, "Timed out waiting for the unhandled exception report to be processed.");
+            }
+        } catch (InterruptedException ex) {
+            Log.d(LOG_TAG, "Interrupted while waiting for the unhandled exception report to be processed.");
+        }
+    }
+
+    // not synchronized: the crashing thread holds this monitor while it waits
+    @ReactMethod
+    public void reportProcessed() {
+        Log.d(LOG_TAG, "Unhandled exception report processed by the JavaScript side.");
+        _reportProcessed.countDown();
     }
 
     private static String stackTraceToString(StackTraceElement[] stackTrace) {
