@@ -24,31 +24,35 @@ export class MachineIdentitfierAttributeProvider implements BacktraceAttributePr
     }
 
     public generateGuid() {
-        switch (process.platform) {
-            case 'win32': {
-                return execSync(this.COMMANDS['win32'])
-                    .toString()
-                    .match(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/i)?.[0]
-                    .toLowerCase();
+        try {
+            switch (process.platform) {
+                case 'win32': {
+                    return execSync(this.COMMANDS['win32'])
+                        .toString()
+                        .match(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/i)?.[0]
+                        .toLowerCase();
+                }
+                case 'darwin': {
+                    return execSync(this.COMMANDS[process.platform])
+                        .toString()
+                        .split('IOPlatformUUID')[1]
+                        .split('\n')[0]
+                        .replace(/=|\s+|"/gi, '')
+                        .toLowerCase();
+                }
+                case 'linux':
+                case 'freebsd': {
+                    return execSync(this.COMMANDS[process.platform])
+                        .toString()
+                        .replace(/\r+|\n+|\s+/gi, '')
+                        .toLowerCase();
+                }
+                default: {
+                    return null;
+                }
             }
-            case 'darwin': {
-                return execSync(this.COMMANDS[process.platform])
-                    .toString()
-                    .split('IOPlatformUUID')[1]
-                    .split('\n')[0]
-                    .replace(/=|\s+|"/gi, '')
-                    .toLowerCase();
-            }
-            case 'linux':
-            case 'freebsd': {
-                return execSync(this.COMMANDS[process.platform])
-                    .toString()
-                    .replace(/\r+|\n+|\s+/gi, '')
-                    .toLowerCase();
-            }
-            default: {
-                return null;
-            }
+        } catch {
+            return null
         }
     }
 }
