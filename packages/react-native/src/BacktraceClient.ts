@@ -6,9 +6,12 @@ import {
     V8StackTraceConverter,
     VariableDebugIdMapProvider,
     type AttributeType,
+    type BacktraceData,
+    type BacktraceReport,
     type DebugIdContainer,
 } from '@backtrace/sdk-core';
 import { NativeModules, Platform } from 'react-native';
+import { AnrException } from './anr/AnrException';
 import { AnrReporter } from './anr/AnrReporter';
 import { AnrWatchdogHandler } from './anr/AnrWatchdogHandler';
 import { BacktraceAnrType, type BacktraceConfiguration } from './BacktraceConfiguration';
@@ -19,6 +22,7 @@ import { version } from './common/platformHelper';
 import { version as agentVersion } from '../package.json';
 import { CrashReporter } from './crashReporter/CrashReporter';
 import { generateUnhandledExceptionHandler } from './handlers';
+import { AndroidUnhandledException } from './handlers/android/AndroidUnhandledException';
 import { type ExceptionHandler } from './handlers/ExceptionHandler';
 import { ReactNativeRequestHandler } from './ReactNativeRequestHandler';
 import { ReactStackTraceConverter } from './ReactStackTraceConverter';
@@ -26,6 +30,8 @@ import { type FileSystem } from './storage/FileSystem';
 
 // Must match the private attribute name BreadcrumbsManager sets on JS reports.
 const BREADCRUMB_ATTRIBUTE_NAME = 'breadcrumbs.lastId';
+// Must match the symbolication_id query parameter of the mapping file upload.
+const SYMBOLICATION_ID_ATTRIBUTE_NAME = 'symbolication_id';
 
 export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration> {
     private _crashReporter?: CrashReporter;
@@ -85,6 +91,7 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
         const lockId = this.sessionFiles?.lockPreviousSessions();
         try {
             super.initialize();
+            this.addProguardSymbolicationId();
             this.captureUnhandledErrors(
                 this.options.captureUnhandledErrors,
                 this.options.captureUnhandledPromiseRejections,
@@ -143,6 +150,25 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
         if (captureUnhandledRejections) {
             this._exceptionHandler.captureUnhandledPromiseRejections(this);
         }
+    }
+
+    protected generateSubmissionData(report: BacktraceReport): BacktraceData | undefined {
+        if (this.options.proguard?.enable && this.hasJavaStackTrace(report)) {
+            report.symbolication = 'proguard';
+        }
+        return super.generateSubmissionData(report);
+    }
+
+    private hasJavaStackTrace(report: BacktraceReport): boolean {
+        return report.data instanceof AndroidUnhandledException || report.data instanceof AnrException;
+    }
+
+    private addProguardSymbolicationId(): void {
+        const proguard = this.options.proguard;
+        if (Platform.OS !== 'android' || !proguard?.enable || !proguard.symbolicationId) {
+            return;
+        }
+        this.addAttribute({ [SYMBOLICATION_ID_ATTRIBUTE_NAME]: proguard.symbolicationId });
     }
 
     private reportApplicationNotResponding(): void {

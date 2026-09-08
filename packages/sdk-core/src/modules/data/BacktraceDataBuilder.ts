@@ -45,7 +45,9 @@ export class BacktraceDataBuilder {
             },
         };
 
-        if (detectedDebugIdentifier) {
+        if (report.symbolication) {
+            result.symbolication = report.symbolication;
+        } else if (detectedDebugIdentifier) {
             result.symbolication = 'sourcemap';
         }
 

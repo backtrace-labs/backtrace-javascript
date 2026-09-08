@@ -108,6 +108,29 @@ describe('Data generation tests', () => {
         expect(backtraceData.threads[backtraceData.mainThread].stack).toEqual(expectedFrames);
     });
 
+    it('Should not set symbolication when no debug identifier is found and no hint is given', () => {
+        const backtraceData = dataBuilder.build(new BacktraceReport(new Error()));
+
+        expect(backtraceData.symbolication).toBeUndefined();
+    });
+
+    it('Should use the symbolication passed in the report options', () => {
+        const backtraceData = dataBuilder.build(
+            new BacktraceReport(new Error(), {}, [], { symbolication: 'proguard' }),
+        );
+
+        expect(backtraceData.symbolication).toEqual('proguard');
+    });
+
+    it('Should use the symbolication set on the report after creation', () => {
+        const report = new BacktraceReport(new Error());
+        report.symbolication = 'proguard';
+
+        const backtraceData = dataBuilder.build(report);
+
+        expect(backtraceData.symbolication).toEqual('proguard');
+    });
+
     it('Should generate threads from BacktraceReport.stackTrace', () => {
         const errorReport = new BacktraceReport(new Error());
         const secondName = 'second-stack-name';

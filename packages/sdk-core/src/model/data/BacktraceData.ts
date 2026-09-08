@@ -2,6 +2,8 @@ import { BacktraceStackTrace } from './BacktraceStackTrace.js';
 
 export type AttributeType = string | number | boolean | undefined | null;
 
+export type BacktraceSymbolication = 'sourcemap' | 'proguard';
+
 export interface BacktraceData {
     uuid: string;
     timestamp: number;
@@ -14,5 +16,5 @@ export interface BacktraceData {
     attributes: Record<string, AttributeType>;
     annotations: Record<string, unknown>;
     threads: Record<string, BacktraceStackTrace>;
-    symbolication?: 'sourcemap';
+    symbolication?: BacktraceSymbolication;
 }
