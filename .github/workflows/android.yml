@@ -75,7 +75,7 @@ jobs:
 
             - name: Build example app
               working-directory: examples/sdk/reactNative/android
-              run: ./gradlew assembleRelease -PbtCiDebuggable -PnewArchEnabled=${{ matrix.new-arch }} -x uploadSourceMapsToBacktrace --console=plain
+              run: ./gradlew assembleRelease -PbtCiDebuggable -PbtCiMinify -PnewArchEnabled=${{ matrix.new-arch }} -x uploadSourceMapsToBacktrace --console=plain
 
             - name: Verify native libraries and JNI symbols
               run: bash .github/scripts/verify-jni-symbols.sh examples/sdk/reactNative/android/app/build/outputs/apk/release/app-release.apk
