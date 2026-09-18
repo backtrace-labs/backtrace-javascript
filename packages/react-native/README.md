@@ -12,6 +12,7 @@ and easy, after which you can explore the rich set of Backtrace features.
     - [Install the package](#install-the-package)
     - [Integrate the SDK](#integrate-the-sdk)
     - [Upload source maps](#upload-source-maps)
+    - [Deobfuscate ProGuard and R8 builds (Android)](#deobfuscate-proguard-and-r8-builds-android)
 1. [Error Reporting Features](#error-reporting-features)
     - [Attributes](#attributes)
     - [File Attachments](#file-attachments)
@@ -84,6 +85,32 @@ your original source identifiers.
 [(Source Map feature documentation)](https://docs.saucelabs.com/error-reporting/platform-integrations/source-map/)
 
 <? TBD: Link to source upload doc ?>
+
+### Deobfuscate ProGuard and R8 builds (Android)
+
+Minified release builds obfuscate Java class and method names. Backtrace deobfuscates unhandled Java exception and
+ANR reports with the mapping file uploaded under the report's `symbolication_id`. The package ships the keep rules
+the native crash reporter needs. No ProGuard rules have to be added to the app.
+
+Generate a UUID for the build, pass it to the client, and upload that build's `mapping.txt` under the same id:
+
+```ts
+const options: BacktraceConfiguration = {
+    url: 'https://submit.backtrace.io/<universe>/<token>/json',
+    proguard: {
+        enable: true,
+        symbolicationId: '<uuid generated for this build>',
+    },
+};
+```
+
+```
+curl --data-binary @android/app/build/outputs/mapping/release/mapping.txt -X POST -H "Expect:" "https://submit.backtrace.io/<universe>/<symbol-access-token>/proguard?symbolication_id=<uuid>"
+```
+
+JavaScript reports keep using source maps and native crash reports keep using native symbols. See
+[Working with ProGuard](https://docs.saucelabs.com/error-reporting/platform-integrations/android/proguard-deobfuscation/)
+for the full flow.
 
 ## Error Reporting Features
 
@@ -430,6 +457,7 @@ The following options are available for the BacktraceClientOptions passed when i
 | `metrics`                           | BacktraceMetricsOptions                             | See [Backtrace Stability Metrics](#application-stability-metrics)                                                                                                                                                                                                                                                                                                                                                  |         | <ul><li>- [ ] </li></ul> |
 | `breadcrumbs`                       | BacktraceBreadcrumbsSettings                        | See [Backtrace Breadcrumbs](#breadcrumbs)                                                                                                                                                                                                                                                                                                                                                                          |         | <ul><li>- [ ] </li></ul> |
 | `database`                          | BacktraceDatabaseSettings                           | See [Backtrace Database](#offline-database-support)                                                                                                                                                                                                                                                                                                                                                                |         | <ul><li>- [ ] </li></ul> |
+| `proguard`                          | BacktraceProguardConfiguration                      | See [Deobfuscate ProGuard and R8 builds](#deobfuscate-proguard-and-r8-builds-android)                                                                                                                                                                                                                                                                                                                              |         | <ul><li>- [ ] </li></ul> |
 
 ### Manually send an error
 
