@@ -70,10 +70,14 @@ public class ProcessAttributeProvider extends ReactContextBaseJavaModule {
             return map;
         }
         map.putInt("process.id", processId);
-        String processAttributes = String.format("/proc/%d/status", processId);
-        Map<String, String> memoryAttributes = AttributeReader.readAttributesFromFile(processAttributes, _attributeMapping);
-        for (Map.Entry<String, String> entry : memoryAttributes.entrySet()) {
-            map.putString(entry.getKey(), entry.getValue());
+        try {
+            String processAttributes = String.format("/proc/%d/status", processId);
+            Map<String, String> memoryAttributes = AttributeReader.readAttributesFromFile(processAttributes, _attributeMapping);
+            for (Map.Entry<String, String> entry : memoryAttributes.entrySet()) {
+                map.putString(entry.getKey(), entry.getValue());
+            }
+        } catch (RuntimeException e) {
+            Log.w(LOG_TAG, "Could not read the process attributes: " + e.getClass().getName());
         }
         return map;
     }

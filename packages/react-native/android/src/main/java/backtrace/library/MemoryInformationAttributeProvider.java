@@ -76,9 +76,13 @@ public class MemoryInformationAttributeProvider extends ReactContextBaseJavaModu
     @ReactMethod(isBlockingSynchronousMethod = true)
     public WritableMap get() {
         WritableMap map = new WritableNativeMap();
-        Map<String,String> memoryAttributes = AttributeReader.readAttributesFromFile(attributePath, _attributeMapping);
-        for (Map.Entry<String, String> entry : memoryAttributes.entrySet()) {
-            map.putString(entry.getKey(), entry.getValue());
+        try {
+            Map<String,String> memoryAttributes = AttributeReader.readAttributesFromFile(attributePath, _attributeMapping);
+            for (Map.Entry<String, String> entry : memoryAttributes.entrySet()) {
+                map.putString(entry.getKey(), entry.getValue());
+            }
+        } catch (RuntimeException e) {
+            android.util.Log.w(NAME, "Could not read the memory attributes: " + e.getClass().getName());
         }
         return map;
     }

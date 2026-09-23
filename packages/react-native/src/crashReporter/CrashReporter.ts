@@ -1,4 +1,4 @@
-import { type AttributeType, type BacktraceAttachment, type FileSystem } from '@backtrace/sdk-core';
+import { warnFailure, type AttributeType, type BacktraceAttachment, type FileSystem } from '@backtrace/sdk-core';
 import { NativeModules } from 'react-native';
 import { BacktraceFileAttachment } from '../attachment/BacktraceFileAttachment';
 import { DebuggerHelper } from '../common/DebuggerHelper';
@@ -7,6 +7,7 @@ export class CrashReporter {
     private static readonly BacktraceReactNative = NativeModules.BacktraceReactNative;
 
     private _enabled = false;
+    private _updateFailureLogged = false;
 
     constructor(private readonly _fileSystem: FileSystem) {}
 
@@ -22,29 +23,42 @@ export class CrashReporter {
         attachments: readonly BacktraceAttachment[],
     ): boolean {
         if (CrashReporter.initialized) {
+            warnFailure("native crash reporting keeps the first client's configuration");
             return false;
         }
-        // verify if the native bindings are available
         if (!CrashReporter.BacktraceReactNative) {
+            warnFailure('native crash reporting is off, BacktraceReactNative is not linked');
             return false;
         }
 
         if (!DebuggerHelper.isNativeBridgeEnabled()) {
+            warnFailure('native crash reporting is off, the native bridge is not available');
             return false;
         }
 
         const nativeDatabasePath = `${databasePath}/native`;
-        this._fileSystem.createDirSync(nativeDatabasePath);
+        try {
+            this._fileSystem.createDirSync(nativeDatabasePath);
 
-        CrashReporter.BacktraceReactNative.initialize(
-            submissionUrl,
-            nativeDatabasePath,
-            {
-                ...this.convertAttributes(attributes),
-                'error.type': 'Crash',
-            },
-            this.convertAttachments(attachments),
-        );
+            // iOS returns nothing on success; only an explicit false is a failure.
+            const result = CrashReporter.BacktraceReactNative.initialize(
+                submissionUrl,
+                nativeDatabasePath,
+                {
+                    ...this.convertAttributes(attributes),
+                    'error.type': 'Crash',
+                },
+                this.convertAttachments(attachments),
+            );
+            if (result === false) {
+                warnFailure('native crash reporting is off, the native crash handler did not start');
+                return false;
+            }
+        } catch (err) {
+            warnFailure('native crash reporting is off', err);
+            return false;
+        }
+
         this._enabled = true;
         CrashReporter.initialized = true;
         return true;
@@ -54,7 +68,7 @@ export class CrashReporter {
         if (!this._enabled) {
             return;
         }
-        CrashReporter.BacktraceReactNative.useAttributes(this.convertAttributes(attributes));
+        this.update(() => CrashReporter.BacktraceReactNative.useAttributes(this.convertAttributes(attributes)));
     }
 
     public updateAttachments(attachments: readonly BacktraceAttachment[]) {
@@ -64,7 +78,7 @@ export class CrashReporter {
         if (typeof CrashReporter.BacktraceReactNative.useAttachments !== 'function') {
             return;
         }
-        CrashReporter.BacktraceReactNative.useAttachments(this.convertAttachments(attachments));
+        this.update(() => CrashReporter.BacktraceReactNative.useAttachments(this.convertAttachments(attachments)));
     }
 
     public static crash(): void {
@@ -82,6 +96,17 @@ export class CrashReporter {
 
     public dispose(): void {
         this._enabled = false;
+    }
+
+    private update(fn: () => void) {
+        try {
+            fn();
+        } catch (err) {
+            if (!this._updateFailureLogged) {
+                this._updateFailureLogged = true;
+                warnFailure('failed to update native crash report attributes or attachments', err);
+            }
+        }
     }
 
     /**

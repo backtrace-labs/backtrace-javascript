@@ -1,4 +1,4 @@
-import { BacktraceReport, type BacktraceStackFrame } from '@backtrace/sdk-core';
+import { BacktraceReport, warnFailure, type BacktraceStackFrame } from '@backtrace/sdk-core';
 import {
     AppState,
     NativeEventEmitter,
@@ -47,29 +47,33 @@ export class AnrWatchdogHandler {
         this._subscription = new NativeEventEmitter(this._watchdog).addListener(
             AnrDetectedEvent,
             (payload: AnrDetectedPayload) => {
-                client.breadcrumbs?.info('ANR detected - thread is blocked');
+                try {
+                    client.breadcrumbs?.info('ANR detected - thread is blocked');
 
-                const report = new BacktraceReport(
-                    new AnrException('Application Not Responding | Blocked thread detected', payload.stackTrace),
-                    { 'error.type': 'Hang' },
-                    [],
-                );
-                report.addStackTrace('main', payload.frames);
-                addOtherThreads(report, payload.threads);
-                client.send(report);
+                    const report = new BacktraceReport(
+                        new AnrException('Application Not Responding | Blocked thread detected', payload.stackTrace),
+                        { 'error.type': 'Hang' },
+                        [],
+                    );
+                    report.addStackTrace('main', payload.frames);
+                    addOtherThreads(report, payload.threads);
+                    client.send(report);
+                } catch (err) {
+                    warnFailure('failed to report an ANR', err);
+                }
             },
         );
 
         // Android freezes backgrounded apps, and the watchdog would misread the resume as a hang
         this._appStateSubscription = AppState.addEventListener('change', (state) => {
             if (state === 'background') {
-                this._watchdog.stop();
+                this.stopWatchdog();
             } else if (state === 'active') {
-                this._watchdog.start(timeout, disableWhenDebuggerAttached);
+                this.startWatchdog(timeout, disableWhenDebuggerAttached);
             }
         });
 
-        this._watchdog.start(timeout, disableWhenDebuggerAttached);
+        this.startWatchdog(timeout, disableWhenDebuggerAttached);
     }
 
     public dispose(): void {
@@ -77,6 +81,22 @@ export class AnrWatchdogHandler {
         this._subscription = undefined;
         this._appStateSubscription?.remove();
         this._appStateSubscription = undefined;
-        this._watchdog.stop?.();
+        this.stopWatchdog();
+    }
+
+    private startWatchdog(timeout: number, disableWhenDebuggerAttached: boolean) {
+        try {
+            this._watchdog.start(timeout, disableWhenDebuggerAttached);
+        } catch (err) {
+            warnFailure('failed to start the ANR watchdog', err);
+        }
+    }
+
+    private stopWatchdog() {
+        try {
+            this._watchdog.stop?.();
+        } catch (err) {
+            warnFailure('failed to stop the ANR watchdog', err);
+        }
     }
 }
