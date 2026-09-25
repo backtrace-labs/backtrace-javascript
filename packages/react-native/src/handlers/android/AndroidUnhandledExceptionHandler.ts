@@ -1,6 +1,6 @@
 import { BacktraceReport } from '@backtrace/sdk-core';
 import { NativeModules } from 'react-native';
-import { BacktraceClient } from '../../BacktraceClient';
+import type { BacktraceClient } from '../../BacktraceClient';
 import { DebuggerHelper } from '../../common/DebuggerHelper';
 import { AndroidStackTraceConverter } from '../../converters/AndroidStackTraceConverter';
 import { UnhandledExceptionHandler } from '../UnhandledExceptionHandler';

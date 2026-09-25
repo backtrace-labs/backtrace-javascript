@@ -1,5 +1,6 @@
 import {
     BacktraceCoreClient,
+    BacktraceCoreClientBuilder,
     BreadcrumbsManager,
     SingleSessionProvider,
     SubmissionUrlInformation,
@@ -14,10 +15,15 @@ import { NativeModules, Platform } from 'react-native';
 import { AnrException } from './anr/AnrException';
 import { AnrReporter } from './anr/AnrReporter';
 import { AnrWatchdogHandler } from './anr/AnrWatchdogHandler';
+import { NativeAttributeProvider } from './attributes/NativeAttributeProvider';
+import { ReactNativeAttributeProvider } from './attributes/ReactNativeAttributeProvider';
 import { BacktraceAnrType, type BacktraceConfiguration } from './BacktraceConfiguration';
+import { AppStateBreadcrumbSubscriber } from './breadcrumbs/events/AppStateBreadcrumbSubscriber';
+import { DimensionChangeBreadcrumbSubscriber } from './breadcrumbs/events/DimensionChangeBreadcrumbSubscriber';
+import { WebRequestEventSubscriber } from './breadcrumbs/events/WebRequestEventSubscriber';
 import { FileBreadcrumbsStorage } from './breadcrumbs/FileBreadcrumbsStorage';
-import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 import type { BacktraceClientSetup } from './builder/BacktraceClientSetup';
+import { DebuggerHelper } from './common/DebuggerHelper';
 import { version } from './common/platformHelper';
 import { version as agentVersion } from '../package.json';
 import { CrashReporter } from './crashReporter/CrashReporter';
@@ -27,6 +33,7 @@ import { type ExceptionHandler } from './handlers/ExceptionHandler';
 import { ReactNativeRequestHandler } from './ReactNativeRequestHandler';
 import { ReactStackTraceConverter } from './ReactStackTraceConverter';
 import { type FileSystem } from './storage/FileSystem';
+import { ReactNativeFileSystem } from './storage/ReactNativeFileSystem';
 
 // Must match the private attribute name BreadcrumbsManager sets on JS reports.
 const BREADCRUMB_ATTRIBUTE_NAME = 'breadcrumbs.lastId';
@@ -227,5 +234,65 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
             this.attachments,
         );
         return crashReporter;
+    }
+}
+
+/**
+ * Builder for {@link BacktraceClient}; obtain one with `BacktraceClient.builder(options)`.
+ */
+// Implementation note:
+// defined in the same module as `BacktraceClient` on purpose. `BacktraceClient.builder()` creates the builder and `BacktraceClientBuilder.build()` creates the client, splitting them into two modules creates a circular import.
+// The browser and node packages keep that cycle harmlessly because rollup bundles them into a single scope;
+// this package ships per-file modules to Metro, and Metro's import/export transform (`experimentalImportSupport`) captures imported bindings when a module is evaluated, which leaves one side of the cycle `undefined`.
+export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<BacktraceClientSetup> {
+    constructor(clientSetup: BacktraceClientSetup) {
+        super(clientSetup);
+
+        this.addAttributeProvider(new ReactNativeAttributeProvider());
+        if (!DebuggerHelper.isNativeBridgeEnabled()) {
+            return;
+        }
+
+        if (Platform.OS !== 'android' && Platform.OS !== 'ios') {
+            return;
+        }
+
+        const attributeProviders = Platform.select({
+            ios: [
+                new NativeAttributeProvider('BacktraceApplicationAttributeProvider', 'scoped'),
+                new NativeAttributeProvider('BacktraceDeviceAttributeProvider', 'scoped'),
+                new NativeAttributeProvider('BacktraceSystemAttributeProvider', 'scoped'),
+                new NativeAttributeProvider('BacktraceMemoryUsageAttributeProvider', 'dynamic'),
+                new NativeAttributeProvider('BacktraceCpuAttributeProvider', 'dynamic'),
+            ],
+            android: [
+                new NativeAttributeProvider('BacktraceApplicationAttributeProvider', 'scoped'),
+                new NativeAttributeProvider('BacktraceDeviceAttributeProvider', 'scoped'),
+                new NativeAttributeProvider('BacktraceSystemAttributeProvider', 'scoped'),
+                new NativeAttributeProvider('MemoryInformationAttributeProvider', 'dynamic'),
+                new NativeAttributeProvider('ProcessAttributeProvider', 'dynamic'),
+            ],
+            default: [],
+        });
+
+        for (const provider of attributeProviders) {
+            this.addAttributeProvider(provider);
+        }
+
+        this.useFileSystem(new ReactNativeFileSystem());
+        this.useBreadcrumbSubscriber(new AppStateBreadcrumbSubscriber());
+        this.useBreadcrumbSubscriber(new DimensionChangeBreadcrumbSubscriber());
+        this.useBreadcrumbSubscriber(new WebRequestEventSubscriber());
+    }
+
+    public useFileSystem(fileSystem: ReactNativeFileSystem): this {
+        super.useFileSystem(fileSystem);
+        return this;
+    }
+
+    public build(): BacktraceClient {
+        const instance = new BacktraceClient(this.clientSetup);
+        instance.initialize();
+        return instance;
     }
 }

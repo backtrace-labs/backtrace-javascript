@@ -12,7 +12,7 @@ import {
     type RawBreadcrumb,
 } from '@backtrace/sdk-core';
 import { WritableStream } from 'web-streams-polyfill';
-import { BacktraceFileAttachment } from '..';
+import { BacktraceFileAttachment } from '../attachment/BacktraceFileAttachment';
 import { type FileSystem } from '../storage';
 import { ChunkifierSink, type ChunkSplitterFactory } from '../storage/Chunkifier';
 import { combinedChunkSplitter } from '../storage/combinedChunkSplitter';

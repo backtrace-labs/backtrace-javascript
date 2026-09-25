@@ -1,5 +1,5 @@
 import { BacktraceReport } from '@backtrace/sdk-core';
-import { BacktraceClient } from '../BacktraceClient';
+import type { BacktraceClient } from '../BacktraceClient';
 import { hermes } from '../common/hermesHelper';
 import { CrashReporter } from '../crashReporter/CrashReporter';
 import { type ExceptionHandler } from './ExceptionHandler';
