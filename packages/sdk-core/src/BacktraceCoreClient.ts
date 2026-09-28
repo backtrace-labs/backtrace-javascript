@@ -1,5 +1,6 @@
 import { CoreClientSetup } from './builder/CoreClientSetup.js';
 import { Events } from './common/Events.js';
+import { failureType, warnFailure } from './common/failureLog.js';
 import { ClientEvents } from './events/ClientEvents.js';
 import {
     BacktraceAttachment,
@@ -309,41 +310,51 @@ export abstract class BacktraceCoreClient<
             return Promise.resolve(BacktraceReportSubmissionResult.OnLimitReached('Client'));
         }
 
-        // If data is BacktraceReport, we know that the second argument should be only AbortSignal
-        const reportAttributes = !this.isReport(data)
-            ? (reportAttributesOrAbortSignal as Record<string, unknown>)
-            : undefined;
+        try {
+            // If data is BacktraceReport, we know that the second argument should be only AbortSignal
+            const reportAttributes = !this.isReport(data)
+                ? (reportAttributesOrAbortSignal as Record<string, unknown>)
+                : undefined;
 
-        // If data is BacktraceReport, we know that the second argument should be only AbortSignal
-        abortSignal = !this.isReport(data) ? abortSignal : (reportAttributesOrAbortSignal as AbortSignal);
+            // If data is BacktraceReport, we know that the second argument should be only AbortSignal
+            abortSignal = !this.isReport(data) ? abortSignal : (reportAttributesOrAbortSignal as AbortSignal);
 
-        const report = this.isReport(data)
-            ? data
-            : new BacktraceReport(data, reportAttributes, [], {
-                  skipFrames: this.skipFrameOnMessage(data),
-              });
+            const report = this.isReport(data)
+                ? data
+                : new BacktraceReport(data, reportAttributes, [], {
+                      skipFrames: this.skipFrameOnMessage(data),
+                  });
 
-        this.emit('before-skip', report);
+            this.emit('before-skip', report);
 
-        if (this.options.skipReport && this.options.skipReport(report)) {
-            return Promise.resolve(BacktraceReportSubmissionResult.ReportSkipped());
+            if (this.options.skipReport && this.options.skipReport(report)) {
+                return Promise.resolve(BacktraceReportSubmissionResult.ReportSkipped());
+            }
+
+            const backtraceData = this.generateSubmissionData(report);
+            if (!backtraceData) {
+                return Promise.resolve(BacktraceReportSubmissionResult.ReportSkipped());
+            }
+
+            const submissionAttachments = this.generateSubmissionAttachments(report, reportAttachments);
+
+            this.emit('before-send', report, backtraceData, submissionAttachments);
+
+            return this._reportSubmission
+                .send(backtraceData, submissionAttachments, abortSignal)
+                .then((submissionResult) => {
+                    this.emit('after-send', report, backtraceData, submissionAttachments, submissionResult);
+                    return submissionResult;
+                })
+                .catch((err) => this.onSendFailure<BacktraceSubmissionResponse>(err));
+        } catch (err) {
+            return Promise.resolve(this.onSendFailure<BacktraceSubmissionResponse>(err));
         }
+    }
 
-        const backtraceData = this.generateSubmissionData(report);
-        if (!backtraceData) {
-            return Promise.resolve(BacktraceReportSubmissionResult.ReportSkipped());
-        }
-
-        const submissionAttachments = this.generateSubmissionAttachments(report, reportAttachments);
-
-        this.emit('before-send', report, backtraceData, submissionAttachments);
-
-        return this._reportSubmission
-            .send(backtraceData, submissionAttachments, abortSignal)
-            .then((submissionResult) => {
-                this.emit('after-send', report, backtraceData, submissionAttachments, submissionResult);
-                return submissionResult;
-            });
+    private onSendFailure<T>(err: unknown): BacktraceReportSubmissionResult<T> {
+        warnFailure('failed to send a report', err);
+        return BacktraceReportSubmissionResult.OnUnknownError(`SDK failure: ${failureType(err)}`);
     }
 
     /**

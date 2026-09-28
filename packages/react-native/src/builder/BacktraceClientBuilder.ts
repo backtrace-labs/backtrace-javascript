@@ -1,4 +1,4 @@
-import { BacktraceCoreClientBuilder } from '@backtrace/sdk-core';
+import { BacktraceCoreClientBuilder, warnFailure } from '@backtrace/sdk-core';
 import { Platform } from 'react-native';
 import { NativeAttributeProvider } from '../attributes/NativeAttributeProvider';
 import { ReactNativeAttributeProvider } from '../attributes/ReactNativeAttributeProvider';
@@ -45,7 +45,10 @@ export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<Backtrace
             this.addAttributeProvider(provider);
         }
 
-        this.useFileSystem(new ReactNativeFileSystem());
+        const fileSystem = this.createFileSystem();
+        if (fileSystem) {
+            this.useFileSystem(fileSystem);
+        }
         this.useBreadcrumbSubscriber(new AppStateBreadcrumbSubscriber());
         this.useBreadcrumbSubscriber(new DimensionChangeBreadcrumbSubscriber());
         this.useBreadcrumbSubscriber(new WebRequestEventSubscriber());
@@ -54,6 +57,15 @@ export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<Backtrace
     public useFileSystem(fileSystem: ReactNativeFileSystem): this {
         super.useFileSystem(fileSystem);
         return this;
+    }
+
+    private createFileSystem(): ReactNativeFileSystem | undefined {
+        try {
+            return new ReactNativeFileSystem();
+        } catch (err) {
+            warnFailure('native storage modules are missing, the database and native crash reporting are off', err);
+            return undefined;
+        }
     }
 
     public build(): BacktraceClient {

@@ -33,8 +33,12 @@ public class BacktraceApplicationAttributeProvider extends ReactContextBaseJavaM
     @ReactMethod(isBlockingSynchronousMethod = true)
     public WritableMap get() {
         WritableMap map = new WritableNativeMap();
-        map.putString("application", this.readApplicationName());
-        map.putString("application.version", this.readApplicationVersion());
+        try {
+            map.putString("application", this.readApplicationName());
+            map.putString("application.version", this.readApplicationVersion());
+        } catch (RuntimeException e) {
+            Log.w(LOG_TAG, "Could not read the application attributes: " + e.getClass().getName());
+        }
         return map;
     }
 
