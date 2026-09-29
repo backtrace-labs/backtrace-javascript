@@ -13,7 +13,7 @@
         "format": "prettier --write '**/*.ts'",
         "lint": "eslint . --ext .ts",
         "watch": "concurrently \"tsc -p tsconfig.build.json --noEmit --watch\" \"rollup -c rollup.config.mjs --watch\"",
-        "prepublishOnly": "npm -w ../sdk-core run prepublishOnly && npm run clean && cross-env NODE_ENV=production npm run build",
+        "prepublishOnly": "npm -w ../sdk-core run prepack && npm run clean && cross-env NODE_ENV=production npm run build",
         "test": "cross-env NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" NODE_NO_WARNINGS=1 NODE_ENV=test jest"
     },
     "repository": {
@@ -31,7 +31,7 @@
     "homepage": "https://github.com/backtrace-labs/backtrace-javascript#readme",
     "dependencies": {
         "rrweb": "^2.0.0-alpha.15",
-        "@backtrace/sdk-core": "0.8.3"
+        "@backtrace/sdk-core": "0.8.3 || 0.8.4-rc.0"
     },
     "devDependencies": {
         "@rollup/plugin-commonjs": "^26.0.1",

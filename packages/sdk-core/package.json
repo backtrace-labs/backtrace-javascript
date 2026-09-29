@@ -1,6 +1,6 @@
 {
     "name": "@backtrace/sdk-core",
-    "version": "0.8.3",
+    "version": "0.8.4-rc.0",
     "description": "Backtrace-JavaScript SDK core library",
     "main": "lib/bundle.cjs",
     "module": "lib/bundle.mjs",
@@ -13,7 +13,7 @@
         "lint": "eslint . --ext .ts",
         "watch": "concurrently \"tsc -p tsconfig.build.json --noEmit --watch\" \"rollup -c rollup.config.mjs --watch\"",
         "test": "cross-env NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" NODE_NO_WARNINGS=1 NODE_ENV=test jest",
-        "prepublishOnly": "npm run clean && cross-env NODE_ENV=production npm run build"
+        "prepack": "npm run clean && cross-env NODE_ENV=production npm run build"
     },
     "repository": {
         "type": "git",
@@ -45,5 +45,9 @@
         "rollup": "^4.21.0",
         "ts-jest": "^29.1.0",
         "typescript": "^5.0.4"
+    },
+    "publishConfig": {
+        "access": "public",
+        "tag": "rc"
     }
 }
