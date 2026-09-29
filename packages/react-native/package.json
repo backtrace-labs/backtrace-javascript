@@ -1,6 +1,6 @@
 {
     "name": "@backtrace/react-native",
-    "version": "0.2.3-rc.0",
+    "version": "0.2.3-rc",
     "description": "Backtrace-Javascript React-Native integration",
     "main": "lib/commonjs/index",
     "module": "lib/module/index",
@@ -101,7 +101,7 @@
         "typescript": "^5.0.2"
     },
     "dependencies": {
-        "@backtrace/sdk-core": "0.8.4-rc.0",
+        "@backtrace/sdk-core": "0.8.4-rc",
         "pretty-format": "^29.7.0",
         "promise": "^8.3.0",
         "web-streams-polyfill": "^4.3.0"

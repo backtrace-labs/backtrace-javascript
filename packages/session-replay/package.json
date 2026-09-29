@@ -31,7 +31,7 @@
     "homepage": "https://github.com/backtrace-labs/backtrace-javascript#readme",
     "dependencies": {
         "rrweb": "^2.0.0-alpha.15",
-        "@backtrace/sdk-core": "0.8.3 || 0.8.4-rc.0"
+        "@backtrace/sdk-core": "0.8.3 || 0.8.4-rc"
     },
     "devDependencies": {
         "@rollup/plugin-commonjs": "^26.0.1",
