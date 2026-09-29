@@ -368,7 +368,9 @@ export abstract class BacktraceCoreClient<
             }
         }
 
-        BacktraceCoreClient.destroy();
+        if (BacktraceCoreClient._instance === this) {
+            BacktraceCoreClient.destroy();
+        }
     }
 
     protected addModule<T extends BacktraceModule>(module: T): void;

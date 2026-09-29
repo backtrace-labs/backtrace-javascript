@@ -24,9 +24,9 @@ import { DimensionChangeBreadcrumbSubscriber } from './breadcrumbs/events/Dimens
 import { WebRequestEventSubscriber } from './breadcrumbs/events/WebRequestEventSubscriber';
 import { FileBreadcrumbsStorage } from './breadcrumbs/FileBreadcrumbsStorage';
 import type { BacktraceClientSetup } from './builder/BacktraceClientSetup';
+import { agentVersion } from './common/agentVersion';
 import { DebuggerHelper } from './common/DebuggerHelper';
 import { version } from './common/platformHelper';
-import { version as agentVersion } from '../package.json';
 import { CrashReporter } from './crashReporter/CrashReporter';
 import { generateUnhandledExceptionHandler } from './handlers';
 import { AndroidUnhandledException } from './handlers/android/AndroidUnhandledException';
@@ -44,6 +44,7 @@ const REQUIRED_APPLICATION_ATTRIBUTES = ['application', 'application.version'];
 const INERT_SUBMISSION_URL = 'https://submit.backtrace.io/unavailable/unavailable/json';
 
 export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration> {
+    private _disposed = false;
     private _crashReporter?: CrashReporter;
     private _anrWatchdogHandler?: AnrWatchdogHandler;
     private readonly _exceptionHandler: ExceptionHandler = generateUnhandledExceptionHandler();
@@ -103,6 +104,7 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
     }
 
     public initialize(): void {
+        this._disposed = false;
         this.ensureApplicationAttributes();
 
         const lockId = this.guard(
@@ -142,10 +144,21 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
     }
 
     public dispose(): void {
+        if (this._disposed) {
+            return;
+        }
+        this._disposed = true;
+
         this.guard(() => this._exceptionHandler.dispose(), 'failed to restore the error handlers');
         this.guard(() => this._anrWatchdogHandler?.dispose(), 'failed to stop the ANR watchdog');
         this.guard(() => this._crashReporter?.dispose(), 'failed to release the native crash reporter');
-        super.dispose();
+        try {
+            super.dispose();
+        } catch (err) {
+            // A custom module may fail during cleanup. Allow the caller to retry.
+            this._disposed = false;
+            throw err;
+        }
         // super.dispose() only clears BacktraceCoreClient._instance.
         if (BacktraceClient._instance === this) {
             BacktraceClient._instance = undefined;
