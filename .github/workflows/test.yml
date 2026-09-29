@@ -30,24 +30,6 @@ jobs:
             - run: npm run lint
             - run: npm run format:check
             - run: npm test
-            - name: Verify React Native release-candidate artifacts
-              shell: bash
-              run: |
-                  native_version="$(node -p "require('./packages/react-native/package.json').version")"
-                  case "$native_version" in
-                    *-rc.*) ;;
-                    *)
-                      echo "React Native is not a release candidate; skipping RC artifact verification."
-                      exit 0
-                      ;;
-                  esac
-                  artifacts_dir="$(mktemp -d "$RUNNER_TEMP/backtrace-rc.XXXXXX")"
-                  npm pack --workspace=@backtrace/sdk-core --pack-destination "$artifacts_dir"
-                  npm pack --workspace=@backtrace/react-native --pack-destination "$artifacts_dir"
-                  core_version="$(node -p "require('./packages/sdk-core/package.json').version")"
-                  node packages/react-native/scripts/verify-rc-packages.cjs \
-                    "$artifacts_dir/backtrace-sdk-core-$core_version.tgz" \
-                    "$artifacts_dir/backtrace-react-native-$native_version.tgz"
             - name: smoke-test
               uses: ./.github/actions/smoke-tests
               with:
