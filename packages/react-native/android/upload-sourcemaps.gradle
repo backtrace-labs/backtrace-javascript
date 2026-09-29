@@ -1,5 +1,7 @@
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
+import org.gradle.api.services.BuildService
+import org.gradle.api.services.BuildServiceParameters
 
 import javax.inject.Inject
 
@@ -20,13 +22,17 @@ abstract class BacktraceSourceMapUploadTask extends DefaultTask {
     abstract ConfigurableFileCollection getConfigFile()
 
     @Internal
-    abstract DirectoryProperty getProjectRoot()
+    abstract DirectoryProperty getAppRoot()
 
     @OutputFile
     abstract RegularFileProperty getProcessedSourceMap()
 
     @Inject
     abstract ExecOperations getExecOperations()
+
+    BacktraceSourceMapUploadTask() {
+        outputs.upToDateWhen { task -> task.processedSourceMap.get().asFile.isFile() }
+    }
 
     @TaskAction
     void upload() {
@@ -61,11 +67,18 @@ abstract class BacktraceSourceMapUploadTask extends DefaultTask {
         if (System.getProperty("os.name").toLowerCase().contains("windows")) {
             command = ["cmd", "/c"] + command
         }
-        execOperations.exec { spec ->
-            spec.workingDir(projectRoot.get().asFile)
+        def result = execOperations.exec { spec ->
+            spec.workingDir(appRoot.get().asFile)
             spec.commandLine(command)
+            spec.ignoreExitValue = true
+        }
+        if (result.exitValue != 0) {
+            throw new GradleException("Backtrace: The ${variant} source map upload failed with exit code ${result.exitValue}. Pass -PbacktraceUploadSourceMaps=false to build without uploading.")
         }
     }
+}
+
+abstract class BacktraceDebugIdPathLock implements BuildService<BuildServiceParameters.None> {
 }
 
 def legacyTaskName = "uploadSourceMapsToBacktrace"
@@ -77,21 +90,19 @@ if (tasks.names.contains(legacyTaskName)) {
 def mentionsLegacyTask = { Collection<String> taskPaths -> taskPaths.any { it.substring(it.lastIndexOf(":") + 1) == legacyTaskName } }
 def legacyRequested = mentionsLegacyTask(gradle.startParameter.taskNames)
 def uploadsEnabled = !mentionsLegacyTask(gradle.startParameter.excludedTaskNames) &&
-        providers.gradleProperty("backtraceUploadSourceMaps").getOrElse("true") != "false"
+        !"false".equalsIgnoreCase(providers.gradleProperty("backtraceUploadSourceMaps").getOrElse("true"))
 def legacyVariant = providers.gradleProperty("buildVariant").getOrElse("release")
 def debugIdPath = providers.environmentVariable("DEBUG_ID_PATH").orNull
-def projectRoot = rootProject.layout.projectDirectory.dir("..")
-def buildDirectory = layout.buildDirectory
+// Under the configuration cache, tasks of one project run in parallel, and every bundle writes the one DEBUG_ID_PATH file.
+def debugIdPathLock = debugIdPath ? gradle.sharedServices.registerIfAbsent("backtraceDebugIdPath", BacktraceDebugIdPathLock) { it.maxParallelUsages.set(1) } : null
 def sourceMapUploads = [:]
 def uploadsByPackagingTask = [:]
 
 def capitalize = { String name -> Character.toUpperCase(name.charAt(0)).toString() + name.substring(1) }
-def bundleTaskNameOf = { String variantName -> "createBundle" + capitalize(variantName) + "JsAndAssets" }
-def assetNameOf = { bundleTask -> bundleTask.hasProperty("bundleAssetName") ? bundleTask.bundleAssetName.get() : "index.android.bundle" }
-def sourceMapOf = { bundleTask -> new File(bundleTask.jsSourceMapsDir.get().asFile, assetNameOf(bundleTask) + ".map") }
+def sourceMapOf = { bundleTask -> new File(bundleTask.jsSourceMapsDir.get().asFile, bundleTask.bundleAssetName.get() + ".map") }
 def debugIdFileOf = { bundleTask ->
     if (debugIdPath) {
-        return projectRoot.file(debugIdPath).asFile
+        return bundleTask.root.file(debugIdPath).get().asFile
     }
     def packagerMapDir = bundleTask.hermesEnabled.get() ? bundleTask.jsIntermediateSourceMapsDir : bundleTask.jsSourceMapsDir
     return new File(packagerMapDir.get().asFile, ".backtrace-sourcemap-id")
@@ -101,28 +112,20 @@ def isDebuggable = { variant ->
     if (variant.hasProperty("debuggable")) {
         return variant.debuggable
     }
-    def buildType = extensions.findByName("android")?.buildTypes?.findByName(variant.buildType)
-    return buildType != null ? buildType.debuggable : variant.buildType == "debug"
+    // Before AGP 8.5, and in Android Studio's analytics wrapper, only the build type exposes debuggable.
+    return extensions.getByName("android").buildTypes.getByName(variant.buildType).debuggable
 }
 
-def logDebuggableSkip = { String variantName ->
-    def bundleTaskName = bundleTaskNameOf(variantName)
-    if (tasks.names.contains(bundleTaskName)) {
-        tasks.named(bundleTaskName).configure {
-            it.doLast { task -> task.logger.lifecycle("Backtrace: ${variantName} is debuggable, skipping its source map upload.") }
-        }
+def logDebuggableSkip = { String variantName, TaskProvider bundle ->
+    bundle.configure {
+        it.doLast { task -> task.logger.lifecycle("Backtrace: ${variantName} is debuggable, skipping its source map upload.") }
     }
 }
 
-def registerSourceMapUpload = { String variantName ->
-    def bundleTaskName = bundleTaskNameOf(variantName)
-    if (!tasks.names.contains(bundleTaskName)) {
-        return
-    }
-
+def registerSourceMapUpload = { String variantName, TaskProvider bundle ->
     def capitalized = capitalize(variantName)
-    def bundle = tasks.named(bundleTaskName)
-    def debugIdSnapshot = buildDirectory.file("intermediates/backtrace/sourcemaps/${variantName}/.backtrace-sourcemap-id")
+    def outputDirectory = "intermediates/backtrace/sourcemaps/${variantName}"
+    def debugIdSnapshot = layout.buildDirectory.file("${outputDirectory}/.backtrace-sourcemap-id")
 
     bundle.configure { bundleTask ->
         def sourceMap = sourceMapOf(bundleTask)
@@ -138,7 +141,7 @@ def registerSourceMapUpload = { String variantName ->
         }
     }
 
-    def upload = tasks.register("uploadSourceMapsToBacktrace" + capitalized, BacktraceSourceMapUploadTask) { task ->
+    def upload = tasks.register(legacyTaskName + capitalized, BacktraceSourceMapUploadTask) { task ->
         def bundleTask = bundle.get()
         task.group = "backtrace"
         task.description = "Uploads the ${variantName} source map to Backtrace."
@@ -146,15 +149,14 @@ def registerSourceMapUpload = { String variantName ->
         task.variantName.set(variantName)
         task.sourceMap.from(sourceMapOf(bundleTask))
         task.debugIdFile.from(debugIdSnapshot)
-        task.configFile.from(projectRoot.file(".backtracejsrc"))
-        task.projectRoot.set(projectRoot)
-        task.processedSourceMap.set(buildDirectory.file("intermediates/backtrace/sourcemaps/${variantName}/${assetNameOf(bundleTask)}.map"))
+        task.configFile.from(bundleTask.root.file(".backtracejsrc"))
+        task.appRoot.set(bundleTask.root)
+        task.processedSourceMap.set(layout.buildDirectory.file("${outputDirectory}/${bundleTask.bundleAssetName.get()}.map"))
     }
     sourceMapUploads[variantName] = upload
 
     if (uploadsEnabled) {
-        uploadsByPackagingTask["package" + capitalized] = upload
-        uploadsByPackagingTask["package" + capitalized + "Bundle"] = upload
+        ["package" + capitalized, "package" + capitalized + "Bundle", "sign" + capitalized + "Bundle"].each { uploadsByPackagingTask[it] = upload }
     }
 }
 
@@ -168,11 +170,13 @@ tasks.configureEach { task ->
 tasks.register(legacyTaskName) { task ->
     task.group = "backtrace"
     task.description = "Uploads the -PbuildVariant source map (default: release) to Backtrace. Release builds upload on their own."
+    // Old documented hooks finalize debug builds with this task; it uploads only when run by name.
     if (legacyRequested) {
         task.dependsOn({
             def upload = sourceMapUploads.find { it.key.equalsIgnoreCase(legacyVariant) }?.value
             if (!upload) {
-                task.logger.warn("Backtrace: No release variant named '${legacyVariant}' has a React Native bundle to upload.")
+                def available = sourceMapUploads.keySet().join(", ") ?: "none"
+                task.logger.warn("Backtrace: No release variant named '${legacyVariant}' has a React Native bundle to upload. Release variants: ${available}.")
             }
             return upload ?: []
         })
@@ -183,10 +187,18 @@ plugins.withId("com.facebook.react") {
     plugins.withId("com.android.application") {
         def androidComponents = extensions.getByName("androidComponents")
         androidComponents.onVariants(androidComponents.selector().all()) { variant ->
+            def bundleTaskName = "createBundle" + capitalize(variant.name) + "JsAndAssets"
+            if (!tasks.names.contains(bundleTaskName)) {
+                return
+            }
+            def bundle = tasks.named(bundleTaskName)
+            if (debugIdPathLock) {
+                bundle.configure { it.usesService(debugIdPathLock) }
+            }
             if (isDebuggable(variant)) {
-                logDebuggableSkip(variant.name)
+                logDebuggableSkip(variant.name, bundle)
             } else {
-                registerSourceMapUpload(variant.name)
+                registerSourceMapUpload(variant.name, bundle)
             }
         }
     }
