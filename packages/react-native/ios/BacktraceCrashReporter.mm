@@ -55,8 +55,8 @@ static void onCrash(siginfo_t *info, ucontext_t *uap, void *context) {
     if( self = [super init]) {
         NSLog(@"Backtrace: Initializing native client");
         _backtraceApi = [[BacktraceApi alloc] initWithBacktraceUrl:submissionUrl];
-        _attachmentsPaths = [attachments mutableCopy];
-        _attributes = [attributes mutableCopy];
+        _attachmentsPaths = attachments ? [attachments mutableCopy] : [NSMutableArray new];
+        _attributes = attributes ? [attributes mutableCopy] : [NSMutableDictionary new];
         
         _crashReporter = [[PLCrashReporter alloc] initWithConfiguration:
                           [[PLCrashReporterConfig alloc]
@@ -108,6 +108,9 @@ static void onCrash(siginfo_t *info, ucontext_t *uap, void *context) {
 
 
 - (void)useAttachments:(NSArray*) attachments {
+    if (attachments == nil) {
+        return;
+    }
     _attachmentsPaths = [attachments mutableCopy];
     [self saveReportData];
     if(_oomWatcher != nil) {
@@ -116,6 +119,9 @@ static void onCrash(siginfo_t *info, ucontext_t *uap, void *context) {
 }
 
 -(void)setAttributes:(NSDictionary*) attributes {
+    if (attributes == nil) {
+        return;
+    }
     [_attributes addEntriesFromDictionary:attributes];
     [self saveReportData];
     if(_oomWatcher != nil) {

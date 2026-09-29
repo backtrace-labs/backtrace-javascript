@@ -1,4 +1,4 @@
-import { BacktraceReport } from '@backtrace/sdk-core';
+import { BacktraceReport, warnFailure } from '@backtrace/sdk-core';
 import type { BacktraceClient } from '../BacktraceClient';
 import { hermes } from '../common/hermesHelper';
 import { CrashReporter } from '../crashReporter/CrashReporter';
@@ -22,18 +22,23 @@ export class UnhandledExceptionHandler implements ExceptionHandler {
     public captureManagedErrors(client: BacktraceClient) {
         const globalErrorHandler = ErrorUtils.getGlobalHandler();
         ErrorUtils.setGlobalHandler((error: Error, fatal?: boolean) => {
-            if (!this.enabled) {
-                return;
+            // The app's own handler always runs, also after dispose.
+            try {
+                if (this.enabled) {
+                    client.send(error, {
+                        'error.type': 'Unhandled exception',
+                        fatal,
+                    });
+                    // iOS: RCTFatal turns a fatal into a native crash the reporter would double-report.
+                    if (fatal) {
+                        CrashReporter.markFatalError();
+                    }
+                }
+            } catch (err) {
+                warnFailure('failed to report an unhandled error', err);
+            } finally {
+                globalErrorHandler(error, fatal);
             }
-            client.send(error, {
-                'error.type': 'Unhandled exception',
-                fatal,
-            });
-            // iOS: RCTFatal turns a fatal into a native crash the reporter would double-report.
-            if (fatal) {
-                CrashReporter.markFatalError();
-            }
-            globalErrorHandler(error, fatal);
         });
     }
 
@@ -47,20 +52,7 @@ export class UnhandledExceptionHandler implements ExceptionHandler {
                     if (!this.enabled) {
                         return;
                     }
-                    client.send(
-                        new BacktraceReport(
-                            rejection,
-                            {
-                                'error.type': 'Unhandled rejection',
-                                unhandledPromiseRejectionId: id,
-                            },
-                            [],
-                            {
-                                classifiers: ['UnhandledPromiseRejection'],
-                                skipFrames: rejection instanceof Error ? 0 : 1,
-                            },
-                        ),
-                    );
+                    this.reportRejection(client, id, rejection);
                 },
             });
         } else {
@@ -72,20 +64,7 @@ export class UnhandledExceptionHandler implements ExceptionHandler {
                 allRejections: true,
                 onUnhandled: (id: number, rejection: Error) => {
                     if (this.enabled) {
-                        client.send(
-                            new BacktraceReport(
-                                rejection,
-                                {
-                                    'error.type': 'Unhandled rejection',
-                                    unhandledPromiseRejectionId: id,
-                                },
-                                [],
-                                {
-                                    classifiers: ['UnhandledPromiseRejection'],
-                                    skipFrames: rejection instanceof Error ? 0 : 1,
-                                },
-                            ),
-                        );
+                        this.reportRejection(client, id, rejection);
                     }
                     if (!__DEV__) {
                         return;
@@ -127,5 +106,26 @@ export class UnhandledExceptionHandler implements ExceptionHandler {
 
     public dispose(): void {
         this.enabled = false;
+    }
+
+    private reportRejection(client: BacktraceClient, id: number, rejection: Error | string) {
+        try {
+            client.send(
+                new BacktraceReport(
+                    rejection,
+                    {
+                        'error.type': 'Unhandled rejection',
+                        unhandledPromiseRejectionId: id,
+                    },
+                    [],
+                    {
+                        classifiers: ['UnhandledPromiseRejection'],
+                        skipFrames: rejection instanceof Error ? 0 : 1,
+                    },
+                ),
+            );
+        } catch (err) {
+            warnFailure('failed to report an unhandled rejection', err);
+        }
     }
 }

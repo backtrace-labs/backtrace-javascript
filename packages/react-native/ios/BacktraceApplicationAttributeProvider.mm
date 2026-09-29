@@ -4,10 +4,11 @@
 RCT_EXPORT_MODULE()
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(get) {
     NSMutableDictionary *dictionary = [NSMutableDictionary dictionary];
-    NSString *displayName = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"];
-    NSString *bundleName = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleName"];
-    [dictionary setObject: displayName ? displayName : bundleName forKey: @"application"];
-    [dictionary setObject: [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"] forKey: @"application.version"];
+    NSBundle *bundle = [NSBundle mainBundle];
+    NSString *displayName = [bundle objectForInfoDictionaryKey:@"CFBundleDisplayName"];
+    NSString *bundleName = [bundle objectForInfoDictionaryKey:@"CFBundleName"];
+    dictionary[@"application"] = displayName ?: bundleName;
+    dictionary[@"application.version"] = [bundle objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
     return dictionary;
 }
 

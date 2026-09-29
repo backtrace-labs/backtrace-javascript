@@ -1,4 +1,5 @@
 import { Events } from '../../common/Events.js';
+import { warnFailure } from '../../common/failureLog.js';
 import { AttributeEvents } from '../../events/AttributeEvents.js';
 import { ReportData } from '../../model/report/ReportData.js';
 import { BacktraceAttributeProvider } from './BacktraceAttributeProvider.js';
@@ -8,6 +9,7 @@ export class AttributeManager {
     public readonly attributeEvents: Events<AttributeEvents>;
 
     private readonly _attributeProviders: BacktraceAttributeProvider[] = [];
+    private readonly _failedProviders = new WeakSet<BacktraceAttributeProvider>();
 
     constructor(providers: BacktraceAttributeProvider[]) {
         this.attributeEvents = new Events();
@@ -38,12 +40,24 @@ export class AttributeManager {
             this._attributeProviders.push(attributeProvider);
             return;
         } else {
-            const attributes = attributeProvider.get();
+            const attributes = this.resolve(attributeProvider);
             this._attributeProviders.push({
                 type: 'scoped',
                 get: () => attributes,
             });
             this.attributeEvents.emit('scoped-attributes-updated', this.get('scoped'));
+        }
+    }
+
+    private resolve(attributeProvider: BacktraceAttributeProvider): Record<string, unknown> {
+        try {
+            return attributeProvider.get() ?? {};
+        } catch (err) {
+            if (!this._failedProviders.has(attributeProvider)) {
+                this._failedProviders.add(attributeProvider);
+                warnFailure('skipped an attribute provider that threw', err);
+            }
+            return {};
         }
     }
 
@@ -61,7 +75,7 @@ export class AttributeManager {
             if (attributeType && attributeProvider.type != attributeType) {
                 continue;
             }
-            const providerResult = ReportDataBuilder.build(attributeProvider.get());
+            const providerResult = ReportDataBuilder.build(this.resolve(attributeProvider));
 
             result.attributes = {
                 ...result.attributes,

@@ -4,6 +4,7 @@ export * from './builder/BacktraceCoreClientBuilder.js';
 export * from './builder/CoreClientSetup.js';
 export * from './builder/SdkOptions.js';
 export { anySignal } from './common/AbortController.js';
+export * from './common/failureLog.js';
 export * from './common/IdGenerator.js';
 export * from './common/jsonEscaper.js';
 export * from './common/TimeHelper.js';

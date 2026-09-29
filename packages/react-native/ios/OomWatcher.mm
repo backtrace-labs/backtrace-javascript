@@ -69,7 +69,7 @@ NSString* _oomCache;
 }
 
 - (void) updateAttributes:(NSDictionary*) clientAttributes {
-    NSMutableDictionary* attributes = [clientAttributes mutableCopy];
+    NSMutableDictionary* attributes = clientAttributes ? [clientAttributes mutableCopy] : [NSMutableDictionary dictionary];
     [attributes setObject:@"OOMException: Out of memory detected."  forKey:@"error.message"];
     [attributes setObject:@"OOMException" forKey:@"classifiers"];
     [attributes setObject:@"OOMException" forKey:@"error.type"];
@@ -77,7 +77,7 @@ NSString* _oomCache;
 }
 
 - (void) updateAttachments:(NSArray*) attachments {
-    [_applicationState setObject:attachments forKey:@"attachments"];
+    [_applicationState setObject:(attachments ?: @[]) forKey:@"attachments"];
 }
 - (void) saveLowMemoryWarning {
     NSTimeInterval currentTime = [[NSDate date] timeIntervalSince1970];
@@ -100,11 +100,10 @@ NSString* _oomCache;
 
 - (void) setDefaultApplicationState: (NSArray*) attachments andAttributes:(NSDictionary*) attributes  {
     [_applicationState setObject:@"foreground" forKey:@"state"];
-    [_applicationState setObject:attachments forKey:@"attachments"];
     [_applicationState setObject:[[NSProcessInfo processInfo] operatingSystemVersionString] forKey:@"osVersion"];
-    [_applicationState setObject:[[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"] forKey:@"appVersion"];
+    _applicationState[@"appVersion"] = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"];
     [_applicationState setObject:[NSNumber numberWithBool:_debugMode] forKey:@"debuggerEnabled"];
-    [self updateAttributes:[attributes mutableCopy]];
+    [self updateAttributes:attributes];
     [self updateAttachments:attachments];
 }
 

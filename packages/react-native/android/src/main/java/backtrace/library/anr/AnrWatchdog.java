@@ -33,6 +33,15 @@ public class AnrWatchdog extends Thread {
 
     @Override
     public void run() {
+        // An uncaught exception on this thread would kill the host process.
+        try {
+            monitor();
+        } catch (RuntimeException e) {
+            Log.w(LOG_TAG, "The ANR watchdog stopped (" + e.getClass().getName() + ")");
+        }
+    }
+
+    private void monitor() {
         if (this.debug && (Debug.isDebuggerConnected() || Debug.waitingForDebugger())) {
             Log.w(LOG_TAG, "Detected a debugger connection. ANR watchdog is disabled");
             return;
@@ -61,7 +70,11 @@ public class AnrWatchdog extends Thread {
             }
             reported = true;
 
-            this.listener.onAnrDetected(Thread.getAllStackTraces());
+            try {
+                this.listener.onAnrDetected(Thread.getAllStackTraces());
+            } catch (RuntimeException e) {
+                Log.w(LOG_TAG, "Failed to report an ANR (" + e.getClass().getName() + ")");
+            }
         }
     }
 

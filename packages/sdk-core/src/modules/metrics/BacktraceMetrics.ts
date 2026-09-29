@@ -1,5 +1,6 @@
 import { createAbortController } from '../../common/AbortController.js';
 import { AbortError } from '../../common/AbortError.js';
+import { warnFailure } from '../../common/failureLog.js';
 import { unrefInterval } from '../../common/intervalHelper.js';
 import { TimeHelper } from '../../common/TimeHelper.js';
 import { BacktraceMetricsOptions } from '../../model/configuration/BacktraceConfiguration.js';
@@ -146,10 +147,10 @@ export class BacktraceMetrics implements BacktraceModule {
             await fn();
             return true;
         } catch (err) {
-            if (err instanceof AbortError) {
-                return false;
+            if (!(err instanceof AbortError)) {
+                warnFailure('failed to send metrics', err);
             }
-            throw err;
+            return false;
         }
     }
 }

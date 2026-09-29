@@ -11,12 +11,14 @@ import com.facebook.react.module.annotations.ReactModule;
 
 import android.content.Context;
 import android.os.Build;
+import android.util.Log;
 
 import java.util.Locale;
 
 @ReactModule(name = BacktraceDeviceAttributeProvider.NAME)
 public class BacktraceDeviceAttributeProvider extends ReactContextBaseJavaModule {
     public static final String NAME = "BacktraceDeviceAttributeProvider";
+    private static final String LOG_TAG = BacktraceDeviceAttributeProvider.class.getSimpleName();
 
     private final Context context;
 
@@ -34,14 +36,18 @@ public class BacktraceDeviceAttributeProvider extends ReactContextBaseJavaModule
     @ReactMethod(isBlockingSynchronousMethod = true)
     public WritableMap get() {
         WritableMap map = new WritableNativeMap();
-        map.putString("culture", this.readCulture());
-        map.putString("device.model", this.getDeviceModel());
-        map.putString("device.brand", this.getDeviceBrand());
-        map.putString("device.product", this.getDeviceProduct());
-        map.putString("device.sdk", this.getDeviceSdk());
-        map.putString("device.manufacturer", this.getDeviceManufacturer());
-        map.putString("cpu.boottime", String.valueOf(java.lang.System.currentTimeMillis() - android.os.SystemClock
-                .elapsedRealtime()));
+        try {
+            map.putString("culture", this.readCulture());
+            map.putString("device.model", this.getDeviceModel());
+            map.putString("device.brand", this.getDeviceBrand());
+            map.putString("device.product", this.getDeviceProduct());
+            map.putString("device.sdk", this.getDeviceSdk());
+            map.putString("device.manufacturer", this.getDeviceManufacturer());
+            map.putString("cpu.boottime", String.valueOf(java.lang.System.currentTimeMillis() - android.os.SystemClock
+                    .elapsedRealtime()));
+        } catch (RuntimeException e) {
+            Log.w(LOG_TAG, "Could not read all device attributes: " + e.getClass().getName());
+        }
         return map;
     }
 

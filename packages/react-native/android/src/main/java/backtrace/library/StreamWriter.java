@@ -13,7 +13,9 @@ import java.io.BufferedWriter;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 @ReactModule(name = backtraceio.library.StreamWriter.NAME)
@@ -27,14 +29,12 @@ public class StreamWriter extends ReactContextBaseJavaModule {
     public String getName() {
         return NAME;
     }
-    private HashMap<String, BufferedWriter> _map = new HashMap<>();
+    // create and close run on the JS thread, append on the native modules thread.
+    private final Map<String, BufferedWriter> _map = new ConcurrentHashMap<>();
 
     @ReactMethod(isBlockingSynchronousMethod = true)
     public String create(String filePath) {
-        String key = String.valueOf(System.currentTimeMillis());
-        if (_map.containsKey(key)) {
-            return null;
-        }
+        String key = UUID.randomUUID().toString();
 
         BufferedWriter writer = this.createWriter(filePath);
 
@@ -68,11 +68,10 @@ public class StreamWriter extends ReactContextBaseJavaModule {
 
     @ReactMethod(isBlockingSynchronousMethod = true)
     public boolean close(String key) {
-        BufferedWriter writer = _map.get(key);
+        BufferedWriter writer = _map.remove(key);
         if (writer == null) {
             return true;
         }
-        _map.remove(key);
         try {
             writer.close();
             return true;
