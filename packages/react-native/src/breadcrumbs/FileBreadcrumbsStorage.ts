@@ -13,6 +13,7 @@ import {
 } from '@backtrace/sdk-core';
 import { WritableStream } from 'web-streams-polyfill';
 import { BacktraceFileAttachment } from '..';
+import { FileSnapshotAttachment } from '../attachment/FileSnapshotAttachment';
 import { type FileSystem } from '../storage';
 import { ChunkifierSink, type ChunkSplitterFactory } from '../storage/Chunkifier';
 import { combinedChunkSplitter } from '../storage/combinedChunkSplitter';
@@ -85,7 +86,7 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
     public getAttachments(): BacktraceFileAttachment[] {
         const files = [...this._sink.files].map((f) => f.path);
         return files.map(
-            (f, i) => new BacktraceFileAttachment(this._fileSystem, f, `bt-breadcrumbs-${i}`, 'application/json'),
+            (f, i) => new FileSnapshotAttachment(this._fileSystem, f, `bt-breadcrumbs-${i}`, 'application/json'),
         );
     }
 

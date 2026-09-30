@@ -11,14 +11,15 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.module.annotations.ReactModule;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Scanner;
 
 @ReactModule(name = BacktraceFileSystemProvider.NAME)
 public class BacktraceFileSystemProvider extends ReactContextBaseJavaModule {
@@ -42,14 +43,8 @@ public class BacktraceFileSystemProvider extends ReactContextBaseJavaModule {
             return null;
         }
 
-        try (Scanner scanner = new Scanner(file)) {
-            StringBuilder sb = new StringBuilder();
-
-            while (scanner.hasNext()) {
-                sb.append(scanner.nextLine());
-            }
-
-            return sb.toString();
+        try {
+            return read(file);
         } catch (Exception e) {
             Log.d(LOG_TAG, e.getMessage());
             return null;
@@ -63,15 +58,8 @@ public class BacktraceFileSystemProvider extends ReactContextBaseJavaModule {
             promise.reject(new FileNotFoundException(path));
             return;
         }
-        try (Scanner scanner = new Scanner(file)) {
-            StringBuilder sb = new StringBuilder();
-
-            while (scanner.hasNext()) {
-                sb.append(scanner.nextLine());
-            }
-
-            scanner.close();
-            promise.resolve(sb.toString());
+        try {
+            promise.resolve(read(file));
         } catch (Exception e) {
             Log.d(LOG_TAG, e.getMessage());
             promise.reject(e);
@@ -154,6 +142,18 @@ public class BacktraceFileSystemProvider extends ReactContextBaseJavaModule {
             return true;
         } catch (Exception e) {
             return false;
+        }
+    }
+
+    private String read(File file) throws IOException {
+        try (FileInputStream inputStream = new FileInputStream(file);
+             ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            byte[] buf = new byte[1024];
+            int len;
+            while ((len = inputStream.read(buf)) > 0) {
+                outputStream.write(buf, 0, len);
+            }
+            return new String(outputStream.toByteArray(), StandardCharsets.UTF_8);
         }
     }
 }
