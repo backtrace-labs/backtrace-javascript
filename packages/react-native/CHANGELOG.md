@@ -27,6 +27,7 @@ Bugfixes
 -   Android: capture native crashes from release builds minified with R8 or ProGuard, ship the keep rules the crash handler needs
 -   Android: wait up to 5 seconds for the unhandled Java exception report to send before the process exits
 -   Android: fix autolinking builds under Expo and React Native 0.82+
+-   Android: fix the source map upload on Gradle 9, upload each release variant's own map, add the `backtraceUploadSourceMaps` property to turn uploads off
 -   iOS: skip the duplicate native crash report for fatal unhandled JavaScript errors
 
 Packaging
