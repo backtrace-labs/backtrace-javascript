@@ -227,6 +227,39 @@ describeOnUnix('ios-sourcemap-upload.sh', () => {
             expect(uploadCall(fixture)).toBeUndefined();
         });
 
+        it('names the Archive case when the debug id file is only in CONFIGURATION_BUILD_DIR', () => {
+            const targetBuildDir = path.join(fixture.root, 'Applications');
+            fs.mkdirSync(targetBuildDir);
+
+            const result = run(fixture, {
+                args: [
+                    fixture.sourceMap,
+                    path.join(targetBuildDir, '.backtrace-sourcemap-id'),
+                    fixture.config,
+                    fixture.project,
+                ],
+                env: { ...release, CONFIGURATION_BUILD_DIR: path.dirname(fixture.debugId) },
+            });
+
+            expect(result.status).toBe(0);
+            expect(result.stderr).toMatch(/^warning: Backtrace: Debug id file .* Product > Archive/m);
+            expect(result.stderr).toContain('Pass $CONFIGURATION_BUILD_DIR/.backtrace-sourcemap-id');
+            expect(uploadCall(fixture)).toBeUndefined();
+        });
+
+        it('keeps the serializer hint when CONFIGURATION_BUILD_DIR has no debug id file either', () => {
+            fs.rmSync(fixture.debugId);
+
+            const result = run(fixture, {
+                env: { ...release, CONFIGURATION_BUILD_DIR: path.dirname(fixture.debugId) },
+            });
+
+            expect(result.status).toBe(0);
+            expect(result.stderr).toMatch(/^warning: Backtrace: Debug id file .* metro\.config\.js/m);
+            expect(result.stderr).not.toContain('Archive');
+            expect(uploadCall(fixture)).toBeUndefined();
+        });
+
         it('warns instead of failing when the configuration file is missing', () => {
             fs.rmSync(fixture.config);
 

@@ -5,7 +5,8 @@
 # Usage:    ./ios-sourcemap-upload.sh <source_map_file_path> <debug_id_file_path> <backtrace_configuration_path> <project_directory_path>
 # Parameters:
 #   <source_map_file_path>          (Required) Path to the source map file.
-#   <debug_id_file_path>            (Required) Path to the debug id file written by the Backtrace metro serializer.
+#   <debug_id_file_path>            (Required) Path to the debug id file written by the Backtrace metro serializer,
+#                                   $CONFIGURATION_BUILD_DIR/.backtrace-sourcemap-id inside an Xcode build phase.
 #   <backtrace_configuration_path>  (Required) Path to the .backtracejsrc configuration file.
 #   <project_directory_path>        (Required) Path to the react-native project directory.
 # Environment:
@@ -78,6 +79,9 @@ if [ ! -f "$source_map_file_path" ]; then
 fi
 
 if [ ! -f "$debug_id_file_path" ]; then
+    if [ -n "$CONFIGURATION_BUILD_DIR" ] && [ -f "$CONFIGURATION_BUILD_DIR/.backtrace-sourcemap-id" ]; then
+        fail "Debug id file '$debug_id_file_path' does not exist. Under Product > Archive it is at '$CONFIGURATION_BUILD_DIR/.backtrace-sourcemap-id'. Pass \$CONFIGURATION_BUILD_DIR/.backtrace-sourcemap-id to this script."
+    fi
     fail "Debug id file '$debug_id_file_path' does not exist. Check if customSerializer has been set to the Backtrace serializer in metro.config.js."
 fi
 
