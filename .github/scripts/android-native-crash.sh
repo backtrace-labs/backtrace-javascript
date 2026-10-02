@@ -1,13 +1,28 @@
 #!/usr/bin/env bash
 # Asserts a native crash produces a minidump carrying an attribute set after init.
+# INSTALL=apk installs the universal APK, INSTALL=split installs the device's APK set from the bundle, like Google Play.
 set -euo pipefail
 
+INSTALL="${INSTALL:-apk}"
 PACKAGE="com.reactnative"
 ACTIVITY="$PACKAGE/.MainActivity"
-APK="examples/sdk/reactNative/android/app/build/outputs/apk/release/app-release.apk"
-MARKER="ci-marker-$(date +%s)"
+OUTPUTS="examples/sdk/reactNative/android/app/build/outputs"
+APK="$OUTPUTS/apk/release/app-release.apk"
+AAB="$OUTPUTS/bundle/release/app-release.aab"
+KEYSTORE="examples/sdk/reactNative/android/app/debug.keystore"
+BUNDLETOOL_JAR="${BUNDLETOOL_JAR:-bundletool.jar}"
+MARKER="ci-marker-$INSTALL-$(date +%s)"
 TRIGGER_URL="backtrace-example://ci-native-crash?marker=$MARKER"
+DUMP_OUT="/tmp/native-crash-$INSTALL.dmp"
+LOGCAT_OUT="/tmp/logcat-$INSTALL.txt"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+WORK="$(mktemp -d)"
+ADB="$(command -v adb)"
+
+case "$INSTALL" in
+    apk|split) ;;
+    *) echo "::error::INSTALL must be apk or split, got '$INSTALL'"; exit 2 ;;
+esac
 
 wait_for_log() {
     local pattern="$1" deadline="$2"
@@ -23,12 +38,52 @@ wait_for_log() {
     return 1
 }
 
+install_apk() {
+    adb install -r "$APK"
+}
+
+install_split() {
+    if [ ! -f "$BUNDLETOOL_JAR" ]; then
+        echo "::error::bundletool jar not found at $BUNDLETOOL_JAR"
+        exit 1
+    fi
+
+    java -jar "$BUNDLETOOL_JAR" build-apks --bundle="$AAB" --output="$WORK/app.apks" --overwrite \
+        --connected-device --adb="$ADB" ${ANDROID_SERIAL:+--device-id="$ANDROID_SERIAL"} \
+        --ks="$KEYSTORE" --ks-key-alias=androiddebugkey --ks-pass=pass:android --key-pass=pass:android
+
+    unzip -o -q "$WORK/app.apks" "splits/base-master.apk" "splits/base-$ABI_US.apk" -d "$WORK"
+    if unzip -l "$WORK/splits/base-master.apk" | grep -q "libbacktrace-native.so"; then
+        echo "::error::base-master.apk carries libbacktrace-native.so, this is not a Play-style split install"
+        exit 1
+    fi
+    ABIS="$ABI" bash "$HERE/verify-jni-symbols.sh" "$WORK/splits/base-$ABI_US.apk"
+
+    java -jar "$BUNDLETOOL_JAR" install-apks --apks="$WORK/app.apks" --adb="$ADB" ${ANDROID_SERIAL:+--device-id="$ANDROID_SERIAL"}
+
+    local installed
+    installed="$(adb shell pm path "$PACKAGE" | tr -d '\r')"
+    echo "$installed"
+    if ! grep -q "split_config.$ABI_US.apk" <<<"$installed"; then
+        echo "::error::split_config.$ABI_US.apk is not installed"
+        exit 1
+    fi
+}
+
 adb wait-for-device
-adb install -r "$APK"
+ABI="$(adb shell getprop ro.product.cpu.abi | tr -d '\r')"
+ABI_US="${ABI//-/_}"
+echo "install mode: $INSTALL, device abi: $ABI, device abis: $(adb shell getprop ro.product.cpu.abilist | tr -d '\r')"
+
+adb uninstall "$PACKAGE" >/dev/null 2>&1 || true
+case "$INSTALL" in
+    apk) install_apk ;;
+    split) install_split ;;
+esac
 adb shell pm clear "$PACKAGE" >/dev/null
 adb logcat -c
+trap 'adb logcat -d > "$LOGCAT_OUT" 2>/dev/null || true; rm -rf "$WORK"' EXIT
 
-echo "device abis: $(adb shell getprop ro.product.cpu.abilist | tr -d '\r')"
 adb shell am start -n "$ACTIVITY" >/dev/null
 echo "app abi:$(adb shell dumpsys package "$PACKAGE" | grep -m1 primaryCpuAbi | tr -d '\r' | cut -d= -f2)"
 
@@ -45,9 +100,9 @@ PULLED=""
 # exec-out, not shell: a pty mangles binary and would corrupt the minidump.
 for _ in $(seq 1 180); do
     DUMP="$(adb shell run-as "$PACKAGE" find files/backtrace/native -name '*.dmp' 2>/dev/null | tr -d '\r' | head -1 || true)"
-    if [ -n "$DUMP" ] && adb exec-out run-as "$PACKAGE" cat "$DUMP" > /tmp/native-crash.dmp 2>/dev/null; then
+    if [ -n "$DUMP" ] && adb exec-out run-as "$PACKAGE" cat "$DUMP" > "$DUMP_OUT" 2>/dev/null; then
         ON_DEVICE_SIZE="$(adb shell run-as "$PACKAGE" stat -c %s "$DUMP" 2>/dev/null | tr -d '\r' || true)"
-        PULLED_SIZE="$(wc -c < /tmp/native-crash.dmp | tr -d ' ')"
+        PULLED_SIZE="$(wc -c < "$DUMP_OUT" | tr -d ' ')"
         if [ -n "$ON_DEVICE_SIZE" ] && [ "$ON_DEVICE_SIZE" = "$PULLED_SIZE" ]; then
             PULLED=1
             break
@@ -63,7 +118,7 @@ if [ -z "$PULLED" ]; then
             echo "::error::the app is still running, so the crash never fired"
         fi
         adb shell run-as "$PACKAGE" ls -R files/backtrace 2>&1 || true
-        adb logcat -d | grep -iE "backtrace|crashpad|SIGSEGV|BT_CI_DRIVER" | tail -30
+        adb logcat -d | grep -iE "backtrace|crashpad|SIGSEGV|BT_CI_DRIVER|AndroidRuntime|nativeloader" | tail -40
     else
         echo "::error::could not pull a stable copy of $DUMP"
     fi
@@ -72,6 +127,4 @@ fi
 echo "minidump: $DUMP"
 echo "minidump pulled: $PULLED_SIZE bytes"
 
-adb logcat -d > /tmp/logcat.txt
-
-MARKER="$MARKER" python3 "$HERE/check-minidump-annotations.py" /tmp/native-crash.dmp
+MARKER="$MARKER" python3 "$HERE/check-minidump-annotations.py" "$DUMP_OUT"
