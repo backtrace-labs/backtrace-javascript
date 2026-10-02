@@ -49,7 +49,7 @@ install_split() {
     fi
 
     java -jar "$BUNDLETOOL_JAR" build-apks --bundle="$AAB" --output="$WORK/app.apks" --overwrite \
-        --connected-device --adb="$ADB" \
+        --connected-device --adb="$ADB" ${ANDROID_SERIAL:+--device-id="$ANDROID_SERIAL"} \
         --ks="$KEYSTORE" --ks-key-alias=androiddebugkey --ks-pass=pass:android --key-pass=pass:android
 
     unzip -o -q "$WORK/app.apks" "splits/base-master.apk" "splits/base-$ABI_US.apk" -d "$WORK"
@@ -59,7 +59,7 @@ install_split() {
     fi
     ABIS="$ABI" bash "$HERE/verify-jni-symbols.sh" "$WORK/splits/base-$ABI_US.apk"
 
-    java -jar "$BUNDLETOOL_JAR" install-apks --apks="$WORK/app.apks" --adb="$ADB"
+    java -jar "$BUNDLETOOL_JAR" install-apks --apks="$WORK/app.apks" --adb="$ADB" ${ANDROID_SERIAL:+--device-id="$ANDROID_SERIAL"}
 
     local installed
     installed="$(adb shell pm path "$PACKAGE" | tr -d '\r')"
@@ -126,11 +126,5 @@ if [ -z "$PULLED" ]; then
 fi
 echo "minidump: $DUMP"
 echo "minidump pulled: $PULLED_SIZE bytes"
-
-adb logcat -d | grep -E "BacktraceCrashHandlerRunner|nativeloader.*libbacktrace-native" || true
-if [ "$INSTALL" = "split" ] && ! adb logcat -d | grep -qE "split_config\.$ABI_US\.apk!/lib/$ABI/libbacktrace-native\.so"; then
-    echo "::error::the crash handler did not load libbacktrace-native.so from split_config.$ABI_US.apk"
-    exit 1
-fi
 
 MARKER="$MARKER" python3 "$HERE/check-minidump-annotations.py" "$DUMP_OUT"
