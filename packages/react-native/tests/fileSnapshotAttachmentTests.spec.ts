@@ -1,4 +1,5 @@
 import { BreadcrumbLogLevel, BreadcrumbType, SessionFiles, type RawBreadcrumb } from '@backtrace/sdk-core';
+import { AbortController as ReactNativeAbortController } from 'abort-controller';
 import assert from 'assert';
 import path from 'path';
 import { Platform } from 'react-native';
@@ -38,6 +39,11 @@ describe('FileSnapshotAttachment', () => {
     const originalOS = Platform.OS;
     const originalFetch = global.fetch;
     const originalFormData = global.FormData;
+
+    beforeAll(() => {
+        // React Native installs this global from abort-controller. Node 14 in CI has none.
+        global.AbortController ??= ReactNativeAbortController as unknown as typeof AbortController;
+    });
 
     beforeEach(() => {
         Platform.OS = 'android';
