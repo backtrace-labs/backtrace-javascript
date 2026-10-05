@@ -32,6 +32,9 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
     private readonly _destinationStream: WritableStream;
     private readonly _destinationWriter: WritableStreamDefaultWriter;
     private readonly _sink: FileChunkSink;
+    private readonly _queuedLines = new Map<number, string>();
+    private readonly _firstFile: string;
+    private readonly _fileLimits: { maximumLines?: number; maximumLength?: number };
 
     constructor(
         session: SessionFiles,
@@ -39,22 +42,28 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
         private readonly _limits: BreadcrumbsStorageLimits,
         onFilesChange?: (lastBreadcrumbId: number) => void,
     ) {
+        const file = (n: number) => session.getFileName(FileBreadcrumbsStorage.getFileName(n));
+        this._firstFile = file(0);
         this._sink = new FileChunkSink({
             maxFiles: 2,
             fs: this._fileSystem,
-            file: (n) => session.getFileName(FileBreadcrumbsStorage.getFileName(n)),
+            file,
             onFilesChange: onFilesChange && (() => onFilesChange(this._lastBreadcrumbId)),
         });
 
+        const { maximumBreadcrumbs, maximumTotalBreadcrumbsSize } = this._limits;
+        const maximumLines = maximumBreadcrumbs !== undefined ? Math.ceil(maximumBreadcrumbs / 2) : undefined;
+        const maximumLength =
+            maximumTotalBreadcrumbsSize !== undefined ? Math.ceil(maximumTotalBreadcrumbsSize / 2) : undefined;
+        this._fileLimits = { maximumLines, maximumLength };
+
         const splitters: ChunkSplitterFactory<string>[] = [];
-        const maximumBreadcrumbs = this._limits.maximumBreadcrumbs;
-        if (maximumBreadcrumbs !== undefined) {
-            splitters.push(() => lineChunkSplitter(Math.ceil(maximumBreadcrumbs / 2)));
+        if (maximumLines !== undefined) {
+            splitters.push(() => lineChunkSplitter(maximumLines));
         }
 
-        const maximumTotalBreadcrumbsSize = this._limits.maximumTotalBreadcrumbsSize;
-        if (maximumTotalBreadcrumbsSize !== undefined) {
-            splitters.push(() => lengthChunkSplitter(Math.ceil(maximumTotalBreadcrumbsSize / 2), 'skip'));
+        if (maximumLength !== undefined) {
+            splitters.push(() => lengthChunkSplitter(maximumLength, 'skip'));
         }
 
         if (!splitters[0]) {
@@ -84,9 +93,16 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
     }
 
     public getAttachments(): BacktraceFileAttachment[] {
-        const files = [...this._sink.files].map((f) => f.path);
+        const files =
+            this._sink.files.length || !this._queuedLines.size
+                ? this._sink.files.map((f) => f.path)
+                : [this._firstFile];
         return files.map(
-            (f, i) => new FileSnapshotAttachment(this._fileSystem, f, `bt-breadcrumbs-${i}`, 'application/json'),
+            (f, i) =>
+                new FileSnapshotAttachment(this._fileSystem, f, `bt-breadcrumbs-${i}`, 'application/json', {
+                    ...this._fileLimits,
+                    queuedLines: () => (this.newestFile() === f ? [...this._queuedLines.values()] : []),
+                }),
         );
     }
 
@@ -121,12 +137,23 @@ export class FileBreadcrumbsStorage implements BreadcrumbsStorage {
             attributes: rawBreadcrumb.attributes,
         };
 
-        const breadcrumbJson = JSON.stringify(breadcrumb, jsonEscaper());
-        this._destinationWriter.write(breadcrumbJson + '\n').catch(() => {
-            // Fail silently here, there's not much we can do about this
-        });
+        const line = JSON.stringify(breadcrumb, jsonEscaper()) + '\n';
+        const { maximumLength } = this._fileLimits;
+        if (maximumLength === undefined || line.length <= maximumLength) {
+            this._queuedLines.set(id, line);
+        }
+        this._destinationWriter
+            .write(line)
+            .catch(() => {
+                // Fail silently here, there's not much we can do about this
+            })
+            .finally(() => this._queuedLines.delete(id));
 
         return id;
+    }
+
+    private newestFile() {
+        return this._sink.files[this._sink.files.length - 1]?.path ?? this._firstFile;
     }
 
     private static getFileName(index: number) {
