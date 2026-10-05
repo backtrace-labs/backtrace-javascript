@@ -1,6 +1,6 @@
 {
     "name": "@backtrace/react-native",
-    "version": "0.2.2",
+    "version": "0.2.3-rc",
     "description": "Backtrace-Javascript React-Native integration",
     "main": "lib/commonjs/index",
     "module": "lib/module/index",
@@ -8,6 +8,7 @@
     "react-native": "src/index",
     "source": "src/index",
     "files": [
+        "RELEASE_CANDIDATE.md",
         "src",
         "lib",
         "android",
@@ -32,8 +33,11 @@
         "watch": "tsc --noEmit --watch",
         "clean": "rimraf \"lib\"",
         "format:check": "eslint \"**/*.{js,ts,tsx}\"",
-        "prepublishOnly": "npm run clean && cross-env NODE_ENV=production bob build",
-        "test": "cross-env NODE_ENV=test jest"
+        "test": "cross-env NODE_ENV=test jest",
+        "generate:version": "node scripts/generate-agent-version.cjs",
+        "prebuild": "npm run generate:version",
+        "pretest": "npm run generate:version",
+        "prepack": "npm run clean && cross-env NODE_ENV=production npm run build"
     },
     "keywords": [
         "Error",
@@ -76,6 +80,8 @@
         ]
     },
     "peerDependencies": {
+        "@backtrace/sourcemap-tools": "^0.2.5",
+        "metro": ">=0.76.0",
         "react": ">=18.0.0",
         "react-native": ">=0.72.0"
     },
@@ -95,7 +101,21 @@
         "typescript": "^5.0.2"
     },
     "dependencies": {
-        "@backtrace/sdk-core": "^0.8.3",
+        "@backtrace/sdk-core": "0.8.4-rc",
+        "pretty-format": "^29.7.0",
+        "promise": "^8.3.0",
         "web-streams-polyfill": "^4.3.0"
+    },
+    "publishConfig": {
+        "access": "public",
+        "tag": "rc"
+    },
+    "peerDependenciesMeta": {
+        "@backtrace/sourcemap-tools": {
+            "optional": true
+        },
+        "metro": {
+            "optional": true
+        }
     }
 }

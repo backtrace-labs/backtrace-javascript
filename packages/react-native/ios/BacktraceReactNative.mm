@@ -13,25 +13,42 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(initialize:(NSString*)submissionUrl
     if(instance != nil) {
         return nil;
     }
-    instance = [[BacktraceCrashReporter alloc] initWithBacktraceUrl:submissionUrl andDatabasePath: databasePath andAttributes: attributes andOomSupport:TRUE andAttachments:attachmentPaths];
-    [instance start];
+    @try {
+        instance = [[BacktraceCrashReporter alloc] initWithBacktraceUrl:submissionUrl andDatabasePath: databasePath andAttributes: (attributes ?: @{}) andOomSupport:TRUE andAttachments:(attachmentPaths ?: @[])];
+        if (instance == nil) {
+            return @NO;
+        }
+        [instance start];
+    } @catch (NSException *exception) {
+        NSLog(@"Backtrace: Native crash reporting is off (%@)", exception.name);
+        instance = nil;
+        return @NO;
+    }
     return nil;
 }
 
 RCT_EXPORT_METHOD(useAttachments: (NSArray*) attachmentPaths) {
-    if(instance == nil) {
+    if(instance == nil || attachmentPaths == nil) {
         return;
     }
-    
-    [instance useAttachments:attachmentPaths];
+
+    @try {
+        [instance useAttachments:attachmentPaths];
+    } @catch (NSException *exception) {
+        NSLog(@"Backtrace: Failed to update native attachments (%@)", exception.name);
+    }
 }
 
 RCT_EXPORT_METHOD(useAttributes: (NSDictionary*) attributes) {
-    if(instance == nil) {
+    if(instance == nil || attributes == nil) {
         return;
     }
-    
-    [instance setAttributes:attributes];
+
+    @try {
+        [instance setAttributes:attributes];
+    } @catch (NSException *exception) {
+        NSLog(@"Backtrace: Failed to update native attributes (%@)", exception.name);
+    }
 }
 
 RCT_EXPORT_METHOD(crash)

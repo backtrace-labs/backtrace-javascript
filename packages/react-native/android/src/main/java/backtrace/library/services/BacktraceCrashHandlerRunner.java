@@ -41,6 +41,7 @@ public class BacktraceCrashHandlerRunner {
 
 
         loader.loadLibrary(crashHandlerLibrary);
+        Log.i(LOG_TAG, "BT_NATIVE_HANDLER_LOADED " + crashHandlerLibrary);
 
         boolean result = crashHandler.handleCrash(args);
         if (!result) {

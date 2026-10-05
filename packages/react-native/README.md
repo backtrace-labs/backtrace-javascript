@@ -82,9 +82,20 @@ client.send(new Error('Something broke!'));
 Client-side error reports are based on minified code. Upload source maps and source code to resolve minified code to
 your original source identifiers.
 
-[(Source Map feature documentation)](https://docs.saucelabs.com/error-reporting/platform-integrations/source-map/)
+Install the build-time tools in the application when using Backtrace's source-map scripts:
 
-<? TBD: Link to source upload doc ?>
+```sh
+npm install --save-dev @backtrace/sourcemap-tools@^0.2.5 @backtrace/javascript-cli
+```
+
+The serializer also needs Metro (`>=0.76.0`). Use the Metro version compatible with the application's React Native version;
+React Native applications normally already provide it. Metro and `@backtrace/sourcemap-tools` are optional peers, installing the SDK alone does not install these tools. 
+The CLI package supplies the `backtrace-js` executable used by the iOS upload script; the Android upload task also uses `@backtrace/javascript-cli`.
+
+Configure `@backtrace/react-native/scripts/processSourceMap` as the Metro custom serializer before enabling the upload scripts.
+See the [example application's source-map setup](https://github.com/backtrace-labs/backtrace-javascript/tree/main/examples/sdk/reactNative#source-maps) for Metro, Android and iOS configuration (these tools are optional for basic runtime error reporting).
+
+[(Source Map feature documentation)](https://docs.saucelabs.com/error-reporting/platform-integrations/source-map/)
 
 ### Deobfuscate ProGuard and R8 builds (Android)
 

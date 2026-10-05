@@ -66,6 +66,9 @@ export SOURCEMAP_FILE="$project_directory/main.jsbundle.map"
 source_map_upload="$project_directory/node_modules/@backtrace/react-native/scripts/ios-sourcemap-upload.sh"
 backtrace_js_config="$project_directory/.backtracejsrc"
 
-/bin/sh -c "$source_map_upload $SOURCEMAP_FILE $TARGET_BUILD_DIR/.backtrace-sourcemap-id $backtrace_js_config $project_directory"
+/bin/sh -c "$source_map_upload $SOURCEMAP_FILE $CONFIGURATION_BUILD_DIR/.backtrace-sourcemap-id $backtrace_js_config $project_directory"
 
 ```
+
+The Backtrace serializer writes the debug id file to `$CONFIGURATION_BUILD_DIR`. Under Product > Archive that folder
+differs from `$TARGET_BUILD_DIR`, and an archive built with `$TARGET_BUILD_DIR` uploads no source map.

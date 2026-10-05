@@ -8,15 +8,14 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(get) {
     NSMutableDictionary *dictionary = [NSMutableDictionary dictionary];
     struct utsname systemInfo;
     uname(&systemInfo);
-    
-    [dictionary setObject: [NSString stringWithCString:systemInfo.machine
-                                              encoding:NSUTF8StringEncoding] forKey: @"device.model"];
-    [dictionary setObject: @"Apple Inc" forKey: @"device.brand"];
-    [dictionary setObject: [[UIDevice currentDevice] model] forKey: @"device.product"];
-    [dictionary setObject: @"Apple Inc" forKey: @"device.manufacturer"];
-    [dictionary setObject: [[NSBundle mainBundle] infoDictionary][@"DTSDKName"] forKey: @"device.sdk"];
-    [dictionary setObject: [[[NSBundle mainBundle] preferredLocalizations] objectAtIndex:0] forKey: @"culture"];
-    
+
+    dictionary[@"device.model"] = [NSString stringWithCString:systemInfo.machine encoding:NSUTF8StringEncoding];
+    dictionary[@"device.brand"] = @"Apple Inc";
+    dictionary[@"device.product"] = [[UIDevice currentDevice] model];
+    dictionary[@"device.manufacturer"] = @"Apple Inc";
+    dictionary[@"device.sdk"] = [[NSBundle mainBundle] infoDictionary][@"DTSDKName"];
+    dictionary[@"culture"] = [[[NSBundle mainBundle] preferredLocalizations] firstObject];
+
     return dictionary;
 }
 

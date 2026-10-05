@@ -90,35 +90,41 @@ public class BacktraceFileSystemProvider extends ReactContextBaseJavaModule {
 
     @ReactMethod(isBlockingSynchronousMethod = true)
     public boolean unlinkSync(String path) {
-        File file = new File(path);
-        if (!file.exists()) {
-            return true;
-        }
-        Boolean result = file.delete();
-        return result;
+        return delete(path);
     }
 
     @ReactMethod
     public void unlink(String filePath, Promise promise) {
-        File file = new File(filePath);
-        if (!file.exists()) {
-            promise.resolve(true);
-            return;
-        }
-        Boolean result = file.delete();
-        promise.resolve(result);
+        promise.resolve(delete(filePath));
     }
 
     @ReactMethod(isBlockingSynchronousMethod = true)
     public boolean existsSync(String path) {
-        File file = new File(path);
-        return file.exists();
+        return exists(path);
     }
 
     @ReactMethod
     public void exists(String path, Promise promise) {
-        File file = new File(path);
-        promise.resolve(file.exists());
+        promise.resolve(exists(path));
+    }
+
+    private boolean delete(String path) {
+        try {
+            File file = new File(path);
+            return !file.exists() || file.delete();
+        } catch (RuntimeException e) {
+            Log.d(LOG_TAG, "Cannot delete " + path + ": " + e.getClass().getName());
+            return false;
+        }
+    }
+
+    private boolean exists(String path) {
+        try {
+            return new File(path).exists();
+        } catch (RuntimeException e) {
+            Log.d(LOG_TAG, "Cannot check " + path + ": " + e.getClass().getName());
+            return false;
+        }
     }
 
     @ReactMethod(isBlockingSynchronousMethod = true)

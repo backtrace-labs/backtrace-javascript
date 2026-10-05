@@ -15,6 +15,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Handle unhandled Android exceptions from background threads.
@@ -23,24 +24,16 @@ import java.util.concurrent.TimeUnit;
 public class BacktraceAndroidBackgroundUnhandledExceptionHandler extends ReactContextBaseJavaModule implements Thread.UncaughtExceptionHandler  {
     private final static transient String LOG_TAG = BacktraceAndroidBackgroundUnhandledExceptionHandler.class.getSimpleName();
 
-    private Thread.UncaughtExceptionHandler _rootHandler;
+    private static final Object INSTALL_LOCK = new Object();
 
-    private Thread _lastCaughtBackgroundExceptionThread;
-    private Throwable _lastCaughtBackgroundException;
+    private volatile Thread.UncaughtExceptionHandler _rootHandler;
 
-    /**
-     * Check if data shouldn't be reported.
-     */
-    private volatile boolean _shouldStop = false;
+    private boolean _installed = false;
 
-    /**
-     * React native callback method
-     */
-    private Callback _callback;
+    // React Native callbacks are single-use; invoking one twice throws.
+    private final AtomicReference<Callback> _callback = new AtomicReference<>();
 
-    private boolean _callbackInvoked = false;
-
-    private final CountDownLatch _reportProcessed = new CountDownLatch(1);
+    private volatile CountDownLatch _reportProcessed = new CountDownLatch(0);
 
     private static final long REPORT_PROCESSED_TIMEOUT_MS = 5000;
 
@@ -60,32 +53,47 @@ public class BacktraceAndroidBackgroundUnhandledExceptionHandler extends ReactCo
     @ReactMethod
     public void start(Callback callback) {
         Log.d(LOG_TAG, "Initializing Android unhandled exception handler");
-        _callback = callback;
-        _rootHandler = Thread.getDefaultUncaughtExceptionHandler();
-        Thread.setDefaultUncaughtExceptionHandler(this);
+        synchronized (INSTALL_LOCK) {
+            if (!_installed) {
+                _rootHandler = Thread.getDefaultUncaughtExceptionHandler();
+                Thread.setDefaultUncaughtExceptionHandler(this);
+                _installed = true;
+            }
+        }
+        _callback.set(callback);
     }
 
     @Override
     public synchronized void uncaughtException(final Thread thread, final Throwable throwable) {
-        _lastCaughtBackgroundExceptionThread = thread;
-        _lastCaughtBackgroundException = throwable;
-        if (_shouldStop == true) {
-            finish();
-            return;
+        try {
+            if (throwable instanceof Exception) {
+                report(throwable);
+            }
+        } catch (RuntimeException ex) {
+            Log.w(LOG_TAG, "Failed to report the unhandled exception.", ex);
+        } finally {
+            Thread.UncaughtExceptionHandler rootHandler = _rootHandler;
+            if (rootHandler != null) {
+                rootHandler.uncaughtException(thread, throwable);
+            }
         }
-        // React Native callbacks are single-use; invoking one twice throws.
-        if (throwable instanceof Exception && !_callbackInvoked) {
-            _callbackInvoked = true;
-            String throwableType = throwable.getClass().getName();
-            _callback.invoke(throwableType, throwable.getMessage(), stackTraceToString(throwable.getStackTrace()));
-            waitForReportProcessing();
-        }
-        finish();
     }
 
-    private void waitForReportProcessing() {
+    private void report(Throwable throwable) {
+        Callback callback = _callback.getAndSet(null);
+        if (callback == null) {
+            return;
+        }
+        CountDownLatch reportProcessed = new CountDownLatch(1);
+        _reportProcessed = reportProcessed;
+        String throwableType = throwable.getClass().getName();
+        callback.invoke(throwableType, throwable.getMessage(), stackTraceToString(throwable.getStackTrace()));
+        waitForReportProcessing(reportProcessed);
+    }
+
+    private void waitForReportProcessing(CountDownLatch reportProcessed) {
         try {
-            if (!_reportProcessed.await(REPORT_PROCESSED_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
+            if (!reportProcessed.await(REPORT_PROCESSED_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
                 Log.d(LOG_TAG, "Timed out waiting for the unhandled exception report to be processed.");
             }
         } catch (InterruptedException ex) {
@@ -112,21 +120,21 @@ public class BacktraceAndroidBackgroundUnhandledExceptionHandler extends ReactCo
         }
     }
 
-    public void finish() {
-        if (_lastCaughtBackgroundExceptionThread == null || _lastCaughtBackgroundException == null) {
-            Log.d(LOG_TAG, "The exception object or the exception thread is not available. This is probably a bug.");
-            return;
-        }
-        if (_shouldStop) {
-            Log.d(LOG_TAG, "Backtrace client has been disposed. The report won't be available.");
-            return;
-        }
-        _rootHandler.uncaughtException(_lastCaughtBackgroundExceptionThread, _lastCaughtBackgroundException);
-    }
-
     @ReactMethod
     public void stop() {
         Log.d(LOG_TAG, "Uncaught exception handler has been disabled.");
-        _shouldStop = true;
+        _callback.set(null);
+        synchronized (INSTALL_LOCK) {
+            if (Thread.getDefaultUncaughtExceptionHandler() == this) {
+                Thread.setDefaultUncaughtExceptionHandler(_rootHandler);
+                _installed = false;
+            }
+        }
+    }
+
+    @Override
+    public void invalidate() {
+        stop();
+        super.invalidate();
     }
 }

@@ -1,6 +1,7 @@
 package backtraceio.library;
 
 import android.os.Looper;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -41,10 +42,14 @@ public class BacktraceAnrWatchdog extends ReactContextBaseJavaModule {
             return;
         }
 
-        this.watchdog = new AnrWatchdog(
-                timeout > 0 ? timeout : AnrWatchdog.DEFAULT_ANR_TIMEOUT,
-                debug,
-                this::emitAnrDetected);
+        try {
+            this.watchdog = new AnrWatchdog(
+                    timeout > 0 ? timeout : AnrWatchdog.DEFAULT_ANR_TIMEOUT,
+                    debug,
+                    this::emitAnrDetected);
+        } catch (RuntimeException | OutOfMemoryError e) {
+            Log.w(NAME, "Failed to start the ANR watchdog (" + e.getClass().getName() + ")");
+        }
     }
 
     @ReactMethod()
@@ -53,7 +58,11 @@ public class BacktraceAnrWatchdog extends ReactContextBaseJavaModule {
             return;
         }
 
-        this.watchdog.stopMonitoring();
+        try {
+            this.watchdog.stopMonitoring();
+        } catch (RuntimeException e) {
+            Log.w(NAME, "Failed to stop the ANR watchdog (" + e.getClass().getName() + ")");
+        }
         this.watchdog = null;
     }
 
@@ -70,8 +79,16 @@ public class BacktraceAnrWatchdog extends ReactContextBaseJavaModule {
     public void removeListeners(Integer count) {}
 
     private void emitAnrDetected(Map<Thread, StackTraceElement[]> allThreads) {
+        try {
+            emitAnrEvent(allThreads);
+        } catch (RuntimeException e) {
+            Log.w(NAME, "Failed to report an ANR (" + e.getClass().getName() + ")");
+        }
+    }
+
+    private void emitAnrEvent(Map<Thread, StackTraceElement[]> allThreads) {
         ReactApplicationContext context = getReactApplicationContext();
-        if (!context.hasActiveReactInstance()) {
+        if (context == null || !context.hasActiveReactInstance()) {
             return;
         }
 

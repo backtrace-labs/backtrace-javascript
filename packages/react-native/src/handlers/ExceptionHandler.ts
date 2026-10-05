@@ -1,4 +1,4 @@
-import { BacktraceClient } from '../BacktraceClient';
+import type { BacktraceClient } from '../BacktraceClient';
 
 export interface ExceptionHandler {
     captureUnhandledPromiseRejections(client: BacktraceClient): void;
