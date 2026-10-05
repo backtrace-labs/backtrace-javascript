@@ -128,3 +128,13 @@ echo "minidump: $DUMP"
 echo "minidump pulled: $PULLED_SIZE bytes"
 
 MARKER="$MARKER" python3 "$HERE/check-minidump-annotations.py" "$DUMP_OUT"
+
+if [ "$INSTALL" = "split" ]; then
+    LOADED_FROM_SPLIT="BT_NATIVE_HANDLER_LOADED /.*/split_config\.$ABI_US\.apk!/lib/$ABI/libbacktrace-native\.so"
+    if ! wait_for_log "$LOADED_FROM_SPLIT" 15; then
+        echo "::error::missing BT_NATIVE_HANDLER_LOADED for split_config.$ABI_US.apk"
+        adb logcat -d -s BacktraceCrashHandlerRunner:I '*:S' | tail -20
+        exit 1
+    fi
+    adb logcat -d -v raw -s BacktraceCrashHandlerRunner:I '*:S' | grep -E "^BT_NATIVE_HANDLER_LOADED"
+fi
