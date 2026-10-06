@@ -1,5 +1,6 @@
 import { BacktraceReport, warnFailure } from '@backtrace/sdk-core';
 import { format as prettyFormat } from 'pretty-format';
+import { AppState } from 'react-native';
 import type { BacktraceClient } from '../BacktraceClient';
 import { hermes } from '../common/hermesHelper';
 import { CrashReporter } from '../crashReporter/CrashReporter';
@@ -16,6 +17,8 @@ const rejectionTracking = require('promise/setimmediate/rejection-tracking') as 
 
 type GlobalErrorHandler = ReturnType<typeof ErrorUtils.getGlobalHandler>;
 
+const FATAL_REPORT_TIMEOUT_MS = 5000;
+
 export class UnhandledExceptionHandler implements ExceptionHandler {
     protected enabled = true;
 
@@ -26,6 +29,8 @@ export class UnhandledExceptionHandler implements ExceptionHandler {
     private _reportingManagedError = false;
     private _reportingRejection = false;
     private _warning = false;
+    private _pendingFatal?: Promise<void>;
+    private _escalatedError?: unknown;
 
     public captureManagedErrors(client: BacktraceClient): void {
         if (!this.enabled || this._installedHandler) {
@@ -36,36 +41,51 @@ export class UnhandledExceptionHandler implements ExceptionHandler {
         this._managedClient = client;
 
         const installedHandler: GlobalErrorHandler = (error: Error, fatal?: boolean) => {
-            const managedClient = this._managedClient;
-
-            if (this.enabled && managedClient && !this._reportingManagedError) {
-                this._reportingManagedError = true;
-
-                try {
-                    // send() can throw before returning a promise. Observe rejected
-                    // submissions without delaying the application's fatal handler.
-                    void Promise.resolve(
-                        managedClient.send(error, {
-                            'error.type': 'Unhandled exception',
-                            fatal,
-                        }),
-                    ).catch(() => undefined);
-
-                    // iOS: RCTFatal turns a fatal into a native crash the reporter would double-report.
-                    // Preserve native reporting when synchronous JS report construction fails.
-                    if (fatal) {
-                        CrashReporter.markFatalError();
-                    }
-                } catch (err) {
-                    this.warnReportingFailure('failed to report an unhandled error', err);
-                } finally {
-                    this._reportingManagedError = false;
-                }
+            if (this._escalatedError !== undefined && error === this._escalatedError) {
+                this._escalatedError = undefined;
+                throw error;
             }
 
-            // Disposed and re-entered wrappers still forward.
-            // Exceptions from the application's original handler must keep their original behavior.
-            previousHandler(error, fatal);
+            const managedClient = this._managedClient;
+
+            if (!this.enabled || !managedClient || this._reportingManagedError) {
+                // Disposed and re-entered wrappers still forward.
+                // Exceptions from the application's original handler must keep their original behavior.
+                previousHandler(error, fatal);
+                return;
+            }
+
+            let submission: Promise<unknown> | undefined;
+            this._reportingManagedError = true;
+            try {
+                // send() can throw before returning a promise.
+                submission = Promise.resolve(
+                    managedClient.send(error, {
+                        'error.type': 'Unhandled exception',
+                        fatal,
+                    }),
+                ).catch(() => undefined);
+            } catch (err) {
+                this.warnReportingFailure('failed to report an unhandled error', err);
+            } finally {
+                this._reportingManagedError = false;
+            }
+
+            if (!fatal || !submission) {
+                previousHandler(error, fatal);
+                return;
+            }
+
+            if (this.isInBackground()) {
+                // JS timers are paused in the background.
+                this.markFatalErrorSafely();
+                previousHandler(error, fatal);
+                return;
+            }
+
+            // The previous handler ends the process.
+            const settled = this.settle(submission, FATAL_REPORT_TIMEOUT_MS);
+            this.queueFatalForwarding(() => settled.then(() => this.forwardFatal(previousHandler, error, fatal)));
         };
 
         try {
@@ -140,6 +160,59 @@ export class UnhandledExceptionHandler implements ExceptionHandler {
 
         // Promise trackers do not expose ownership. Disabling tracking globally
         // could disable a newer tracker installed by another SDK.
+    }
+
+    protected markFatalError(): void {
+        CrashReporter.markFatalError();
+    }
+
+    private queueFatalForwarding(forward: () => Promise<void> | void): void {
+        const pending = (this._pendingFatal ?? Promise.resolve()).then(forward).then(() => {
+            if (this._pendingFatal === pending) {
+                this._pendingFatal = undefined;
+            }
+        });
+        this._pendingFatal = pending;
+    }
+
+    private forwardFatal(previousHandler: GlobalErrorHandler, error: Error, fatal: boolean): void {
+        this.markFatalErrorSafely();
+        try {
+            previousHandler(error, fatal);
+        } catch (err) {
+            // React Native's native fallback ends the process only for a throw out of the global handler.
+            this._escalatedError = err;
+            setTimeout(() => {
+                throw err;
+            }, 0);
+        }
+    }
+
+    private markFatalErrorSafely(): void {
+        try {
+            this.markFatalError();
+        } catch (err) {
+            this.warnReportingFailure('failed to mark the fatal error for the native handler', err);
+        }
+    }
+
+    private isInBackground(): boolean {
+        try {
+            return AppState.currentState === 'background';
+        } catch {
+            return false;
+        }
+    }
+
+    private settle(promise: Promise<unknown>, timeoutMs: number): Promise<void> {
+        return new Promise<void>((resolve) => {
+            const timer = setTimeout(resolve, timeoutMs);
+            const done = () => {
+                clearTimeout(timer);
+                resolve();
+            };
+            promise.then(done, done);
+        });
     }
 
     private reportRejection(id: number, rejection: unknown = 'Unknown'): void {

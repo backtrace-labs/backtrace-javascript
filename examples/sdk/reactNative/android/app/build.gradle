@@ -110,6 +110,7 @@ android {
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
+            buildConfigField "boolean", "USE_DEVELOPER_SUPPORT", "true"
         }
         release {
             // Caution! In production, you need to generate your own keystore file.
@@ -117,6 +118,8 @@ android {
             signingConfig signingConfigs.debug
             // CI-only, so run-as can read the crashpad database.
             debuggable project.hasProperty("btCiDebuggable")
+            // BuildConfig.DEBUG is true in the debuggable CI build.
+            buildConfigField "boolean", "USE_DEVELOPER_SUPPORT", "false"
             minifyEnabled enableProguardInReleaseBuilds || project.hasProperty("btCiMinify")
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }

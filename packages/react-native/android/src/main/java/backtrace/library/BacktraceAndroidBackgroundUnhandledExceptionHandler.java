@@ -9,6 +9,7 @@ import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.common.JavascriptException;
 import com.facebook.react.module.annotations.ReactModule;
 
 import java.io.PrintWriter;
@@ -36,6 +37,10 @@ public class BacktraceAndroidBackgroundUnhandledExceptionHandler extends ReactCo
     private volatile CountDownLatch _reportProcessed = new CountDownLatch(0);
 
     private static final long REPORT_PROCESSED_TIMEOUT_MS = 5000;
+
+    private static final long FATAL_ERROR_MARK_TIMEOUT_MS = 5000;
+
+    private volatile long _fatalErrorMarkedAtNanos = 0;
 
     public static final String NAME = "BacktraceAndroidBackgroundUnhandledExceptionHandler";
 
@@ -66,7 +71,9 @@ public class BacktraceAndroidBackgroundUnhandledExceptionHandler extends ReactCo
     @Override
     public synchronized void uncaughtException(final Thread thread, final Throwable throwable) {
         try {
-            if (throwable instanceof Exception) {
+            if (isReportedFatalError(throwable)) {
+                Log.d(LOG_TAG, "Skipping the JavascriptException of a fatal error already reported from JavaScript.");
+            } else if (throwable instanceof Exception) {
                 report(throwable);
             }
         } catch (RuntimeException ex) {
@@ -77,6 +84,25 @@ public class BacktraceAndroidBackgroundUnhandledExceptionHandler extends ReactCo
                 rootHandler.uncaughtException(thread, throwable);
             }
         }
+    }
+
+    // The interop layer rejects a void synchronous method.
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    public boolean markFatalError() {
+        _fatalErrorMarkedAtNanos = System.nanoTime();
+        return true;
+    }
+
+    private boolean isReportedFatalError(Throwable throwable) {
+        if (!(throwable instanceof JavascriptException)) {
+            return false;
+        }
+        long markedAtNanos = _fatalErrorMarkedAtNanos;
+        if (markedAtNanos == 0) {
+            return false;
+        }
+        _fatalErrorMarkedAtNanos = 0;
+        return System.nanoTime() - markedAtNanos <= TimeUnit.MILLISECONDS.toNanos(FATAL_ERROR_MARK_TIMEOUT_MS);
     }
 
     private void report(Throwable throwable) {
@@ -102,10 +128,11 @@ public class BacktraceAndroidBackgroundUnhandledExceptionHandler extends ReactCo
     }
 
     // not synchronized: the crashing thread holds this monitor while it waits
-    @ReactMethod
-    public void reportProcessed() {
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    public boolean reportProcessed() {
         Log.d(LOG_TAG, "Unhandled exception report processed by the JavaScript side.");
         _reportProcessed.countDown();
+        return true;
     }
 
     private static String stackTraceToString(StackTraceElement[] stackTrace) {

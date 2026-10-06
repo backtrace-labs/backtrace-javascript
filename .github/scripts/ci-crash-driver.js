@@ -2,6 +2,14 @@
 import { Linking } from 'react-native';
 
 Linking.addEventListener('url', ({ url }) => {
+    const fatal = /^backtrace-example:\/\/ci-js-fatal\?marker=([A-Za-z0-9-]+)$/.exec(url ?? '');
+    if (fatal) {
+        console.log(`BT_CI_DRIVER firing: ${url}`);
+        setTimeout(() => {
+            throw new Error(`BT_CI_JS_FATAL ${fatal[1]}`);
+        }, 0);
+        return;
+    }
     const match = /^backtrace-example:\/\/ci-native-crash\?marker=([A-Za-z0-9-]+)$/.exec(url ?? '');
     if (!match) {
         return;

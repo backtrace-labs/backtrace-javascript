@@ -113,7 +113,7 @@ jobs:
                   disable-animations: false
                   script: echo "Generated AVD snapshot for caching."
 
-            - name: Capture a native crash on the emulator, single APK then Play-style split install
+            - name: Capture a native crash, single APK then Play-style split install, and a fatal JS error on the emulator
               uses: reactivecircus/android-emulator-runner@v2
               env:
                   BUNDLETOOL_JAR: ${{ runner.temp }}/bundletool.jar
@@ -127,6 +127,7 @@ jobs:
                   script: |
                       INSTALL=apk bash .github/scripts/android-native-crash.sh
                       INSTALL=split bash .github/scripts/android-native-crash.sh
+                      bash .github/scripts/android-js-fatal.sh
 
             - name: Upload crash evidence
               if: failure()
@@ -136,5 +137,7 @@ jobs:
                   path: |
                       /tmp/native-crash-*.dmp
                       /tmp/logcat-*.txt
+                      /tmp/js-fatal-logcat.txt
+                      /tmp/js-fatal-record.json
                   if-no-files-found: warn
                   retention-days: 7
