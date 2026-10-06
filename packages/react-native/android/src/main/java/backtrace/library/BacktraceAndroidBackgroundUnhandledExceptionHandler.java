@@ -66,10 +66,8 @@ public class BacktraceAndroidBackgroundUnhandledExceptionHandler extends ReactCo
     @Override
     public synchronized void uncaughtException(final Thread thread, final Throwable throwable) {
         try {
-            if (throwable instanceof Exception) {
-                report(throwable);
-            }
-        } catch (RuntimeException ex) {
+            report(throwable);
+        } catch (RuntimeException | Error ex) {
             Log.w(LOG_TAG, "Failed to report the unhandled exception.", ex);
         } finally {
             Thread.UncaughtExceptionHandler rootHandler = _rootHandler;

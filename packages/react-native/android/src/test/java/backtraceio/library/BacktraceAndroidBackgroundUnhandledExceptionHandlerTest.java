@@ -2,6 +2,7 @@ package backtraceio.library;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.react.bridge.Callback;
 import java.util.ArrayList;
@@ -139,15 +140,46 @@ public class BacktraceAndroidBackgroundUnhandledExceptionHandlerTest {
     }
 
     @Test
-    public void errorIsForwardedWithoutConsumingTheCallback() {
+    public void stackOverflowErrorIsReportedAndForwarded() {
+        assertErrorReportedAndForwarded(new StackOverflowError("stack size 8MB"));
+    }
+
+    @Test
+    public void outOfMemoryErrorIsReportedAndForwarded() {
+        assertErrorReportedAndForwarded(new OutOfMemoryError("Failed to allocate a 24 byte allocation"));
+    }
+
+    @Test
+    public void noClassDefFoundErrorIsReportedAndForwarded() {
+        assertErrorReportedAndForwarded(new NoClassDefFoundError("com/example/Missing"));
+    }
+
+    @Test
+    public void secondCrashIsForwardedWithoutReporting() {
         RecordingCallback callback = new RecordingCallback(handler);
         handler.start(callback);
 
-        crash(new StackOverflowError());
-        crash(new RuntimeException("after error"));
+        crash(new StackOverflowError("first"));
+        crash(new RuntimeException("second"));
 
         assertEquals(1, callback.calls.size());
         assertEquals(2, rootHandler.received.size());
+    }
+
+    @Test
+    public void callbackThrowingErrorStillForwards() {
+        StackOverflowError error = new StackOverflowError("boom");
+        List<Object[]> calls = new ArrayList<>();
+        handler.start(args -> {
+            calls.add(args);
+            throw new OutOfMemoryError("callback failed");
+        });
+
+        crash(error);
+
+        assertEquals(1, calls.size());
+        assertEquals(1, rootHandler.received.size());
+        assertSame(error, rootHandler.received.get(0));
     }
 
     @Test
@@ -188,6 +220,20 @@ public class BacktraceAndroidBackgroundUnhandledExceptionHandlerTest {
         assertEquals(0, oldCallback.calls.size());
         assertEquals(1, newCallback.calls.size());
         assertEquals(1, rootHandler.received.size());
+    }
+
+    private void assertErrorReportedAndForwarded(Throwable error) {
+        RecordingCallback callback = new RecordingCallback(handler);
+        handler.start(callback);
+
+        crash(error);
+
+        assertEquals(1, callback.calls.size());
+        assertEquals(error.getClass().getName(), callback.calls.get(0)[0]);
+        assertEquals(error.getMessage(), callback.calls.get(0)[1]);
+        assertTrue(((String) callback.calls.get(0)[2]).contains(getClass().getName()));
+        assertEquals(1, rootHandler.received.size());
+        assertSame(error, rootHandler.received.get(0));
     }
 
     private void crash(Throwable throwable) {
