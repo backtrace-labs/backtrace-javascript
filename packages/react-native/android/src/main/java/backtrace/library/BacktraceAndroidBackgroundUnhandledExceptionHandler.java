@@ -73,10 +73,10 @@ public class BacktraceAndroidBackgroundUnhandledExceptionHandler extends ReactCo
         try {
             if (isReportedFatalError(throwable)) {
                 Log.d(LOG_TAG, "Skipping the JavascriptException of a fatal error already reported from JavaScript.");
-            } else if (throwable instanceof Exception) {
+            } else {
                 report(throwable);
             }
-        } catch (RuntimeException ex) {
+        } catch (RuntimeException | Error ex) {
             Log.w(LOG_TAG, "Failed to report the unhandled exception.", ex);
         } finally {
             Thread.UncaughtExceptionHandler rootHandler = _rootHandler;
