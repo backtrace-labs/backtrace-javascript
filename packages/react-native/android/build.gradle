@@ -10,7 +10,11 @@ buildscript {
 }
 
 def isNewArchitectureEnabled() {
-  return rootProject.hasProperty("newArchEnabled") && rootProject.getProperty("newArchEnabled") == "true"
+  // Read the property from this project rather than the root project:
+  // since React Native 0.82 the New Architecture is always on and the React Native Gradle plugin sets `newArchEnabled` on every subproject, while the app's gradle.properties no longer has to define it.
+  return ["newArchEnabled", "react.newArchEnabled"].any { name ->
+    project.hasProperty(name) && project.getProperty(name).toString().equalsIgnoreCase("true")
+  }
 }
 
 apply plugin: "com.android.library"
@@ -38,7 +42,9 @@ def supportsNamespace() {
 
 android {
   if (supportsNamespace()) {
-    namespace "com.backtrace.reactnative"
+    // Must match the Java package of ReactNativePackage: Expo's autolinking derives the
+    // `import <namespace>.ReactNativePackage;` line in PackageList.java from the namespace.
+    namespace "backtraceio.library"
 
     sourceSets {
       main {
@@ -93,6 +99,7 @@ if (isNewArchitectureEnabled()) {
   react {
     jsRootDir = file("../src/")
     libraryName = "ReactNative"
+    // Java package for codegen output only; intentionally independent of the library namespace above.
     codegenJavaPackageName = "com.backtrace.reactnative"
   }
 }

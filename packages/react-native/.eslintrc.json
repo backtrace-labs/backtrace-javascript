@@ -1,0 +1,14 @@
+{
+    "plugins": ["import"],
+    "settings": {
+        "import/ignore": ["node_modules"],
+        "import/resolver": {
+            "node": {
+                "extensions": [".js", ".jsx", ".ts", ".tsx"]
+            }
+        }
+    },
+    "rules": {
+        "import/no-cycle": ["error", { "ignoreExternal": true }]
+    }
+}
