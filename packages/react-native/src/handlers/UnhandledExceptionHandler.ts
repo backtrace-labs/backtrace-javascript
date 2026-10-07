@@ -76,9 +76,15 @@ export class UnhandledExceptionHandler implements ExceptionHandler {
                 return;
             }
 
+            // The previous handler ends the process only in release builds.
+            if (__DEV__) {
+                previousHandler(error, fatal);
+                return;
+            }
+
             if (this.isInBackground()) {
                 // JS timers are paused in the background.
-                this.markFatalErrorSafely();
+                this.markFatalErrorSafely(error);
                 previousHandler(error, fatal);
                 return;
             }
@@ -162,9 +168,7 @@ export class UnhandledExceptionHandler implements ExceptionHandler {
         // could disable a newer tracker installed by another SDK.
     }
 
-    protected markFatalError(): void {
-        CrashReporter.markFatalError();
-    }
+    protected markFatalError: (message: string) => void = () => CrashReporter.markFatalError();
 
     private queueFatalForwarding(forward: () => Promise<void> | void): void {
         const pending = (this._pendingFatal ?? Promise.resolve()).then(forward).then(() => {
@@ -176,7 +180,7 @@ export class UnhandledExceptionHandler implements ExceptionHandler {
     }
 
     private forwardFatal(previousHandler: GlobalErrorHandler, error: Error, fatal: boolean): void {
-        this.markFatalErrorSafely();
+        this.markFatalErrorSafely(error);
         try {
             previousHandler(error, fatal);
         } catch (err) {
@@ -188,12 +192,20 @@ export class UnhandledExceptionHandler implements ExceptionHandler {
         }
     }
 
-    private markFatalErrorSafely(): void {
+    private markFatalErrorSafely(error: unknown): void {
         try {
-            this.markFatalError();
+            this.markFatalError(this.fatalErrorMessage(error));
         } catch (err) {
             this.warnReportingFailure('failed to mark the fatal error for the native handler', err);
         }
+    }
+
+    // Mirrors the message React Native builds for the rethrown error.
+    private fatalErrorMessage(error: unknown): string {
+        if (error instanceof Error) {
+            return error.message ? String(error.message) : '';
+        }
+        return error === undefined ? '' : String(error);
     }
 
     private isInBackground(): boolean {
@@ -206,13 +218,27 @@ export class UnhandledExceptionHandler implements ExceptionHandler {
 
     private settle(promise: Promise<unknown>, timeoutMs: number): Promise<void> {
         return new Promise<void>((resolve) => {
-            const timer = setTimeout(resolve, timeoutMs);
             const done = () => {
                 clearTimeout(timer);
+                subscription?.remove();
                 resolve();
             };
+            const timer = setTimeout(done, timeoutMs);
+            const subscription = this.onBackground(done);
             promise.then(done, done);
         });
+    }
+
+    private onBackground(callback: () => void): { remove(): void } | undefined {
+        try {
+            return AppState.addEventListener('change', (state) => {
+                if (state === 'background') {
+                    callback();
+                }
+            });
+        } catch {
+            return undefined;
+        }
     }
 
     private reportRejection(id: number, rejection: unknown = 'Unknown'): void {

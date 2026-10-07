@@ -47,8 +47,11 @@ describe('AndroidUnhandledExceptionHandler', () => {
     let originalErrorUtils: unknown;
     let previousGlobalHandler: jest.Mock;
     let registeredHandler: GlobalHandler;
+    let originalDev: PropertyDescriptor | undefined;
 
     beforeEach(() => {
+        originalDev = Object.getOwnPropertyDescriptor(globalThis, '__DEV__');
+        Object.defineProperty(globalThis, '__DEV__', { configurable: true, value: false });
         jest.clearAllMocks();
         mockIsNativeBridgeEnabled.mockReturnValue(true);
         previousGlobalHandler = jest.fn();
@@ -64,6 +67,11 @@ describe('AndroidUnhandledExceptionHandler', () => {
 
     afterEach(() => {
         (global as unknown as { ErrorUtils: unknown }).ErrorUtils = originalErrorUtils;
+        if (originalDev) {
+            Object.defineProperty(globalThis, '__DEV__', originalDev);
+        } else {
+            Reflect.deleteProperty(globalThis, '__DEV__');
+        }
     });
 
     function captureNativeCallback(client: BacktraceClient): NativeExceptionCallback {
@@ -137,11 +145,39 @@ describe('AndroidUnhandledExceptionHandler', () => {
         await flush();
 
         expect(nativeHandlerMock.markFatalError).toHaveBeenCalledTimes(1);
+        expect(nativeHandlerMock.markFatalError).toHaveBeenCalledWith('boom');
         expect(CrashReporter.markFatalError).not.toHaveBeenCalled();
         expect(previousGlobalHandler).toHaveBeenCalledWith(error, true);
         expect(nativeHandlerMock.markFatalError.mock.invocationCallOrder[0]).toBeLessThan(
             previousGlobalHandler.mock.invocationCallOrder[0],
         );
+    });
+
+    it('Should pass the message of a thrown non-Error value to the Java handler', async () => {
+        new AndroidUnhandledExceptionHandler().captureManagedErrors({
+            send: jest.fn().mockResolvedValue(undefined),
+        } as unknown as BacktraceClient);
+
+        registeredHandler('plain failure' as unknown as Error, true);
+        await flush();
+
+        expect(nativeHandlerMock.markFatalError).toHaveBeenCalledWith('plain failure');
+    });
+
+    it.each([
+        ['undefined', undefined, ''],
+        ['an Error without a message', new Error(), ''],
+        ['null', null, 'null'],
+        ['the number 0', 0, '0'],
+    ])("Should pass React Native's message for %s to the Java handler", async (_label, thrown, expected) => {
+        new AndroidUnhandledExceptionHandler().captureManagedErrors({
+            send: jest.fn().mockResolvedValue(undefined),
+        } as unknown as BacktraceClient);
+
+        registeredHandler(thrown as unknown as Error, true);
+        await flush();
+
+        expect(nativeHandlerMock.markFatalError).toHaveBeenCalledWith(expected);
     });
 
     it('Should forward a fatal error when the Java handler module has no markFatalError', async () => {

@@ -88,8 +88,11 @@ describe('UnhandledExceptionHandler managed errors', () => {
     let registeredHandler: (error: Error, fatal?: boolean) => void;
     let previousGlobalHandler: jest.Mock;
     let originalErrorUtils: unknown;
+    let originalDev: PropertyDescriptor | undefined;
 
     beforeEach(() => {
+        originalDev = Object.getOwnPropertyDescriptor(globalThis, '__DEV__');
+        Object.defineProperty(globalThis, '__DEV__', { configurable: true, value: false });
         markFatalErrorMock.mockClear();
         sendMock = jest.fn();
         client = { send: sendMock } as unknown as BacktraceClient;
@@ -109,6 +112,12 @@ describe('UnhandledExceptionHandler managed errors', () => {
 
     afterEach(() => {
         (global as unknown as { ErrorUtils: unknown }).ErrorUtils = originalErrorUtils;
+        if (originalDev) {
+            Object.defineProperty(globalThis, '__DEV__', originalDev);
+        } else {
+            Reflect.deleteProperty(globalThis, '__DEV__');
+        }
+        jest.restoreAllMocks();
     });
 
     it('Should forward a fatal unhandled error only after the report settles, marking it for the native reporter first', async () => {
@@ -187,6 +196,62 @@ describe('UnhandledExceptionHandler managed errors', () => {
         } finally {
             appState.currentState = original;
         }
+    });
+
+    it('Should forward a pending fatal error once the app goes to the background', async () => {
+        let onChange!: (state: string) => void;
+        jest.spyOn(AppState, 'addEventListener').mockImplementation(((
+            _type: string,
+            listener: (state: string) => void,
+        ) => {
+            onChange = listener;
+            return { remove: jest.fn() };
+        }) as unknown as typeof AppState.addEventListener);
+        sendMock.mockReturnValue(new Promise<void>(() => undefined));
+        const error = new Error('boom');
+
+        registeredHandler(error, true);
+        await flush();
+        expect(previousGlobalHandler).not.toHaveBeenCalled();
+
+        onChange('inactive');
+        await flush();
+        expect(previousGlobalHandler).not.toHaveBeenCalled();
+
+        onChange('background');
+        await flush();
+
+        expect(markFatalErrorMock).toHaveBeenCalledTimes(1);
+        expect(previousGlobalHandler).toHaveBeenCalledWith(error, true);
+        expect(markFatalErrorMock.mock.invocationCallOrder[0]).toBeLessThan(
+            previousGlobalHandler.mock.invocationCallOrder[0],
+        );
+    });
+
+    it('Should stop listening for the background once the report settles', async () => {
+        const remove = jest.fn();
+        jest.spyOn(AppState, 'addEventListener').mockReturnValue({
+            remove,
+        } as unknown as ReturnType<typeof AppState.addEventListener>);
+        sendMock.mockResolvedValue(undefined);
+
+        registeredHandler(new Error('boom'), true);
+        await flush();
+
+        expect(previousGlobalHandler).toHaveBeenCalledTimes(1);
+        expect(remove).toHaveBeenCalled();
+    });
+
+    it('Should forward a fatal error at once without marking it in a debug build', () => {
+        Object.defineProperty(globalThis, '__DEV__', { configurable: true, value: true });
+        sendMock.mockReturnValue(new Promise<void>(() => undefined));
+        const error = new Error('boom');
+
+        registeredHandler(error, true);
+
+        expect(sendMock).toHaveBeenCalledWith(error, { 'error.type': 'Unhandled exception', fatal: true });
+        expect(markFatalErrorMock).not.toHaveBeenCalled();
+        expect(previousGlobalHandler).toHaveBeenCalledWith(error, true);
     });
 
     it('Should report a second fatal error while the first is pending and forward both in order', async () => {
