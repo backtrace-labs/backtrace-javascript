@@ -41,8 +41,8 @@ public class BacktraceAndroidBackgroundUnhandledExceptionHandlerFatalErrorTest {
 
     @Test
     public void markedJavascriptExceptionSkipsTheReportAndTheWait() {
-        JavascriptException exception = new JavascriptException("Error: boom\n    at app (index.js:1:1)");
-        handler.markFatalError();
+        JavascriptException exception = new JavascriptException("Error: boom, stack:\nanonymous@1:26921");
+        handler.markFatalError("boom");
 
         long elapsedMs = timed(() -> handler.uncaughtException(Thread.currentThread(), exception));
 
@@ -50,6 +50,53 @@ public class BacktraceAndroidBackgroundUnhandledExceptionHandlerFatalErrorTest {
         assertEquals(1, rootHandlerThrowables.size());
         assertSame(exception, rootHandlerThrowables.get(0));
         assertTrue("forwarded after " + elapsedMs + " ms", elapsedMs < WAIT_BOUND_MS);
+    }
+
+    @Test
+    public void javascriptExceptionWithAnotherMessageIsReported() {
+        JavascriptException exception = new JavascriptException("Error: render failed, stack:\nanonymous@1:1");
+        handler.markFatalError("boom");
+
+        handler.uncaughtException(Thread.currentThread(), exception);
+
+        assertEquals(1, callbackInvocations.size());
+        assertEquals(JavascriptException.class.getName(), callbackInvocations.get(0)[0]);
+        assertSame(exception, rootHandlerThrowables.get(0));
+    }
+
+    @Test
+    public void markWithoutMessageSkipsOnlyAJavascriptExceptionWithoutMessage() {
+        handler.markFatalError("");
+        handler.uncaughtException(Thread.currentThread(), new JavascriptException("Error: render failed, stack:\nanonymous@1:1"));
+        assertEquals(1, callbackInvocations.size());
+
+        handler.uncaughtException(Thread.currentThread(), new JavascriptException("Error: , stack:\nanonymous@1:1"));
+        handler.markFatalError("");
+        handler.uncaughtException(Thread.currentThread(), new JavascriptException(", stack:\nhandleException@1:1"));
+
+        assertEquals(1, callbackInvocations.size());
+        assertEquals(3, rootHandlerThrowables.size());
+    }
+
+    @Test
+    public void markMatchesTheErrorMessageOnlyNotTheStack() {
+        handler.markFatalError("anonymous");
+
+        handler.uncaughtException(Thread.currentThread(), new JavascriptException("Error: render failed, stack:\nanonymous@1:1"));
+
+        assertEquals(1, callbackInvocations.size());
+    }
+
+    @Test
+    public void twoMarksSetBeforeEitherRethrowSkipBoth() {
+        handler.markFatalError("first");
+        handler.markFatalError("second");
+
+        handler.uncaughtException(Thread.currentThread(), new JavascriptException("Error: first, stack:\nanonymous@1:1"));
+        handler.uncaughtException(Thread.currentThread(), new JavascriptException("TypeError: second, stack:\nanonymous@1:1"));
+
+        assertEquals(0, callbackInvocations.size());
+        assertEquals(2, rootHandlerThrowables.size());
     }
 
     @Test
@@ -66,10 +113,10 @@ public class BacktraceAndroidBackgroundUnhandledExceptionHandlerFatalErrorTest {
 
     @Test
     public void markIsConsumedByTheFirstJavascriptException() {
-        handler.markFatalError();
-        handler.uncaughtException(Thread.currentThread(), new JavascriptException("first"));
+        handler.markFatalError("boom");
+        handler.uncaughtException(Thread.currentThread(), new JavascriptException("Error: boom, stack:"));
 
-        handler.uncaughtException(Thread.currentThread(), new JavascriptException("second"));
+        handler.uncaughtException(Thread.currentThread(), new JavascriptException("Error: boom, stack:"));
 
         assertEquals(1, callbackInvocations.size());
         assertEquals(2, rootHandlerThrowables.size());
@@ -77,8 +124,8 @@ public class BacktraceAndroidBackgroundUnhandledExceptionHandlerFatalErrorTest {
 
     @Test
     public void markDoesNotApplyToOtherExceptions() {
-        RuntimeException exception = new IllegalStateException("background failure");
-        handler.markFatalError();
+        RuntimeException exception = new IllegalStateException("boom");
+        handler.markFatalError("boom");
 
         handler.uncaughtException(Thread.currentThread(), exception);
 
@@ -89,7 +136,7 @@ public class BacktraceAndroidBackgroundUnhandledExceptionHandlerFatalErrorTest {
 
     @Test
     public void synchronousMethodsReturnAValue() {
-        assertTrue(handler.markFatalError());
+        assertTrue(handler.markFatalError("boom"));
         assertTrue(handler.reportProcessed());
     }
 

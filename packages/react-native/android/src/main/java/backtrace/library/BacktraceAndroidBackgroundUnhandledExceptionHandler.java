@@ -14,6 +14,9 @@ import com.facebook.react.module.annotations.ReactModule;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -40,7 +43,9 @@ public class BacktraceAndroidBackgroundUnhandledExceptionHandler extends ReactCo
 
     private static final long FATAL_ERROR_MARK_TIMEOUT_MS = 5000;
 
-    private volatile long _fatalErrorMarkedAtNanos = 0;
+    private static final int MAX_FATAL_ERROR_MARKS = 8;
+
+    private final List<FatalErrorMark> _fatalErrorMarks = new ArrayList<>();
 
     public static final String NAME = "BacktraceAndroidBackgroundUnhandledExceptionHandler";
 
@@ -88,8 +93,14 @@ public class BacktraceAndroidBackgroundUnhandledExceptionHandler extends ReactCo
 
     // The interop layer rejects a void synchronous method.
     @ReactMethod(isBlockingSynchronousMethod = true)
-    public boolean markFatalError() {
-        _fatalErrorMarkedAtNanos = System.nanoTime();
+    public boolean markFatalError(String message) {
+        synchronized (_fatalErrorMarks) {
+            removeExpiredMarks();
+            if (_fatalErrorMarks.size() == MAX_FATAL_ERROR_MARKS) {
+                _fatalErrorMarks.remove(0);
+            }
+            _fatalErrorMarks.add(new FatalErrorMark(message, System.nanoTime()));
+        }
         return true;
     }
 
@@ -97,12 +108,35 @@ public class BacktraceAndroidBackgroundUnhandledExceptionHandler extends ReactCo
         if (!(throwable instanceof JavascriptException)) {
             return false;
         }
-        long markedAtNanos = _fatalErrorMarkedAtNanos;
-        if (markedAtNanos == 0) {
-            return false;
+        String errorMessage = errorMessageOf((JavascriptException) throwable);
+        synchronized (_fatalErrorMarks) {
+            removeExpiredMarks();
+            for (Iterator<FatalErrorMark> marks = _fatalErrorMarks.iterator(); marks.hasNext(); ) {
+                if (marks.next().matches(errorMessage)) {
+                    marks.remove();
+                    return true;
+                }
+            }
         }
-        _fatalErrorMarkedAtNanos = 0;
-        return System.nanoTime() - markedAtNanos <= TimeUnit.MILLISECONDS.toNanos(FATAL_ERROR_MARK_TIMEOUT_MS);
+        return false;
+    }
+
+    private void removeExpiredMarks() {
+        for (Iterator<FatalErrorMark> marks = _fatalErrorMarks.iterator(); marks.hasNext(); ) {
+            if (!marks.next().isRecent()) {
+                marks.remove();
+            }
+        }
+    }
+
+    // React Native appends ", stack:" and the JS frames to the error message.
+    private static String errorMessageOf(JavascriptException exception) {
+        String text = exception.getMessage();
+        if (text == null) {
+            return "";
+        }
+        int stackStart = text.indexOf(", stack:");
+        return stackStart >= 0 ? text.substring(0, stackStart) : text;
     }
 
     private void report(Throwable throwable) {
@@ -133,6 +167,28 @@ public class BacktraceAndroidBackgroundUnhandledExceptionHandler extends ReactCo
         Log.d(LOG_TAG, "Unhandled exception report processed by the JavaScript side.");
         _reportProcessed.countDown();
         return true;
+    }
+
+    private static final class FatalErrorMark {
+        private final String message;
+        private final long markedAtNanos;
+
+        FatalErrorMark(String message, long markedAtNanos) {
+            this.message = message == null ? "" : message;
+            this.markedAtNanos = markedAtNanos;
+        }
+
+        boolean matches(String errorMessage) {
+            if (message.isEmpty()) {
+                String trimmed = errorMessage.trim();
+                return trimmed.isEmpty() || trimmed.endsWith(":");
+            }
+            return errorMessage.contains(message);
+        }
+
+        boolean isRecent() {
+            return System.nanoTime() - markedAtNanos <= TimeUnit.MILLISECONDS.toNanos(FATAL_ERROR_MARK_TIMEOUT_MS);
+        }
     }
 
     private static String stackTraceToString(StackTraceElement[] stackTrace) {

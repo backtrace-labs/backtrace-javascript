@@ -52,7 +52,7 @@ export class AndroidUnhandledExceptionHandler extends UnhandledExceptionHandler 
     }
 
     // React Native rethrows the fatal as a JavascriptException the Java handler must not report again.
-    protected markFatalError(): void {
-        this._unhandledExceptionHandler?.markFatalError?.();
-    }
+    protected markFatalError = (message: string) => {
+        this._unhandledExceptionHandler?.markFatalError?.(message);
+    };
 }
