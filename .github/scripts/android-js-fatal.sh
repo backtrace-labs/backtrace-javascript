@@ -1,13 +1,21 @@
 #!/usr/bin/env bash
 # Asserts a fatal JS error produces one report, no duplicate from the rethrown JavascriptException, and no 5 s wait.
+# MODE=js-fatal throws from a timer, MODE=render-error throws while rendering, outside any error boundary.
 set -euo pipefail
+
+MODE="${MODE:-js-fatal}"
+case "$MODE" in
+    js-fatal) MESSAGE_PREFIX="BT_CI_JS_FATAL" ;;
+    render-error) MESSAGE_PREFIX="BT_CI_RENDER_ERROR" ;;
+    *) echo "::error::MODE must be js-fatal or render-error, got '$MODE'"; exit 2 ;;
+esac
 
 PACKAGE="com.reactnative"
 ACTIVITY="$PACKAGE/.MainActivity"
 APK="examples/sdk/reactNative/android/app/build/outputs/apk/release/app-release.apk"
-MARKER="ci-js-fatal-$(date +%s)"
-TRIGGER_URL="backtrace-example://ci-js-fatal?marker=$MARKER"
-LOGCAT_OUT="/tmp/js-fatal-logcat.txt"
+MARKER="ci-$MODE-$(date +%s)"
+TRIGGER_URL="backtrace-example://ci-$MODE?marker=$MARKER"
+LOGCAT_OUT="/tmp/$MODE-logcat.txt"
 FORWARD_BOUND_S=7
 EXIT_BOUND_S=2
 
@@ -46,7 +54,7 @@ wait_for_log "BT_CI_DRIVER_ARMED" 120
 PID="$(adb shell pidof "$PACKAGE" | tr -d '\r')"
 
 adb shell am start -n "$ACTIVITY" -a android.intent.action.VIEW -d "'$TRIGGER_URL'" >/dev/null
-echo "fatal JS error fired: $MARKER, pid $PID"
+echo "$MODE fired: $MARKER, pid $PID"
 
 for _ in $(seq 1 30); do
     if ! adb shell pidof "$PACKAGE" >/dev/null 2>&1; then
@@ -61,7 +69,7 @@ fi
 sleep 1
 adb logcat -d -v epoch > "$LOGCAT_OUT"
 
-FIRED_AT="$(awk '/BT_CI_DRIVER firing: backtrace-example:\/\/ci-js-fatal/ { print $1; exit }' "$LOGCAT_OUT")"
+FIRED_AT="$(awk -v url="BT_CI_DRIVER firing: backtrace-example://ci-$MODE" 'index($0, url) { print $1; exit }' "$LOGCAT_OUT")"
 RETHROWN_AT="$(awk -v pid="$PID" '$2 == pid && /AndroidRuntime: FATAL EXCEPTION/ { print $1; exit }' "$LOGCAT_OUT")"
 DIED_AT="$(grep -F "Process $PACKAGE (pid $PID) has died" "$LOGCAT_OUT" | head -1 | awk '{ print $1 }' || true)"
 if [ -z "$FIRED_AT" ] || [ -z "$RETHROWN_AT" ] || [ -z "$DIED_AT" ]; then
@@ -90,8 +98,12 @@ if [ "$COUNT" != "1" ]; then
     echo "::error::expected exactly one stored report, found $COUNT"
     exit 1
 fi
-if ! printf '%s\n' "$RECORDS" | grep -qF "Error \"BT_CI_JS_FATAL $MARKER\""; then
-    echo "::error::the stored report is not the fatal JS error"
+if ! printf '%s\n' "$RECORDS" | grep -qF "Error \"$MESSAGE_PREFIX $MARKER\" \"Unhandled exception\" fatal=true"; then
+    echo "::error::the stored report is not the $MODE error, typed as a fatal unhandled exception"
+    exit 1
+fi
+if [ "$MODE" = "render-error" ] && ! printf '%s\n' "$RECORDS" | grep -qF "component-stack"; then
+    echo "::error::the stored render error report has no component stack"
     exit 1
 fi
 echo "one report with the JS error, no JavascriptException duplicate, process died ${EXIT_S}s after the rethrow"
