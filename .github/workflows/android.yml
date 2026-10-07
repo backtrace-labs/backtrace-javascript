@@ -127,6 +127,8 @@ jobs:
                   script: |
                       INSTALL=apk bash .github/scripts/android-native-crash.sh
                       INSTALL=split bash .github/scripts/android-native-crash.sh
+                      bash .github/scripts/android-js-fatal.sh
+                      MODE=render-error bash .github/scripts/android-js-fatal.sh
 
             - name: Upload crash evidence
               if: failure()
@@ -136,5 +138,7 @@ jobs:
                   path: |
                       /tmp/native-crash-*.dmp
                       /tmp/logcat-*.txt
+                      /tmp/js-fatal-logcat.txt
+                      /tmp/render-error-logcat.txt
                   if-no-files-found: warn
                   retention-days: 7

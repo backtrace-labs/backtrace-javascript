@@ -25,6 +25,7 @@ const rejectionTracking = require('promise/setimmediate/rejection-tracking') as 
 };
 
 type Handler = (error: Error, fatal?: boolean) => void;
+const flush = () => new Promise<void>((resolve) => setImmediate(resolve));
 type RejectionOptions = {
     allRejections: boolean;
     onUnhandled: (id: number, rejection?: unknown) => void;
@@ -91,28 +92,71 @@ describe('UnhandledExceptionHandler safety', () => {
             expect(warn).toHaveBeenCalledWith('Backtrace: failed to report an unhandled error (Error)');
         });
 
-        it('observes asynchronous failures without delaying delegation or fatal marking', async () => {
+        it('delegates a fatal error once the failed submission settles and still marks it', async () => {
             send.mockRejectedValue(new Error('transport failure'));
             handler.captureManagedErrors(client);
             const error = new Error('application failure');
             current(error, true);
+            expect(previous).not.toHaveBeenCalled();
+            await flush();
             expect(previous).toHaveBeenCalledTimes(1);
             expect(previous).toHaveBeenCalledWith(error, true);
             expect(CrashReporter.markFatalError).toHaveBeenCalledTimes(1);
-            // A rejected submission must be handled in the same turn,
-            // even if the process remains alive after the application's handler returns.
-            await new Promise((resolve) => setImmediate(resolve));
+            expect(warn).not.toHaveBeenCalled();
         });
 
-        it('delegates even when native fatal marking fails', () => {
+        it('delegates even when native fatal marking fails', async () => {
             (CrashReporter.markFatalError as jest.Mock).mockImplementation(() => {
                 throw new Error('native marker failed');
             });
             handler.captureManagedErrors(client);
             const error = new Error('application failure');
             expect(() => current(error, true)).not.toThrow();
+            await flush();
             expect(previous).toHaveBeenCalledTimes(1);
             expect(previous).toHaveBeenCalledWith(error, true);
+            expect(warn).toHaveBeenCalledWith(
+                'Backtrace: failed to mark the fatal error for the native handler (Error)',
+            );
+        });
+
+        it('rethrows a failing previous fatal handler from a timer without reporting it again', async () => {
+            const failure = new Error('previous handler failure');
+            previous.mockImplementation((_error: Error, fatal?: boolean) => {
+                if (fatal) {
+                    throw failure;
+                }
+            });
+            const realSetTimeout = setTimeout;
+            let escalation: (() => void) | undefined;
+            jest.spyOn(globalThis, 'setTimeout').mockImplementation(((fn: () => void, ms?: number) => {
+                if (ms === 0) {
+                    escalation = fn;
+                    return 0 as unknown as NodeJS.Timeout;
+                }
+                return realSetTimeout(fn, ms);
+            }) as typeof setTimeout);
+            handler.captureManagedErrors(client);
+            current(new Error('application failure'), true);
+            await flush();
+            expect(previous).toHaveBeenCalledTimes(1);
+            expect(escalation).toBeDefined();
+            expect(() => escalation?.()).toThrow(failure);
+            expect(() => current(failure, true)).toThrow(failure);
+            expect(send).toHaveBeenCalledTimes(1);
+            expect(previous).toHaveBeenCalledTimes(1);
+        });
+
+        it('forwards a fatal error synchronously when synchronous reporting fails', () => {
+            send.mockImplementation(() => {
+                throw new Error('report construction failure');
+            });
+            handler.captureManagedErrors(client);
+            const error = new Error('application failure');
+            current(error, true);
+            expect(previous).toHaveBeenCalledTimes(1);
+            expect(previous).toHaveBeenCalledWith(error, true);
+            expect(CrashReporter.markFatalError).not.toHaveBeenCalled();
         });
 
         it('does not swallow exceptions from the previous global handler', () => {

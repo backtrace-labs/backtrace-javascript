@@ -31,44 +31,54 @@ module.exports = mergeConfig(getDefaultConfig(__dirname), config);
 
 ```
 
-Add Backtrace to build automation to ensure every build has source map support.
-
-In order to upload source maps to Backtrace, you can:
+Add the upload step to your native build. Every release build then uploads its source map.
 
 **On Android:**
 
-Enable source map support in `app/build.gradle` by uncommenting hermes source map flags. With additional parameters, source maps will be generated. To automatically upload them to Backtrace, you can use the gradle task available the @backtrace/react-native library.
-
-`apply from: "$rootDir/../node_modules/@backtrace/react-native/android/upload-sourcemaps.gradle"`
-
-Once you import the gradle task, you can simply add it to your flow for any build/assemble tasks.
+Hermes writes a source map for every release build unless a `hermesFlags` override drops `-output-source-map`. To
+upload it, add the Backtrace script at the end of `android/app/build.gradle`:
 
 ```gradle
-tasks.matching {
-    it.name.startsWith("assemble") || it.name.startsWith("build")
-}.configureEach { task ->
-     task.finalizedBy("uploadSourceMapsToBacktrace")
-}
+apply from: "$rootDir/../node_modules/@backtrace/react-native/android/upload-sourcemaps.gradle"
 ```
 
-**On iOS.**
+Each release variant then uploads its own source map after `assemble` or `bundle` packages it. Debug variants upload
+nothing. A failed upload fails the build. An existing `finalizedBy("uploadSourceMapsToBacktrace")` hook keeps working.
 
-Modify the code in the `Bundle React Native code and images` step in the `Build Phases` of your xcode project setting. In the end of the script, you can include the code below, to upload source maps directly to Backtrace after generating the applicaiton.
+To build a release without uploading, set `backtraceUploadSourceMaps=false` in `gradle.properties` or pass it on the
+command line:
+
+```
+./gradlew assembleRelease -PbacktraceUploadSourceMaps=false
+```
+
+**On iOS:**
+
+In Xcode, select the app target, open `Build Phases` and expand `Bundle React Native code and images`. Add the lines
+marked below around the phase's existing script. React Native writes a source map only when `SOURCEMAP_FILE` is
+exported before its bundling line.
 
 ```bash
+set -e
+# added for Backtrace
 project_directory="$(pwd)/.."
-# enable source map support
 export SOURCEMAP_FILE="$project_directory/main.jsbundle.map"
 
-...
+# existing lines of the phase, unchanged
+WITH_ENVIRONMENT="$REACT_NATIVE_PATH/scripts/xcode/with-environment.sh"
+REACT_NATIVE_XCODE="$REACT_NATIVE_PATH/scripts/react-native-xcode.sh"
 
-# upload source maps to Backtrace
+/bin/sh -c "\"$WITH_ENVIRONMENT\" \"$REACT_NATIVE_XCODE\""
+# end of the existing lines
+
+# added for Backtrace
 source_map_upload="$project_directory/node_modules/@backtrace/react-native/scripts/ios-sourcemap-upload.sh"
 backtrace_js_config="$project_directory/.backtracejsrc"
 
-/bin/sh -c "$source_map_upload $SOURCEMAP_FILE $CONFIGURATION_BUILD_DIR/.backtrace-sourcemap-id $backtrace_js_config $project_directory"
-
+/bin/bash "$source_map_upload" "$SOURCEMAP_FILE" "$CONFIGURATION_BUILD_DIR/.backtrace-sourcemap-id" "$backtrace_js_config" "$project_directory"
 ```
 
 The Backtrace serializer writes the debug id file to `$CONFIGURATION_BUILD_DIR`. Under Product > Archive that folder
 differs from `$TARGET_BUILD_DIR`, and an archive built with `$TARGET_BUILD_DIR` uploads no source map.
+
+The full setup is in the [React Native Integration Guide](https://docs.saucelabs.com/error-reporting/language-integrations/react-native/#upload-source-maps).
