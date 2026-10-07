@@ -434,13 +434,12 @@ JavaScript reports:
 #### Manual Database Operations
 
 The `BacktraceDatabase` instance, available as `client.database`, sends or discards the stored reports on demand. Use it
-when `autoSend` is disabled.
+when `autoSend` is disabled. `send()` stops at the first report that fails and keeps the rest for a later attempt.
+`flush()` sends the reports, then removes all of them, sent or not. `client.database` is `undefined` while the offline
+database is disabled.
 
 ```ts
-// database is undefined when the offline database is disabled
-// send the stored reports, stop at the first failure and keep every report not sent
 client.database?.send();
-// send the stored reports, then remove all of them whether or not the send succeeded
 client.database?.flush();
 ```
 
