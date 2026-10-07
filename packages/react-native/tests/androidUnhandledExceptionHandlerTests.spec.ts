@@ -24,11 +24,13 @@ jest.mock('../src/common/DebuggerHelper', () => ({
 }));
 
 import { NativeModules } from 'react-native';
+import { CrashReporter } from '../src/crashReporter/CrashReporter';
 
 const nativeHandlerMock = {
     start: jest.fn(),
     stop: jest.fn(),
     reportProcessed: jest.fn(),
+    markFatalError: jest.fn(),
 };
 
 NativeModules.BacktraceAndroidBackgroundUnhandledExceptionHandler = nativeHandlerMock;
@@ -37,23 +39,39 @@ NativeModules.BacktraceAndroidBackgroundUnhandledExceptionHandler = nativeHandle
 const { AndroidUnhandledExceptionHandler } = require('../src/handlers/android/AndroidUnhandledExceptionHandler');
 
 type NativeExceptionCallback = (classifier: string, message: string, stackTrace: string) => Promise<void>;
+type GlobalHandler = (error: Error, fatal?: boolean) => void;
+
+const flush = () => new Promise<void>((resolve) => setImmediate(resolve));
 
 describe('AndroidUnhandledExceptionHandler', () => {
     let originalErrorUtils: unknown;
+    let previousGlobalHandler: jest.Mock;
+    let registeredHandler: GlobalHandler;
+    let originalDev: PropertyDescriptor | undefined;
 
     beforeEach(() => {
+        originalDev = Object.getOwnPropertyDescriptor(globalThis, '__DEV__');
+        Object.defineProperty(globalThis, '__DEV__', { configurable: true, value: false });
         jest.clearAllMocks();
         mockIsNativeBridgeEnabled.mockReturnValue(true);
+        previousGlobalHandler = jest.fn();
 
         originalErrorUtils = (global as unknown as { ErrorUtils?: unknown }).ErrorUtils;
         (global as unknown as { ErrorUtils: unknown }).ErrorUtils = {
-            getGlobalHandler: () => jest.fn(),
-            setGlobalHandler: jest.fn(),
+            getGlobalHandler: () => previousGlobalHandler,
+            setGlobalHandler: (fn: GlobalHandler) => {
+                registeredHandler = fn;
+            },
         };
     });
 
     afterEach(() => {
         (global as unknown as { ErrorUtils: unknown }).ErrorUtils = originalErrorUtils;
+        if (originalDev) {
+            Object.defineProperty(globalThis, '__DEV__', originalDev);
+        } else {
+            Reflect.deleteProperty(globalThis, '__DEV__');
+        }
     });
 
     function captureNativeCallback(client: BacktraceClient): NativeExceptionCallback {
@@ -78,6 +96,16 @@ describe('AndroidUnhandledExceptionHandler', () => {
         resolveSend();
         await callbackPromise;
 
+        expect(nativeHandlerMock.reportProcessed).toHaveBeenCalledTimes(1);
+    });
+
+    it('Should signal reportProcessed before the send settles for a JavascriptException', async () => {
+        const sendMock = jest.fn().mockReturnValue(new Promise<void>(() => undefined));
+        const callback = captureNativeCallback({ send: sendMock } as unknown as BacktraceClient);
+
+        void callback('com.facebook.react.common.JavascriptException', 'Error: boom', 'a.b(C.java:1)');
+
+        expect(sendMock).toHaveBeenCalledTimes(1);
         expect(nativeHandlerMock.reportProcessed).toHaveBeenCalledTimes(1);
     });
 
@@ -106,6 +134,69 @@ describe('AndroidUnhandledExceptionHandler', () => {
         new AndroidUnhandledExceptionHandler().captureManagedErrors({ send: jest.fn() } as unknown as BacktraceClient);
 
         expect(nativeHandlerMock.start).not.toHaveBeenCalled();
+    });
+
+    it('Should mark the fatal error on the Java handler, not the crash reporter, before forwarding it', async () => {
+        const sendMock = jest.fn().mockResolvedValue(undefined);
+        new AndroidUnhandledExceptionHandler().captureManagedErrors({ send: sendMock } as unknown as BacktraceClient);
+        const error = new Error('boom');
+
+        registeredHandler(error, true);
+        await flush();
+
+        expect(nativeHandlerMock.markFatalError).toHaveBeenCalledTimes(1);
+        expect(nativeHandlerMock.markFatalError).toHaveBeenCalledWith('boom');
+        expect(CrashReporter.markFatalError).not.toHaveBeenCalled();
+        expect(previousGlobalHandler).toHaveBeenCalledWith(error, true);
+        expect(nativeHandlerMock.markFatalError.mock.invocationCallOrder[0]).toBeLessThan(
+            previousGlobalHandler.mock.invocationCallOrder[0],
+        );
+    });
+
+    it('Should pass the message of a thrown non-Error value to the Java handler', async () => {
+        new AndroidUnhandledExceptionHandler().captureManagedErrors({
+            send: jest.fn().mockResolvedValue(undefined),
+        } as unknown as BacktraceClient);
+
+        registeredHandler('plain failure' as unknown as Error, true);
+        await flush();
+
+        expect(nativeHandlerMock.markFatalError).toHaveBeenCalledWith('plain failure');
+    });
+
+    it.each([
+        ['undefined', undefined, ''],
+        ['an Error without a message', new Error(), ''],
+        ['null', null, 'null'],
+        ['the number 0', 0, '0'],
+    ])("Should pass React Native's message for %s to the Java handler", async (_label, thrown, expected) => {
+        new AndroidUnhandledExceptionHandler().captureManagedErrors({
+            send: jest.fn().mockResolvedValue(undefined),
+        } as unknown as BacktraceClient);
+
+        registeredHandler(thrown as unknown as Error, true);
+        await flush();
+
+        expect(nativeHandlerMock.markFatalError).toHaveBeenCalledWith(expected);
+    });
+
+    it('Should forward a fatal error when the Java handler module has no markFatalError', async () => {
+        const { markFatalError, ...olderModule } = nativeHandlerMock;
+        NativeModules.BacktraceAndroidBackgroundUnhandledExceptionHandler = olderModule;
+        try {
+            new AndroidUnhandledExceptionHandler().captureManagedErrors({
+                send: jest.fn().mockResolvedValue(undefined),
+            } as unknown as BacktraceClient);
+            const error = new Error('boom');
+
+            registeredHandler(error, true);
+            await flush();
+
+            expect(markFatalError).not.toHaveBeenCalled();
+            expect(previousGlobalHandler).toHaveBeenCalledWith(error, true);
+        } finally {
+            NativeModules.BacktraceAndroidBackgroundUnhandledExceptionHandler = nativeHandlerMock;
+        }
     });
 
     it('Should stop the native handler on dispose', () => {
