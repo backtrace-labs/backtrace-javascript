@@ -1,6 +1,7 @@
 import { jsonEscaper } from '../../common/jsonEscaper.js';
 import { TimeHelper } from '../../common/TimeHelper.js';
 import { BacktraceAttachment } from '../attachment/index.js';
+import { BacktraceSymbolication } from '../data/BacktraceData.js';
 import { BacktraceStackFrame } from '../data/BacktraceStackTrace.js';
 import { BacktraceErrorType } from './BacktraceErrorType.js';
 import { BacktraceReportStackTraceInfo } from './BacktraceReportStackTraceInfo.js';
@@ -40,6 +41,12 @@ export class BacktraceReport {
     public skipFrames = 0;
 
     /**
+     * Symbolication Backtrace should apply to the report frames.
+     * When not set, 'sourcemap' is used if a debug identifier is found in the frames.
+     */
+    public symbolication?: BacktraceSymbolication;
+
+    /**
      * Add additional stack trace to the report.
      * If the thread name already exists it will be overwritten
      * @param name thread name
@@ -65,9 +72,15 @@ export class BacktraceReport {
         public readonly data: Error | string,
         public readonly attributes: Record<string, unknown> = {},
         public readonly attachments: BacktraceAttachment[] = [],
-        options: { skipFrames?: number; classifiers?: string[]; timestamp?: number } = {},
+        options: {
+            skipFrames?: number;
+            classifiers?: string[];
+            timestamp?: number;
+            symbolication?: BacktraceSymbolication;
+        } = {},
     ) {
         this.skipFrames = options?.skipFrames ?? 0;
+        this.symbolication = options?.symbolication;
         let errorType: BacktraceErrorType = 'Exception';
         if (data instanceof Error) {
             this.message = this.generateErrorMessage(data.message);

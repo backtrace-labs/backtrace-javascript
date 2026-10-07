@@ -2,9 +2,43 @@ import { BacktraceReport, BacktraceStringAttachment } from '../../src/index.js';
 import { AttributeManager } from '../../src/modules/attribute/AttributeManager.js';
 import { BacktraceTestClient } from '../mocks/BacktraceTestClient.js';
 import { testHttpClient } from '../mocks/testHttpClient.js';
+
+class LifecycleTestClient extends BacktraceTestClient {
+    public static get instance() {
+        return this._instance;
+    }
+}
+
 describe('Client tests', () => {
     afterEach(() => {
         jest.restoreAllMocks();
+    });
+
+    describe('Disposal tests', () => {
+        it('Should clear the current core instance when it is disposed', () => {
+            const client = BacktraceTestClient.buildFakeClient({ breadcrumbs: { enable: false } });
+
+            expect(LifecycleTestClient.instance).toBe(client);
+            client.dispose();
+
+            expect(client.enabled).toBe(false);
+            expect(LifecycleTestClient.instance).toBeUndefined();
+        });
+
+        it('Should retain a newer core instance when an older client is disposed', () => {
+            const first = BacktraceTestClient.buildFakeClient({ breadcrumbs: { enable: false } });
+            const replacement = BacktraceTestClient.buildFakeClient({ breadcrumbs: { enable: false } });
+
+            try {
+                first.dispose();
+
+                expect(first.enabled).toBe(false);
+                expect(LifecycleTestClient.instance).toBe(replacement);
+                expect(replacement.enabled).toBe(true);
+            } finally {
+                replacement.dispose();
+            }
+        });
     });
 
     describe('Send tests', () => {

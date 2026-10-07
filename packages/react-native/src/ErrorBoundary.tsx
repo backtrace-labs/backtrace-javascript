@@ -1,4 +1,4 @@
-import { BacktraceReport } from '@backtrace/sdk-core';
+import { BacktraceReport, warnFailure } from '@backtrace/sdk-core';
 import { Component, isValidElement, type ErrorInfo, type ReactElement, type ReactNode } from 'react';
 import { BacktraceClient } from './BacktraceClient';
 
@@ -15,19 +15,15 @@ export interface ErrorBoundaryState {
 }
 
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-    private _client: BacktraceClient;
     private COMPONENT_THREAD_NAME = 'component-stack';
     constructor(props: ErrorBoundaryProps) {
         super(props);
         this.state = {
             error: undefined,
         };
-        // grabbing here so it will fail fast if BacktraceClient is uninitialized
-        const client = BacktraceClient.instance;
-        if (!client) {
-            throw new Error('BacktraceClient is uninitialized. Call "BacktraceClient.initialize" function first.');
+        if (!BacktraceClient.instance) {
+            warnFailure('ErrorBoundary reports nothing until BacktraceClient.initialize is called');
         }
-        this._client = client;
     }
 
     public static getDerivedStateFromError(error: Error) {
@@ -35,13 +31,18 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     }
 
     public componentDidCatch(error: Error, info: ErrorInfo) {
+        const client = BacktraceClient.instance;
+        if (!client) {
+            return;
+        }
+
         const { name } = this.props;
         const report = new BacktraceReport(error, {
             'errorboundary.name': name ?? 'main',
             'error.type': 'Unhandled exception',
         });
         report.addStackTrace(this.COMPONENT_THREAD_NAME, info.componentStack ?? '');
-        this._client.send(report);
+        client.send(report);
     }
 
     render() {

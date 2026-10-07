@@ -117,7 +117,7 @@ android {
             signingConfig signingConfigs.debug
             // CI-only, so run-as can read the crashpad database.
             debuggable project.hasProperty("btCiDebuggable")
-            minifyEnabled enableProguardInReleaseBuilds
+            minifyEnabled enableProguardInReleaseBuilds || project.hasProperty("btCiMinify")
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }

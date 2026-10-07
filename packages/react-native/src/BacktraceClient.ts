@@ -1,33 +1,50 @@
 import {
     BacktraceCoreClient,
+    BacktraceCoreClientBuilder,
     BreadcrumbsManager,
     SingleSessionProvider,
     SubmissionUrlInformation,
     V8StackTraceConverter,
     VariableDebugIdMapProvider,
+    warnFailure,
     type AttributeType,
+    type BacktraceData,
+    type BacktraceReport,
     type DebugIdContainer,
 } from '@backtrace/sdk-core';
 import { NativeModules, Platform } from 'react-native';
+import { AnrException } from './anr/AnrException';
 import { AnrReporter } from './anr/AnrReporter';
 import { AnrWatchdogHandler } from './anr/AnrWatchdogHandler';
+import { NativeAttributeProvider } from './attributes/NativeAttributeProvider';
+import { ReactNativeAttributeProvider } from './attributes/ReactNativeAttributeProvider';
 import { BacktraceAnrType, type BacktraceConfiguration } from './BacktraceConfiguration';
+import { AppStateBreadcrumbSubscriber } from './breadcrumbs/events/AppStateBreadcrumbSubscriber';
+import { DimensionChangeBreadcrumbSubscriber } from './breadcrumbs/events/DimensionChangeBreadcrumbSubscriber';
+import { WebRequestEventSubscriber } from './breadcrumbs/events/WebRequestEventSubscriber';
 import { FileBreadcrumbsStorage } from './breadcrumbs/FileBreadcrumbsStorage';
-import { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 import type { BacktraceClientSetup } from './builder/BacktraceClientSetup';
+import { agentVersion } from './common/agentVersion';
+import { DebuggerHelper } from './common/DebuggerHelper';
 import { version } from './common/platformHelper';
-import { version as agentVersion } from '../package.json';
 import { CrashReporter } from './crashReporter/CrashReporter';
 import { generateUnhandledExceptionHandler } from './handlers';
+import { AndroidUnhandledException } from './handlers/android/AndroidUnhandledException';
 import { type ExceptionHandler } from './handlers/ExceptionHandler';
 import { ReactNativeRequestHandler } from './ReactNativeRequestHandler';
 import { ReactStackTraceConverter } from './ReactStackTraceConverter';
 import { type FileSystem } from './storage/FileSystem';
+import { ReactNativeFileSystem } from './storage/ReactNativeFileSystem';
 
 // Must match the private attribute name BreadcrumbsManager sets on JS reports.
 const BREADCRUMB_ATTRIBUTE_NAME = 'breadcrumbs.lastId';
+// Must match the symbolication_id query parameter of the mapping file upload.
+const SYMBOLICATION_ID_ATTRIBUTE_NAME = 'symbolication_id';
+const REQUIRED_APPLICATION_ATTRIBUTES = ['application', 'application.version'];
+const INERT_SUBMISSION_URL = 'https://submit.backtrace.io/unavailable/unavailable/json';
 
 export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration> {
+    private _disposed = false;
     private _crashReporter?: CrashReporter;
     private _anrWatchdogHandler?: AnrWatchdogHandler;
     private readonly _exceptionHandler: ExceptionHandler = generateUnhandledExceptionHandler();
@@ -37,7 +54,12 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
     }
 
     public static get applicationDataPath(): string {
-        return NativeModules.BacktraceDirectoryProvider?.applicationDirectory() ?? '';
+        try {
+            return NativeModules.BacktraceDirectoryProvider?.applicationDirectory() ?? '';
+        } catch (err) {
+            warnFailure('failed to read the application data path', err);
+            return '';
+        }
     }
 
     constructor(clientSetup: BacktraceClientSetup) {
@@ -82,26 +104,65 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
     }
 
     public initialize(): void {
-        const lockId = this.sessionFiles?.lockPreviousSessions();
-        try {
-            super.initialize();
-            this.captureUnhandledErrors(
-                this.options.captureUnhandledErrors,
-                this.options.captureUnhandledPromiseRejections,
-            );
+        this._disposed = false;
+        this.ensureApplicationAttributes();
 
-            this._crashReporter = this.initializeNativeCrashReporter();
-            this.reportApplicationNotResponding();
+        const lockId = this.guard(
+            () => this.sessionFiles?.lockPreviousSessions(),
+            'failed to lock previous session files',
+        );
+        try {
+            try {
+                super.initialize();
+            } catch (err) {
+                warnFailure('failed to initialize, error reporting is off', err);
+                return;
+            }
+
+            this.guard(() => this.addProguardSymbolicationId(), 'failed to add the proguard symbolication id');
+            this.guard(
+                () =>
+                    this.captureUnhandledErrors(
+                        this.options.captureUnhandledErrors,
+                        this.options.captureUnhandledPromiseRejections,
+                    ),
+                'unhandled error capture is off',
+            );
+            this._crashReporter = this.guard(
+                () => this.initializeNativeCrashReporter(),
+                'native crash reporting is off',
+            );
+            this.guard(() => this.reportApplicationNotResponding(), 'ANR detection is off');
         } finally {
-            lockId && this.sessionFiles?.unlockPreviousSessions(lockId);
+            if (lockId) {
+                this.guard(
+                    () => this.sessionFiles?.unlockPreviousSessions(lockId),
+                    'failed to unlock previous session files',
+                );
+            }
         }
     }
 
     public dispose(): void {
-        this._exceptionHandler.dispose();
-        this._anrWatchdogHandler?.dispose();
-        this._crashReporter?.dispose();
-        super.dispose();
+        if (this._disposed) {
+            return;
+        }
+        this._disposed = true;
+
+        this.guard(() => this._exceptionHandler.dispose(), 'failed to restore the error handlers');
+        this.guard(() => this._anrWatchdogHandler?.dispose(), 'failed to stop the ANR watchdog');
+        this.guard(() => this._crashReporter?.dispose(), 'failed to release the native crash reporter');
+        try {
+            super.dispose();
+        } catch (err) {
+            // A custom module may fail during cleanup. Allow the caller to retry.
+            this._disposed = false;
+            throw err;
+        }
+        // super.dispose() only clears BacktraceCoreClient._instance.
+        if (BacktraceClient._instance === this) {
+            BacktraceClient._instance = undefined;
+        }
     }
 
     public static builder(options: BacktraceConfiguration): BacktraceClientBuilder {
@@ -110,6 +171,9 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
     /**
      * Initializes the client. If the client already exists, the available instance
      * will be returned and all other options will be ignored.
+     *
+     * On a failure the returned client is disabled (`enabled` is false) and the reason
+     * is logged as a warning.
      * @param options client configuration
      * @param build builder
      * @returns backtrace client
@@ -121,9 +185,16 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
         if (this.instance) {
             return this.instance;
         }
-        const builder = this.builder(options);
-        build && build(builder);
-        this._instance = builder.build();
+
+        const safeOptions = BacktraceClient.sanitizeOptions(options ?? ({} as BacktraceConfiguration));
+        try {
+            const builder = this.builder(safeOptions);
+            build && build(builder);
+            this._instance = builder.build();
+        } catch (err) {
+            warnFailure('failed to create the client, error reporting is off', err);
+            this._instance = BacktraceClient.createInertClient();
+        }
         return this._instance as BacktraceClient;
     }
 
@@ -135,6 +206,49 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
         return this._instance as BacktraceClient;
     }
 
+    private static sanitizeOptions(options: BacktraceConfiguration): BacktraceConfiguration {
+        let result = options;
+        if (result.database?.enable && !result.database.path) {
+            warnFailure('database.path is missing, the database and native crash reporting are off');
+            result = { ...result, database: { ...result.database, enable: false, createDatabaseDirectory: false } };
+        }
+        if (result.rateLimit !== undefined && result.rateLimit < 0) {
+            warnFailure('rateLimit is negative, the client rate limit is off');
+            result = { ...result, rateLimit: 0 };
+        }
+        return result;
+    }
+
+    private static createInertClient(): BacktraceClient {
+        return new BacktraceClient({
+            options: {
+                url: INERT_SUBMISSION_URL,
+                metrics: { enable: false },
+                breadcrumbs: { enable: false },
+            },
+        });
+    }
+
+    private ensureApplicationAttributes(): void {
+        const attributes = this.attributeManager.get().attributes;
+        const missing = REQUIRED_APPLICATION_ATTRIBUTES.filter((name) => !attributes[name]);
+        if (missing.length === 0) {
+            return;
+        }
+
+        warnFailure(`${missing.join(' and ')} not found, reporting "unknown" until set in userAttributes`);
+        this.attributeManager.add(Object.fromEntries(missing.map((name) => [name, 'unknown'])));
+    }
+
+    private guard<T>(fn: () => T, message: string): T | undefined {
+        try {
+            return fn();
+        } catch (err) {
+            warnFailure(message, err);
+            return undefined;
+        }
+    }
+
     private captureUnhandledErrors(captureUnhandledExceptions = true, captureUnhandledRejections = true) {
         if (captureUnhandledExceptions) {
             this._exceptionHandler.captureManagedErrors(this);
@@ -143,6 +257,25 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
         if (captureUnhandledRejections) {
             this._exceptionHandler.captureUnhandledPromiseRejections(this);
         }
+    }
+
+    protected generateSubmissionData(report: BacktraceReport): BacktraceData | undefined {
+        if (this.options.proguard?.enable && this.hasJavaStackTrace(report)) {
+            report.symbolication = 'proguard';
+        }
+        return super.generateSubmissionData(report);
+    }
+
+    private hasJavaStackTrace(report: BacktraceReport): boolean {
+        return report.data instanceof AndroidUnhandledException || report.data instanceof AnrException;
+    }
+
+    private addProguardSymbolicationId(): void {
+        const proguard = this.options.proguard;
+        if (Platform.OS !== 'android' || !proguard?.enable || !proguard.symbolicationId) {
+            return;
+        }
+        this.addAttribute({ [SYMBOLICATION_ID_ATTRIBUTE_NAME]: proguard.symbolicationId });
     }
 
     private reportApplicationNotResponding(): void {
@@ -190,7 +323,7 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
         const submissionUrl = SubmissionUrlInformation.toJsonReportSubmissionUrl(this.options.url);
 
         const crashReporter = new CrashReporter(fileSystem);
-        crashReporter.initialize(
+        const initialized = crashReporter.initialize(
             Platform.select({
                 ios: SubmissionUrlInformation.toPlCrashReporterSubmissionUrl(submissionUrl),
                 android: SubmissionUrlInformation.toMinidumpSubmissionUrl(submissionUrl),
@@ -200,6 +333,78 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
             this.attributeManager.get('scoped').attributes,
             this.attachments,
         );
-        return crashReporter;
+        return initialized ? crashReporter : undefined;
+    }
+}
+
+/**
+ * Builder for {@link BacktraceClient}; obtain one with `BacktraceClient.builder(options)`.
+ */
+// Implementation note:
+// defined in the same module as `BacktraceClient` on purpose. `BacktraceClient.builder()` creates the builder and `BacktraceClientBuilder.build()` creates the client, splitting them into two modules creates a circular import.
+// The browser and node packages keep that cycle harmlessly because rollup bundles them into a single scope;
+// this package ships per-file modules to Metro, and Metro's import/export transform (`experimentalImportSupport`) captures imported bindings when a module is evaluated, which leaves one side of the cycle `undefined`.
+export class BacktraceClientBuilder extends BacktraceCoreClientBuilder<BacktraceClientSetup> {
+    constructor(clientSetup: BacktraceClientSetup) {
+        super(clientSetup);
+
+        this.addAttributeProvider(new ReactNativeAttributeProvider());
+        if (!DebuggerHelper.isNativeBridgeEnabled()) {
+            return;
+        }
+
+        if (Platform.OS !== 'android' && Platform.OS !== 'ios') {
+            return;
+        }
+
+        const attributeProviders = Platform.select({
+            ios: [
+                new NativeAttributeProvider('BacktraceApplicationAttributeProvider', 'scoped'),
+                new NativeAttributeProvider('BacktraceDeviceAttributeProvider', 'scoped'),
+                new NativeAttributeProvider('BacktraceSystemAttributeProvider', 'scoped'),
+                new NativeAttributeProvider('BacktraceMemoryUsageAttributeProvider', 'dynamic'),
+                new NativeAttributeProvider('BacktraceCpuAttributeProvider', 'dynamic'),
+            ],
+            android: [
+                new NativeAttributeProvider('BacktraceApplicationAttributeProvider', 'scoped'),
+                new NativeAttributeProvider('BacktraceDeviceAttributeProvider', 'scoped'),
+                new NativeAttributeProvider('BacktraceSystemAttributeProvider', 'scoped'),
+                new NativeAttributeProvider('MemoryInformationAttributeProvider', 'dynamic'),
+                new NativeAttributeProvider('ProcessAttributeProvider', 'dynamic'),
+            ],
+            default: [],
+        });
+
+        for (const provider of attributeProviders) {
+            this.addAttributeProvider(provider);
+        }
+
+        const fileSystem = this.createFileSystem();
+        if (fileSystem) {
+            this.useFileSystem(fileSystem);
+        }
+        this.useBreadcrumbSubscriber(new AppStateBreadcrumbSubscriber());
+        this.useBreadcrumbSubscriber(new DimensionChangeBreadcrumbSubscriber());
+        this.useBreadcrumbSubscriber(new WebRequestEventSubscriber());
+    }
+
+    public useFileSystem(fileSystem: ReactNativeFileSystem): this {
+        super.useFileSystem(fileSystem);
+        return this;
+    }
+
+    private createFileSystem(): ReactNativeFileSystem | undefined {
+        try {
+            return new ReactNativeFileSystem();
+        } catch (err) {
+            warnFailure('native storage modules are missing, the database and native crash reporting are off', err);
+            return undefined;
+        }
+    }
+
+    public build(): BacktraceClient {
+        const instance = new BacktraceClient(this.clientSetup);
+        instance.initialize();
+        return instance;
     }
 }

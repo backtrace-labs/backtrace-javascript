@@ -75,10 +75,16 @@ jobs:
 
             - name: Build example app
               working-directory: examples/sdk/reactNative/android
-              run: ./gradlew assembleRelease -PbtCiDebuggable -PnewArchEnabled=${{ matrix.new-arch }} -x uploadSourceMapsToBacktrace --console=plain
+              run: ./gradlew assembleRelease bundleRelease -PbtCiDebuggable -PbtCiMinify -PnewArchEnabled=${{ matrix.new-arch }} -x uploadSourceMapsToBacktrace --console=plain
 
             - name: Verify native libraries and JNI symbols
               run: bash .github/scripts/verify-jni-symbols.sh examples/sdk/reactNative/android/app/build/outputs/apk/release/app-release.apk
+
+            - name: Download bundletool
+              run: |
+                  curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 -o "$RUNNER_TEMP/bundletool.jar" \
+                      https://github.com/google/bundletool/releases/download/1.17.2/bundletool-all-1.17.2.jar
+                  echo "2d4ad908faea64047c1cc9cb747e6aa667c6ab192e09607bd16b67246a8cd6ae  $RUNNER_TEMP/bundletool.jar" | sha256sum -c -
 
             - name: Enable KVM
               run: |
@@ -107,8 +113,10 @@ jobs:
                   disable-animations: false
                   script: echo "Generated AVD snapshot for caching."
 
-            - name: Capture a native crash on the emulator
+            - name: Capture a native crash on the emulator, single APK then Play-style split install
               uses: reactivecircus/android-emulator-runner@v2
+              env:
+                  BUNDLETOOL_JAR: ${{ runner.temp }}/bundletool.jar
               with:
                   api-level: ${{ matrix.api-level }}
                   arch: ${{ matrix.arch }}
@@ -116,7 +124,9 @@ jobs:
                   force-avd-creation: false
                   emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
                   disable-animations: true
-                  script: bash .github/scripts/android-native-crash.sh
+                  script: |
+                      INSTALL=apk bash .github/scripts/android-native-crash.sh
+                      INSTALL=split bash .github/scripts/android-native-crash.sh
 
             - name: Upload crash evidence
               if: failure()
@@ -124,7 +134,7 @@ jobs:
               with:
                   name: native-crash-api${{ matrix.api-level }}-${{ matrix.arch }}-newarch-${{ matrix.new-arch }}
                   path: |
-                      /tmp/native-crash.dmp
-                      /tmp/logcat.txt
+                      /tmp/native-crash-*.dmp
+                      /tmp/logcat-*.txt
                   if-no-files-found: warn
                   retention-days: 7

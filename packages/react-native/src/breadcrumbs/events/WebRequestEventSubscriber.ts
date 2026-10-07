@@ -40,7 +40,7 @@ export class WebRequestEventSubscriber implements BreadcrumbsEventSubscriber {
                 readyStateChangeCallback?.apply(this, [event]);
             };
 
-            xmlHttpRequestOriginalOpenMethod.call(this, method, url, async || true, username, password);
+            xmlHttpRequestOriginalOpenMethod.call(this, method, url, async ?? true, username, password);
         };
 
         this._xmlHttpRequestOriginalOpenMethod = xmlHttpRequestOriginalOpenMethod;

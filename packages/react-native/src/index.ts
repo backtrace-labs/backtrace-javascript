@@ -17,6 +17,7 @@ export {
     BacktraceAnrType,
     type BacktraceAnrConfiguration,
     type BacktraceConfiguration,
+    type BacktraceProguardConfiguration,
 } from './BacktraceConfiguration';
 export { BacktraceClientBuilder } from './builder/BacktraceClientBuilder';
 export { ErrorBoundary } from './ErrorBoundary';

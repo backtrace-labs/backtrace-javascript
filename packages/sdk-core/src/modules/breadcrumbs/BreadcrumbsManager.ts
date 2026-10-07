@@ -1,3 +1,4 @@
+import { warnFailure } from '../../common/failureLog.js';
 import { jsonEscaper } from '../../common/jsonEscaper.js';
 import { jsonSize } from '../../common/jsonSize.js';
 import { limitObjectDepth } from '../../common/limitObjectDepth.js';
@@ -44,6 +45,8 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
      * Determines if the breadcrumb manager is enabled.
      */
     private _enabled = false;
+    private _adding = false;
+    private _failureLogged = false;
 
     private readonly _limits: BreadcrumbLimits;
     private readonly _eventSubscribers: BreadcrumbsEventSubscriber[] = [new ConsoleEventSubscriber()];
@@ -154,10 +157,31 @@ export class BreadcrumbsManager implements BacktraceBreadcrumbs, BacktraceModule
         type: BreadcrumbType,
         attributes?: Record<string, AttributeType> | undefined,
     ): boolean {
-        if (!this._enabled) {
+        // The patched console calls this; _adding stops an interceptor that logs from recursing.
+        if (!this._enabled || this._adding) {
             return false;
         }
 
+        this._adding = true;
+        try {
+            return this.createBreadcrumb(message, level, type, attributes);
+        } catch (err) {
+            if (!this._failureLogged) {
+                this._failureLogged = true;
+                warnFailure('failed to record a breadcrumb', err);
+            }
+            return false;
+        } finally {
+            this._adding = false;
+        }
+    }
+
+    private createBreadcrumb(
+        message: string,
+        level: BreadcrumbLogLevel,
+        type: BreadcrumbType,
+        attributes?: Record<string, AttributeType> | undefined,
+    ): boolean {
         let rawBreadcrumb: RawBreadcrumb = {
             message: this.prepareBreadcrumbMessage(message),
             level,

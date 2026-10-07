@@ -1,5 +1,6 @@
 import { anySignal, createAbortController } from '../../common/AbortController.js';
 import { Events } from '../../common/Events.js';
+import { warnFailure } from '../../common/failureLog.js';
 import { IdGenerator } from '../../common/IdGenerator.js';
 import { unrefInterval } from '../../common/intervalHelper.js';
 import { TimeHelper } from '../../common/TimeHelper.js';
@@ -81,6 +82,7 @@ export class BacktraceDatabase extends Events<BacktraceDatabaseEvents> implement
             .then(() => {
                 this.setupDatabaseAutoSend();
             })
+            .catch((err) => warnFailure('failed to load stored reports', err))
             .finally(() => lockId && this._sessionFiles?.unlockPreviousSessions(lockId));
 
         this._enabled = true;
