@@ -133,9 +133,3 @@ dependencies {
         implementation jscFlavor
     }
 }
-
-tasks.matching { 
-    it.name.startsWith("assemble") || it.name.startsWith("build") 
-}.configureEach { task ->
-     task.finalizedBy("uploadSourceMapsToBacktrace")
-}
