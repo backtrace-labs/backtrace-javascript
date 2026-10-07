@@ -138,6 +138,5 @@ jobs:
                       /tmp/native-crash-*.dmp
                       /tmp/logcat-*.txt
                       /tmp/js-fatal-logcat.txt
-                      /tmp/js-fatal-record.json
                   if-no-files-found: warn
                   retention-days: 7

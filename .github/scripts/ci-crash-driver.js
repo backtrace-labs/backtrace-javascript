@@ -20,4 +20,12 @@ Linking.addEventListener('url', ({ url }) => {
     client.crash();
 });
 
+BacktraceClient.instance?.database?.on('added', (record) => {
+    if (record.type === 'report') {
+        console.log(
+            `BT_CI_RECORD ${record.data.classifiers?.[0]} ${JSON.stringify(record.data.attributes?.['error.message'] ?? '')}`,
+        );
+    }
+});
+
 console.log('BT_CI_DRIVER_ARMED');
