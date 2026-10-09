@@ -15,6 +15,7 @@ import android.util.Log;
 import android.content.Context;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -31,6 +32,9 @@ public class BacktraceReactNative extends ReactContextBaseJavaModule {
     public static final String NAME = "BacktraceReactNative";
 
     private static final boolean nativeLibraryLoaded = loadNativeLibrary();
+
+    // The crash handler's start-up attributes outrank any later update of the same key in the uploaded report.
+    private static final Set<String> HANDLER_ATTRIBUTE_NAMES = new HashSet<>(Arrays.asList("guid", "error.type"));
 
     public native void Crash();
 
@@ -77,13 +81,13 @@ public class BacktraceReactNative extends ReactContextBaseJavaModule {
             }
 
             Map<String, Object> attributes = readableAttributes != null ? readableAttributes.toHashMap() : new HashMap<String, Object>();
-            String[] keys = new String[attributes.size()];
-            String[] values = new String[attributes.size()];
-            int index = 0;
+            List<String> keys = new ArrayList<>();
+            List<String> values = new ArrayList<>();
             for (Map.Entry<String, Object> attribute : attributes.entrySet()) {
-                keys[index] = attribute.getKey();
-                values[index] = stringValue(attribute.getValue());
-                index++;
+                if (HANDLER_ATTRIBUTE_NAMES.contains(attribute.getKey())) {
+                    keys.add(attribute.getKey());
+                    values.add(stringValue(attribute.getValue()));
+                }
             }
 
             List<String> attachments = stringList(attachmentPaths);
@@ -93,8 +97,8 @@ public class BacktraceReactNative extends ReactContextBaseJavaModule {
                     minidumpSubmissionUrl,
                     databasePath,
                     crashHandlerConfiguration.getClassPath(),
-                    keys,
-                    values,
+                    keys.toArray(new String[0]),
+                    values.toArray(new String[0]),
                     attachments.toArray(new String[0]),
                     crashHandlerConfiguration.getCrashHandlerEnvironmentVariables(this.context.getApplicationInfo()).toArray(new String[0])
                     );
@@ -102,6 +106,12 @@ public class BacktraceReactNative extends ReactContextBaseJavaModule {
             if (!result) {
                 Log.w(NAME, "The native crash handler did not start");
                 return false;
+            }
+
+            for (Map.Entry<String, Object> attribute : attributes.entrySet()) {
+                if (!HANDLER_ATTRIBUTE_NAMES.contains(attribute.getKey())) {
+                    BacktraceDatabase.addAttribute(attribute.getKey(), stringValue(attribute.getValue()));
+                }
             }
 
             this.registeredAttachments.addAll(attachments);
