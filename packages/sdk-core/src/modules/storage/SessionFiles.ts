@@ -86,7 +86,7 @@ export class SessionFiles implements BacktraceModule {
     public getSessionWithId(sessionId: SessionId) {
         // eslint-disable-next-line @typescript-eslint/no-this-alias
         let session: SessionFiles | undefined = this;
-        while (session && this.sessionIdEquals(session.sessionId, sessionId)) {
+        while (session && !this.sessionIdEquals(session.sessionId, sessionId)) {
             session = session.getPreviousSession();
         }
 

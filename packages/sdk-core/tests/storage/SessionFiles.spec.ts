@@ -186,6 +186,69 @@ describe('SessionFiles', () => {
         });
     });
 
+    describe('getSessionWithId', () => {
+        it('should return itself for its own session ID', () => {
+            const fileSystem = mockFileSystem();
+            new SessionFiles(fileSystem, '.', sessionId('previousSessionId', 10)).initialize();
+            const session = new SessionFiles(fileSystem, '.', sessionId('sessionId', 20));
+            session.initialize();
+
+            expect(session.getSessionWithId(session.sessionId)).toBe(session);
+        });
+
+        it('should return the previous session for its session ID', () => {
+            const fileSystem = mockFileSystem();
+            const previousSession = new SessionFiles(fileSystem, '.', sessionId('previousSessionId', 10));
+            previousSession.initialize();
+            const session = new SessionFiles(fileSystem, '.', sessionId('sessionId', 20));
+            session.initialize();
+
+            expect(session.getSessionWithId(previousSession.sessionId)?.sessionId).toEqual(previousSession.sessionId);
+        });
+
+        it('should return an older session for its session ID', () => {
+            const fileSystem = mockFileSystem();
+            const session1 = new SessionFiles(fileSystem, '.', sessionId('session1', 5));
+            const session2 = new SessionFiles(fileSystem, '.', sessionId('session2', 10));
+            session1.initialize();
+            session2.initialize();
+            const session = new SessionFiles(fileSystem, '.', sessionId('sessionId', 20));
+            session.initialize();
+
+            expect(session.getSessionWithId(session1.sessionId)?.sessionId).toEqual(session1.sessionId);
+        });
+
+        it('should match sessions sharing an ID by timestamp', () => {
+            const fileSystem = mockFileSystem();
+            const olderSession = new SessionFiles(fileSystem, '.', sessionId('sessionId', 10));
+            olderSession.initialize();
+            const session = new SessionFiles(fileSystem, '.', sessionId('sessionId', 20));
+            session.initialize();
+
+            expect(session.getSessionWithId(olderSession.sessionId)?.sessionId).toEqual(olderSession.sessionId);
+            expect(session.getSessionWithId(session.sessionId)).toBe(session);
+        });
+
+        it('should return undefined for an unknown session ID', () => {
+            const fileSystem = mockFileSystem();
+            new SessionFiles(fileSystem, '.', sessionId('previousSessionId', 10)).initialize();
+            const session = new SessionFiles(fileSystem, '.', sessionId('sessionId', 20));
+            session.initialize();
+
+            expect(session.getSessionWithId(sessionId('unknownSessionId', 15))).toBeUndefined();
+        });
+
+        it('should return undefined for an unknown session ID after previous sessions are cleared', () => {
+            const fileSystem = mockFileSystem();
+            new SessionFiles(fileSystem, '.', sessionId('previousSessionId', 10)).initialize();
+            const session = new SessionFiles(fileSystem, '.', sessionId('sessionId', 20));
+            session.initialize();
+            session.clearPreviousSessions();
+
+            expect(session.getSessionWithId(sessionId('unknownSessionId', 15))).toBeUndefined();
+        });
+    });
+
     describe('getFileName', () => {
         it('should return file name with escaped session ID', () => {
             const fileSystem = mockFileSystem();

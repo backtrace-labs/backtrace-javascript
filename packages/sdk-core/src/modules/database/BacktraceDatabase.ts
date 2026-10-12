@@ -404,6 +404,10 @@ export class BacktraceDatabase extends Events<BacktraceDatabaseEvents> implement
         }
 
         const session = this._sessionFiles.getSessionWithId(sessionId);
+        if (session === this._sessionFiles) {
+            return;
+        }
+
         session?.lock(record.id);
     }
 }
