@@ -16,15 +16,20 @@ export class CrashReporter {
      */
     private static initialized = false;
 
+    private static activeReporter?: CrashReporter;
+    private static nativeSubmissionUrl?: string;
+    private static nativeDatabasePath?: string;
+    private static nativeAttributeNames = new Set<string>();
+
     public initialize(
         submissionUrl: string,
         databasePath: string,
         attributes: Record<string, AttributeType>,
         attachments: readonly BacktraceAttachment[],
     ): boolean {
+        const nativeDatabasePath = `${databasePath}/native`;
         if (CrashReporter.initialized) {
-            warnFailure("native crash reporting keeps the first client's configuration");
-            return false;
+            return this.takeOver(submissionUrl, nativeDatabasePath, attributes, attachments);
         }
         if (!CrashReporter.BacktraceReactNative) {
             warnFailure('native crash reporting is off, BacktraceReactNative is not linked');
@@ -36,7 +41,7 @@ export class CrashReporter {
             return false;
         }
 
-        const nativeDatabasePath = `${databasePath}/native`;
+        const nativeAttributes = this.convertAttributes(attributes);
         try {
             this._fileSystem.createDirSync(nativeDatabasePath);
 
@@ -45,7 +50,7 @@ export class CrashReporter {
                 submissionUrl,
                 nativeDatabasePath,
                 {
-                    ...this.convertAttributes(attributes),
+                    ...nativeAttributes,
                     'error.type': 'Crash',
                 },
                 this.convertAttachments(attachments),
@@ -59,8 +64,11 @@ export class CrashReporter {
             return false;
         }
 
-        this._enabled = true;
         CrashReporter.initialized = true;
+        CrashReporter.nativeSubmissionUrl = submissionUrl;
+        CrashReporter.nativeDatabasePath = nativeDatabasePath;
+        CrashReporter.nativeAttributeNames = new Set(Object.keys(nativeAttributes));
+        this.enable();
         return true;
     }
 
@@ -68,7 +76,7 @@ export class CrashReporter {
         if (!this._enabled) {
             return;
         }
-        this.update(() => CrashReporter.BacktraceReactNative.useAttributes(this.convertAttributes(attributes)));
+        this.useAttributes(this.convertAttributes(attributes));
     }
 
     public updateAttachments(attachments: readonly BacktraceAttachment[]) {
@@ -96,6 +104,49 @@ export class CrashReporter {
 
     public dispose(): void {
         this._enabled = false;
+        if (CrashReporter.activeReporter === this) {
+            CrashReporter.activeReporter = undefined;
+        }
+    }
+
+    private takeOver(
+        submissionUrl: string,
+        nativeDatabasePath: string,
+        attributes: Record<string, AttributeType>,
+        attachments: readonly BacktraceAttachment[],
+    ): boolean {
+        if (CrashReporter.activeReporter) {
+            warnFailure('native crash reporting stays with the client that is still running, dispose it first');
+            return false;
+        }
+        if (
+            submissionUrl !== CrashReporter.nativeSubmissionUrl ||
+            nativeDatabasePath !== CrashReporter.nativeDatabasePath
+        ) {
+            warnFailure(
+                "native crash reports keep the first client's submission url and database path until the app restarts",
+            );
+        }
+
+        const blankedPreviousAttributes = Object.fromEntries(
+            [...CrashReporter.nativeAttributeNames].map((name) => [name, '']),
+        );
+        this.enable();
+        this.useAttributes({ ...blankedPreviousAttributes, ...this.convertAttributes(attributes) });
+        this.updateAttachments(attachments);
+        return true;
+    }
+
+    private enable() {
+        this._enabled = true;
+        CrashReporter.activeReporter = this;
+    }
+
+    private useAttributes(attributes: Record<string, string>) {
+        for (const name of Object.keys(attributes)) {
+            CrashReporter.nativeAttributeNames.add(name);
+        }
+        this.update(() => CrashReporter.BacktraceReactNative.useAttributes(attributes));
     }
 
     private update(fn: () => void) {

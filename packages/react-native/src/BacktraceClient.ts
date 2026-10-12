@@ -307,6 +307,7 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
     }
 
     private initializeNativeCrashReporter(): CrashReporter | undefined {
+        this._crashReporter?.dispose();
         if (!this.options.database?.enable) {
             return;
         }
