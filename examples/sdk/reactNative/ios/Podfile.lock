@@ -1,12 +1,12 @@
 PODS:
-  - backtrace-react-native (0.2.2):
+  - backtrace-react-native (0.2.3-rc):
     - boost
     - DoubleConversion
     - fast_float
     - fmt
     - glog
     - hermes-engine
-    - PLCrashReporter
+    - PLCrashReporter (= 1.12.0)
     - RCT-Folly
     - RCT-Folly/Fabric
     - RCTRequired
@@ -2515,7 +2515,7 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
 SPEC CHECKSUMS:
-  backtrace-react-native: a1690b2efc46d1ce7cf4d48b385c7b1efafe150c
+  backtrace-react-native: 1f7ad1c58ae2735e7ae5c8028091eb9ad74f9957
   boost: 7e761d76ca2ce687f7cc98e698152abd03a18f90
   DoubleConversion: cb417026b2400c8f53ae97020b2be961b59470cb
   fast_float: b32c788ed9c6a8c584d114d0047beda9664e7cc6
