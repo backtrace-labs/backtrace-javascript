@@ -321,7 +321,10 @@ export class BacktraceClient extends BacktraceCoreClient<BacktraceConfiguration>
 
                 const data = this.generateSubmissionData(report);
                 if (data) {
-                    this.database.add(data, report.attachments);
+                    const record = this.database.add(data, report.attachments);
+                    if (record && session) {
+                        session.lock(record.id);
+                    }
                 }
             } catch {
                 // Do nothing, skip the report
