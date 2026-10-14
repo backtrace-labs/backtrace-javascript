@@ -51,10 +51,10 @@ at_most() {
 trap 'adb logcat -d -v epoch > "$LOGCAT_OUT" 2>/dev/null || true' EXIT
 
 adb wait-for-device
-if adb shell pm path "$PACKAGE" >/dev/null 2>&1; then
-    adb uninstall "$PACKAGE"
-fi
+adb uninstall "$PACKAGE" >/dev/null 2>&1 || true
 adb install -r "$APK"
+# Not pm clear, its late force-stop kills the launch. Uninstall alone can leave data on the cached emulator image.
+adb shell run-as "$PACKAGE" find . -mindepth 1 -delete >/dev/null
 adb logcat -c
 
 adb shell am start -n "$ACTIVITY" >/dev/null

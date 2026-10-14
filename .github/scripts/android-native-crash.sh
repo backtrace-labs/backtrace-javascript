@@ -82,13 +82,13 @@ ABI="$(adb shell getprop ro.product.cpu.abi | tr -d '\r')"
 ABI_US="${ABI//-/_}"
 echo "install mode: $INSTALL, device abi: $ABI, device abis: $(adb shell getprop ro.product.cpu.abilist | tr -d '\r')"
 
-if adb shell pm path "$PACKAGE" >/dev/null 2>&1; then
-    adb uninstall "$PACKAGE"
-fi
+adb uninstall "$PACKAGE" >/dev/null 2>&1 || true
 case "$INSTALL" in
     apk) install_apk ;;
     split) install_split ;;
 esac
+# Not pm clear, its late force-stop kills the launch. Uninstall alone can leave data on the cached emulator image.
+adb shell run-as "$PACKAGE" find . -mindepth 1 -delete >/dev/null
 adb logcat -c
 trap 'adb logcat -d > "$LOGCAT_OUT" 2>/dev/null || true; rm -rf "$WORK"' EXIT
 
