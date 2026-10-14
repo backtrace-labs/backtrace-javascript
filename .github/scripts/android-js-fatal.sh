@@ -20,7 +20,7 @@ FORWARD_BOUND_S=7
 EXIT_BOUND_S=2
 
 wait_for_log() {
-    local pattern="$1" deadline="$2"
+    local pattern="$1" deadline="$2" uid
     for _ in $(seq 1 "$deadline"); do
         if adb logcat -d | grep -qE "$pattern"; then
             return 0
@@ -29,7 +29,14 @@ wait_for_log() {
     done
 
     echo "::error::timed out after ${deadline}s waiting for: $pattern"
-    adb logcat -d | tail -50
+    if ! adb shell pidof "$PACKAGE" >/dev/null 2>&1; then
+        echo "$PACKAGE is not running"
+    fi
+    adb logcat -d -s ActivityManager:I ActivityTaskManager:I | grep -F "$PACKAGE" | tail -20 || true
+    uid="$(adb shell pm list packages -U "$PACKAGE" | tr -d '\r' | sed -n "s/^package:$PACKAGE uid://p")"
+    if [ -n "$uid" ]; then
+        adb logcat -d --uid="$uid" | tail -50
+    fi
     return 1
 }
 
@@ -44,9 +51,10 @@ at_most() {
 trap 'adb logcat -d -v epoch > "$LOGCAT_OUT" 2>/dev/null || true' EXIT
 
 adb wait-for-device
-adb uninstall "$PACKAGE" >/dev/null 2>&1 || true
+if adb shell pm path "$PACKAGE" >/dev/null 2>&1; then
+    adb uninstall "$PACKAGE"
+fi
 adb install -r "$APK"
-adb shell pm clear "$PACKAGE" >/dev/null
 adb logcat -c
 
 adb shell am start -n "$ACTIVITY" >/dev/null
