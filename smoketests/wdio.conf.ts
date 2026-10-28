@@ -4,6 +4,7 @@ export const config: Options.Testrunner & {
     capabilities: WebdriverIO.Capabilities[];
 } = {
     runner: 'local',
+    autoXvfb: false,
 
     user: process.env.SMOKETESTS_SAUCE_USERNAME,
     key: process.env.SMOKETESTS_SAUCE_ACCESS_KEY,
