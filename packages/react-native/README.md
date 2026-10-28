@@ -63,6 +63,13 @@ $ cd ios
 $ pod install
 ```
 
+When upgrading from an earlier version of the package, run this once instead of `pod install`:
+
+```
+$ cd ios
+$ pod update PLCrashReporter
+```
+
 Xcode 27 requires a minimum deployment target of iOS 15.0. Add the following inside the existing `post_install` block
 of `ios/Podfile`, then run `pod install` again:
 
@@ -103,11 +110,13 @@ const options = {
 // Initialize the client with the options
 const client = BacktraceClient.initialize(options);
 
-// By default, Backtrace will send an error for Uncaught Exceptions and Unhandled Promise Rejections
-
 // Manually send an error
 client.send(new Error('Something broke!'));
 ```
+
+Once initialized, the client automatically reports JavaScript errors that are not caught by the application and
+promise rejections without a handler. A fatal error is reported before the app closes. Use `client.send()` for errors
+your code catches.
 
 ### Upload Source Maps
 
@@ -420,7 +429,6 @@ const client = BacktraceClient.initialize({
 | `autoSend`                         | Boolean | Sends stored reports at startup and then every `retryInterval`. With `false`, stored reports wait for `client.database?.send()` or `client.database?.flush()`. New reports are still sent when they are created. | `true`  |
 | `maximumNumberOfRecords`           | Number  | The maximum number of reports stored in the offline database. When the limit is reached, the oldest reports are removed. With `0`, stored reports from earlier sessions are deleted at startup.                  | `8`     |
 | `retryInterval`                    | Number  | Time in ms between retries when sending stored reports fails.                                                                                                                                                    | `60000` |
-| `maximumNumberOfAttachmentRecords` | Number  | The maximum number of attachments stored in the offline database. When the limit is reached, the oldest attachments are removed.                                                                                 | `10`    |
 | `maximumRetries`                   | Number  | Send attempts per session. An attempt stops at the first report that fails. Reports that still fail are retried on the next launch.                                                                              | `3`     |
 | `maximumOldSessions`               | Number  | The number of previous sessions whose files, such as breadcrumbs, are kept on disk.                                                                                                                              | `1`     |
 | `captureNativeCrashes`             | Boolean | Capture crashes in the native layer. Requires `enable: true`. Android sends the report at crash time. iOS sends it on the next launch. See [Native Crash Support](#native-crash-support).                        | `false` |
@@ -490,8 +498,7 @@ Pass these options to `BacktraceClient.initialize`. Only `url` is required.
 
 ### Manually Send an Error
 
-There are several ways to send an error to Backtrace. For more details on the definition of `client.send()` see
-methods below.
+`client.send()` accepts a string, an `Error`, or a `BacktraceReport`:
 
 ```ts
 // send as a string

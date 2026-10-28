@@ -1,3 +1,7 @@
+# Version 0.2.2
+
+-   update `@backtrace/sdk-core` to `0.8.4`
+
 # Version 0.2.1
 
 -   update `@backtrace/sdk-core` to `0.8.3`

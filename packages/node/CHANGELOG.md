@@ -1,3 +1,8 @@
+# Version 0.8.4
+
+-   update `@backtrace/sdk-core` to `0.8.4`
+-   crash reports from the previous run keep their breadcrumbs until they are sent
+
 # Version 0.8.3
 
 -   Fix: label unhandled promise rejections as 'Unhandled rejection' (#370)

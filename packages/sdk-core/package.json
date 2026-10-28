@@ -1,6 +1,6 @@
 {
     "name": "@backtrace/sdk-core",
-    "version": "0.8.4-rc",
+    "version": "0.8.4",
     "description": "Backtrace-JavaScript SDK core library",
     "main": "lib/bundle.cjs",
     "module": "lib/bundle.mjs",
@@ -47,7 +47,6 @@
         "typescript": "^5.0.4"
     },
     "publishConfig": {
-        "access": "public",
-        "tag": "rc"
+        "access": "public"
     }
 }

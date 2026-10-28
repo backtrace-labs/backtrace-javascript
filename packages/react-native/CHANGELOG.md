@@ -1,42 +1,54 @@
-# Version 0.2.3-rc
+# Version 0.2.3
 
 Features
 
--   Android: detect ANRs with the new `anr` option, from a main-thread watchdog (`BacktraceAnrType.Threshold`) or from the exit records Android keeps for earlier runs (`BacktraceAnrType.ApplicationExit`)
--   Android: deobfuscate unhandled Java exception and ANR reports from R8 and ProGuard builds with the new `proguard` option
+-   report React render errors that no error boundary catches, with the JavaScript stack and the component stack
+-   Android: detect app hangs (ANRs) with the new `anr` option, as they happen or on the next launch
+-   Android: deobfuscate Java crash and ANR reports from minified (R8 or ProGuard) builds with the new `proguard` option
+-   Android: report fatal Java errors such as out-of-memory and stack overflow, not only exceptions
 
 Improvements
 
--   support React Native 0.81 and React 19, declare `react >=18.0.0` and `react-native >=0.72.0` peer dependencies
--   SDK failures no longer crash the app, the failing feature turns off and logs a `Backtrace:` warning
+-   support React Native up to 0.87 and React 19, require React Native 0.72 or later and React 18 or later
+-   an internal SDK failure no longer crashes the app, the affected feature turns off and logs a warning
 -   `BacktraceClient.initialize` returns a disabled client instead of throwing on invalid options or a failed setup
--   restore the previous global error handler on `dispose()`, make `dispose()` safe to call more than once
--   Android: update `libbacktrace-native.so` to backtrace-android 3.14.0, add `x86_64` support for native crash capture, remove the unused `libnative-lib.so`
--   iOS: `ios-sourcemap-upload.sh` skips Debug and `SKIP_BUNDLING` builds, warns instead of failing the Xcode build on missing inputs, can run outside Xcode
--   iOS: support `use_frameworks! :linkage => :dynamic`
+-   `dispose()` restores the app's previous error handlers and is safe to call more than once
+-   native crash reports use the attributes and attachments of a new client created after `dispose()`, a new submission URL or database path applies only after the app restarts
+-   release builds give the report of a fatal JavaScript error up to 5 seconds to send before the app closes
+-   Android: update the native crash handler to backtrace-android 3.14.0, capture native crashes on x86_64, remove an unused native library
+-   Android: release builds upload source maps without an extra hook in `app/build.gradle`, an existing hook keeps working
+-   iOS: the source map upload step skips Debug builds and builds without a JavaScript bundle, and warns instead of failing the build on missing files or settings
+-   iOS: upload source maps from archive builds, existing apps need the updated Xcode build phase from the integration guide
+-   iOS: support apps built with dynamic frameworks (`use_frameworks!`)
+-   iOS: support Xcode 27 builds on React Native 0.76 and later, with a Podfile step from the README
 
 Bugfixes
 
--   forward attributes and file attachments added after `initialize()` to native crash reports
--   attach breadcrumb files and `breadcrumbs.lastId` to native crash reports
--   apply `maximumBreadcrumbs` to the breadcrumb files written with the offline database on
--   a failure while reporting an unhandled error or rejection no longer surfaces as a new unhandled rejection
--   report the package version in `agentVersion` and `backtrace.version` instead of `0.0.1`
--   fix the SDK init crash on React Native 0.72
--   fix `TypeError: Cannot read property 'prototype' of undefined` under Metro `experimentalImportSupport`
--   Android: capture native crashes from release builds minified with R8 or ProGuard, ship the keep rules the crash handler needs
--   Android: wait up to 5 seconds for the unhandled Java exception report to send before the process exits
--   Android: fix autolinking builds under Expo and React Native 0.82+
--   Android: fix the source map upload on Gradle 9, upload each release variant's own map, add the `backtraceUploadSourceMaps` property to turn uploads off
--   iOS: skip the duplicate native crash report for fatal unhandled JavaScript errors
+-   native crash reports include attributes and attachments added or changed after the SDK starts
+-   native crash reports include breadcrumbs
+-   apply the `maximumBreadcrumbs` limit to breadcrumbs saved by the offline database
+-   reports saved offline or during a crash are sent on the next launch with their breadcrumbs
+-   a fatal JavaScript error produces one report instead of two
+-   a failure while reporting an unhandled error or rejection no longer shows up as a new unhandled promise rejection
+-   reports show the SDK version instead of `0.0.1`
+-   fix a crash at startup on React Native 0.72
+-   fix a startup `TypeError` when Metro's `experimentalImportSupport` is on
+-   Android: capture native crashes in minified (R8 or ProGuard) release builds without extra keep rules
+-   Android: capture native crashes in apps installed from Google Play app bundles
+-   Android: give the report of a Java crash up to 5 seconds to send before the app closes
+-   Android: after `dispose()`, Java crashes go to the previous crash handler again, a new client or a JavaScript reload turns reporting back on
+-   Android: fix failed uploads when a breadcrumb is added while a report is being sent
+-   Android: fix builds under Expo and on React Native 0.82 and later
+-   Android: fix the source map upload on Gradle 9, upload the right map for each build variant, add a `backtraceUploadSourceMaps` Gradle property to turn uploads off
 
 Packaging
 
--   update `@backtrace/sdk-core` to `0.8.4-rc`
--   declare `promise` and `pretty-format` as dependencies, add `@backtrace/sourcemap-tools` and `metro` as optional peer dependencies
--   ship the `scripts` folder with the Metro serializer and the iOS source map upload script
--   fix the `repository` field and remove the self-dependency in `package.json`
--   raise `web-streams-polyfill` to `^4.3.0`
+-   update `@backtrace/sdk-core` to `0.8.4`
+-   iOS: require PLCrashReporter 1.12.0, run `pod update PLCrashReporter` once when upgrading
+-   fix missing dependencies in the package, `@backtrace/sourcemap-tools` and `metro` are optional and used for source maps
+-   include the source map scripts (Metro serializer, iOS upload script) in the package
+-   fix the package metadata
+-   update `web-streams-polyfill` to 4.3.0
 
 # Version 0.2.2
 
