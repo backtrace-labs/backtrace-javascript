@@ -37,6 +37,7 @@ application to Backtrace. This README covers setup and configuration. Symbolicat
 ## Supported Versions
 
 -   React Native 0.72+, verified up to 0.87
+-   React Native 0.76+ when building with Xcode 27
 -   React 18+
 -   Hermes JavaScript engine (JavaScriptCore is not supported)
 -   New Architecture and Legacy Architecture (React Native 0.82 and later are New Architecture only)
@@ -67,6 +68,20 @@ When upgrading from an earlier version of the package, run this once instead of 
 ```
 $ cd ios
 $ pod update PLCrashReporter
+```
+
+Xcode 27 requires a minimum deployment target of iOS 15.0. Add the following inside the existing `post_install` block
+of `ios/Podfile`, then run `pod install` again:
+
+```ruby
+installer.target_installation_results.pod_target_installation_results.each_value do |result|
+  result.resource_bundle_targets.each do |bundle_target|
+    bundle_target.build_configurations.each do |config|
+      current = config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] || min_ios_version_supported
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = [min_ios_version_supported.to_f, current.to_f].max.to_s
+    end
+  end
+end
 ```
 
 ### Integrate the SDK
