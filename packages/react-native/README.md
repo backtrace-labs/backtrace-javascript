@@ -37,7 +37,7 @@ application to Backtrace. This README covers setup and configuration. Symbolicat
 ## Supported Versions
 
 -   React Native 0.72+, verified up to 0.87
--   Xcode 27 needs React Native 0.76 or later
+-   React Native 0.76+ when building with Xcode 27
 -   React 18+
 -   Hermes JavaScript engine (JavaScriptCore is not supported)
 -   New Architecture and Legacy Architecture (React Native 0.82 and later are New Architecture only)
