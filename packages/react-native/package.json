@@ -1,6 +1,6 @@
 {
     "name": "@backtrace/react-native",
-    "version": "0.2.3-rc",
+    "version": "0.2.3",
     "description": "Backtrace-Javascript React-Native integration",
     "main": "lib/commonjs/index",
     "module": "lib/module/index",
@@ -8,7 +8,6 @@
     "react-native": "src/index",
     "source": "src/index",
     "files": [
-        "RELEASE_CANDIDATE.md",
         "src",
         "lib",
         "android",
@@ -23,6 +22,7 @@
         "!android/gradlew",
         "!android/gradlew.bat",
         "!android/local.properties",
+        "!android/src/test",
         "!**/__tests__",
         "!**/__fixtures__",
         "!**/__mocks__",
@@ -101,14 +101,13 @@
         "typescript": "^5.0.2"
     },
     "dependencies": {
-        "@backtrace/sdk-core": "0.8.4-rc",
+        "@backtrace/sdk-core": "0.8.4",
         "pretty-format": "^29.7.0",
         "promise": "^8.3.0",
         "web-streams-polyfill": "^4.3.0"
     },
     "publishConfig": {
-        "access": "public",
-        "tag": "rc"
+        "access": "public"
     },
     "peerDependenciesMeta": {
         "@backtrace/sourcemap-tools": {

@@ -1,3 +1,7 @@
+# Version 0.5.2
+
+-   update `@backtrace/browser` to `0.6.3`
+
 # Version 0.5.1
 
 -   update `@backtrace/browser` to `0.6.2`

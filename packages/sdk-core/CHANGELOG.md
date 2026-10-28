@@ -1,13 +1,13 @@
-# Version 0.8.4-rc
+# Version 0.8.4
 
--   build the bundle as ES5 with the `tslib` helpers inlined, fix loading on React Native 0.72
--   add `BacktraceReport.symbolication` and the `symbolication` report option (`sourcemap` or `proguard`)
--   `send()` never throws or rejects, an exception inside it makes the call resolve with status `Unknown` and message `SDK failure: <ErrorName>`
--   skip attribute providers that throw and keep the remaining attributes
--   `addBreadcrumb` returns `false` instead of throwing and drops breadcrumbs raised while another breadcrumb is recorded
--   log failures to load stored reports and to send metrics instead of leaving unhandled promise rejections
--   add the `warnFailure` and `failureType` exports
--   `dispose()` clears the shared client instance only when the disposed client is the current one
+-   fix loading the package on React Native 0.72
+-   add a `symbolication` report option to pick source map or ProGuard symbolication
+-   `send()` no longer throws or rejects, an internal failure returns an `Unknown` result
+-   an attribute provider that throws no longer blocks the other attributes
+-   `addBreadcrumb` returns `false` instead of throwing
+-   failures to load saved reports or send metrics log a warning instead of an unhandled promise rejection
+-   `dispose()` on an older client no longer clears the current shared client
+-   reports saved in an earlier session are sent with their breadcrumbs on the next launch
 
 # Version 0.8.3
 

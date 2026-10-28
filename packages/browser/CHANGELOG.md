@@ -1,3 +1,8 @@
+# Version 0.6.3
+
+-   update `@backtrace/sdk-core` to `0.8.4`
+-   keep the same user id (`guid`) across sessions, a new session no longer counts as a new user
+
 # Version 0.6.2
 
 -   Fix: label unhandled promise rejections as 'Unhandled rejection' (#370)
