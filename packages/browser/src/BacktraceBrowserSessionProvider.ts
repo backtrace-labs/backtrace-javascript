@@ -6,8 +6,8 @@ export class BacktraceBrowserSessionProvider implements BacktraceSessionProvider
      * the session is treaten as an old session.
      */
     public static readonly PERSISTENCE_INTERVAL = TimeHelper.convertSecondsToMilliseconds(30 * 60);
-    private readonly SESSION_LAST_ACTIVE = 'backtrace-last-active';
-    private readonly SESSION_GUID = 'backtrace-guid';
+    private readonly SESSION_LAST_ACTIVE = 'backtrace-session-last-active';
+    private readonly SESSION_ID = 'backtrace-session-id';
 
     get lastActive(): number {
         return this._lastActive;
@@ -25,14 +25,19 @@ export class BacktraceBrowserSessionProvider implements BacktraceSessionProvider
         }
 
         const lastActive = this.readLastActiveTimestamp();
-        if (!lastActive || TimeHelper.now() - lastActive > BacktraceBrowserSessionProvider.PERSISTENCE_INTERVAL) {
+        const sessionId = localStorage.getItem(this.SESSION_ID);
+        if (
+            !sessionId ||
+            !lastActive ||
+            TimeHelper.now() - lastActive > BacktraceBrowserSessionProvider.PERSISTENCE_INTERVAL
+        ) {
             this.updateLastActiveTimestamp();
-            localStorage.setItem(this.SESSION_GUID, this.sessionId);
+            localStorage.setItem(this.SESSION_ID, this.sessionId);
             return;
         }
         this._lastActive = lastActive;
         this.newSession = false;
-        this.sessionId = localStorage.getItem(this.SESSION_GUID) as string;
+        this.sessionId = sessionId;
     }
 
     public afterMetricsSubmission(): void {
